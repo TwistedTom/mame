@@ -11244,6 +11244,93 @@ ROM_START( lasthope )
 ROM_END
 
 
+
+
+
+/****************************************
+ 
+ Conversions
+ 
+****************************************/
+
+
+ROM_START( mslug3c )  // 256
+	ROM_REGION( 0x500000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
+	ROM_LOAD16_WORD_SWAP( "256-ph1.p1",  0x000000, 0x100000, CRC(9c42ca85) SHA1(7a8f77a89867b889295ae9b9dfd4ba28f02d234d) ) /* TC538200  8Mbit  27c800 */
+	ROM_LOAD16_WORD_SWAP( "256-ph2.sp2", 0x100000, 0x400000, CRC(1f3d8ce8) SHA1(08b05a8abfb86ec09a5e758d6273acf1489961f9) ) /* TC5332205  32Mbit  27c322 */
+
+	NEO_SFIX_128K( "256-s1d.s1", CRC(39f1a271) SHA1(07835758801f31876274a25bc7796abe1b5f052b) ) /* TC531000  1Mbit  27c1000 */
+
+	//NEO_BIOS_AUDIO_256K( "256-m1.m1", CRC(eaeec116) SHA1(54419dbb21edc8c4b37eaac2e7ad9496d2de037a) ) /* TC532000  2Mbit  27c020 */
+	NEO_BIOS_AUDIO_512K( "256-m1.m1", CRC(eaeec116) SHA1(54419dbb21edc8c4b37eaac2e7ad9496d2de037a) ) /* TC534000  4Mbit  27c040 */
+
+	ROM_REGION( 0x1000000, "cslot1:ymsnd", 0 )
+	ROM_LOAD( "256-v1.v1", 0x000000, 0x400000, CRC(f2690241) SHA1(fd56babc1934d10e0d27c32f032f9edda7ca8ce9) ) /* TC5332204  32Mbit  x */
+	ROM_LOAD( "256-v2.v2", 0x400000, 0x400000, CRC(7e2a10bd) SHA1(0d587fb9f64cba0315ce2d8a03e2b8fe34936dff) ) /* TC5332204  32Mbit  x */
+	ROM_LOAD( "256-v3.v3", 0x800000, 0x400000, CRC(0eaec17c) SHA1(c3ed613cc6993edd6fc0d62a90bcd85de8e21915) ) /* TC5332204  32Mbit  x */
+	ROM_LOAD( "256-v4.v4", 0xc00000, 0x400000, CRC(9b4b22d4) SHA1(9764fbf8453e52f80aa97a46fb9cf5937ef15a31) ) /* TC5332204  32Mbit  x */
+
+	ROM_REGION( 0x4000000, "cslot1:sprites", 0 )
+	ROM_LOAD16_BYTE( "256-c1d.c1", 0x0000000, 0x800000, CRC(3540398c) SHA1(0a96f2360eb26c66bf02bbc6f52230b55cc95e4e) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "256-c2d.c2", 0x0000001, 0x800000, CRC(bdd220f0) SHA1(f52851023f3bc120b05f622af0e0ab1bedc41604) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "256-c3d.c3", 0x1000000, 0x800000, CRC(bfaade82) SHA1(66b07e592c9a9b35567fe463496f8f75c32a7db9) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "256-c4d.c4", 0x1000001, 0x800000, CRC(1463add6) SHA1(4db91b46d6430da272d27d00a6dc0eb25949bea1) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "256-c5d.c5", 0x2000000, 0x800000, CRC(48ca7f28) SHA1(e903876be5fb4fa582c988d74c6bef1c3b9c7083) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "256-c6d.c6", 0x2000001, 0x800000, CRC(806eb36f) SHA1(a412a9cab80c326733dde7652d1db2a46afb3ebb) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "256-c7d.c7", 0x3000000, 0x800000, CRC(9395b809) SHA1(ca9ac9832017094eee3623f0b6c4c4b7b4f1374d) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "256-c8d.c8", 0x3000001, 0x800000, CRC(a369f9d4) SHA1(f8146ea80a1a23da7e7e04c88f778ee9abdfeb5c) ) /* TC5364205  64Mbit  x */
+ROM_END
+
+
+ROM_START( mslug4c )  // 263
+	ROM_REGION( 0x500000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
+	ROM_LOAD16_WORD_SWAP( "263-p1.p1",  0x000000, 0x100000, CRC(27e4def3) SHA1(a08785e8145981bb6b5332a3b2df7eb321253cca) ) /* TC538200  8Mbit  27c800 */
+	ROM_LOAD16_WORD_SWAP( "263-p2.sp2", 0x100000, 0x400000, CRC(fdb7aed8) SHA1(dbeaec38f44e58ffedba99e70fa1439c2bf0dfa3) ) /* TC5332205  32Mbit  27c322 */
+
+	NEO_SFIX_128K( "263-s1d.s1", CRC(c4f4ed0e) SHA1(bbf31c879d72cc843229b03db01399af98e02f01) ) /* TC531000  1Mbit  27c1000 */
+
+	NEO_BIOS_AUDIO_128K( "263-m1d.m1", CRC(ef5db532) SHA1(4aeba9e206b8f309610eb7e1891644f39aa61830) ) /* TC531001  1Mbit  27c010 */
+
+	ROM_REGION( 0x1000000, "cslot1:ymsnd", 0 )
+	ROM_LOAD( "263-v1d.v1", 0x000000, 0x400000, CRC(8cb5a9ef) SHA1(272ad312f8694acf9190ebf48d1c8a5fec73c130) ) /* TC5332204  32Mbit  x */
+	ROM_LOAD( "263-v2d.v2", 0x400000, 0x400000, CRC(94217b1e) SHA1(c468a192e2ec0952a20cfd9e391cf6c12346efb3) ) /* TC5332204  32Mbit  x */
+	ROM_LOAD( "263-v3d.v3", 0x800000, 0x400000, CRC(7616fcec) SHA1(83006094379d0373b967603dcaa1cec69c2f746f) ) /* TC5332204  32Mbit  x */
+	ROM_LOAD( "263-v4d.v4", 0xc00000, 0x400000, CRC(7b0b92a1) SHA1(c14320c4652de16ff2535f8743ce0e71ba135e75) ) /* TC5332204  32Mbit  x */
+
+	ROM_REGION( 0x3000000, "cslot1:sprites", 0 )
+	ROM_LOAD16_BYTE( "263-c1d.c1", 0x0000000, 0x800000, CRC(a75ffcde) SHA1(97f405a95a56615ae49f79e1a69f98cc2f2434ef) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "263-c2d.c2", 0x0000001, 0x800000, CRC(5ab0d12b) SHA1(8a3d95dd2e9cc1b6dcf6a957fed43ee390248307) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "263-c3d.c3", 0x1000000, 0x800000, CRC(61af560c) SHA1(aa7bc45e03a6bbd18eb56d118d4932102ccb196a) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "263-c4d.c4", 0x1000001, 0x800000, CRC(f2c544fd) SHA1(179b064f81b49f5808d7a7a5bce28e95b09e5abe) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "263-c5d.c5", 0x2000000, 0x800000, CRC(84c66c44) SHA1(9273f44bf11891aa04ddd2cbb6442d084c2a2e04) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "263-c6d.c6", 0x2000001, 0x800000, CRC(5ed018ab) SHA1(e78501fa8a80960093a4d54ce952681a98300148) ) /* TC5364205  64Mbit  x */
+ROM_END
+
+
+ROM_START( mslugxc )  // 250
+	ROM_REGION( 0x500000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
+	ROM_LOAD16_WORD_SWAP( "250-p1h.p1", 0x000000, 0x100000, CRC(0a570b39) SHA1(3e332847c931c532c2e85ff853fd84529baf6be9) ) /* TC538200  8Mbit  27c800 */
+	ROM_LOAD16_WORD_SWAP( "250-p2.ep1", 0x100000, 0x400000, CRC(1fda2e12) SHA1(18aaa7a3ba8da99f78c430e9be69ccde04bc04d9) ) /* TC5332205  32Mbit  27c322 */
+
+	NEO_SFIX_128K( "250-s1.s1", CRC(fb6f441d) SHA1(2cc392ecde5d5afb28ddbaa1030552b48571dcfb) ) /* TC531000  1Mbit  27c1000 */
+
+	NEO_BIOS_AUDIO_128K( "250-m1.m1", CRC(fd42a842) SHA1(55769bad4860f64ef53a333e0da9e073db483d6a) ) /* TC531001  1Mbit  27c010 */
+
+	ROM_REGION( 0xa00000, "cslot1:ymsnd", 0 )
+	ROM_LOAD( "250-v1.v1", 0x000000, 0x400000, CRC(c79ede73) SHA1(ebfcc67204ff9677cf7972fd5b6b7faabf07280c) ) /* TC5332204  32Mbit  x */
+	ROM_LOAD( "250-v2.v2", 0x400000, 0x400000, CRC(ea9aabe1) SHA1(526c42ca9a388f7435569400e2f132e2724c71ff) ) /* TC5332204  32Mbit  x */
+	ROM_LOAD( "250-v3.v3", 0x800000, 0x200000, CRC(2ca65102) SHA1(45979d1edb1fc774a415d9386f98d7cb252a2043) ) /* TC5316200  16Mbit  27c160 */
+
+	ROM_REGION( 0x3000000, "cslot1:sprites", 0 )
+	ROM_LOAD16_BYTE( "250-c1.c1", 0x0000000, 0x800000, CRC(09a52c6f) SHA1(c3e8a8ccdac0f8bddc4c3413277626532405fae2) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "250-c2.c2", 0x0000001, 0x800000, CRC(31679821) SHA1(554f600a3aa09c16c13c625299b087a79d0d15c5) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "250-c3.c3", 0x1000000, 0x800000, CRC(fd602019) SHA1(c56646c62387bc1439d46610258c755beb8d7dd8) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "250-c4.c4", 0x1000001, 0x800000, CRC(31354513) SHA1(31be8ea2498001f68ce4b06b8b90acbf2dcab6af) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "250-c5.c5", 0x2000000, 0x800000, CRC(a4b56124) SHA1(d41069856df990a1a99d39fb263c8303389d5475) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "250-c6.c6", 0x2000001, 0x800000, CRC(83e3e69d) SHA1(39be66287696829d243fb71b3fb8b7dc2bc3298f) ) /* TC5364205  64Mbit  x */
+ROM_END
+
+
 /*************************************
  *
  *  Title catalog
@@ -11950,6 +12037,16 @@ GAME( 2004, sbp,        neogeo,   sbp,       neogeo,    mvs_led_state, empty_ini
 
 // NG:DEV.TEAM
 GAME( 2005, lasthope,   neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "NG:DEV.TEAM", "Last Hope (bootleg AES to MVS conversion, no coin support)", MACHINE_SUPPORTS_SAVE ) // wasn't actually released on MVS but bootleg carts have been sold, this doesn't accept coins, runs like a console game
+
+
+// Conversions
+
+GAME( 2019, mslug3c,    neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "SNK", "Metal Slug 3 (NGH-2560) (PROGBK1/CHA512Y Conversion)", MACHINE_SUPPORTS_SAVE )
+GAME( 2019, mslug4c,    neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Mega / Playmore", "Metal Slug 4 (NGM-2630) (PROGBK1/CHA512Y Conversion) (PROGBK1/CHA512Y Conversion)", MACHINE_SUPPORTS_SAVE )
+GAME( 2019, mslugxc,    neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "SNK", "Metal Slug X - Super Vehicle-001 (NGM-2500 ~ NGH-2500) (PROGBK1 Conversion)", MACHINE_SUPPORTS_SAVE )
+
+
+
 // Last Hope Pink Bullets (c)2008 - MVS/AES
 // Fast Striker (c)2010 - MVS/AES
 // Fast Striker 1.5 (c)2010 - MVS/AES
