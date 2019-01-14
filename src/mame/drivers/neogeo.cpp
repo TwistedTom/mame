@@ -11331,6 +11331,60 @@ ROM_START( mslugxc )  // 250
 ROM_END
 
 
+ROM_START( mslug5c )  // 268
+	ROM_REGION( 0x500000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
+	ROM_LOAD16_WORD_SWAP( "268-p1d.p1", 0x000000, 0x100000, CRC(ca50afdf) SHA1(e3780b77f20d139a0dcaa2ded2c6ee323b8b4279) ) /* TC538200  8Mbit  27c800 */
+	ROM_LOAD16_WORD_SWAP( "268-p2d.p2", 0x100000, 0x400000, CRC(768ee64a) SHA1(76a65a69aee749758a2101aabdd44f3404838b54) ) /* TC5332205  32Mbit  27c322 */
+	
+	NEO_SFIX_128K( "268-s1d.s1", CRC(64952683) SHA1(88ec728c2fe18a11fdd218bed5d73bb3affe2ec1) ) /* TC531000  1Mbit  27c1000 */
+	
+	NEO_BIOS_AUDIO_512K( "268-m1d.m1", CRC(39f3cbba) SHA1(56f9ba6a1ecfc28733b7b88c9796415cba0461f2) ) /* TC534000  4Mbit  27c040 */
+
+	ROM_REGION( 0x1000000, "cslot1:ymsnd", 0 )
+	ROM_LOAD( "268-v1d.v1", 0x000000, 0x400000, CRC(f61daa9e) SHA1(c9a64c48a37d9fcbd83f34580f44330aab0a0601) ) /* TC5332204  32Mbit  x */
+	ROM_LOAD( "268-v2d.v2", 0x400000, 0x400000, CRC(eeb7c926) SHA1(4d71f59948bdc5ed2e6daf101f16fd979e1ab193) ) /* TC5332204  32Mbit  x */
+	ROM_LOAD( "268-v3d.v3", 0x800000, 0x400000, CRC(02fd519e) SHA1(6fbda5bf8dbf52bc110aba7b9d20b24bdc2fe0d7) ) /* TC5332204  32Mbit  x */
+	ROM_LOAD( "268-v4d.v4", 0xc00000, 0x400000, CRC(d7c67794) SHA1(345dcbf76b25b2fbd10bcaf08ee395da0a52c5ce) ) /* TC5332204  32Mbit  x */
+
+	ROM_REGION( 0x4000000, "cslot1:sprites", 0 )
+	ROM_LOAD16_BYTE( "268-c1d.c1", 0x0000000, 0x800000, CRC(e8239365) SHA1(e0a75902a783110049730b66ad3cbccdd804bf62) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "268-c2d.c2", 0x0000001, 0x800000, CRC(89b21d4c) SHA1(862ac31ce9570529b33e6f58ada0ac867a442679) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "268-c3d.c3", 0x1000000, 0x800000, CRC(3cda13a0) SHA1(5d029c92688384eafd65ad711a2954d0b86a3163) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "268-c4d.c4", 0x1000001, 0x800000, CRC(9c00160d) SHA1(c612102f9cd288bba4c245b5855d795e4362b217) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "268-c5d.c5", 0x2000000, 0x800000, CRC(38754256) SHA1(744d91d041998ca27ee2781188746797c65377bd) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "268-c6d.c6", 0x2000001, 0x800000, CRC(59d33e9c) SHA1(ed7f5c7db4c35ec5a7db0ad5436110b3fe80b89a) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "268-c7d.c7", 0x3000000, 0x800000, CRC(c9f8c357) SHA1(7064224afa887f57245f5479b0b46228539a131b) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "268-c8d.c8", 0x3000001, 0x800000, CRC(fafc3eb9) SHA1(f4f73194cc7fd151be3ca2561f993b5be7628369) ) /* TC5364205  64Mbit  x */
+ROM_END
+
+
+ROM_START( matrimc )  // 266
+	ROM_REGION( 0x500000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
+	ROM_LOAD16_WORD_SWAP( "266-p1d.p1", 0x000000, 0x100000, CRC(24f917cd) SHA1(01a10f28b7744cac2f876d72ae106b562b46f083) ) /* TC538200  8Mbit  27c800 */
+	ROM_LOAD16_WORD_SWAP( "266-p2d.p2", 0x100000, 0x400000, CRC(b0132cef) SHA1(3780db1b8947a8371a46b67ca1a14a12bf97986b) ) /* TC5332205  32Mbit  27c322 */
+	
+	NEO_SFIX_128K( "266-s1d.s1", CRC(aff2a3be) SHA1(57aba048573eacf8fbdd228f04a7f30da64cebe5) ) /* TC531000  1Mbit  27c1000 */
+	
+	NEO_BIOS_AUDIO_128K( "266-m1d.m1", CRC(d2f3742d) SHA1(dd42f8a301f07e079fbc2bfd23e788baa03ca72d) ) /* TC531001  1Mbit  27c010 */
+
+	ROM_REGION( 0x1000000, "cslot1:ymsnd", 0 )
+	ROM_LOAD( "266-v1d.v1", 0x000000, 0x400000, CRC(435f33cf) SHA1(8d7e4f416abcf3290ecc4ac93d856855793ca7f2) ) /* TC5332204  32Mbit  x */
+	ROM_LOAD( "266-v2d.v2", 0x400000, 0x400000, CRC(945f8831) SHA1(6ac9bd41e0bb33601c82ebeb2aa5b1b8b91fada1) ) /* TC5332204  32Mbit  x */
+	ROM_LOAD( "266-v3d.v3", 0x800000, 0x400000, CRC(e8362fcc) SHA1(42d558fd80cabe22a1c09a1fa75741afbcf46b7c) ) /* TC5332204  32Mbit  x */
+	ROM_LOAD( "266-v4d.v4", 0xc00000, 0x400000, CRC(393c9a62) SHA1(0eaee0007557e59e64edcdbca229e6f776de9aef) ) /* TC5332204  32Mbit  x */
+
+	ROM_REGION( 0x4000000, "cslot1:sprites", 0 )
+	ROM_LOAD16_BYTE( "266-c1d.c1", 0x0000000, 0x800000, CRC(0ab54c54) SHA1(31bca460462b8545b3e5264804987ab951e9b202) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "266-c2d.c2", 0x0000001, 0x800000, CRC(b834dd89) SHA1(579470839a8d23b2d22cf727d2b43c6c3c113e1f) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "266-c3d.c3", 0x1000000, 0x800000, CRC(f31d68d4) SHA1(a6b8aaf11d25f871b52e9626fe0e4ae0683c3c52) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "266-c4d.c4", 0x1000001, 0x800000, CRC(58cfb6e9) SHA1(106875db996ec29b0254b34f9d935c761cde20c4) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "266-c5d.c5", 0x2000000, 0x800000, CRC(f3c0e3fd) SHA1(3a2f14517617fb98a202ceec88d52891e1438c8e) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "266-c6d.c6", 0x2000001, 0x800000, CRC(b53c8dcf) SHA1(9f4b0bac92262e8c1c1055a70f13c7c326367f73) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "266-c7d.c7", 0x3000000, 0x800000, CRC(3c1fb02a) SHA1(43e170e6d48c01d8c323f9309f97e6038bab20d7) ) /* TC5364205  64Mbit  x */
+	ROM_LOAD16_BYTE( "266-c8d.c8", 0x3000001, 0x800000, CRC(5ee31f80) SHA1(3cdd8037f5004df92f4c19ba0746c8bccb4e2473) ) /* TC5364205  64Mbit  x */
+ROM_END
+
+
 /*************************************
  *
  *  Title catalog
@@ -12044,6 +12098,8 @@ GAME( 2005, lasthope,   neogeo,   neobase,   neogeo,    mvs_led_state, empty_ini
 GAME( 2019, mslug3c,    neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "SNK", "Metal Slug 3 (NGH-2560) (PROGBK1/CHA512Y Conversion)", MACHINE_SUPPORTS_SAVE )
 GAME( 2019, mslug4c,    neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Mega / Playmore", "Metal Slug 4 (NGM-2630) (PROGBK1/CHA512Y Conversion) (PROGBK1/CHA512Y Conversion)", MACHINE_SUPPORTS_SAVE )
 GAME( 2019, mslugxc,    neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "SNK", "Metal Slug X - Super Vehicle-001 (NGM-2500 ~ NGH-2500) (PROGBK1 Conversion)", MACHINE_SUPPORTS_SAVE )
+GAME( 2019, mslug5c,    neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "SNK Playmore", "Metal Slug 5 (NGM-2680) (PROGBK1 Conversion)", MACHINE_SUPPORTS_SAVE )
+GAME( 2019, matrimc,    neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Noise Factory / Atlus", "Matrimelee / Shin Gouketsuji Ichizoku Toukon (NGM-2660 ~ NGH-2660) (PROGBK1 Conversion)", MACHINE_SUPPORTS_SAVE )
 
 
 
