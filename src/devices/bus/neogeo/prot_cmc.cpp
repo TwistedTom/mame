@@ -609,6 +609,19 @@ void cmc_prot_device::sfix_decrypt(uint8_t* rom, uint32_t rom_size, uint8_t* fix
 
 	for (int i = 0; i < tx_size; i++)
 		dst[i] = src[(i & ~0x1f) + ((i & 7) << 2) + ((~i & 8) >> 2) + ((i & 0x10) >> 4)];
+	
+	// dump full s rom, same as s1grab
+	// FILE *fp;
+	// const char *gamename = machine().system().name;
+	// char filename[256];
+	// sprintf(filename, "%s_s.dump", gamename);
+
+	// fp=fopen(filename, "w+b");
+	// if (fp)
+	// {
+		// fwrite(dst, tx_size, 1, fp);
+		// fclose(fp);
+	// }
 }
 
 
@@ -723,6 +736,7 @@ void cmc_prot_device::cmc50_m1_decrypt(uint8_t* romcrypt, uint32_t romcrypt_size
 	memcpy(rom2,rom, 0x10000);
 	memcpy(rom2 + 0x10000, rom, 0x80000);
 
+	// change to 1, dump m rom, same as m1crypt
 	#if 0
 	{
 		FILE *fp;
