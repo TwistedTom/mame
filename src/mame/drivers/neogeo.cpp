@@ -2674,6 +2674,16 @@ void mvs_led_state::svc(machine_config &config)
 	cartslot_fixed(config, "pvc_svc");
 }
 
+
+
+void mvs_led_state::svcc(machine_config &config)
+{
+	mv1_fixed(config);
+	cartslot_fixed(config, "svcc");
+}
+
+
+
 void mvs_led_state::svcboot(machine_config &config)
 {
 	mv1_fixed(config);
