@@ -171,6 +171,19 @@ void pvc_prot_device::svc_px_decrypt(uint8_t* rom, uint32_t size)
 	memcpy(&buf[0], rom, rom_size );
 	memcpy(&rom[0x100000], &buf[0x700000], 0x100000);
 	memcpy(&rom[0x200000], &buf[0x100000], 0x600000);
+	
+	// dump unscrambled P roms
+	// FILE *fp;
+	// const char *gamename = machine().system().name;
+	// char filename[256];
+	// sprintf(filename, "%s_p.dump", gamename);
+
+	// fp=fopen(filename, "w+b");
+	// if (fp)
+	// {
+		// fwrite(rom, size, 1, fp);
+		// fclose(fp);
+	// }
 }
 
 

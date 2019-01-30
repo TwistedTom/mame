@@ -171,6 +171,9 @@ static const neogeo_slot slot_list[] =
 	{ NEOGEO_KOF2K2P, "k2k2_kf2k2p" },
 	{ NEOGEO_MSLUG5, "pvc_mslug5" },
 	{ NEOGEO_SVC, "pvc_svc" },
+	
+	{ NEOGEO_SVCC, "svcc" },
+	
 	{ NEOGEO_KOF2K3, "pvc_kf2k3" },
 	{ NEOGEO_KOF2K3H, "pvc_kf2k3h" },
 	{ NEOGEO_CTHD2K3, "boot_cthd2k3" },
