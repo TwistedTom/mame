@@ -2641,15 +2641,6 @@ MACHINE_CONFIG_START(mvs_led_state::svc)
 	NEOGEO_CONFIG_ONE_FIXED_CARTSLOT("pvc_svc")
 MACHINE_CONFIG_END
 
-
-
-MACHINE_CONFIG_START(mvs_led_state::svcc)
-	mv1_fixed(config);
-	NEOGEO_CONFIG_ONE_FIXED_CARTSLOT("svcc")
-MACHINE_CONFIG_END
-
-
-
 MACHINE_CONFIG_START(mvs_led_state::svcboot)
 	mv1_fixed(config);
 	NEOGEO_CONFIG_ONE_FIXED_CARTSLOT("boot_svcboot")
