@@ -76,10 +76,6 @@ void neogeo_cart(device_slot_interface &device)
 	device.option_add_internal("pvc_svc",    NEOGEO_PVC_SVC_CART);
 	device.option_add_internal("pvc_kf2k3",  NEOGEO_PVC_KOF2003_CART);
 	device.option_add_internal("pvc_kf2k3h", NEOGEO_PVC_KOF2003H_CART);
-	
-	device.option_add_internal("svcc", SVCC_CART);
-	
-	
 
 	// Bootleg logic for CTHD2K3 and clones
 	device.option_add_internal("boot_cthd2k3",  NEOGEO_CTHD2K3_CART);

@@ -76,32 +76,6 @@ public:
 DECLARE_DEVICE_TYPE(NEOGEO_PVC_SVC_CART, neogeo_pvc_svc_cart_device)
 
 
-
-
-
-
-
-
-
-class svcc_cart_device : public neogeo_pvc_cart_device
-{
-public:
-	svcc_cart_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
-	virtual void decrypt_all(DECRYPT_ALL_PARAMS) override;
-	virtual int get_fixed_bank_type() override { return 2; }
-};
-
-DECLARE_DEVICE_TYPE(SVCC_CART, svcc_cart_device)
-
-
-
-
-
-
-
-
-
-
 /*************************************************
  kof2003
 **************************************************/

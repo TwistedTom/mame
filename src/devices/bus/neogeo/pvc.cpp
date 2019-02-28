@@ -97,35 +97,6 @@ void neogeo_pvc_svc_cart_device::decrypt_all(DECRYPT_ALL_PARAMS)
 	m_cmc_prot->sfix_decrypt(spr_region, spr_region_size, fix_region, fix_region_size);
 }
 
-
-
-
-
-
-DEFINE_DEVICE_TYPE(SVCC_CART, svcc_cart_device, "neocart_svcC", "SVCC Cart")
-
-svcc_cart_device::svcc_cart_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock) :
-	neogeo_pvc_cart_device(mconfig, SVCC_CART, tag, owner, clock)
-{
-}
-
-void svcc_cart_device::decrypt_all(DECRYPT_ALL_PARAMS)
-{
-	// m_pvc_prot->svc_px_decrypt(cpuregion, cpuregion_size);
-	// m_pcm2_prot->swap(ym_region, ym_region_size, 3);
-	// m_cmc_prot->cmc50_m1_decrypt(audiocrypt_region, audiocrypt_region_size, audiocpu_region, audio_region_size);
-	// m_cmc_prot->cmc50_gfx_decrypt(spr_region, spr_region_size, SVC_GFX_KEY);
-	// m_cmc_prot->sfix_decrypt(spr_region, spr_region_size, fix_region, fix_region_size);
-}
-
-
-
-
-
-
-
-
-
 /*************************************************
  kof2003
 **************************************************/
