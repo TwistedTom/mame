@@ -167,6 +167,7 @@ WRITE8_MEMBER(spectrum_expansion_slot_device::mreq_w)
 #include "uslot.h"
 #include "usource.h"
 #include "uspeech.h"
+#include "mface1.h"
 
 
 void spectrum_expansion_devices(device_slot_interface &device)
@@ -181,6 +182,7 @@ void spectrum_expansion_devices(device_slot_interface &device)
 	device.option_add("uslot", SPECTRUM_USLOT);
 	device.option_add("usource", SPECTRUM_USOURCE);
 	device.option_add("uspeech", SPECTRUM_USPEECH);
+  device.option_add("mface1", SPECTRUM_MFACE1);
 }
 
 void spec128_expansion_devices(device_slot_interface &device)
