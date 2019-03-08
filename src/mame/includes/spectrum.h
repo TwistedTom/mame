@@ -109,8 +109,8 @@ public:
 	void init_spectrum();
 	void init_plus2();
 	void init_plus3();
-  
-  DECLARE_INPUT_CHANGED_MEMBER(nmi_press);
+	
+	DECLARE_INPUT_CHANGED_MEMBER(nmi_press);
 
 protected:
 	enum

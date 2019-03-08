@@ -700,8 +700,7 @@ void spectrum_state::spectrum_common(machine_config &config)
 	SPEAKER_SOUND(config, "speaker").add_route(ALL_OUTPUTS, "mono", 0.50);
 
 	/* expansion port */
-	////SPECTRUM_EXPANSION_SLOT(config, m_exp, spectrum_expansion_devices, "kempjoy");
-  SPECTRUM_EXPANSION_SLOT(config, m_exp, spectrum_expansion_devices, "mface1");
+	SPECTRUM_EXPANSION_SLOT(config, m_exp, spectrum_expansion_devices, "kempjoy");
 	m_exp->set_io_space(m_maincpu, AS_IO);
 	m_exp->irq_handler().set_inputline(m_maincpu, INPUT_LINE_IRQ0);
 	m_exp->nmi_handler().set_inputline(m_maincpu, INPUT_LINE_NMI);

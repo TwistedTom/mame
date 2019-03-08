@@ -3280,7 +3280,7 @@ if (BUSES["SPECTRUM"]~=null) then
 		MAME_DIR .. "src/devices/bus/spectrum/usource.h",
 		MAME_DIR .. "src/devices/bus/spectrum/uspeech.cpp",
 		MAME_DIR .. "src/devices/bus/spectrum/uspeech.h",
-    MAME_DIR .. "src/devices/bus/spectrum/mface1.cpp",
+		MAME_DIR .. "src/devices/bus/spectrum/mface1.cpp",
 		MAME_DIR .. "src/devices/bus/spectrum/mface1.h",
 	}
 end
