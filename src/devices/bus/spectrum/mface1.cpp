@@ -195,7 +195,7 @@ void spectrum_mface1_device::device_reset()
 READ8_MEMBER(spectrum_mface1_device::page_in_r)
 {
 	mf1_active = 1;
-	return 0;          // should be floating bus output, no support in mame yet?
+	return 0;          // should be floating bus output?
 }
 
 READ8_MEMBER(spectrum_mface1_device::page_out_r)

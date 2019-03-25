@@ -424,9 +424,27 @@ READ8_MEMBER(spectrum_state::spectrum_port_fe_r)
 
 READ8_MEMBER(spectrum_state::spectrum_port_ula_r)
 {
+	/*
+	*  a little bit of the "floating bus" behaviour,
+	*  (cpu can unintentionally read the video bus)
+	*  
+	*  fixes a few games that rely on it:
+	*    Arkanoid
+	*    Cobra
+	*    Sidewize
+	*    Short Circuit
+	*    ... probably others ...
+	*/
+	
+	uint8_t data = 0xff;
+	int hpos = m_screen->hpos();
 	int vpos = m_screen->vpos();
-
-	return vpos<193 ? m_video_ram[(vpos&0xf8)<<2]:0xff;
+	
+	// peak into attribute ram when non-border/flyback
+	if ((hpos >= 48 && hpos < 304) && (vpos >= 48 && vpos < 240))
+		data = m_video_ram[0x1800 + (((vpos-48)/8)*32) + ((hpos-48)/8)];
+	
+	return data;
 }
 
 /* Memory Maps */
