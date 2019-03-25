@@ -92,11 +92,11 @@ void electra_state::video_start()
 {
 }
 
-void electra_state::electra(machine_config &config)
-{
+MACHINE_CONFIG_START(electra_state::electra)
+
 	/* basic machine hardware */
-	NETLIST_CPU(config, m_maincpu, NETLIST_CLOCK);
-	m_maincpu->set_constructor(netlist_electra);
+	MCFG_DEVICE_ADD("maincpu", NETLIST_CPU, NETLIST_CLOCK)
+	MCFG_NETLIST_SETUP(electra)
 
 	/* video hardware */
 	SCREEN(config, "screen", SCREEN_TYPE_RASTER);
@@ -106,7 +106,7 @@ void electra_state::electra(machine_config &config)
 	m_video->set_vert_params(V_TOTAL-22,V_TOTAL-19,V_TOTAL-12,V_TOTAL);
 	m_video->set_fieldcount(1);
 	m_video->set_threshold(0.30);
-}
+MACHINE_CONFIG_END
 
 
 /***************************************************************************

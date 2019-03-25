@@ -2074,7 +2074,7 @@ void st_state::keyboard(machine_config &config)
 }
 
 //-------------------------------------------------
-//  machine_config( st )
+//  MACHINE_CONFIG( st )
 //-------------------------------------------------
 
 void st_state::st(machine_config &config)
@@ -2106,7 +2106,7 @@ void st_state::st(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( megast )
+//  MACHINE_CONFIG( megast )
 //-------------------------------------------------
 
 void megast_state::megast(machine_config &config)
@@ -2141,7 +2141,7 @@ void megast_state::megast(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( ste )
+//  MACHINE_CONFIG( ste )
 //-------------------------------------------------
 
 void ste_state::ste(machine_config &config)
@@ -2181,7 +2181,7 @@ void ste_state::ste(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( megaste )
+//  MACHINE_CONFIG( megaste )
 //-------------------------------------------------
 
 void megaste_state::megaste(machine_config &config)
@@ -2198,7 +2198,7 @@ void megaste_state::megaste(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( stbook )
+//  MACHINE_CONFIG( stbook )
 //-------------------------------------------------
 #if 0
 void stbook_state::stbook(machine_config &config)
@@ -2282,7 +2282,7 @@ void stbook_state::stbook(machine_config &config)
 #endif
 
 //-------------------------------------------------
-//  machine_config( tt030 )
+//  MACHINE_CONFIG( tt030 )
 //-------------------------------------------------
 
 void ste_state::tt030(machine_config &config)
@@ -2292,7 +2292,7 @@ void ste_state::tt030(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( falcon )
+//  MACHINE_CONFIG( falcon )
 //-------------------------------------------------
 
 void ste_state::falcon(machine_config &config)
@@ -2302,7 +2302,7 @@ void ste_state::falcon(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( falcon40 )
+//  MACHINE_CONFIG( falcon40 )
 //-------------------------------------------------
 
 void ste_state::falcon40(machine_config &config)

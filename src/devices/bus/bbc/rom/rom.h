@@ -31,7 +31,7 @@ protected:
 	virtual void device_start() override;
 
 	// device_bbc_rom_interface overrides
-	virtual uint8_t read(offs_t offset) override;
+	virtual DECLARE_READ8_MEMBER(read) override;
 };
 
 // device type definition

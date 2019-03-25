@@ -47,7 +47,7 @@ public:
 	u16 m_inp_mux;                  // multiplexed inputs mask
 
 	u8 read_inputs(int columns);
-	virtual DECLARE_INPUT_CHANGED_MEMBER(reset_button);
+	DECLARE_INPUT_CHANGED_MEMBER(reset_button);
 
 	// display common
 	int m_display_wait;             // led/lamp off-delay in milliseconds (default 33ms)
@@ -203,11 +203,9 @@ INPUT_CHANGED_MEMBER(hh_melps4_state::reset_button)
 
 /***************************************************************************
 
-  Minidrivers (subclass, I/O, Inputs, Machine Config, ROM Defs)
+  Minidrivers (subclass, I/O, Inputs, Machine Config)
 
 ***************************************************************************/
-
-namespace {
 
 /***************************************************************************
 
@@ -221,8 +219,8 @@ namespace {
 class cfrogger_state : public hh_melps4_state
 {
 public:
-	cfrogger_state(const machine_config &mconfig, device_type type, const char *tag) :
-		hh_melps4_state(mconfig, type, tag)
+	cfrogger_state(const machine_config &mconfig, device_type type, const char *tag)
+		: hh_melps4_state(mconfig, type, tag)
 	{ }
 
 	void prepare_display();
@@ -292,7 +290,7 @@ static INPUT_PORTS_START( cfrogger )
 	PORT_CONFSETTING(    0x00, "1" )
 	PORT_CONFSETTING(    0x08, "2" )
 
-	PORT_START("RESET")
+	PORT_START("IN.3") // fake
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_START ) PORT_CHANGED_MEMBER(DEVICE_SELF, hh_melps4_state, reset_button, nullptr)
 INPUT_PORTS_END
 
@@ -311,24 +309,13 @@ void cfrogger_state::cfrogger(machine_config &config)
 	screen_device &screen(SCREEN(config, "screen", "svg"));
 	screen.set_refresh_hz(50);
 	screen.set_size(500, 1080);
-	screen.set_visarea_full();
-
+	screen.set_visarea(0, 500-1, 0, 1080-1);
 	TIMER(config, "display_decay").configure_periodic(FUNC(hh_melps4_state::display_decay_tick), attotime::from_msec(1));
 
 	/* sound hardware */
 	SPEAKER(config, "mono").front_center();
 	SPEAKER_SOUND(config, m_speaker).add_route(ALL_OUTPUTS, "mono", 0.25);
 }
-
-// roms
-
-ROM_START( cfrogger )
-	ROM_REGION( 0x1000, "maincpu", 0 )
-	ROM_LOAD( "m58846-701p", 0x0000, 0x1000, CRC(ba52a242) SHA1(7fa53b617f4bb54be32eb209e9b88131e11cb518) )
-
-	ROM_REGION( 786255, "svg", 0)
-	ROM_LOAD( "cfrogger.svg", 0, 786255, CRC(d8d6e2b6) SHA1(bc9a0260b211ed07021dfe1cc19a993569f4c544) )
-ROM_END
 
 
 
@@ -346,8 +333,8 @@ ROM_END
 class gjungler_state : public hh_melps4_state
 {
 public:
-	gjungler_state(const machine_config &mconfig, device_type type, const char *tag) :
-		hh_melps4_state(mconfig, type, tag)
+	gjungler_state(const machine_config &mconfig, device_type type, const char *tag)
+		: hh_melps4_state(mconfig, type, tag)
 	{ }
 
 	void prepare_display();
@@ -417,7 +404,7 @@ static INPUT_PORTS_START( gjungler )
 	PORT_CONFSETTING(    0x00, "A" )
 	PORT_CONFSETTING(    0x08, "B" )
 
-	PORT_START("RESET")
+	PORT_START("IN.3") // fake
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_START ) PORT_CHANGED_MEMBER(DEVICE_SELF, hh_melps4_state, reset_button, nullptr)
 INPUT_PORTS_END
 
@@ -437,8 +424,7 @@ void gjungler_state::gjungler(machine_config &config)
 	screen_device &screen(SCREEN(config, "screen", "svg"));
 	screen.set_refresh_hz(50);
 	screen.set_size(481, 1080);
-	screen.set_visarea_full();
-
+	screen.set_visarea(0, 481-1, 0, 1080-1);
 	TIMER(config, "display_decay").configure_periodic(FUNC(hh_melps4_state::display_decay_tick), attotime::from_msec(1));
 
 	/* sound hardware */
@@ -446,7 +432,24 @@ void gjungler_state::gjungler(machine_config &config)
 	SPEAKER_SOUND(config, m_speaker).add_route(ALL_OUTPUTS, "mono", 0.25);
 }
 
-// roms
+
+
+
+
+/***************************************************************************
+
+  Game driver(s)
+
+***************************************************************************/
+
+ROM_START( cfrogger )
+	ROM_REGION( 0x1000, "maincpu", 0 )
+	ROM_LOAD( "m58846-701p", 0x0000, 0x1000, CRC(ba52a242) SHA1(7fa53b617f4bb54be32eb209e9b88131e11cb518) )
+
+	ROM_REGION( 786255, "svg", 0)
+	ROM_LOAD( "cfrogger.svg", 0, 786255, CRC(d8d6e2b6) SHA1(bc9a0260b211ed07021dfe1cc19a993569f4c544) )
+ROM_END
+
 
 ROM_START( gjungler )
 	ROM_REGION( 0x1000, "maincpu", 0 )
@@ -457,14 +460,6 @@ ROM_START( gjungler )
 ROM_END
 
 
-
-} // anonymous namespace
-
-/***************************************************************************
-
-  Game driver(s)
-
-***************************************************************************/
 
 //    YEAR  NAME      PARENT CMP MACHINE   INPUT     CLASS           INIT        COMPANY, FULLNAME, FLAGS
 CONS( 1981, cfrogger, 0,      0, cfrogger, cfrogger, cfrogger_state, empty_init, "Coleco", "Frogger (Coleco)", MACHINE_SUPPORTS_SAVE )

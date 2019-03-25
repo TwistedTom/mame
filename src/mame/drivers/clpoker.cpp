@@ -253,12 +253,11 @@ static GFXDECODE_START( gfx_clpoker )
 GFXDECODE_END
 
 
-void clpoker_state::clpoker(machine_config &config)
-{
+MACHINE_CONFIG_START(clpoker_state::clpoker)
 	/* basic machine hardware */
-	Z80(config, m_maincpu, XTAL(12'000'000) / 3); // Z0840004PSC, divider not verified
-	m_maincpu->set_addrmap(AS_PROGRAM, &clpoker_state::prg_map);
-	m_maincpu->set_addrmap(AS_IO, &clpoker_state::io_map);
+	MCFG_DEVICE_ADD("maincpu", Z80, XTAL(12'000'000) / 3) // Z0840004PSC, divider not verified
+	MCFG_DEVICE_PROGRAM_MAP(prg_map)
+	MCFG_DEVICE_IO_MAP(io_map)
 
 	NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_0); // HY6116ALP-12
 
@@ -274,16 +273,16 @@ void clpoker_state::clpoker(machine_config &config)
 
 	TICKET_DISPENSER(config, m_hopper, attotime::from_msec(60), TICKET_MOTOR_ACTIVE_HIGH, TICKET_STATUS_ACTIVE_LOW);
 
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
-	screen.set_refresh_hz(60); // wrong
-	screen.set_vblank_time(ATTOSECONDS_IN_USEC(0));  // wrong
-	screen.set_size(64*8, 32*8); // wrong
-	screen.set_visarea_full(); // probably right
-	screen.set_screen_update(FUNC(clpoker_state::screen_update));
-	screen.set_palette("palette");
-	screen.screen_vblank().set(FUNC(clpoker_state::vblank_w));
+	MCFG_SCREEN_ADD("screen", RASTER)
+	MCFG_SCREEN_REFRESH_RATE(60) // wrong
+	MCFG_SCREEN_VBLANK_TIME(ATTOSECONDS_IN_USEC(0))  // wrong
+	MCFG_SCREEN_SIZE(64*8, 32*8) // wrong
+	MCFG_SCREEN_VISIBLE_AREA(0*8, 64*8-1, 0*8, 32*8-1) // probably right
+	MCFG_SCREEN_UPDATE_DRIVER(clpoker_state, screen_update)
+	MCFG_SCREEN_PALETTE("palette")
+	MCFG_SCREEN_VBLANK_CALLBACK(WRITELINE(*this, clpoker_state, vblank_w))
 
-	PALETTE(config, "palette").set_entries(0x100);
+	MCFG_PALETTE_ADD("palette", 0x100)
 	ramdac_device &ramdac(RAMDAC(config, "ramdac", 0, "palette")); // HM86171
 	ramdac.set_addrmap(0, &clpoker_state::ramdac_map);
 
@@ -295,7 +294,7 @@ void clpoker_state::clpoker(machine_config &config)
 	aysnd.port_a_read_callback().set_ioport("DSW1");
 	aysnd.port_b_read_callback().set_ioport("DSW2");
 	aysnd.add_route(ALL_OUTPUTS, "mono", 0.30);
-}
+MACHINE_CONFIG_END
 
 
 ROM_START( clpoker )

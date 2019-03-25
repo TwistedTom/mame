@@ -570,7 +570,7 @@ void ep64_state::machine_reset()
 //**************************************************************************
 
 //-------------------------------------------------
-//  machine_config( ep64 )
+//  MACHINE_CONFIG( ep64 )
 //-------------------------------------------------
 
 void ep64_state::ep64(machine_config &config)
@@ -639,7 +639,7 @@ void ep64_state::ep64(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( ep128 )
+//  MACHINE_CONFIG( ep128 )
 //-------------------------------------------------
 
 void ep64_state::ep128(machine_config &config)

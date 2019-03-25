@@ -126,7 +126,7 @@ const tiny_rom_entry *intv_ecs_device::device_rom_region() const
  Paged ROM handling
  -------------------------------------------------*/
 
-uint16_t intv_ecs_device::read_rom20(offs_t offset)
+READ16_MEMBER(intv_ecs_device::read_rom20)
 {
 	if (m_bank_base[2])
 		return INTV_ROM16_READ(offset + 0x2000);
@@ -134,7 +134,7 @@ uint16_t intv_ecs_device::read_rom20(offs_t offset)
 		return 0xffff;
 }
 
-uint16_t intv_ecs_device::read_rom70(offs_t offset)
+READ16_MEMBER(intv_ecs_device::read_rom70)
 {
 	if (m_bank_base[7])
 		return 0xffff;
@@ -142,21 +142,21 @@ uint16_t intv_ecs_device::read_rom70(offs_t offset)
 		return INTV_ROM16_READ(offset + 0x7000);
 }
 
-uint16_t intv_ecs_device::read_rome0(offs_t offset)
+READ16_MEMBER(intv_ecs_device::read_rome0)
 {
 	if (m_bank_base[14])
 		return INTV_ROM16_READ(offset + 0xe000);
 	else    // if WSMLB is loaded, it shall go here, otherwise 0xffff
-		return m_subslot->read_rome0(offset);
+		return m_subslot->read_rome0(space, offset, mem_mask);
 }
 
-uint16_t intv_ecs_device::read_romf0(offs_t offset)
+READ16_MEMBER(intv_ecs_device::read_romf0)
 {
 	// only WSMLB should come here with bank_base = 1
 	if (m_bank_base[15])
-		return m_subslot->read_romf0(offset + 0x1000);
+		return m_subslot->read_romf0(space, offset + 0x1000, mem_mask);
 	else
-		return m_subslot->read_romf0(offset);
+		return m_subslot->read_romf0(space, offset, mem_mask);
 }
 
 
@@ -164,40 +164,44 @@ uint16_t intv_ecs_device::read_romf0(offs_t offset)
  read_audio
  -------------------------------------------------*/
 
-uint16_t intv_ecs_device::read_ay(offs_t offset)
+READ16_MEMBER(intv_ecs_device::read_ay)
 {
-	return 0xff00 | m_snd->read(offset);
+	if (ACCESSING_BITS_0_7)
+		return m_snd->read(offset);
+	else
+		return 0xffff;
 }
 
 /*-------------------------------------------------
  write_audio
  -------------------------------------------------*/
 
-void intv_ecs_device::write_ay(offs_t offset, uint16_t data)
+WRITE16_MEMBER(intv_ecs_device::write_ay)
 {
-	return m_snd->write(offset, data & 0x00ff);
+	if (ACCESSING_BITS_0_7)
+		return m_snd->write(offset, data);
 }
 
 
-uint16_t intv_ecs_device::read_rom80(offs_t offset)
+READ16_MEMBER(intv_ecs_device::read_rom80)
 {
 	if (m_ram88_enabled && offset >= 0x800)
-		return m_subslot->read_ram(offset & 0x7ff);
+		return m_subslot->read_ram(space, offset & 0x7ff, mem_mask);
 	else
-		return m_subslot->read_rom80(offset);
+		return m_subslot->read_rom80(space, offset, mem_mask);
 }
 
 
-uint16_t intv_ecs_device::read_romd0(offs_t offset)
+READ16_MEMBER(intv_ecs_device::read_romd0)
 {
 	if (m_ramd0_enabled && offset < 0x800)
-		return m_subslot->read_ram(offset);
+		return m_subslot->read_ram(space, offset, mem_mask);
 	else
-		return m_subslot->read_romd0(offset);
+		return m_subslot->read_romd0(space, offset, mem_mask);
 }
 
 
-void intv_ecs_device::write_rom20(offs_t offset, uint16_t data)
+WRITE16_MEMBER(intv_ecs_device::write_rom20)
 {
 	if (offset == 0xfff)
 	{
@@ -208,7 +212,7 @@ void intv_ecs_device::write_rom20(offs_t offset, uint16_t data)
 	}
 }
 
-void intv_ecs_device::write_rom70(offs_t offset, uint16_t data)
+WRITE16_MEMBER(intv_ecs_device::write_rom70)
 {
 	if (offset == 0xfff)
 	{
@@ -219,7 +223,7 @@ void intv_ecs_device::write_rom70(offs_t offset, uint16_t data)
 	}
 }
 
-void intv_ecs_device::write_rome0(offs_t offset, uint16_t data)
+WRITE16_MEMBER(intv_ecs_device::write_rome0)
 {
 	if (offset == 0xfff)
 	{
@@ -230,7 +234,7 @@ void intv_ecs_device::write_rome0(offs_t offset, uint16_t data)
 	}
 }
 
-void intv_ecs_device::write_romf0(offs_t offset, uint16_t data)
+WRITE16_MEMBER(intv_ecs_device::write_romf0)
 {
 	if (offset == 0xfff)
 	{

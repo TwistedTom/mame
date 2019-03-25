@@ -471,12 +471,12 @@ WRITE8_MEMBER(qx10_state::memory_write_byte)
 
 WRITE8_MEMBER(qx10_state::mc146818_w)
 {
-	m_rtc->write(!offset, data);
+	m_rtc->write(space, !offset, data);
 }
 
 READ8_MEMBER(qx10_state::mc146818_r)
 {
-	return m_rtc->read(!offset);
+	return m_rtc->read(space, !offset);
 }
 
 WRITE_LINE_MEMBER(qx10_state::keyboard_irq)

@@ -592,7 +592,7 @@ void comx35_state::machine_reset()
 //**************************************************************************
 
 //-------------------------------------------------
-//  machine_config( pal )
+//  MACHINE_CONFIG( pal )
 //-------------------------------------------------
 
 void comx35_state::base(machine_config &config, const XTAL clock)

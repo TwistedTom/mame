@@ -133,7 +133,7 @@ WRITE_LINE_MEMBER( wangpc_mvc_device::vsync_w )
 }
 
 //-------------------------------------------------
-//  machine_config( wangpc_mvc )
+//  MACHINE_CONFIG_START( wangpc_mvc )
 //-------------------------------------------------
 
 void wangpc_mvc_device::device_add_mconfig(machine_config &config)

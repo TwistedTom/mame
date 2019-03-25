@@ -45,7 +45,7 @@ void bbc_mrme00_device::device_start()
 //  read
 //-------------------------------------------------
 
-uint8_t bbc_mrme00_device::read(offs_t offset)
+READ8_MEMBER(bbc_mrme00_device::read)
 {
 	if (offset < get_rom_size())
 		return get_rom_base()[offset & (get_rom_size() - 1)];
@@ -57,7 +57,7 @@ uint8_t bbc_mrme00_device::read(offs_t offset)
 //  write
 //-------------------------------------------------
 
-void bbc_mrme00_device::write(offs_t offset, uint8_t data)
+WRITE8_MEMBER(bbc_mrme00_device::write)
 {
 	get_ram_base()[offset & (get_ram_size() - 1)] = data;
 }

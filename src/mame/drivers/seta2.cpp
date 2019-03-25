@@ -196,6 +196,7 @@ void seta2_state::grdians_map(address_map &map)
 	map(0xc50000, 0xc5ffff).ram();                             // cleared
 	map(0xc60000, 0xc6003f).ram().w(FUNC(seta2_state::vregs_w)).share("vregs");  // Video Registers
 	map(0xe00010, 0xe0001f).w(FUNC(seta2_state::sound_bank_w)).umask16(0x00ff);       // Samples Banks
+	map(0xfffc00, 0xffffff).rw(m_tmp68301, FUNC(tmp68301_device::regs_r), FUNC(tmp68301_device::regs_w));  // TMP68301 Registers
 }
 
 /***************************************************************************
@@ -234,6 +235,7 @@ void seta2_state::gundamex_map(address_map &map)
 	map(0xc50000, 0xc5ffff).ram();                             // cleared
 	map(0xc60000, 0xc6003f).ram().w(FUNC(seta2_state::vregs_w)).share("vregs");  // Video Registers
 	map(0xe00010, 0xe0001f).w(FUNC(seta2_state::sound_bank_w)).umask16(0x00ff);       // Samples Banks
+	map(0xfffc00, 0xffffff).rw(m_tmp68301, FUNC(tmp68301_device::regs_r), FUNC(tmp68301_device::regs_w));  // TMP68301 Registers
 }
 
 
@@ -290,6 +292,7 @@ void seta2_state::mj4simai_map(address_map &map)
 	map(0xc00000, 0xc3ffff).ram().share("spriteram");   // Sprites
 	map(0xc40000, 0xc4ffff).ram().w(m_palette, FUNC(palette_device::write16)).share("palette");    // Palette
 	map(0xc60000, 0xc6003f).ram().w(FUNC(seta2_state::vregs_w)).share("vregs");  // Video Registers
+	map(0xfffc00, 0xffffff).rw(m_tmp68301, FUNC(tmp68301_device::regs_r), FUNC(tmp68301_device::regs_w));  // TMP68301 Registers
 }
 
 
@@ -313,6 +316,7 @@ void seta2_state::myangel_map(address_map &map)
 	map(0xc00000, 0xc3ffff).ram().share("spriteram");       // Sprites
 	map(0xc40000, 0xc4ffff).ram().w(m_palette, FUNC(palette_device::write16)).share("palette");    // Palette
 	map(0xc60000, 0xc6003f).ram().w(FUNC(seta2_state::vregs_w)).share("vregs");              // Video Registers
+	map(0xfffc00, 0xffffff).rw(m_tmp68301, FUNC(tmp68301_device::regs_r), FUNC(tmp68301_device::regs_w));      // TMP68301 Registers
 }
 
 
@@ -336,6 +340,7 @@ void seta2_state::myangel2_map(address_map &map)
 	map(0xd00000, 0xd3ffff).ram().share("spriteram");       // Sprites
 	map(0xd40000, 0xd4ffff).ram().w(m_palette, FUNC(palette_device::write16)).share("palette");    // Palette
 	map(0xd60000, 0xd6003f).ram().w(FUNC(seta2_state::vregs_w)).share("vregs");          // Video Registers
+	map(0xfffc00, 0xffffff).rw(m_tmp68301, FUNC(tmp68301_device::regs_r), FUNC(tmp68301_device::regs_w));      // TMP68301 Registers
 }
 
 
@@ -378,6 +383,7 @@ void seta2_state::pzlbowl_map(address_map &map)
 	map(0x840000, 0x84ffff).ram().w(m_palette, FUNC(palette_device::write16)).share("palette");    // Palette
 	map(0x860000, 0x86003f).ram().w(FUNC(seta2_state::vregs_w)).share("vregs");              // Video Registers
 	map(0x900000, 0x903fff).rw("x1snd", FUNC(x1_010_device::word_r), FUNC(x1_010_device::word_w));   // Sound
+	map(0xfffc00, 0xffffff).rw(m_tmp68301, FUNC(tmp68301_device::regs_r), FUNC(tmp68301_device::regs_w));      // TMP68301 Registers
 }
 
 
@@ -410,6 +416,7 @@ void seta2_state::penbros_map(address_map &map)
 	map(0x500302, 0x500303).portr("DSW2");
 	map(0x500300, 0x50030f).w(FUNC(seta2_state::sound_bank_w)).umask16(0x00ff);
 	map(0xb60000, 0xb6003f).ram().w(FUNC(seta2_state::vregs_w)).share("vregs");
+	map(0xfffc00, 0xffffff).rw(m_tmp68301, FUNC(tmp68301_device::regs_r), FUNC(tmp68301_device::regs_w));
 }
 
 void seta2_state::ablastb_map(address_map &map)
@@ -475,6 +482,7 @@ void seta2_state::reelquak_map(address_map &map)
 	map(0xc00000, 0xc3ffff).ram().share("spriteram");       // Sprites
 	map(0xc40000, 0xc4ffff).ram().w(m_palette, FUNC(palette_device::write16)).share("palette");    // Palette
 	map(0xc60000, 0xc6003f).ram().w(FUNC(seta2_state::vregs_w)).share("vregs");              // Video Registers
+	map(0xfffc00, 0xffffff).rw(m_tmp68301, FUNC(tmp68301_device::regs_r), FUNC(tmp68301_device::regs_w));      // TMP68301 Registers
 }
 
 
@@ -489,6 +497,7 @@ void seta2_state::namcostr_map(address_map &map)
 	map(0x200000, 0x20ffff).ram();                             // RAM
 	map(0xc00000, 0xc3ffff).ram().share("spriteram");       // Sprites
 	map(0xc60000, 0xc6003f).ram().w(FUNC(seta2_state::vregs_w)).share("vregs");  // Video Registers
+	map(0xfffc00, 0xffffff).rw(m_tmp68301, FUNC(tmp68301_device::regs_r), FUNC(tmp68301_device::regs_w));  // TMP68301 Registers
 }
 
 
@@ -531,6 +540,8 @@ void seta2_state::samshoot_map(address_map &map)
 	map(0x860000, 0x86003f).ram().w(FUNC(seta2_state::vregs_w)).share("vregs");    // Video Registers
 
 	map(0x900000, 0x903fff).rw("x1snd", FUNC(x1_010_device::word_r), FUNC(x1_010_device::word_w));   // Sound
+
+	map(0xfffc00, 0xffffff).rw(m_tmp68301, FUNC(tmp68301_device::regs_r), FUNC(tmp68301_device::regs_w));    // TMP68301 Registers
 }
 
 
@@ -624,6 +635,7 @@ void staraudi_state::staraudi_map(address_map &map)
 	map(0xc40000, 0xc4ffff).ram().w(m_palette, FUNC(palette_device::write16)).share("palette");    // Palette
 	map(0xc50000, 0xc5ffff).ram();                             // cleared
 	map(0xc60000, 0xc6003f).ram().w(FUNC(staraudi_state::vregs_w)).share("vregs");  // Video Registers
+	map(0xfffc00, 0xffffff).rw(m_tmp68301, FUNC(tmp68301_device::regs_r), FUNC(tmp68301_device::regs_w));  // TMP68301 Registers
 }
 
 
@@ -682,6 +694,7 @@ void seta2_state::telpacfl_map(address_map &map)
 	map(0xd00006, 0xd00007).r("watchdog", FUNC(watchdog_timer_device::reset16_r));
 //  AM_RANGE(0xe00000, 0xe00001) AM_WRITE
 	map(0xe00010, 0xe0001f).w(FUNC(seta2_state::sound_bank_w)).umask16(0x00ff);              // Samples Banks
+	map(0xfffc00, 0xffffff).rw(m_tmp68301, FUNC(tmp68301_device::regs_r), FUNC(tmp68301_device::regs_w));      // TMP68301 Registers
 }
 
 
@@ -2288,19 +2301,23 @@ GFXDECODE_END
 INTERRUPT_GEN_MEMBER(seta2_state::seta2_interrupt)
 {
 	/* VBlank is connected to INT0 (external interrupts pin 0) */
-	downcast<tmp68301_device &>(*m_maincpu).external_interrupt_0();
+	m_tmp68301->external_interrupt_0();
 }
 
 INTERRUPT_GEN_MEMBER(seta2_state::samshoot_interrupt)
 {
-	downcast<tmp68301_device &>(*m_maincpu).external_interrupt_2();   // to do: hook up x1-10 interrupts
+	m_tmp68301->external_interrupt_2();   // to do: hook up x1-10 interrupts
 }
 
 void seta2_state::seta2(machine_config &config)
 {
-	TMP68301(config, m_maincpu, XTAL(50'000'000)/3);   // !! TMP68301 !!
+	M68301(config, m_maincpu, XTAL(50'000'000)/3);   // !! TMP68301 !!
 	m_maincpu->set_addrmap(AS_PROGRAM, &seta2_state::mj4simai_map);
 	m_maincpu->set_vblank_int("screen", FUNC(seta2_state::seta2_interrupt));
+	m_maincpu->set_irq_acknowledge_callback("tmp68301", FUNC(tmp68301_device::irq_callback));
+
+	TMP68301(config, m_tmp68301, 0);
+	m_tmp68301->set_cputag(m_maincpu);
 
 	WATCHDOG_TIMER(config, "watchdog");
 
@@ -2332,8 +2349,8 @@ void seta2_state::gundamex(machine_config &config)
 	seta2(config);
 	m_maincpu->set_addrmap(AS_PROGRAM, &seta2_state::gundamex_map);
 
-	downcast<tmp68301_device &>(*m_maincpu).in_parallel_callback().set(FUNC(seta2_state::gundamex_eeprom_r));
-	downcast<tmp68301_device &>(*m_maincpu).out_parallel_callback().set(FUNC(seta2_state::gundamex_eeprom_w));
+	m_tmp68301->in_parallel_callback().set(FUNC(seta2_state::gundamex_eeprom_r));
+	m_tmp68301->out_parallel_callback().set(FUNC(seta2_state::gundamex_eeprom_w));
 
 	EEPROM_93C46_16BIT(config, "eeprom");
 
@@ -2397,6 +2414,8 @@ void seta2_state::ablastb(machine_config &config)
 	M68000(config.replace(), m_maincpu, XTAL(16'000'000)); // TMP68HC000P-16
 	m_maincpu->set_addrmap(AS_PROGRAM, &seta2_state::ablastb_map);
 	m_maincpu->set_vblank_int("screen", FUNC(seta2_state::irq2_line_hold));
+
+	config.device_remove("tmp68301");
 }
 
 void seta2_state::reelquak(machine_config &config)
@@ -2404,7 +2423,7 @@ void seta2_state::reelquak(machine_config &config)
 	seta2(config);
 	m_maincpu->set_addrmap(AS_PROGRAM, &seta2_state::reelquak_map);
 
-	downcast<tmp68301_device &>(*m_maincpu).out_parallel_callback().set(FUNC(seta2_state::reelquak_leds_w));
+	m_tmp68301->out_parallel_callback().set(FUNC(seta2_state::reelquak_leds_w));
 
 	NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_0);
 	TICKET_DISPENSER(config, m_dispenser, attotime::from_msec(200), TICKET_MOTOR_ACTIVE_HIGH, TICKET_STATUS_ACTIVE_LOW);
@@ -2419,7 +2438,7 @@ void seta2_state::samshoot(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &seta2_state::samshoot_map);
 	m_maincpu->set_periodic_int(FUNC(seta2_state::samshoot_interrupt), attotime::from_hz(60));
 
-	downcast<tmp68301_device &>(*m_maincpu).in_parallel_callback().set_ioport("DSW2");
+	m_tmp68301->in_parallel_callback().set_ioport("DSW2");
 
 	NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_0);
 
@@ -2448,7 +2467,7 @@ void seta2_state::telpacfl(machine_config &config)
 	seta2(config);
 	m_maincpu->set_addrmap(AS_PROGRAM, &seta2_state::telpacfl_map);
 
-	downcast<tmp68301_device &>(*m_maincpu).in_parallel_callback().set_ioport("KNOB");
+	m_tmp68301->in_parallel_callback().set_ioport("KNOB");
 
 	EEPROM_93C46_16BIT(config, "eeprom"); // not hooked up, seems unused
 
@@ -2551,10 +2570,13 @@ void funcube_state::funcube3(machine_config &config)
 
 void seta2_state::namcostr(machine_config &config)
 {
-	TMP68301(config, m_maincpu, XTAL(50'000'000)/3);   // !! TMP68301 !!
+	M68301(config, m_maincpu, XTAL(50'000'000)/3);   // !! TMP68301 !!
 	m_maincpu->set_addrmap(AS_PROGRAM, &seta2_state::namcostr_map);
 	m_maincpu->set_vblank_int("screen", FUNC(seta2_state::seta2_interrupt));
-	// does this have a ticket dispenser?
+	m_maincpu->set_irq_acknowledge_callback("tmp68301", FUNC(tmp68301_device::irq_callback));
+
+	TMP68301(config, m_tmp68301, 0);  // does this have a ticket dispenser?
+	m_tmp68301->set_cputag(m_maincpu);
 
 	// video hardware
 	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);

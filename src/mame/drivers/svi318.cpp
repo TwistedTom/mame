@@ -63,7 +63,6 @@ public:
 		m_expander(*this, "exp"),
 		m_keyboard(*this, "KEY.%u", 0),
 		m_buttons(*this, "BUTTONS"),
-		m_led_caps_lock(*this, "led_caps_lock"),
 		m_intvdp(0), m_intexp(0),
 		m_romdis(1), m_ramdis(1),
 		m_cart(1), m_bk21(1),
@@ -79,20 +78,23 @@ public:
 	void svi328p(machine_config &config);
 
 private:
-	uint8_t ppi_port_a_r();
-	uint8_t ppi_port_b_r();
-	void ppi_port_c_w(uint8_t data);
-	void bank_w(uint8_t data);
+	DECLARE_READ8_MEMBER( ppi_port_a_r );
+	DECLARE_READ8_MEMBER( ppi_port_b_r );
+	DECLARE_WRITE8_MEMBER( ppi_port_c_w );
+	DECLARE_WRITE8_MEMBER( bank_w );
 	DECLARE_WRITE_LINE_MEMBER( intvdp_w );
 
-	uint8_t mreq_r(offs_t offset);
-	void mreq_w(offs_t offset, uint8_t data);
+	READ8_MEMBER( mreq_r );
+	WRITE8_MEMBER( mreq_w );
 
 	// from expander bus
 	DECLARE_WRITE_LINE_MEMBER( intexp_w );
 	DECLARE_WRITE_LINE_MEMBER( romdis_w );
 	DECLARE_WRITE_LINE_MEMBER( ramdis_w );
 	DECLARE_WRITE_LINE_MEMBER( ctrl1_w );
+
+	DECLARE_READ8_MEMBER( excs_r );
+	DECLARE_WRITE8_MEMBER( excs_w );
 
 	DECLARE_DEVICE_IMAGE_LOAD_MEMBER(cartridge);
 
@@ -114,7 +116,6 @@ private:
 	required_device<svi_expander_device> m_expander;
 	required_ioport_array<16> m_keyboard;
 	required_ioport m_buttons;
-	output_finder<> m_led_caps_lock;
 
 	int m_intvdp;
 	int m_intexp;
@@ -150,8 +151,10 @@ void svi3x8_state::svi3x8_io_bank(address_map &map)
 {
 	map(0x000, 0x0ff).rw(m_expander, FUNC(svi_expander_device::iorq_r), FUNC(svi_expander_device::iorq_w));
 	map(0x100, 0x17f).rw(m_expander, FUNC(svi_expander_device::iorq_r), FUNC(svi_expander_device::iorq_w));
-	map(0x180, 0x181).mirror(0x22).w(m_vdp, FUNC(tms9928a_device::write));
-	map(0x184, 0x185).mirror(0x22).r(m_vdp, FUNC(tms9928a_device::read));
+	map(0x180, 0x180).mirror(0x22).w(m_vdp, FUNC(tms9928a_device::vram_w));
+	map(0x181, 0x181).mirror(0x22).w(m_vdp, FUNC(tms9928a_device::register_w));
+	map(0x184, 0x184).mirror(0x22).r(m_vdp, FUNC(tms9928a_device::vram_r));
+	map(0x185, 0x185).mirror(0x22).r(m_vdp, FUNC(tms9928a_device::register_r));
 	map(0x188, 0x188).mirror(0x23).w("psg", FUNC(ay8910_device::address_w));
 	map(0x18c, 0x18c).mirror(0x23).w("psg", FUNC(ay8910_device::data_w));
 	map(0x190, 0x190).mirror(0x23).r("psg", FUNC(ay8910_device::data_r));
@@ -339,8 +342,6 @@ WRITE_LINE_MEMBER( svi3x8_state::intvdp_w )
 
 void svi3x8_state::machine_start()
 {
-	m_led_caps_lock.resolve();
-
 	// register for save states
 	save_item(NAME(m_intvdp));
 	save_item(NAME(m_intexp));
@@ -370,7 +371,7 @@ void svi3x8_state::machine_reset()
 		ctrl1_w(1);
 }
 
-uint8_t svi3x8_state::mreq_r(offs_t offset)
+READ8_MEMBER( svi3x8_state::mreq_r )
 {
 	// ctrl1 inverts a15
 	if (m_ctrl1 == 0)
@@ -379,7 +380,7 @@ uint8_t svi3x8_state::mreq_r(offs_t offset)
 	if (CCS1 || CCS2 || CCS3 || CCS4)
 		return m_cart_rom->read_rom(offset);
 
-	uint8_t data = m_expander->mreq_r(offset);
+	uint8_t data = m_expander->mreq_r(space, offset);
 
 	if (ROMCS)
 		data = m_basic->as_u8(offset);
@@ -393,7 +394,7 @@ uint8_t svi3x8_state::mreq_r(offs_t offset)
 	return data;
 }
 
-void svi3x8_state::mreq_w(offs_t offset, uint8_t data)
+WRITE8_MEMBER( svi3x8_state::mreq_w )
 {
 	// ctrl1 inverts a15
 	if (m_ctrl1 == 0)
@@ -402,7 +403,7 @@ void svi3x8_state::mreq_w(offs_t offset, uint8_t data)
 	if (CCS1 || CCS2 || CCS3 || CCS4)
 		return;
 
-	m_expander->mreq_w(offset, data);
+	m_expander->mreq_w(space, offset, data);
 
 	if (m_bk21 == 0 && IS_SVI328 && offset < 0x8000)
 		m_ram->write(offset, data);
@@ -411,7 +412,7 @@ void svi3x8_state::mreq_w(offs_t offset, uint8_t data)
 		m_ram->write(IS_SVI328 ? offset : offset - 0xc000, data);
 }
 
-void svi3x8_state::bank_w(uint8_t data)
+WRITE8_MEMBER( svi3x8_state::bank_w )
 {
 	logerror("bank_w: %02x\n", data);
 
@@ -426,10 +427,10 @@ void svi3x8_state::bank_w(uint8_t data)
 	m_rom2 = BIT(data, 6);
 	m_rom3 = BIT(data, 7);
 
-	m_led_caps_lock = BIT(data, 5);
+	output().set_value("led_caps_lock", BIT(data, 5));
 }
 
-uint8_t svi3x8_state::ppi_port_a_r()
+READ8_MEMBER( svi3x8_state::ppi_port_a_r )
 {
 	uint8_t data = 0x3f;
 
@@ -445,13 +446,13 @@ uint8_t svi3x8_state::ppi_port_a_r()
 	return data;
 }
 
-uint8_t svi3x8_state::ppi_port_b_r()
+READ8_MEMBER( svi3x8_state::ppi_port_b_r )
 {
 	// bit 0-7, keyboard data
 	return m_keyboard[m_keyboard_row]->read();
 }
 
-void svi3x8_state::ppi_port_c_w(uint8_t data)
+WRITE8_MEMBER( svi3x8_state::ppi_port_c_w )
 {
 	// bit 0-3, keyboard row
 	m_keyboard_row = data & 0x0f;
@@ -491,6 +492,22 @@ WRITE_LINE_MEMBER( svi3x8_state::ctrl1_w )
 
 	// ctrl1 disables internal io address decoding
 	m_io->set_bank(m_ctrl1);
+}
+
+READ8_MEMBER( svi3x8_state::excs_r )
+{
+	if (offset & 1)
+		return m_vdp->register_read();
+	else
+		return m_vdp->vram_read();
+}
+
+WRITE8_MEMBER( svi3x8_state::excs_w )
+{
+	if (offset & 1)
+		m_vdp->register_write(data);
+	else
+		m_vdp->vram_write(data);
 }
 
 
@@ -556,8 +573,8 @@ MACHINE_CONFIG_START(svi3x8_state::svi318)
 	m_expander->romdis_handler().set(FUNC(svi3x8_state::romdis_w));
 	m_expander->ramdis_handler().set(FUNC(svi3x8_state::ramdis_w));
 	m_expander->ctrl1_handler().set(FUNC(svi3x8_state::ctrl1_w));
-	m_expander->excsr_handler().set(m_vdp, FUNC(tms9928a_device::read));
-	m_expander->excsw_handler().set(m_vdp, FUNC(tms9928a_device::write));
+	m_expander->excsr_handler().set(FUNC(svi3x8_state::excs_r));
+	m_expander->excsw_handler().set(FUNC(svi3x8_state::excs_w));
 MACHINE_CONFIG_END
 
 void svi3x8_state::svi318p(machine_config &config)

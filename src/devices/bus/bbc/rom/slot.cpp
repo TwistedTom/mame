@@ -180,10 +180,10 @@ uint32_t bbc_romslot_device::get_rom_size()
 //  read - rom read
 //-------------------------------------------------
 
-uint8_t bbc_romslot_device::read(offs_t offset)
+READ8_MEMBER(bbc_romslot_device::read)
 {
 	if (m_cart)
-		return m_cart->read(offset);
+		return m_cart->read(space, offset);
 	else
 		return 0xff;
 }
@@ -193,10 +193,10 @@ uint8_t bbc_romslot_device::read(offs_t offset)
 //  write - rom write
 //-------------------------------------------------
 
-void bbc_romslot_device::write(offs_t offset, uint8_t data)
+WRITE8_MEMBER(bbc_romslot_device::write)
 {
 	if (m_cart)
-		m_cart->write(offset, data);
+		m_cart->write(space, offset, data);
 }
 
 

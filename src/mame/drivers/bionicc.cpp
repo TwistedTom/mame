@@ -388,21 +388,21 @@ void bionicc_state::machine_reset()
 	m_scroll[3] = 0;
 }
 
-void bionicc_state::bionicc(machine_config &config)
-{
+MACHINE_CONFIG_START(bionicc_state::bionicc)
+
 	/* basic machine hardware */
-	M68000(config, m_maincpu, XTAL(24'000'000) / 2); /* 12 MHz - verified in schematics */
-	m_maincpu->set_addrmap(AS_PROGRAM, &bionicc_state::main_map);
+	MCFG_DEVICE_ADD("maincpu", M68000, XTAL(24'000'000) / 2) /* 12 MHz - verified in schematics */
+	MCFG_DEVICE_PROGRAM_MAP(main_map)
 	TIMER(config, "scantimer").configure_scanline(FUNC(bionicc_state::scanline), "screen", 0, 1);
 
 
-	z80_device &audiocpu(Z80(config, "audiocpu", XTAL(14'318'181) / 4));   /* EXO3 C,B=GND, A=5V ==> Divisor 2^2 */
-	audiocpu.set_addrmap(AS_PROGRAM, &bionicc_state::sound_map);
+	MCFG_DEVICE_ADD("audiocpu", Z80, XTAL(14'318'181) / 4)   /* EXO3 C,B=GND, A=5V ==> Divisor 2^2 */
+	MCFG_DEVICE_PROGRAM_MAP(sound_map)
 	/* FIXME: interrupt timing
 	 * schematics indicate that nmi_line is set on  M680000 access with AB1=1
 	 * and IOCS=0 (active low), see pages A-1/10, A-4/10 in schematics
 	 */
-	audiocpu.set_periodic_int(FUNC(bionicc_state::nmi_line_pulse), attotime::from_hz(4*60));
+	MCFG_DEVICE_PERIODIC_INT_DRIVER(bionicc_state, nmi_line_pulse, 4*60)
 
 	/* Protection MCU Intel C8751H-88 runs at 24MHz / 4 = 6MHz */
 	I8751(config, m_mcu, XTAL(24'000'000) / 4);
@@ -411,16 +411,16 @@ void bionicc_state::bionicc(machine_config &config)
 	m_mcu->port_out_cb<3>().set(FUNC(bionicc_state::out3_w));
 
 	/* video hardware */
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	MCFG_SCREEN_ADD("screen", RASTER)
 	/* FIXME: should be 257 visible horizontal pixels, first visible pixel should be repeated, back porch/front porch should be separated */
-	screen.set_raw(XTAL(24'000'000) / 4, 386, 0, 256, 260, 16, 240);
-	screen.set_screen_update(FUNC(bionicc_state::screen_update));
-	screen.screen_vblank().set(m_spriteram, FUNC(buffered_spriteram16_device::vblank_copy_rising));
-	screen.set_palette(m_palette);
+	MCFG_SCREEN_RAW_PARAMS(XTAL(24'000'000) / 4, 386, 0, 256, 260, 16, 240)
+	MCFG_SCREEN_UPDATE_DRIVER(bionicc_state, screen_update)
+	MCFG_SCREEN_VBLANK_CALLBACK(WRITELINE("spriteram", buffered_spriteram16_device, vblank_copy_rising))
+	MCFG_SCREEN_PALETTE(m_palette)
 
 	GFXDECODE(config, m_gfxdecode, m_palette, gfx_bionicc);
 
-	TIGEROAD_SPRITE(config, m_spritegen, 0);
+	MCFG_DEVICE_ADD("spritegen", TIGEROAD_SPRITE, 0)
 
 	PALETTE(config, m_palette).set_format(2, &bionicc_state::RRRRGGGGBBBBIIII, 1024);
 
@@ -431,7 +431,7 @@ void bionicc_state::bionicc(machine_config &config)
 	GENERIC_LATCH_8(config, m_soundlatch);
 
 	YM2151(config, "ymsnd", XTAL(14'318'181) / 4).add_route(0, "mono", 0.60).add_route(1, "mono", 0.60);
-}
+MACHINE_CONFIG_END
 
 
 

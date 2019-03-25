@@ -734,7 +734,7 @@ void compis_state::machine_reset()
 //**************************************************************************
 
 //-------------------------------------------------
-//  machine_config( compis )
+//  MACHINE_CONFIG( compis )
 //-------------------------------------------------
 
 void compis_state::compis(machine_config &config)
@@ -829,7 +829,7 @@ void compis_state::compis(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( compis2 )
+//  MACHINE_CONFIG( compis2 )
 //-------------------------------------------------
 
 void compis_state::compis2(machine_config &config)

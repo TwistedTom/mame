@@ -416,12 +416,12 @@ CH3_EXA ==      0X3E                      ; CH-3 extended address (W)
 
 READ8_MEMBER(apc_state::apc_dma_r)
 {
-	return m_dmac->read(bitswap<4>(offset,2,1,0,3));
+	return m_dmac->read(space, bitswap<8>(offset,7,6,5,4,2,1,0,3), 0xff);
 }
 
 WRITE8_MEMBER(apc_state::apc_dma_w)
 {
-	m_dmac->write(bitswap<4>(offset,2,1,0,3), data);
+	m_dmac->write(space, bitswap<8>(offset,7,6,5,4,2,1,0,3), data, 0xff);
 }
 
 WRITE8_MEMBER(apc_state::apc_irq_ack_w)
@@ -936,13 +936,13 @@ static void apc_floppies(device_slot_interface &device)
 	device.option_add("8", FLOPPY_8_DSDD);
 }
 
-void apc_state::apc(machine_config &config)
-{
+MACHINE_CONFIG_START(apc_state::apc)
+
 	/* basic machine hardware */
-	I8086(config, m_maincpu, MAIN_CLOCK);
-	m_maincpu->set_addrmap(AS_PROGRAM, &apc_state::apc_map);
-	m_maincpu->set_addrmap(AS_IO, &apc_state::apc_io);
-	m_maincpu->set_irq_acknowledge_callback("pic8259_master", FUNC(pic8259_device::inta_cb));
+	MCFG_DEVICE_ADD(m_maincpu,I8086,MAIN_CLOCK)
+	MCFG_DEVICE_PROGRAM_MAP(apc_map)
+	MCFG_DEVICE_IO_MAP(apc_io)
+	MCFG_DEVICE_IRQ_ACKNOWLEDGE_DEVICE("pic8259_master", pic8259_device, inta_cb)
 
 	PIT8253(config, m_pit, 0);
 	m_pit->set_clk<0>(MAIN_CLOCK); // heartbeat IRQ
@@ -1003,8 +1003,9 @@ void apc_state::apc(machine_config &config)
 
 	/* sound hardware */
 	SPEAKER(config, m_speaker).front_center();
-	UPD1771C(config, m_sound, MAIN_CLOCK).add_route(ALL_OUTPUTS, "mono", 1.00); //uPD1771C-006
-}
+	MCFG_DEVICE_ADD(m_sound, UPD1771C, MAIN_CLOCK) //uPD1771C-006
+	MCFG_SOUND_ROUTE(ALL_OUTPUTS, "mono", 1.00)
+MACHINE_CONFIG_END
 
 
 /***************************************************************************

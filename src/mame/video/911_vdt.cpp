@@ -280,11 +280,11 @@ READ8_MEMBER( vdt911_device::cru_r )
 {
 	int reply=0;
 
-	offset &= 0xf;
+	offset &= 0x1;
 
 	if (!m_word_select)
 	{   /* select word 0 */
-		switch (offset >> 3)
+		switch (offset)
 		{
 		case 0:
 			reply = m_display_RAM[m_cursor_address];
@@ -299,7 +299,7 @@ READ8_MEMBER( vdt911_device::cru_r )
 	}
 	else
 	{   /* select word 1 */
-		switch (offset >> 3)
+		switch (offset)
 		{
 		case 0:
 			reply = m_cursor_address & 0xff;
@@ -321,7 +321,7 @@ READ8_MEMBER( vdt911_device::cru_r )
 		}
 	}
 
-	return BIT(reply, offset & 3);
+	return reply;
 }
 
 /*

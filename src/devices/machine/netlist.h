@@ -20,7 +20,6 @@ class nld_sound_in;
 
 namespace netlist {
 	class setup_t;
-	class netlist_state_t;
 	class nlparse_t;
 	template <typename T>
 	class param_num_t;
@@ -160,7 +159,7 @@ private:
 	netlist::netlist_time        m_rem;
 	netlist::netlist_time        m_old;
 
-	netlist::pool_owned_ptr<netlist_mame_t> m_netlist;
+	netlist::poolptr<netlist_mame_t> m_netlist;
 
 	func_type m_setup_func;
 };
@@ -269,8 +268,8 @@ public:
 	{
 	}
 
-	virtual void custom_netlist_additions(netlist::netlist_state_t &nlstate) { }
-	virtual void pre_parse_action(netlist::netlist_state_t &nlstate) { }
+	virtual void custom_netlist_additions(netlist::setup_t &setup) { }
+	virtual void pre_parse_action(netlist::setup_t &setup) { }
 
 	inline netlist_mame_device &nl_owner() const { return *m_owner; }
 
@@ -348,7 +347,7 @@ public:
 protected:
 	// device-level overrides
 	virtual void device_start() override;
-	virtual void custom_netlist_additions(netlist::netlist_state_t &nlstate) override;
+	virtual void custom_netlist_additions(netlist::setup_t &setup) override;
 
 private:
 	const char *m_in;
@@ -380,7 +379,7 @@ public:
 protected:
 	// device-level overrides
 	virtual void device_start() override;
-	virtual void custom_netlist_additions(netlist::netlist_state_t &nlstate) override;
+	virtual void custom_netlist_additions(netlist::setup_t &setup) override;
 
 private:
 	const char *m_in;
@@ -509,7 +508,7 @@ public:
 protected:
 	// device-level overrides
 	virtual void device_start() override;
-	virtual void custom_netlist_additions(netlist::netlist_state_t &nlstate) override;
+	virtual void custom_netlist_additions(netlist::setup_t &setup) override;
 private:
 	uint32_t m_channel;
 	const char *m_param_name;
@@ -535,7 +534,7 @@ public:
 protected:
 	// device-level overrides
 	virtual void device_start() override;
-	virtual void custom_netlist_additions(netlist::netlist_state_t &nlstate) override;
+	virtual void custom_netlist_additions(netlist::setup_t &setup) override;
 
 private:
 	uint32_t m_channel;

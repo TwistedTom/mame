@@ -20,20 +20,12 @@
 #include "plib/pstate.h"
 #include "plib/pstring.h"
 #include "plib/ptime.h"
-#include "plib/putil.h"
 
 #include <cstdint>
 #include <unordered_map>
 
 namespace netlist
 {
-	/*! @brief plib::constants struct specialized for nl_double
-	 *
-	 *  This may be any of bool, uint8_t, uint16_t, uin32_t and uint64_t.
-	 *  The choice has little to no impact on performance.
-	 */
-	using constants = plib::constants<nl_double>;
-
 	/*! @brief netlist_sig_t is the type used for logic signals.
 	 *
 	 *  This may be any of bool, uint8_t, uint16_t, uin32_t and uint64_t.
@@ -92,18 +84,18 @@ namespace netlist
 #if (USE_MEMPOOL)
 	using nlmempool = plib::mempool;
 #else
-	using nlmempool = plib::aligned_arena;
+	using nlmempool = plib::mempool_default;
 #endif
 
 	/*! Owned pointer type for pooled allocations.
 	 *
 	 */
 	template <typename T>
-	using pool_owned_ptr = nlmempool::owned_pool_ptr<T>;
+	using poolptr = nlmempool::poolptr<T>;
 
 	inline nlmempool &pool()
 	{
-		static nlmempool static_pool;
+		static nlmempool static_pool(655360, 16);
 		return static_pool;
 	}
 
@@ -115,6 +107,11 @@ namespace netlist
 			INPUT    = 1, /*!< object is an input */
 			OUTPUT   = 2, /*!< object is an output */
 		};
+
+		/*! Type of the model map used.
+		 *  This is used to hold all #Models in an unordered map
+		 */
+		using model_map_t = std::unordered_map<pstring, pstring>;
 
 	} // namespace detail
 

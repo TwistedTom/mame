@@ -46,8 +46,8 @@ public:
 	auto irq_handler() { return m_irq_handler.bind(); }
 
 	// device interface
-	uint8_t data_r(offs_t offset);
-	void data_w(offs_t offset, uint8_t data);
+	DECLARE_READ8_MEMBER( data_r );
+	DECLARE_WRITE8_MEMBER( data_w );
 
 	void update_scanline(uint16_t scanline);
 	void set_color_filler( uint8_t color );

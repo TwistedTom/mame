@@ -248,11 +248,11 @@ void copsnrob_state::machine_reset()
 }
 
 
-void copsnrob_state::copsnrob(machine_config &config)
-{
+MACHINE_CONFIG_START(copsnrob_state::copsnrob)
+
 	/* basic machine hardware */
-	M6502(config, m_maincpu, 14318180/16);      /* 894886.25 kHz */
-	m_maincpu->set_addrmap(AS_PROGRAM, &copsnrob_state::main_map);
+	MCFG_DEVICE_ADD("maincpu", M6502,14318180/16)      /* 894886.25 kHz */
+	MCFG_DEVICE_PROGRAM_MAP(main_map)
 
 	/* video hardware */
 	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
@@ -267,7 +267,7 @@ void copsnrob_state::copsnrob(machine_config &config)
 	PALETTE(config, m_palette, palette_device::MONOCHROME);
 
 	copsnrob_audio(config);
-}
+MACHINE_CONFIG_END
 
 
 

@@ -1356,20 +1356,20 @@ READ8_MEMBER( sun4_state::fdc_r )
 	switch(offset)
 	{
 		case 0: // Main Status (R, 82072)
-			return m_fdc->msr_r();
+			return m_fdc->msr_r(space, 0, 0xff);
 
 		case 1: // FIFO Data Port (R, 82072)
 		case 5: // FIFO Data Port (R, 82077)
-			return m_fdc->fifo_r();
+			return m_fdc->fifo_r(space, 0, 0xff);
 
 		case 2: // Digital Output Register (R, 82077)
-			return m_fdc->dor_r();
+			return m_fdc->dor_r(space, 0, 0xff);
 
 		case 4: // Main Status Register (R, 82077)
-			return m_fdc->msr_r();
+			return m_fdc->msr_r(space, 0, 0xff);
 
 		case 7:// Digital Input Register (R, 82077)
-			return m_fdc->dir_r();
+			return m_fdc->dir_r(space, 0, 0xff);
 
 		default:
 			break;
@@ -1384,16 +1384,16 @@ WRITE8_MEMBER( sun4_state::fdc_w )
 	{
 		case 0: // Data Rate Select Register (W, 82072)
 		case 4: // Data Rate Select Register (W, 82077)
-			m_fdc->dsr_w(data);
+			m_fdc->dsr_w(space, 0, data, 0xff);
 			break;
 
 		case 1: // FIFO Data Port (W, 82072)
 		case 5: // FIFO Data Port (W, 82077)
-			m_fdc->fifo_w(data);
+			m_fdc->fifo_w(space, 0, data, 0xff);
 			break;
 
 		case 7: // Configuration Control REgister (W, 82077)
-			m_fdc->ccr_w(data);
+			m_fdc->ccr_w(space, 0, data, 0xff);
 			break;
 
 		default:

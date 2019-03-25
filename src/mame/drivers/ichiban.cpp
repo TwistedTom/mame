@@ -130,8 +130,8 @@ void ichibanjyan_state::machine_reset()
 }
 
 
-void ichibanjyan_state::ichibanjyan(machine_config &config)
-{
+MACHINE_CONFIG_START(ichibanjyan_state::ichibanjyan)
+
 	/* basic machine hardware */
 	Z80(config, m_maincpu, MAIN_CLOCK/3);
 	m_maincpu->set_addrmap(AS_PROGRAM, &ichibanjyan_state::mem_map);
@@ -154,8 +154,9 @@ void ichibanjyan_state::ichibanjyan(machine_config &config)
 	SPEAKER(config, "mono").front_center();
 	YM2149(config, "aysnd", MAIN_CLOCK/12).add_route(ALL_OUTPUTS, "mono", 0.30);
 
-	YM2413(config, "ymsnd", MAIN_CLOCK/6).add_route(ALL_OUTPUTS, "mono", 0.5);
-}
+	MCFG_DEVICE_ADD("ymsnd", YM2413, MAIN_CLOCK/6)
+	MCFG_SOUND_ROUTE(ALL_OUTPUTS, "mono", 0.5)
+MACHINE_CONFIG_END
 
 
 /***************************************************************************

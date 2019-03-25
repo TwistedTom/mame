@@ -311,8 +311,7 @@ static GFXDECODE_START( gfx_amu880 )
 GFXDECODE_END
 
 
-void amu880_state::amu880(machine_config &config)
-{
+MACHINE_CONFIG_START(amu880_state::amu880)
 	/* basic machine hardware */
 	Z80(config, m_maincpu, XTAL(10'000'000)/4); // U880D
 	m_maincpu->set_addrmap(AS_PROGRAM, &amu880_state::amu880_mem);
@@ -322,9 +321,9 @@ void amu880_state::amu880(machine_config &config)
 	TIMER(config, "keyboard").configure_periodic(FUNC(amu880_state::keyboard_tick), attotime::from_hz(1500));
 
 	/* video hardware */
-	screen_device &screen(SCREEN(config, SCREEN_TAG, SCREEN_TYPE_RASTER));
-	screen.set_screen_update(FUNC(amu880_state::screen_update));
-	screen.set_raw(9000000, 576, 0*6, 64*6, 320, 0*10, 24*10);
+	MCFG_SCREEN_ADD(SCREEN_TAG, RASTER)
+	MCFG_SCREEN_UPDATE_DRIVER(amu880_state, screen_update)
+	MCFG_SCREEN_RAW_PARAMS(9000000, 576, 0*6, 64*6, 320, 0*10, 24*10)
 
 	GFXDECODE(config, "gfxdecode", m_palette, gfx_amu880);
 	PALETTE(config, m_palette, palette_device::MONOCHROME);
@@ -353,7 +352,7 @@ void amu880_state::amu880(machine_config &config)
 
 	/* internal ram */
 	RAM(config, RAM_TAG).set_default_size("64K");
-}
+MACHINE_CONFIG_END
 
 /* ROMs */
 

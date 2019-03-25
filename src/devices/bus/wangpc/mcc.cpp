@@ -52,7 +52,7 @@ DEFINE_DEVICE_TYPE(WANGPC_MCC, wangpc_mcc_device, "wangpc_mcc", "Wang PC-PM043 M
 
 
 //-------------------------------------------------
-//  machine_config( wangpc_mcc )
+//  MACHINE_CONFIG_START( wangpc_mcc )
 //-------------------------------------------------
 
 void wangpc_mcc_device::device_add_mconfig(machine_config &config)

@@ -122,14 +122,14 @@ READ8_MEMBER(cp1_state::i8155_read)
 
 	if (!(m_port2 & 0x10))
 	{
-		m_i8155->ale_w(BIT(m_port2, 7), offset);
-		data |= m_i8155->data_r();
+		m_i8155->ale_w(space, BIT(m_port2, 7), offset);
+		data |= m_i8155->read(space, offset);
 	}
 	if ((m_io_config->read() & 0x02) && !(m_port2 & 0x20))
 	{
 		// CP3 RAM expansion
-		m_i8155_cp3->ale_w(BIT(m_port2, 7), offset);
-		data |= m_i8155_cp3->data_r();
+		m_i8155_cp3->ale_w(space, BIT(m_port2, 7), offset);
+		data |= m_i8155_cp3->read(space, offset);
 	}
 
 	return data;
@@ -139,14 +139,14 @@ WRITE8_MEMBER(cp1_state::i8155_write)
 {
 	if (!(m_port2 & 0x10))
 	{
-		m_i8155->ale_w(BIT(m_port2, 7), offset);
-		m_i8155->data_w(data);
+		m_i8155->ale_w(space, BIT(m_port2, 7), offset);
+		m_i8155->write(space, offset, data);
 	}
 	if ((m_io_config->read() & 0x02) && !(m_port2 & 0x20))
 	{
 		// CP3 RAM expansion
-		m_i8155_cp3->ale_w(BIT(m_port2, 7), offset);
-		m_i8155_cp3->data_w(data);
+		m_i8155_cp3->ale_w(space, BIT(m_port2, 7), offset);
+		m_i8155_cp3->write(space, offset, data);
 	}
 }
 
@@ -244,6 +244,7 @@ void cp1_state::machine_reset()
 
 QUICKLOAD_LOAD_MEMBER( cp1_state, quickload )
 {
+	address_space &space = machine().dummy_space();
 	char line[0x10];
 	int addr = 0;
 	while (image.fgets(line, 10) && addr < 0x100)
@@ -251,8 +252,8 @@ QUICKLOAD_LOAD_MEMBER( cp1_state, quickload )
 		int op = 0, arg = 0;
 		if (sscanf(line, "%d.%d", &op, &arg) == 2)
 		{
-			m_i8155->memory_w(addr++, op);
-			m_i8155->memory_w(addr++, arg);
+			m_i8155->memory_w(space, addr++, op);
+			m_i8155->memory_w(space, addr++, arg);
 		}
 		else
 		{

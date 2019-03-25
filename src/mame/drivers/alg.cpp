@@ -305,11 +305,11 @@ INPUT_PORTS_END
  *
  *************************************/
 
-void alg_state::alg_r1(machine_config &config)
-{
+MACHINE_CONFIG_START(alg_state::alg_r1)
+
 	/* basic machine hardware */
-	M68000(config, m_maincpu, amiga_state::CLK_7M_NTSC);
-	m_maincpu->set_addrmap(AS_PROGRAM, &alg_state::main_map_r1);
+	MCFG_DEVICE_ADD("maincpu", M68000, amiga_state::CLK_7M_NTSC)
+	MCFG_DEVICE_PROGRAM_MAP(main_map_r1)
 
 	ADDRESS_MAP_BANK(config, "overlay").set_map(&alg_state::overlay_512kb_map).set_options(ENDIANNESS_BIG, 16, 22, 0x200000);
 
@@ -333,13 +333,13 @@ void alg_state::alg_r1(machine_config &config)
 	SPEAKER(config, "lspeaker").front_left();
 	SPEAKER(config, "rspeaker").front_right();
 
-	PAULA_8364(config, m_paula, amiga_state::CLK_C1_NTSC);
-	m_paula->add_route(0, "lspeaker", 0.25);
-	m_paula->add_route(1, "rspeaker", 0.25);
-	m_paula->add_route(2, "rspeaker", 0.25);
-	m_paula->add_route(3, "lspeaker", 0.25);
-	m_paula->mem_read_cb().set(FUNC(amiga_state::chip_ram_r));
-	m_paula->int_cb().set(FUNC(amiga_state::paula_int_w));
+	paula_8364_device &paula(PAULA_8364(config, "amiga", amiga_state::CLK_C1_NTSC));
+	paula.add_route(0, "lspeaker", 0.25);
+	paula.add_route(1, "rspeaker", 0.25);
+	paula.add_route(2, "rspeaker", 0.25);
+	paula.add_route(3, "lspeaker", 0.25);
+	paula.mem_read_cb().set(FUNC(amiga_state::chip_ram_r));
+	paula.int_cb().set(FUNC(amiga_state::paula_int_w));
 
 	m_laserdisc->add_route(0, "lspeaker", 1.0);
 	m_laserdisc->add_route(1, "rspeaker", 1.0);
@@ -359,31 +359,32 @@ void alg_state::alg_r1(machine_config &config)
 	m_fdc->write_dma_callback().set(FUNC(amiga_state::chip_ram_w));
 	m_fdc->dskblk_callback().set(FUNC(amiga_state::fdc_dskblk_w));
 	m_fdc->dsksyn_callback().set(FUNC(amiga_state::fdc_dsksyn_w));
-}
+MACHINE_CONFIG_END
 
 
-void alg_state::alg_r2(machine_config &config)
-{
+MACHINE_CONFIG_START(alg_state::alg_r2)
 	alg_r1(config);
-	m_maincpu->set_addrmap(AS_PROGRAM, &alg_state::main_map_r2);
-}
+	MCFG_DEVICE_MODIFY("maincpu")
+	MCFG_DEVICE_PROGRAM_MAP(main_map_r2)
+MACHINE_CONFIG_END
 
 
-void alg_state::picmatic(machine_config &config)
-{
+MACHINE_CONFIG_START(alg_state::picmatic)
 	alg_r1(config);
 	/* adjust for PAL specs */
-	m_maincpu->set_clock(amiga_state::CLK_7M_PAL);
-	m_maincpu->set_addrmap(AS_PROGRAM, &alg_state::main_map_picmatic);
+	MCFG_DEVICE_REPLACE("maincpu", M68000, amiga_state::CLK_7M_PAL)
+	MCFG_DEVICE_PROGRAM_MAP(main_map_picmatic)
 
 	config.device_remove("screen");
 	pal_video(config);
 
-	m_paula->set_clock(amiga_state::CLK_C1_PAL);
+	MCFG_DEVICE_MODIFY("amiga")
+	MCFG_DEVICE_CLOCK(amiga_state::CLK_C1_PAL)
 	m_cia_0->set_clock(amiga_state::CLK_E_PAL);
 	m_cia_1->set_clock(amiga_state::CLK_E_PAL);
-	m_fdc->set_clock(amiga_state::CLK_7M_PAL);
-}
+	MCFG_DEVICE_MODIFY("fdc")
+	MCFG_DEVICE_CLOCK(amiga_state::CLK_7M_PAL)
+MACHINE_CONFIG_END
 
 
 

@@ -622,8 +622,7 @@ void hp9825_state::set_dmar_slot(unsigned slot , int state)
 	m_io_sys->set_dmar(uint8_t(sc) , state);
 }
 
-void hp9825_state::hp9825_base(machine_config &config)
-{
+MACHINE_CONFIG_START(hp9825_state::hp9825_base)
 	HP_09825_67907(config , m_cpu , MAIN_CLOCK);
 	// Just guessing... settings borrowed from hp9845
 	m_cpu->set_rw_cycles(6 , 6);
@@ -674,7 +673,7 @@ void hp9825_state::hp9825_base(machine_config &config)
 	}
 
 	config.set_default_layout(layout_hp9825);
-}
+MACHINE_CONFIG_END
 
 #define IOP_MASK(x) BIT_MASK<ioport_value>((x))
 
@@ -845,11 +844,10 @@ private:
 	void cpu_mem_map(address_map &map);
 };
 
-void hp9825b_state::hp9825b(machine_config &config)
-{
+MACHINE_CONFIG_START(hp9825b_state::hp9825b)
 	hp9825_base(config);
 	m_cpu->set_addrmap(AS_PROGRAM , &hp9825b_state::cpu_mem_map);
-}
+MACHINE_CONFIG_END
 
 void hp9825b_state::cpu_mem_map(address_map &map)
 {
@@ -903,13 +901,12 @@ private:
 	bool is_rom(uint16_t addr , uint8_t cycle_type) const;
 };
 
-void hp9825t_state::hp9825t(machine_config &config)
-{
+MACHINE_CONFIG_START(hp9825t_state::hp9825t)
 	hp9825_base(config);
 	m_cpu->set_addrmap(AS_PROGRAM , &hp9825t_state::cpu_mem_map);
 	m_cpu->stm_cb().set(FUNC(hp9825t_state::stm));
 	m_cpu->opcode_cb().set(FUNC(hp9825t_state::opcode_fetch));
-}
+MACHINE_CONFIG_END
 
 void hp9825t_state::machine_start()
 {

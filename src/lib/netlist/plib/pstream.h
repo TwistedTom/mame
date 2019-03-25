@@ -7,6 +7,9 @@
 #ifndef PSTREAM_H_
 #define PSTREAM_H_
 
+#include <array>
+#include <type_traits>
+#include <vector>
 
 #include "palloc.h"
 #include "pconfig.h"
@@ -16,15 +19,13 @@
 
 #define USE_CSTREAM (0)
 
-#include <array>
-#include <type_traits>
-#include <vector>
 
 #if USE_CSTREAM
 #include <fstream>
 //#include <strstream>
 #include <sstream>
 #endif
+
 
 namespace plib {
 
@@ -179,15 +180,18 @@ public:
 	pomemstream(pomemstream &&src) noexcept
 	: postream(std::move(src))
 	, m_pos(src.m_pos)
-	, m_mem(std::move(src.m_mem))
+	, m_capacity(src.m_capacity)
+	, m_size(src.m_size)
+	, m_mem(src.m_mem)
 	{
+		src.m_mem = nullptr;
 	}
 	pomemstream &operator=(pomemstream &&src) = delete;
 
-	~pomemstream() override = default;
+	~pomemstream() override;
 
-	const char *memory() const { return m_mem.data(); }
-	pos_type size() const { return m_mem.size(); }
+	char *memory() const { return m_mem; }
+	pos_type size() const { return m_size; }
 
 protected:
 	/* write n bytes to stream */
@@ -197,7 +201,9 @@ protected:
 
 private:
 	pos_type m_pos;
-	std::vector<char> m_mem;
+	pos_type m_capacity;
+	pos_type m_size;
+	char *m_mem;
 };
 
 class postringstream : public postream
@@ -621,10 +627,11 @@ public:
 	{
 		std::size_t sz = 0;
 		read(sz);
-		std::vector<plib::string_info<pstring>::mem_t> buf(sz+1);
-		m_strm.read(buf.data(), sz);
+		auto buf = plib::pnew_array<plib::string_info<pstring>::mem_t>(sz+1);
+		m_strm.read(reinterpret_cast<pistream::value_type *>(buf), sz);
 		buf[sz] = 0;
-		s = pstring(buf.data());
+		s = pstring(buf);
+		plib::pdelete_array(buf);
 	}
 
 	template <typename T>

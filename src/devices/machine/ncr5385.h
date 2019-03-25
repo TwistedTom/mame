@@ -58,8 +58,8 @@ public:
 
 	auto irq() { return m_int.bind(); }
 
-	void write(offs_t offset, uint8_t data);
-	uint8_t read(offs_t offset);
+	DECLARE_WRITE8_MEMBER(write);
+	DECLARE_READ8_MEMBER(read);
 
 protected:
 	// device-level overrides

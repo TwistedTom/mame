@@ -4331,8 +4331,8 @@ void dynax_state::htengoku_banked_map(address_map &map)
 	map(0x80000, 0x801ff).w(FUNC(dynax_state::tenkai_palette_w));
 }
 
-void ddenlovr_state::htengoku(machine_config &config)
-{
+MACHINE_CONFIG_START(ddenlovr_state::htengoku)
+
 	/* basic machine hardware */
 	Z80(config, m_maincpu, 20000000 / 4);
 	m_maincpu->set_addrmap(AS_PROGRAM, &ddenlovr_state::htengoku_mem_map);
@@ -4392,7 +4392,7 @@ void ddenlovr_state::htengoku(machine_config &config)
 	/* devices */
 	msm6242_device &rtc(MSM6242(config, "rtc", XTAL(32'768)));
 	rtc.out_int_handler().set("mainirq", FUNC(rst_pos_buffer_device::rst1_w));
-}
+MACHINE_CONFIG_END
 
 
 /***************************************************************************
@@ -9692,8 +9692,8 @@ WRITE_LINE_MEMBER(ddenlovr_state::ddenlovr_irq)
 		m_maincpu->set_input_line(M68K_IRQ_1, HOLD_LINE);
 }
 
-void ddenlovr_state::ddenlovr(machine_config &config)
-{
+MACHINE_CONFIG_START(ddenlovr_state::ddenlovr)
+
 	/* basic machine hardware */
 	M68000(config, m_maincpu, XTAL(24'000'000) / 2);
 	m_maincpu->set_addrmap(AS_PROGRAM, &ddenlovr_state::ddenlovr_map);
@@ -9730,14 +9730,14 @@ void ddenlovr_state::ddenlovr(machine_config &config)
 
 	YMZ284(config, "aysnd", XTAL(28'636'363) / 16).add_route(ALL_OUTPUTS, "mono", 0.30);  // or /8 ?
 
-	OKIM6295(config, m_oki, XTAL(28'636'363) / 28, okim6295_device::PIN7_HIGH).add_route(ALL_OUTPUTS, "mono", 0.80);
+	okim6295_device &oki(OKIM6295(config, "oki", XTAL(28'636'363) / 28, okim6295_device::PIN7_HIGH));
+	oki.add_route(ALL_OUTPUTS, "mono", 0.80);
 
 	/* devices */
 	RTC72421(config, "rtc", XTAL(32'768)); // internal oscillator
-}
+MACHINE_CONFIG_END
 
-void ddenlovr_state::ddenlovj(machine_config &config)
-{
+MACHINE_CONFIG_START(ddenlovr_state::ddenlovj)
 	ddenlovr(config);
 
 	/* basic machine hardware */
@@ -9748,7 +9748,7 @@ void ddenlovr_state::ddenlovj(machine_config &config)
 	m_mainlatch->q_out_cb<5>().set(FUNC(ddenlovr_state::ddenlovr_blitter_irq_ack_w));
 
 	RTC62421(config.replace(), "rtc", XTAL(32'768)); // internal oscillator
-}
+MACHINE_CONFIG_END
 
 void ddenlovr_state::ddenlovrk(machine_config &config)
 {
@@ -10061,7 +10061,7 @@ void ddenlovr_state::kotbinyo(machine_config &config)
 	m_screen->set_visarea(0, 336-1-1, 1+4, 256-15-1+4);
 	m_screen->set_screen_update(FUNC(ddenlovr_state::screen_update_ddenlovr));
 	m_screen->set_video_attributes(VIDEO_ALWAYS_UPDATE);
-	m_screen->set_palette(m_palette);
+	m_screen->set_palette("palette");
 	m_screen->screen_vblank().set(FUNC(ddenlovr_state::hanakanz_irq));
 
 	PALETTE(config, m_palette).set_entries(0x200);
@@ -10431,8 +10431,7 @@ void ddenlovr_state::mjflove(machine_config &config)
 	AY8910(config, "aysnd", 28636363/8).add_route(ALL_OUTPUTS, "mono", 0.30);
 }
 
-void ddenlovr_state::hparadis(machine_config &config)
-{
+MACHINE_CONFIG_START(ddenlovr_state::hparadis)
 	quizchq(config);
 
 	/* basic machine hardware */
@@ -10446,30 +10445,30 @@ void ddenlovr_state::hparadis(machine_config &config)
 	config.device_remove("rtc");
 
 	MCFG_MACHINE_START_OVERRIDE(ddenlovr_state,hparadis)
-}
+MACHINE_CONFIG_END
 
-void ddenlovr_state::jongtei(machine_config &config)
-{
+MACHINE_CONFIG_START(ddenlovr_state::jongtei)
+
 	/* basic machine hardware */
-	Z80(config, m_maincpu, XTAL(20'000'000) / 2); // KL5C80A12
-	m_maincpu->set_addrmap(AS_PROGRAM, &ddenlovr_state::hanakanz_map);
-	m_maincpu->set_addrmap(AS_IO, &ddenlovr_state::jongtei_portmap);
+	MCFG_DEVICE_ADD("maincpu",Z80, XTAL(20'000'000) / 2) // KL5C80A12
+	MCFG_DEVICE_PROGRAM_MAP(hanakanz_map)
+	MCFG_DEVICE_IO_MAP(jongtei_portmap)
 
 	MCFG_MACHINE_START_OVERRIDE(ddenlovr_state,hanakanz)
 	MCFG_MACHINE_RESET_OVERRIDE(ddenlovr_state,ddenlovr)
 
 	/* video hardware */
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
-	m_screen->set_refresh_hz(60);
-	m_screen->set_vblank_time(ATTOSECONDS_IN_USEC(0));
-	m_screen->set_size(336, 256);
-	m_screen->set_visarea(0, 336-1, 5, 256-11-1);
-	m_screen->set_screen_update(FUNC(ddenlovr_state::screen_update_ddenlovr));
-	m_screen->set_video_attributes(VIDEO_ALWAYS_UPDATE);
-	m_screen->set_palette(m_palette);
-	m_screen->screen_vblank().set(FUNC(ddenlovr_state::hanakanz_irq));
+	MCFG_SCREEN_ADD(m_screen, RASTER)
+	MCFG_SCREEN_REFRESH_RATE(60)
+	MCFG_SCREEN_VBLANK_TIME(ATTOSECONDS_IN_USEC(0))
+	MCFG_SCREEN_SIZE(336, 256)
+	MCFG_SCREEN_VISIBLE_AREA(0, 336-1, 5, 256-11-1)
+	MCFG_SCREEN_UPDATE_DRIVER(ddenlovr_state, screen_update_ddenlovr)
+	MCFG_SCREEN_VIDEO_ATTRIBUTES(VIDEO_ALWAYS_UPDATE)
+	MCFG_SCREEN_PALETTE("palette")
+	MCFG_SCREEN_VBLANK_CALLBACK(WRITELINE(*this, ddenlovr_state, hanakanz_irq))
 
-	PALETTE(config, m_palette).set_entries(0x200);
+	MCFG_PALETTE_ADD("palette", 0x200)
 
 	blitter_irq().set(FUNC(ddenlovr_state::mjflove_blitter_irq));
 
@@ -10480,27 +10479,29 @@ void ddenlovr_state::jongtei(machine_config &config)
 
 	YM2413(config, "ym2413", XTAL(28'636'363) / 8).add_route(ALL_OUTPUTS, "mono", 0.80);
 
-	OKIM6295(config, m_oki, XTAL(28'636'363) / 28, okim6295_device::PIN7_HIGH).add_route(ALL_OUTPUTS, "mono", 0.80);
+	MCFG_DEVICE_ADD("oki", OKIM6295, XTAL(28'636'363) / 28, okim6295_device::PIN7_HIGH)
+	MCFG_SOUND_ROUTE(ALL_OUTPUTS, "mono", 0.80)
 
 	/* devices */
 	MSM6242(config, "rtc", XTAL(32'768)).out_int_handler().set(FUNC(ddenlovr_state::hanakanz_rtc_irq));
-}
+MACHINE_CONFIG_END
 
-void ddenlovr_state::mjgnight(machine_config &config)
-{
+MACHINE_CONFIG_START(ddenlovr_state::mjgnight)
 	jongtei(config);
-	m_maincpu->set_addrmap(AS_IO, &ddenlovr_state::mjgnight_portmap);
+	MCFG_DEVICE_MODIFY("maincpu")
+	MCFG_DEVICE_IO_MAP(mjgnight_portmap)
 
-	m_screen->set_size(336, 256);
-	m_screen->set_visarea(0, 336-1, 5-4, 256-11-1-4);
-}
+	MCFG_SCREEN_MODIFY("screen")
+	MCFG_SCREEN_SIZE(336, 256)
+	MCFG_SCREEN_VISIBLE_AREA(0, 336-1, 5-4, 256-11-1-4)
+MACHINE_CONFIG_END
 
 /***************************************************************************
                             Mahjong Seiryu Densetsu
 ***************************************************************************/
 
-void ddenlovr_state::sryudens(machine_config &config)
-{
+MACHINE_CONFIG_START(ddenlovr_state::sryudens)
+
 	/* basic machine hardware */
 	tmpz84c015_device &maincpu(TMPZ84C015(config, m_maincpu, XTAL(16'000'000) / 2)); // ?
 	maincpu.set_addrmap(AS_PROGRAM, &ddenlovr_state::sryudens_map);
@@ -10512,17 +10513,17 @@ void ddenlovr_state::sryudens(machine_config &config)
 	MCFG_MACHINE_RESET_OVERRIDE(ddenlovr_state,ddenlovr)
 
 	/* video hardware */
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
-	m_screen->set_refresh_hz(60.8532);   // VSync 60.8532Hz, HSync 15.2790kHz
-	m_screen->set_vblank_time(ATTOSECONDS_IN_USEC(0));
-	m_screen->set_size(336, 256+22);
-	m_screen->set_visarea(0, 336-1, 0+5, 256-12-1);
-	m_screen->set_screen_update(FUNC(ddenlovr_state::screen_update_ddenlovr));
-	m_screen->set_video_attributes(VIDEO_ALWAYS_UPDATE);
-	m_screen->set_palette(m_palette);
-	m_screen->screen_vblank().set(m_maincpu, FUNC(tmpz84c015_device::trg0));
+	MCFG_SCREEN_ADD(m_screen, RASTER)
+	MCFG_SCREEN_REFRESH_RATE(60.8532)   // VSync 60.8532Hz, HSync 15.2790kHz
+	MCFG_SCREEN_VBLANK_TIME(ATTOSECONDS_IN_USEC(0))
+	MCFG_SCREEN_SIZE(336, 256+22)
+	MCFG_SCREEN_VISIBLE_AREA(0, 336-1, 0+5, 256-12-1)
+	MCFG_SCREEN_UPDATE_DRIVER(ddenlovr_state, screen_update_ddenlovr)
+	MCFG_SCREEN_VIDEO_ATTRIBUTES(VIDEO_ALWAYS_UPDATE)
+	MCFG_SCREEN_PALETTE("palette")
+	MCFG_SCREEN_VBLANK_CALLBACK(WRITELINE("maincpu", tmpz84c015_device, trg0))
 
-	PALETTE(config, m_palette).set_entries(0x100);
+	MCFG_PALETTE_ADD("palette", 0x100)
 
 	blitter_irq().set(FUNC(ddenlovr_state::mjflove_blitter_irq));
 
@@ -10535,19 +10536,20 @@ void ddenlovr_state::sryudens(machine_config &config)
 
 	YMZ284(config, "aysnd", XTAL(28'636'363) / 8).add_route(ALL_OUTPUTS, "mono", 0.30);
 
-	OKIM6295(config, m_oki, XTAL(28'636'363) / 28, okim6295_device::PIN7_HIGH).add_route(ALL_OUTPUTS, "mono", 0.80); // ?
+	MCFG_DEVICE_ADD("oki", OKIM6295, XTAL(28'636'363) / 28, okim6295_device::PIN7_HIGH) // ?
+	MCFG_SOUND_ROUTE(ALL_OUTPUTS, "mono", 0.80)
 
 	/* devices */
 	RTC62421(config, "rtc", XTAL(32'768)).out_int_handler().set(m_maincpu, FUNC(tmpz84c015_device::trg1)); // internal oscillator
-}
+MACHINE_CONFIG_END
 
 /***************************************************************************
                             Mahjong Janshin Plus
 ***************************************************************************/
 
 // PCB: NM7001004
-void ddenlovr_state::janshinp(machine_config &config)
-{
+MACHINE_CONFIG_START(ddenlovr_state::janshinp)
+
 	/* basic machine hardware */
 	tmpz84c015_device &maincpu(TMPZ84C015(config, m_maincpu, XTAL(16'000'000) / 2));
 	maincpu.set_addrmap(AS_PROGRAM, &ddenlovr_state::janshinp_map);
@@ -10559,17 +10561,17 @@ void ddenlovr_state::janshinp(machine_config &config)
 	MCFG_MACHINE_RESET_OVERRIDE(ddenlovr_state,ddenlovr)
 
 	/* video hardware */
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
-	m_screen->set_refresh_hz(60.8532);   // VSync 60.8532Hz, HSync 15.2790kHz ?
-	m_screen->set_vblank_time(ATTOSECONDS_IN_USEC(0));
-	m_screen->set_size(336, 256+22);
-	m_screen->set_visarea(0, 336-1, 0+5, 256-12-1);
-	m_screen->set_screen_update(FUNC(ddenlovr_state::screen_update_ddenlovr));
-	m_screen->set_video_attributes(VIDEO_ALWAYS_UPDATE);
-	m_screen->set_palette(m_palette);
-	m_screen->screen_vblank().set(m_maincpu, FUNC(tmpz84c015_device::trg0));
+	MCFG_SCREEN_ADD(m_screen, RASTER)
+	MCFG_SCREEN_REFRESH_RATE(60.8532)   // VSync 60.8532Hz, HSync 15.2790kHz ?
+	MCFG_SCREEN_VBLANK_TIME(ATTOSECONDS_IN_USEC(0))
+	MCFG_SCREEN_SIZE(336, 256+22)
+	MCFG_SCREEN_VISIBLE_AREA(0, 336-1, 0+5, 256-12-1)
+	MCFG_SCREEN_UPDATE_DRIVER(ddenlovr_state, screen_update_ddenlovr)
+	MCFG_SCREEN_VIDEO_ATTRIBUTES(VIDEO_ALWAYS_UPDATE)
+	MCFG_SCREEN_PALETTE("palette")
+	MCFG_SCREEN_VBLANK_CALLBACK(WRITELINE("maincpu", tmpz84c015_device, trg0))
 
-	PALETTE(config, m_palette).set_entries(0x100);
+	MCFG_PALETTE_ADD("palette", 0x100)
 
 	blitter_irq().set(FUNC(ddenlovr_state::mjflove_blitter_irq));
 
@@ -10582,11 +10584,12 @@ void ddenlovr_state::janshinp(machine_config &config)
 
 	YMZ284(config, "aysnd", XTAL(28'636'363) / 8).add_route(ALL_OUTPUTS, "mono", 0.30);
 
-	OKIM6295(config, m_oki, XTAL(28'636'363) / 28, okim6295_device::PIN7_HIGH).add_route(ALL_OUTPUTS, "mono", 0.80); // ?
+	MCFG_DEVICE_ADD("oki", OKIM6295, XTAL(28'636'363) / 28, okim6295_device::PIN7_HIGH) // ?
+	MCFG_SOUND_ROUTE(ALL_OUTPUTS, "mono", 0.80)
 
 	/* devices */
 	MSM6242(config, "rtc", XTAL(32'768)).out_int_handler().set(m_maincpu, FUNC(tmpz84c015_device::trg1));
-}
+MACHINE_CONFIG_END
 
 // Same PCB as janshinp
 void ddenlovr_state::dtoyoken(machine_config &config)
@@ -10615,8 +10618,8 @@ MACHINE_START_MEMBER(ddenlovr_state,seljan2)
 	MACHINE_START_CALL_MEMBER(ddenlovr);
 }
 
-void ddenlovr_state::seljan2(machine_config &config)
-{
+MACHINE_CONFIG_START(ddenlovr_state::seljan2)
+
 	/* basic machine hardware */
 	tmpz84c015_device &maincpu(TMPZ84C015(config, m_maincpu, XTAL(16'000'000) / 2));
 	maincpu.set_addrmap(AS_PROGRAM, &ddenlovr_state::seljan2_map);
@@ -10628,17 +10631,17 @@ void ddenlovr_state::seljan2(machine_config &config)
 	MCFG_MACHINE_RESET_OVERRIDE(ddenlovr_state,ddenlovr)
 
 	/* video hardware */
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
-	m_screen->set_refresh_hz(60.8532);   // VSync 60.8532Hz, HSync 15.2790kHz ?
-	m_screen->set_vblank_time(ATTOSECONDS_IN_USEC(0));
-	m_screen->set_size(336, 256+22);
-	m_screen->set_visarea(0, 336-1, 0+5, 256-12-1);
-	m_screen->set_screen_update(FUNC(ddenlovr_state::screen_update_ddenlovr));
-	m_screen->set_video_attributes(VIDEO_ALWAYS_UPDATE);
-	m_screen->set_palette(m_palette);
-	m_screen->screen_vblank().set(m_maincpu, FUNC(tmpz84c015_device::trg0));
+	MCFG_SCREEN_ADD(m_screen, RASTER)
+	MCFG_SCREEN_REFRESH_RATE(60.8532)   // VSync 60.8532Hz, HSync 15.2790kHz ?
+	MCFG_SCREEN_VBLANK_TIME(ATTOSECONDS_IN_USEC(0))
+	MCFG_SCREEN_SIZE(336, 256+22)
+	MCFG_SCREEN_VISIBLE_AREA(0, 336-1, 0+5, 256-12-1)
+	MCFG_SCREEN_UPDATE_DRIVER(ddenlovr_state, screen_update_ddenlovr)
+	MCFG_SCREEN_VIDEO_ATTRIBUTES(VIDEO_ALWAYS_UPDATE)
+	MCFG_SCREEN_PALETTE("palette")
+	MCFG_SCREEN_VBLANK_CALLBACK(WRITELINE("maincpu", tmpz84c015_device, trg0))
 
-	PALETTE(config, m_palette).set_entries(0x100);
+	MCFG_PALETTE_ADD("palette", 0x100)
 
 	blitter_irq().set("maincpu", FUNC(tmpz84c015_device::pa7_w)).invert(); // PA bit 7 = blitter busy
 
@@ -10654,11 +10657,12 @@ void ddenlovr_state::seljan2(machine_config &config)
 	aysnd.port_b_write_callback().set(FUNC(ddenlovr_state::ddenlovr_select_w));
 	aysnd.add_route(ALL_OUTPUTS, "mono", 0.30);
 
-	OKIM6295(config, m_oki, XTAL(28'636'363) / 28, okim6295_device::PIN7_HIGH).add_route(ALL_OUTPUTS, "mono", 0.80); // ?
+	MCFG_DEVICE_ADD("oki", OKIM6295, XTAL(28'636'363) / 28, okim6295_device::PIN7_HIGH) // ?
+	MCFG_SOUND_ROUTE(ALL_OUTPUTS, "mono", 0.80)
 
 	/* devices */
 	MSM6242(config, "rtc", XTAL(32'768)).out_int_handler().set(m_maincpu, FUNC(tmpz84c015_device::trg1));
-}
+MACHINE_CONFIG_END
 
 
 /***************************************************************************
@@ -10666,28 +10670,28 @@ void ddenlovr_state::seljan2(machine_config &config)
 ***************************************************************************/
 
 
-void ddenlovr_state::daimyojn(machine_config &config)
-{
+MACHINE_CONFIG_START(ddenlovr_state::daimyojn)
+
 	/* basic machine hardware */
-	Z80(config, m_maincpu, XTAL(20'000'000) / 2);
-	m_maincpu->set_addrmap(AS_PROGRAM, &ddenlovr_state::hanakanz_map);
-	m_maincpu->set_addrmap(AS_IO, &ddenlovr_state::daimyojn_portmap);
+	MCFG_DEVICE_ADD("maincpu",Z80, XTAL(20'000'000) / 2)
+	MCFG_DEVICE_PROGRAM_MAP(hanakanz_map)
+	MCFG_DEVICE_IO_MAP(daimyojn_portmap)
 
 	MCFG_MACHINE_START_OVERRIDE(ddenlovr_state,mjflove)
 	MCFG_MACHINE_RESET_OVERRIDE(ddenlovr_state,ddenlovr)
 
 	/* video hardware */
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
-	m_screen->set_refresh_hz(59.7922);   // HSync 15.4248kHz
-	m_screen->set_vblank_time(ATTOSECONDS_IN_USEC(0));
-	m_screen->set_size(336, 256+22);
-	m_screen->set_visarea(0, 336-1-1, 1, 256-15-1);
-	m_screen->set_screen_update(FUNC(ddenlovr_state::screen_update_ddenlovr));
-	m_screen->set_video_attributes(VIDEO_ALWAYS_UPDATE);
-	m_screen->set_palette(m_palette);
-	m_screen->screen_vblank().set(FUNC(ddenlovr_state::hanakanz_irq));
+	MCFG_SCREEN_ADD(m_screen, RASTER)
+	MCFG_SCREEN_REFRESH_RATE(59.7922)   // HSync 15.4248kHz
+	MCFG_SCREEN_VBLANK_TIME(ATTOSECONDS_IN_USEC(0))
+	MCFG_SCREEN_SIZE(336, 256+22)
+	MCFG_SCREEN_VISIBLE_AREA(0, 336-1-1, 1, 256-15-1)
+	MCFG_SCREEN_UPDATE_DRIVER(ddenlovr_state, screen_update_ddenlovr)
+	MCFG_SCREEN_VIDEO_ATTRIBUTES(VIDEO_ALWAYS_UPDATE)
+	MCFG_SCREEN_PALETTE("palette")
+	MCFG_SCREEN_VBLANK_CALLBACK(WRITELINE(*this, ddenlovr_state, hanakanz_irq))
 
-	PALETTE(config, m_palette).set_entries(0x200);
+	MCFG_PALETTE_ADD("palette", 0x200)
 
 	MCFG_VIDEO_START_OVERRIDE(ddenlovr_state,hanakanz) // blitter commands in the roms are shuffled around
 
@@ -10696,11 +10700,12 @@ void ddenlovr_state::daimyojn(machine_config &config)
 
 	YM2413(config, "ym2413", XTAL(28'636'363) / 8).add_route(ALL_OUTPUTS, "mono", 0.80);
 
-	OKIM6295(config, m_oki, XTAL(28'636'363) / 28, okim6295_device::PIN7_HIGH).add_route(ALL_OUTPUTS, "mono", 0.80);
+	MCFG_DEVICE_ADD("oki", OKIM6295, XTAL(28'636'363) / 28, okim6295_device::PIN7_HIGH)
+	MCFG_SOUND_ROUTE(ALL_OUTPUTS, "mono", 0.80)
 
 	/* devices */
 	MSM6242(config, "rtc", XTAL(32'768)).out_int_handler().set(FUNC(ddenlovr_state::hanakanz_rtc_irq));
-}
+MACHINE_CONFIG_END
 
 
 

@@ -1260,7 +1260,7 @@ void c64_state::machine_reset()
 //**************************************************************************
 
 //-------------------------------------------------
-//  machine_config( ntsc )
+//  MACHINE_CONFIG( ntsc )
 //-------------------------------------------------
 
 void c64_state::ntsc(machine_config &config)
@@ -1380,7 +1380,7 @@ void c64_state::ntsc(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( pet64 )
+//  MACHINE_CONFIG( pet64 )
 //-------------------------------------------------
 
 void c64_state::pet64(machine_config &config)
@@ -1391,7 +1391,7 @@ void c64_state::pet64(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( ntsc_sx )
+//  MACHINE_CONFIG( ntsc_sx )
 //-------------------------------------------------
 
 void sx64_state::ntsc_sx(machine_config &config)
@@ -1409,7 +1409,7 @@ void sx64_state::ntsc_sx(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( ntsc_dx )
+//  MACHINE_CONFIG( ntsc_dx )
 //-------------------------------------------------
 
 void sx64_state::ntsc_dx(machine_config &config)
@@ -1422,7 +1422,7 @@ void sx64_state::ntsc_dx(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( ntsc_c )
+//  MACHINE_CONFIG( ntsc_c )
 //-------------------------------------------------
 
 void c64c_state::ntsc_c(machine_config &config)
@@ -1436,7 +1436,7 @@ void c64c_state::ntsc_c(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( pal )
+//  MACHINE_CONFIG( pal )
 //-------------------------------------------------
 
 void c64_state::pal(machine_config &config)
@@ -1556,7 +1556,7 @@ void c64_state::pal(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( pal_sx )
+//  MACHINE_CONFIG( pal_sx )
 //-------------------------------------------------
 
 void sx64_state::pal_sx(machine_config &config)
@@ -1574,7 +1574,7 @@ void sx64_state::pal_sx(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( pal_c )
+//  MACHINE_CONFIG( pal_c )
 //-------------------------------------------------
 
 void c64c_state::pal_c(machine_config &config)
@@ -1588,7 +1588,7 @@ void c64c_state::pal_c(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( pal_gs )
+//  MACHINE_CONFIG( pal_gs )
 //-------------------------------------------------
 
 void c64gs_state::pal_gs(machine_config &config)

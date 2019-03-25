@@ -492,8 +492,7 @@ TIMER_DEVICE_CALLBACK_MEMBER( fireball_state::int_0 )
 *************************/
 
 
-void fireball_state::fireball(machine_config &config)
-{
+MACHINE_CONFIG_START(fireball_state::fireball)
 	/* basic machine hardware */
 	I8031(config, m_maincpu, CPU_CLK); //
 	m_maincpu->set_addrmap(AS_PROGRAM, &fireball_state::fireball_map);
@@ -514,7 +513,7 @@ void fireball_state::fireball(machine_config &config)
 
 	/* Video */
 	config.set_default_layout(layout_fireball);
-}
+MACHINE_CONFIG_END
 
 
 /*************************

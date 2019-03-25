@@ -1030,11 +1030,11 @@ static INPUT_PORTS_START( mgprem11 )
 INPUT_PORTS_END
 
 
-void cubo_state::cubo(machine_config &config)
-{
+MACHINE_CONFIG_START(cubo_state::cubo)
+
 	/* basic machine hardware */
-	M68EC020(config, m_maincpu, amiga_state::CLK_28M_PAL / 2);
-	m_maincpu->set_addrmap(AS_PROGRAM, &cubo_state::cubo_mem);
+	MCFG_DEVICE_ADD("maincpu", M68EC020, amiga_state::CLK_28M_PAL / 2)
+	MCFG_DEVICE_PROGRAM_MAP(cubo_mem)
 
 	ADDRESS_MAP_BANK(config, "overlay").set_map(&amiga_state::overlay_2mb_map32).set_options(ENDIANNESS_BIG, 32, 22, 0x200000);
 
@@ -1050,8 +1050,9 @@ void cubo_state::cubo(machine_config &config)
 
 	// video hardware
 	pal_video(config);
-	m_screen->set_screen_update(FUNC(amiga_state::screen_update_amiga_aga));
-	m_screen->set_palette(finder_base::DUMMY_TAG);
+	MCFG_DEVICE_MODIFY("screen")
+	MCFG_SCREEN_UPDATE_DRIVER(amiga_state, screen_update_amiga_aga)
+	MCFG_SCREEN_NO_PALETTE
 
 	MCFG_VIDEO_START_OVERRIDE(amiga_state, amiga_aga)
 
@@ -1067,9 +1068,9 @@ void cubo_state::cubo(machine_config &config)
 	paula.mem_read_cb().set(FUNC(amiga_state::chip_ram_r));
 	paula.int_cb().set(FUNC(amiga_state::paula_int_w));
 
-	CDDA(config, m_cdda);
-	m_cdda->add_route(0, "lspeaker", 0.50);
-	m_cdda->add_route(1, "rspeaker", 0.50);
+	MCFG_DEVICE_ADD("cdda", CDDA)
+	MCFG_SOUND_ROUTE(0, "lspeaker", 0.50)
+	MCFG_SOUND_ROUTE(1, "rspeaker", 0.50)
 
 	/* cia */
 	// these are setup differently on other amiga drivers (needed for floppy to work) which is correct / why?
@@ -1092,7 +1093,7 @@ void cubo_state::cubo(machine_config &config)
 	m_fdc->write_dma_callback().set(FUNC(amiga_state::chip_ram_w));
 	m_fdc->dskblk_callback().set(FUNC(amiga_state::fdc_dskblk_w));
 	m_fdc->dsksyn_callback().set(FUNC(amiga_state::fdc_dsksyn_w));
-}
+MACHINE_CONFIG_END
 
 
 

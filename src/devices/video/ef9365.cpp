@@ -1225,7 +1225,7 @@ void ef9365_device::update_scanline(uint16_t scanline)
 // data_r: Registers read access callback
 //-------------------------------------------------
 
-uint8_t ef9365_device::data_r(offs_t offset)
+READ8_MEMBER( ef9365_device::data_r )
 {
 	unsigned char return_value;
 
@@ -1316,7 +1316,7 @@ uint8_t ef9365_device::data_r(offs_t offset)
 // data_w: Registers write access callback
 //-------------------------------------------------
 
-void ef9365_device::data_w(offs_t offset, uint8_t data)
+WRITE8_MEMBER( ef9365_device::data_w )
 {
 	LOG("EF9365 [ %s ] <WR [ 0x%.2X ] - %s\n", register_names[offset&0xF],data, machine().describe_context() );
 

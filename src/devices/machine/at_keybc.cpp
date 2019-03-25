@@ -110,22 +110,22 @@ DEFINE_DEVICE_TYPE(PS2_KEYBOARD_CONTROLLER, ps2_keyboard_controller_device, "ps2
 //  KEYBOARD CONTROLLER DEVICE BASE
 //**************************************************************************
 
-uint8_t at_kbc_device_base::data_r()
+READ8_MEMBER(at_kbc_device_base::data_r)
 {
-	return m_mcu->upi41_master_r(machine().dummy_space(), 0U);
+	return m_mcu->upi41_master_r(space, 0U);
 }
 
-uint8_t at_kbc_device_base::status_r()
+READ8_MEMBER(at_kbc_device_base::status_r)
 {
-	return m_mcu->upi41_master_r(machine().dummy_space(), 1U);
+	return m_mcu->upi41_master_r(space, 1U);
 }
 
-void at_kbc_device_base::data_w(uint8_t data)
+WRITE8_MEMBER(at_kbc_device_base::data_w)
 {
 	machine().scheduler().synchronize(timer_expired_delegate(FUNC(at_kbc_device_base::write_data), this), unsigned(data));
 }
 
-void at_kbc_device_base::command_w(uint8_t data)
+WRITE8_MEMBER(at_kbc_device_base::command_w)
 {
 	machine().scheduler().synchronize(timer_expired_delegate(FUNC(at_kbc_device_base::write_command), this), unsigned(data));
 }
@@ -265,7 +265,7 @@ ioport_constructor at_keyboard_controller_device::device_input_ports() const
 	return INPUT_PORTS_NAME(at_kbc);
 }
 
-void at_keyboard_controller_device::p2_w(uint8_t data)
+WRITE8_MEMBER(at_keyboard_controller_device::p2_w)
 {
 	set_hot_res(BIT(~data, 0));
 	set_gate_a20(BIT(data, 1));
@@ -279,11 +279,11 @@ void at_keyboard_controller_device::p2_w(uint8_t data)
 //  PS/2 KEYBOARD/MOUSE CONTROLLER DEVICE
 //**************************************************************************
 
-uint8_t ps2_keyboard_controller_device::data_r()
+READ8_MEMBER(ps2_keyboard_controller_device::data_r)
 {
 	set_kbd_irq(0U);
 	set_mouse_irq(0U);
-	return m_mcu->upi41_master_r(machine().dummy_space(), 0U);
+	return m_mcu->upi41_master_r(space, 0U);
 }
 
 WRITE_LINE_MEMBER(ps2_keyboard_controller_device::mouse_clk_w)
@@ -385,12 +385,12 @@ TIMER_CALLBACK_MEMBER(ps2_keyboard_controller_device::set_mouse_data_in)
 	m_mouse_data_in = param ? 1U : 0U;
 }
 
-uint8_t ps2_keyboard_controller_device::p1_r()
+READ8_MEMBER(ps2_keyboard_controller_device::p1_r)
 {
 	return kbd_data_r() | (mouse_data_r() << 1) | 0xfcU;
 }
 
-void ps2_keyboard_controller_device::p2_w(uint8_t data)
+WRITE8_MEMBER(ps2_keyboard_controller_device::p2_w)
 {
 	set_hot_res(BIT(~data, 0));
 	set_gate_a20(BIT(data, 1));

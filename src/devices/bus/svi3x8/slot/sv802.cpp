@@ -62,7 +62,7 @@ void sv802_device::device_start()
 //  IMPLEMENTATION
 //**************************************************************************
 
-uint8_t sv802_device::iorq_r(offs_t offset)
+READ8_MEMBER( sv802_device::iorq_r )
 {
 	if (offset == 0x12)
 		return 0xfe | m_busy;
@@ -70,7 +70,7 @@ uint8_t sv802_device::iorq_r(offs_t offset)
 	return 0xff;
 }
 
-void sv802_device::iorq_w(offs_t offset, uint8_t data)
+WRITE8_MEMBER( sv802_device::iorq_w )
 {
 	switch (offset)
 	{

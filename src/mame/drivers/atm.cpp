@@ -187,14 +187,13 @@ static GFXDECODE_START( gfx_atmtb2 )
 GFXDECODE_END
 
 
-void atm_state::atm(machine_config &config)
-{
+MACHINE_CONFIG_START(atm_state::atm)
 	spectrum_128(config);
 
-	m_maincpu->set_addrmap(AS_PROGRAM, &atm_state::atm_mem);
-	m_maincpu->set_addrmap(AS_IO, &atm_state::atm_io);
-	m_maincpu->set_addrmap(AS_OPCODES, &atm_state::atm_switch);
-
+	MCFG_DEVICE_MODIFY("maincpu")
+	MCFG_DEVICE_PROGRAM_MAP(atm_mem)
+	MCFG_DEVICE_IO_MAP(atm_io)
+	MCFG_DEVICE_OPCODES_MAP(atm_switch)
 	MCFG_MACHINE_RESET_OVERRIDE(atm_state, atm )
 
 	BETA_DISK(config, m_beta, 0);
@@ -202,7 +201,7 @@ void atm_state::atm(machine_config &config)
 	subdevice<gfxdecode_device>("gfxdecode")->set_info(gfx_atm);
 
 	config.device_remove("exp");
-}
+MACHINE_CONFIG_END
 
 void atm_state::atmtb2(machine_config &config)
 {

@@ -1629,7 +1629,7 @@ void c128_state::machine_reset()
 //**************************************************************************
 
 //-------------------------------------------------
-//  machine_config( ntsc )
+//  MACHINE_CONFIG( ntsc )
 //-------------------------------------------------
 
 void c128_state::ntsc(machine_config &config)
@@ -1783,7 +1783,7 @@ void c128_state::ntsc(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( c128 )
+//  MACHINE_CONFIG( c128 )
 //-------------------------------------------------
 
 void c128_state::c128(machine_config &config)
@@ -1796,7 +1796,7 @@ void c128_state::c128(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( c128dcr )
+//  MACHINE_CONFIG( c128dcr )
 //-------------------------------------------------
 
 void c128_state::c128dcr(machine_config &config)
@@ -1809,7 +1809,7 @@ void c128_state::c128dcr(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( c128d81 )
+//  MACHINE_CONFIG( c128d81 )
 //-------------------------------------------------
 
 void c128_state::c128d81(machine_config &config)
@@ -1824,7 +1824,7 @@ void c128_state::c128d81(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( pal )
+//  MACHINE_CONFIG( pal )
 //-------------------------------------------------
 
 void c128_state::pal(machine_config &config)
@@ -1978,7 +1978,7 @@ void c128_state::pal(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( c128pal )
+//  MACHINE_CONFIG( c128pal )
 //-------------------------------------------------
 
 void c128_state::c128pal(machine_config &config)
@@ -1991,7 +1991,7 @@ void c128_state::c128pal(machine_config &config)
 
 
 //-------------------------------------------------
-//  machine_config( c128dcrp )
+//  MACHINE_CONFIG( c128dcrp )
 //-------------------------------------------------
 
 void c128_state::c128dcrp(machine_config &config)

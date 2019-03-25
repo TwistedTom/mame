@@ -129,25 +129,21 @@ void bbc_pal_device::device_start()
 //  read
 //-------------------------------------------------
 
-uint8_t bbc_cciword_device::read(offs_t offset)
+READ8_MEMBER(bbc_cciword_device::read)
 {
 	if (!machine().side_effects_disabled())
 	{
-		/* switching zones for Inter-Word */
 		switch (offset & 0x3fe0)
 		{
-		case 0x0060:
-		case 0x3fc0: m_bank = 0; break;
-		case 0x0040:
-		case 0x3fa0:
-		case 0x3fe0: m_bank = 1; break;
+		case 0x0040: m_bank = 1; break;
+		case 0x0060: m_bank = 0; break;
 		}
 	}
 
 	return get_rom_base()[(offset & 0x3fff) | (m_bank << 14)];
 }
 
-uint8_t bbc_ccibase_device::read(offs_t offset)
+READ8_MEMBER(bbc_ccibase_device::read)
 {
 	if (!machine().side_effects_disabled())
 	{
@@ -164,7 +160,7 @@ uint8_t bbc_ccibase_device::read(offs_t offset)
 	return get_rom_base()[(offset & 0x3fff) | (m_bank << 14)];
 }
 
-uint8_t bbc_ccispell_device::read(offs_t offset)
+READ8_MEMBER(bbc_ccispell_device::read)
 {
 	if (!machine().side_effects_disabled())
 	{
@@ -191,7 +187,7 @@ uint8_t bbc_ccispell_device::read(offs_t offset)
 	return get_rom_base()[(offset & 0x3fff) | (m_bank << 14)];
 }
 
-uint8_t bbc_palqst_device::read(offs_t offset)
+READ8_MEMBER(bbc_palqst_device::read)
 {
 	if (!machine().side_effects_disabled())
 	{
@@ -215,7 +211,7 @@ uint8_t bbc_palqst_device::read(offs_t offset)
 	}
 }
 
-uint8_t bbc_palwap_device::read(offs_t offset)
+READ8_MEMBER(bbc_palwap_device::read)
 {
 	if (!machine().side_effects_disabled())
 	{
@@ -243,7 +239,7 @@ uint8_t bbc_palwap_device::read(offs_t offset)
 	}
 }
 
-uint8_t bbc_palted_device::read(offs_t offset)
+READ8_MEMBER(bbc_palted_device::read)
 {
 	if (!machine().side_effects_disabled())
 	{
@@ -267,7 +263,7 @@ uint8_t bbc_palted_device::read(offs_t offset)
 	}
 }
 
-uint8_t bbc_palabep_device::read(offs_t offset)
+READ8_MEMBER(bbc_palabep_device::read)
 {
 	if (!machine().side_effects_disabled())
 	{
@@ -282,7 +278,7 @@ uint8_t bbc_palabep_device::read(offs_t offset)
 	return get_rom_base()[(offset & 0x3fff) | (m_bank << 14)];
 }
 
-uint8_t bbc_palabe_device::read(offs_t offset)
+READ8_MEMBER(bbc_palabe_device::read)
 {
 	if (!machine().side_effects_disabled())
 	{
@@ -297,7 +293,7 @@ uint8_t bbc_palabe_device::read(offs_t offset)
 	return get_rom_base()[(offset & 0x3fff) | (m_bank << 14)];
 }
 
-uint8_t bbc_palmo2_device::read(offs_t offset)
+READ8_MEMBER(bbc_palmo2_device::read)
 {
 	if (!machine().side_effects_disabled())
 	{

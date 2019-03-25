@@ -42,7 +42,7 @@ void vp575_device::update_interrupts()
 
 
 //-------------------------------------------------
-//  machine_config( vp575 )
+//  MACHINE_CONFIG_START( vp575 )
 //-------------------------------------------------
 
 void vp575_device::device_add_mconfig(machine_config &config)

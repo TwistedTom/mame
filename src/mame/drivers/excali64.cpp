@@ -75,9 +75,6 @@ public:
 
 	void excali64(machine_config &config);
 
-protected:
-	virtual void machine_reset() override;
-
 private:
 	void excali64_palette(palette_device &palette);
 	DECLARE_WRITE8_MEMBER(ppib_w);
@@ -100,7 +97,7 @@ private:
 	DECLARE_WRITE_LINE_MEMBER(crtc_hs);
 	DECLARE_WRITE_LINE_MEMBER(crtc_vs);
 	DECLARE_WRITE_LINE_MEMBER(motor_w);
-
+	DECLARE_MACHINE_RESET(excali64);
 	void io_map(address_map &map);
 	void mem_map(address_map &map);
 
@@ -415,7 +412,7 @@ WRITE8_MEMBER( excali64_state::port70_w )
 		membank("bankr1")->set_entry(2);
 }
 
-void excali64_state::machine_reset()
+MACHINE_RESET_MEMBER( excali64_state, excali64 )
 {
 	membank("bankr1")->set_entry(1); // read from ROM
 	membank("bankr2")->set_entry(1); // read from ROM
@@ -553,12 +550,13 @@ MC6845_UPDATE_ROW( excali64_state::update_row )
 	}
 }
 
-void excali64_state::excali64(machine_config &config)
-{
+MACHINE_CONFIG_START(excali64_state::excali64)
 	/* basic machine hardware */
-	Z80(config, m_maincpu, 16_MHz_XTAL / 4);
-	m_maincpu->set_addrmap(AS_PROGRAM, &excali64_state::mem_map);
-	m_maincpu->set_addrmap(AS_IO, &excali64_state::io_map);
+	MCFG_DEVICE_ADD("maincpu", Z80, 16_MHz_XTAL / 4)
+	MCFG_DEVICE_PROGRAM_MAP(mem_map)
+	MCFG_DEVICE_IO_MAP(io_map)
+
+	MCFG_MACHINE_RESET_OVERRIDE(excali64_state, excali64)
 
 	I8251(config, "uart", 0);
 	//uart.txd_handler().set("rs232", FUNC(rs232_port_device::write_txd));
@@ -583,12 +581,12 @@ void excali64_state::excali64(machine_config &config)
 	WAVE(config, "wave", "cassette").add_route(ALL_OUTPUTS, "mono", 0.05);
 
 	/* Video hardware */
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
-	screen.set_refresh_hz(50);
-	screen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); /* not accurate */
-	screen.set_size(80*8, 24*12);
-	screen.set_visarea_full();
-	screen.set_screen_update("crtc", FUNC(mc6845_device::screen_update));
+	MCFG_SCREEN_ADD("screen", RASTER)
+	MCFG_SCREEN_REFRESH_RATE(50)
+	MCFG_SCREEN_VBLANK_TIME(ATTOSECONDS_IN_USEC(2500)) /* not accurate */
+	MCFG_SCREEN_SIZE(80*8, 24*12)
+	MCFG_SCREEN_VISIBLE_AREA(0, 80*8-1, 0, 24*12-1)
+	MCFG_SCREEN_UPDATE_DEVICE("crtc", mc6845_device, screen_update)
 
 	PALETTE(config, m_palette, FUNC(excali64_state::excali64_palette), 40);
 	GFXDECODE(config, "gfxdecode", m_palette, gfx_excali64);
@@ -630,7 +628,7 @@ void excali64_state::excali64(machine_config &config)
 
 	output_latch_device &cent_data_out(OUTPUT_LATCH(config, "cent_data_out"));
 	m_centronics->set_output_latch(cent_data_out);
-}
+MACHINE_CONFIG_END
 
 /* ROM definition */
 ROM_START( excali64 )

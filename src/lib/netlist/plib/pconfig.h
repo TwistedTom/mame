@@ -48,13 +48,12 @@
  */
 
 #define PALIGN_CACHELINE        (64)
-#define PALIGN_VECTOROPT        (64)
+#define PALIGN_VECTOROPT        (32)
 
 #define PALIGNAS_CACHELINE()    PALIGNAS(PALIGN_CACHELINE)
 #define PALIGNAS_VECTOROPT()    PALIGNAS(PALIGN_VECTOROPT)
 
-/* Breaks mame build on windows due to -Wattribute
- * FIXME: no error on cross-compile - need further checks */
+/* Breaks mame build on windows due to -Wattribute */
 #if defined(_WIN32) && defined(__GNUC__)
 #define PALIGNAS(x)
 #else

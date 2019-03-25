@@ -315,7 +315,7 @@ READ8_MEMBER( asr733_device::cru_r )
 {
 	int reply = 0;
 
-	switch (offset >> 3)
+	switch (offset)
 	{
 	case 0:
 		/* receive buffer */
@@ -328,7 +328,7 @@ READ8_MEMBER( asr733_device::cru_r )
 		break;
 	}
 
-	return BIT(reply, offset & 7);
+	return reply;
 }
 
 /*

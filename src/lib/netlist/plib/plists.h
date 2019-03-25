@@ -34,10 +34,10 @@ public:
 	using iterator = C *;
 	using const_iterator = const C *;
 
-	uninitialised_array_t() noexcept = default;
+	uninitialised_array_t() = default;
 
 	COPYASSIGNMOVE(uninitialised_array_t, delete)
-	~uninitialised_array_t() noexcept
+	~uninitialised_array_t()
 	{
 		for (std::size_t i=0; i<N; i++)
 			(*this)[i].~C();
@@ -76,7 +76,7 @@ protected:
 private:
 
 	/* ensure proper alignment */
-	PALIGNAS_VECTOROPT()
+	// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays, modernize-avoid-c-arrays)
 	std::array<typename std::aligned_storage<sizeof(C), alignof(C)>::type, N> m_buf;
 };
 
@@ -226,10 +226,10 @@ public:
 
 	void push_front(LC *elem) noexcept
 	{
-		if (m_head)
-			m_head->m_prev = elem;
 		elem->m_next = m_head;
 		elem->m_prev = nullptr;
+		if (elem->m_next)
+			elem->m_next->m_prev = elem;
 		m_head = elem;
 	}
 

@@ -1049,7 +1049,7 @@ QUICKLOAD_LOAD_MEMBER( abc800_state, bac )
 //**************************************************************************
 
 //-------------------------------------------------
-//  machine_config( common )
+//  MACHINE_CONFIG( common )
 //-------------------------------------------------
 
 MACHINE_CONFIG_START(abc800_state::common)
@@ -1118,11 +1118,10 @@ MACHINE_CONFIG_END
 
 
 //-------------------------------------------------
-//  machine_config( abc800c )
+//  MACHINE_CONFIG( abc800c )
 //-------------------------------------------------
 
-void abc800c_state::abc800c(machine_config &config)
-{
+MACHINE_CONFIG_START(abc800c_state::abc800c)
 	common(config);
 
 	// basic machine hardware
@@ -1133,23 +1132,23 @@ void abc800c_state::abc800c(machine_config &config)
 	abc800c_video(config);
 
 	// peripheral hardware
-	abc_keyboard_port_device &kb(*subdevice<abc_keyboard_port_device>(ABC_KEYBOARD_PORT_TAG));
-	kb.set_default_option("abc800");
-	kb.set_fixed(true);
+	MCFG_DEVICE_MODIFY(ABC_KEYBOARD_PORT_TAG)
+	MCFG_SLOT_DEFAULT_OPTION("abc800")
+	MCFG_SLOT_FIXED(true)
 
-	subdevice<abcbus_slot_device>(ABCBUS_TAG)->set_default_option("abc830");
+	MCFG_DEVICE_MODIFY(ABCBUS_TAG)
+	MCFG_SLOT_DEFAULT_OPTION("abc830")
 
 	// internal ram
 	RAM(config, RAM_TAG).set_default_size("16K").set_extra_options("32K");
-}
+MACHINE_CONFIG_END
 
 
 //-------------------------------------------------
-//  machine_config( abc800m )
+//  MACHINE_CONFIG( abc800m )
 //-------------------------------------------------
 
-void abc800m_state::abc800m(machine_config &config)
-{
+MACHINE_CONFIG_START(abc800m_state::abc800m)
 	common(config);
 
 	// basic machine hardware
@@ -1160,23 +1159,23 @@ void abc800m_state::abc800m(machine_config &config)
 	abc800m_video(config);
 
 	// peripheral hardware
-	abc_keyboard_port_device &kb(*subdevice<abc_keyboard_port_device>(ABC_KEYBOARD_PORT_TAG));
-	kb.set_default_option("abc800");
-	kb.set_fixed(true);
+	MCFG_DEVICE_MODIFY(ABC_KEYBOARD_PORT_TAG)
+	MCFG_SLOT_DEFAULT_OPTION("abc800")
+	MCFG_SLOT_FIXED(true)
 
-	subdevice<abcbus_slot_device>(ABCBUS_TAG)->set_default_option("abc830");
+	MCFG_DEVICE_MODIFY(ABCBUS_TAG)
+	MCFG_SLOT_DEFAULT_OPTION("abc830")
 
 	// internal ram
 	RAM(config, RAM_TAG).set_default_size("16K").set_extra_options("32K");
-}
+MACHINE_CONFIG_END
 
 
 //-------------------------------------------------
-//  machine_config( abc802 )
+//  MACHINE_CONFIG( abc802 )
 //-------------------------------------------------
 
-void abc802_state::abc802(machine_config &config)
-{
+MACHINE_CONFIG_START(abc802_state::abc802)
 	common(config);
 
 	// basic machine hardware
@@ -1190,21 +1189,22 @@ void abc802_state::abc802(machine_config &config)
 	m_dart->out_dtrb_callback().set(FUNC(abc802_state::lrs_w));
 	m_dart->out_rtsb_callback().set(FUNC(abc802_state::mux80_40_w));
 
-	subdevice<abc_keyboard_port_device>(ABC_KEYBOARD_PORT_TAG)->set_default_option("abc55");
+	MCFG_DEVICE_MODIFY(ABC_KEYBOARD_PORT_TAG)
+	MCFG_SLOT_DEFAULT_OPTION("abc55")
 
-	subdevice<abcbus_slot_device>(ABCBUS_TAG)->set_default_option("abc834");
+	MCFG_DEVICE_MODIFY(ABCBUS_TAG)
+	MCFG_SLOT_DEFAULT_OPTION("abc834")
 
 	// internal ram
 	RAM(config, RAM_TAG).set_default_size("64K");
-}
+MACHINE_CONFIG_END
 
 
 //-------------------------------------------------
-//  machine_config( abc806 )
+//  MACHINE_CONFIG( abc806 )
 //-------------------------------------------------
 
-void abc806_state::abc806(machine_config &config)
-{
+MACHINE_CONFIG_START(abc806_state::abc806)
 	common(config);
 
 	// basic machine hardware
@@ -1219,16 +1219,18 @@ void abc806_state::abc806(machine_config &config)
 
 	m_dart->out_dtrb_callback().set(FUNC(abc806_state::keydtr_w));
 
-	subdevice<abc_keyboard_port_device>(ABC_KEYBOARD_PORT_TAG)->set_default_option("abc77");
+	MCFG_DEVICE_MODIFY(ABC_KEYBOARD_PORT_TAG)
+	MCFG_SLOT_DEFAULT_OPTION("abc77")
 
-	subdevice<abcbus_slot_device>(ABCBUS_TAG)->set_default_option("abc832");
+	MCFG_DEVICE_MODIFY(ABCBUS_TAG)
+	MCFG_SLOT_DEFAULT_OPTION("abc832")
 
 	// internal ram
 	RAM(config, RAM_TAG).set_default_size("160K").set_extra_options("544K");
 
 	// software list
 	SOFTWARE_LIST(config, "flop_list2").set_original("abc806");
-}
+MACHINE_CONFIG_END
 
 
 

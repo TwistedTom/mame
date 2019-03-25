@@ -187,13 +187,13 @@ static void dragon_alpha_floppies(device_slot_interface &device)
 	device.option_add("dd", FLOPPY_35_DD);
 }
 
-void dragon_state::dragon_base(machine_config &config)
-{
-	this->set_clock(14.218_MHz_XTAL / 16);
+MACHINE_CONFIG_START(dragon_state::dragon_base)
+	MCFG_DEVICE_MODIFY(":")
+	MCFG_DEVICE_CLOCK(14.218_MHz_XTAL / 16)
 
 	// basic machine hardware
-	MC6809E(config, m_maincpu, DERIVED_CLOCK(1, 1));
-	m_maincpu->set_addrmap(AS_PROGRAM, &dragon_state::dragon_mem);
+	MCFG_DEVICE_ADD("maincpu", MC6809E, DERIVED_CLOCK(1, 1))
+	MCFG_DEVICE_PROGRAM_MAP(dragon_mem)
 
 	// devices
 	pia6821_device &pia0(PIA6821(config, PIA0_TAG, 0));
@@ -243,10 +243,9 @@ void dragon_state::dragon_base(machine_config &config)
 	SOFTWARE_LIST(config, "dragon_cass_list").set_original("dragon_cass");
 	SOFTWARE_LIST(config, "dragon_flop_list").set_original("dragon_flop");
 	SOFTWARE_LIST(config, "coco_cart_list").set_compatible("coco_cart");
-}
+MACHINE_CONFIG_END
 
-void dragon_state::dragon32(machine_config &config)
-{
+MACHINE_CONFIG_START(dragon_state::dragon32)
 	dragon_base(config);
 	// internal ram
 	RAM(config, m_ram).set_default_size("32K").set_extra_options("64K");
@@ -256,7 +255,7 @@ void dragon_state::dragon32(machine_config &config)
 	cartslot.cart_callback().set([this] (int state) { cart_w(state != 0); }); // lambda because name is overloaded
 	cartslot.nmi_callback().set_inputline(m_maincpu, INPUT_LINE_NMI);
 	cartslot.halt_callback().set_inputline(m_maincpu, INPUT_LINE_HALT);
-}
+MACHINE_CONFIG_END
 
 void dragon64_state::dragon64(machine_config &config)
 {
@@ -279,14 +278,13 @@ void dragon64_state::dragon64(machine_config &config)
 	SOFTWARE_LIST(config, "dragon_os9_list").set_original("dragon_os9");
 }
 
-void dragon64_state::dragon64h(machine_config &config)
-{
+MACHINE_CONFIG_START(dragon64_state::dragon64h)
 	dragon64(config);
 	// Replace M6809 with HD6309
-	HD6309E(config.replace(), m_maincpu, DERIVED_CLOCK(1, 1));
-	m_maincpu->set_addrmap(AS_PROGRAM, &dragon64_state::dragon_mem);
+	MCFG_DEVICE_REPLACE(MAINCPU_TAG, HD6309E, DERIVED_CLOCK(1, 1))
+	MCFG_DEVICE_PROGRAM_MAP(dragon_mem)
 	m_ram->set_default_size("64K");
-}
+MACHINE_CONFIG_END
 
 void dragon200e_state::dragon200e(machine_config &config)
 {
@@ -295,16 +293,15 @@ void dragon200e_state::dragon200e(machine_config &config)
 	m_vdg->set_get_char_rom(FUNC(dragon200e_state::char_rom_r));
 }
 
-void d64plus_state::d64plus(machine_config &config)
-{
+MACHINE_CONFIG_START(d64plus_state::d64plus)
 	dragon64(config);
 	// video hardware
-	screen_device &plus_screen(SCREEN(config, "plus_screen", SCREEN_TYPE_RASTER));
-	plus_screen.set_refresh_hz(50);
-	plus_screen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); /* not accurate */
-	plus_screen.set_size(640, 264);
-	plus_screen.set_visarea_full();
-	plus_screen.set_screen_update("crtc", FUNC(hd6845_device::screen_update));
+	MCFG_SCREEN_ADD("plus_screen", RASTER)
+	MCFG_SCREEN_REFRESH_RATE(50)
+	MCFG_SCREEN_VBLANK_TIME(ATTOSECONDS_IN_USEC(2500)) /* not accurate */
+	MCFG_SCREEN_SIZE(640, 264)
+	MCFG_SCREEN_VISIBLE_AREA(0, 640-1, 0, 264-1)
+	MCFG_SCREEN_UPDATE_DEVICE("crtc", hd6845_device, screen_update)
 	PALETTE(config, m_palette, palette_device::MONOCHROME);
 
 	// crtc
@@ -313,7 +310,7 @@ void d64plus_state::d64plus(machine_config &config)
 	m_crtc->set_show_border_area(false);
 	m_crtc->set_char_width(8);
 	m_crtc->set_update_row_callback(FUNC(d64plus_state::crtc_update_row), this);
-}
+MACHINE_CONFIG_END
 
 void dragon_alpha_state::dgnalpha(machine_config &config)
 {
@@ -359,10 +356,10 @@ void dragon_alpha_state::dgnalpha(machine_config &config)
 	SOFTWARE_LIST(config, "dragon_os9_list").set_original("dragon_os9");
 }
 
-void dragon64_state::tanodr64(machine_config &config)
-{
+MACHINE_CONFIG_START(dragon64_state::tanodr64)
 	dragon64(config);
-	this->set_clock(14.318181_MHz_XTAL / 16);
+	MCFG_DEVICE_MODIFY(":")
+	MCFG_DEVICE_CLOCK(14.318181_MHz_XTAL / 16)
 
 	m_sam->set_clock(14.318181_MHz_XTAL);
 
@@ -374,17 +371,17 @@ void dragon64_state::tanodr64(machine_config &config)
 	m_vdg->input_callback().set(m_sam, FUNC(sam6883_device::display_read));
 
 	// cartridge
-	subdevice<cococart_slot_device>(CARTRIDGE_TAG)->set_default_option("sdtandy_fdc");
-}
+	MCFG_DEVICE_MODIFY(CARTRIDGE_TAG)
+	MCFG_DEVICE_SLOT_INTERFACE(dragon_cart, "sdtandy_fdc", false)
+MACHINE_CONFIG_END
 
-void dragon64_state::tanodr64h(machine_config &config)
-{
+MACHINE_CONFIG_START(dragon64_state::tanodr64h)
 	tanodr64(config);
 	// Replace M6809 CPU with HD6309 CPU
-	HD6309E(config.replace(), m_maincpu, DERIVED_CLOCK(1, 1));
-	m_maincpu->set_addrmap(AS_PROGRAM, &dragon64_state::dragon_mem);
+	MCFG_DEVICE_REPLACE(MAINCPU_TAG, HD6309E, DERIVED_CLOCK(1, 1))
+	MCFG_DEVICE_PROGRAM_MAP(dragon_mem)
 	m_ram->set_default_size("64K");
-}
+MACHINE_CONFIG_END
 
 /***************************************************************************
 

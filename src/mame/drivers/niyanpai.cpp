@@ -154,6 +154,8 @@ void niyanpai_state::niyanpai_map(address_map &map)
 	map(0x240a01, 0x240a01).w(FUNC(niyanpai_state::clutsel_0_w));
 	map(0x240c01, 0x240c01).w(FUNC(niyanpai_state::clutsel_1_w));
 	map(0x240e01, 0x240e01).w(FUNC(niyanpai_state::clutsel_2_w));
+
+	map(0xfffc00, 0xffffff).rw(m_tmp68301, FUNC(tmp68301_device::regs_r), FUNC(tmp68301_device::regs_w));  // TMP68301 Registers
 }
 
 void niyanpai_state::musobana_map(address_map &map)
@@ -191,6 +193,8 @@ void niyanpai_state::musobana_map(address_map &map)
 	map(0x280000, 0x280001).r(FUNC(niyanpai_state::dipsw_r));
 	map(0x280200, 0x280201).r(FUNC(niyanpai_state::musobana_inputport_0_r));
 	map(0x280400, 0x280401).portr("SYSTEM");
+
+	map(0xfffc00, 0xffffff).rw(m_tmp68301, FUNC(tmp68301_device::regs_r), FUNC(tmp68301_device::regs_w));  // TMP68301 Registers
 }
 
 void niyanpai_state::mhhonban_map(address_map &map)
@@ -230,6 +234,8 @@ void niyanpai_state::mhhonban_map(address_map &map)
 	map(0x280000, 0x280001).r(FUNC(niyanpai_state::dipsw_r));
 	map(0x280200, 0x280201).r(FUNC(niyanpai_state::musobana_inputport_0_r));
 	map(0x280400, 0x280401).portr("SYSTEM");
+
+	map(0xfffc00, 0xffffff).rw(m_tmp68301, FUNC(tmp68301_device::regs_r), FUNC(tmp68301_device::regs_w));  // TMP68301 Registers
 }
 
 void niyanpai_state::zokumahj_map(address_map &map)
@@ -268,6 +274,8 @@ void niyanpai_state::zokumahj_map(address_map &map)
 	map(0x280000, 0x280001).r(FUNC(niyanpai_state::dipsw_r));
 	map(0x280200, 0x280201).r(FUNC(niyanpai_state::musobana_inputport_0_r));
 	map(0x280400, 0x280401).portr("SYSTEM");
+
+	map(0xfffc00, 0xffffff).rw(m_tmp68301, FUNC(tmp68301_device::regs_r), FUNC(tmp68301_device::regs_w));  // TMP68301 Registers
 }
 
 
@@ -679,16 +687,20 @@ INPUT_PORTS_END
 WRITE_LINE_MEMBER(niyanpai_state::vblank_irq)
 {
 	if (state)
-		m_maincpu->external_interrupt_0();
+		m_tmp68301->external_interrupt_0();
 }
 
 
 void niyanpai_state::niyanpai(machine_config &config)
 {
 	/* basic machine hardware */
-	TMP68301(config, m_maincpu, 12288000/2); /* TMP68301, 6.144 MHz */
+	M68000(config, m_maincpu, 12288000/2); /* TMP68301, 6.144 MHz */
 	m_maincpu->set_addrmap(AS_PROGRAM, &niyanpai_state::niyanpai_map);
-	m_maincpu->out_parallel_callback().set(FUNC(niyanpai_state::tmp68301_parallel_port_w));
+	m_maincpu->set_irq_acknowledge_callback("tmp68301", FUNC(tmp68301_device::irq_callback));
+
+	TMP68301(config, m_tmp68301, 0);
+	m_tmp68301->set_cputag(m_maincpu);
+	m_tmp68301->out_parallel_callback().set(FUNC(niyanpai_state::tmp68301_parallel_port_w));
 
 	NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_0);
 
