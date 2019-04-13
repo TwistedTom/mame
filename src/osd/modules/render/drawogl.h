@@ -120,6 +120,7 @@ public:
 		, m_last_vofs(0.0f)
 		, m_surf_w(0)
 		, m_surf_h(0)
+		, m_fd(0)
 	{
 		for (int i=0; i < HASH_SIZE + OVERFLOW_SIZE; i++)
 			m_texhash[i] = nullptr;
@@ -230,6 +231,8 @@ private:
 
 	static bool     s_shown_video_info;
 	static bool     s_dll_loaded;
+	// DRM file handle
+	int             m_fd; 
 };
 
 #endif // __DRAWOGL__

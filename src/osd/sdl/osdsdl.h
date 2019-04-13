@@ -20,7 +20,6 @@
 #define SDLOPTION_SCALEMODE             "scalemode"
 
 #define SDLOPTION_WAITVSYNC             "waitvsync"
-#define SDLOPTION_SYNCREFRESH           "syncrefresh"
 #define SDLOPTION_KEYMAP                "keymap"
 #define SDLOPTION_KEYMAP_FILE           "keymap_file"
 
@@ -122,6 +121,7 @@ public:
 	// general overridables
 	virtual void init(running_machine &machine) override;
 	virtual void update(bool skip_redraw) override;
+	virtual void poll_input(void) override;
 
 	// input overridables
 	virtual void customize_input_type_list(simple_list<input_type_entry> &typelist) override;
@@ -140,6 +140,8 @@ public:
 	bool should_hide_mouse();
 	void process_events_buf();
 
+	void extract_video_config();
+	
 	virtual sdl_options &options() override { return m_options; }
 
 protected:
@@ -149,7 +151,6 @@ protected:
 private:
 	virtual void osd_exit() override;
 
-	void extract_video_config();
 	void output_oslog(const char *buffer);
 
 	sdl_options &m_options;

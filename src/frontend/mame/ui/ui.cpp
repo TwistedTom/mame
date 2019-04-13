@@ -30,6 +30,7 @@
 #include "ui/state.h"
 #include "ui/viewgfx.h"
 #include "imagedev/cassette.h"
+#include "config.h"
 
 
 /***************************************************************************
@@ -207,6 +208,9 @@ void mame_ui_manager::init()
 
 	// request a callback upon exiting
 	machine().add_notifier(MACHINE_NOTIFY_EXIT, machine_notify_delegate(&mame_ui_manager::exit, this));
+
+	// register callbacks
+	machine().configuration().config_register("sliders", config_load_delegate(&mame_ui_manager::config_load, this), config_save_delegate(&mame_ui_manager::config_save, this));
 
 	// create mouse bitmap
 	uint32_t *dst = &m_mouse_bitmap.pix32(0);
@@ -1373,6 +1377,9 @@ std::vector<ui::menu_item> mame_ui_manager::slider_init(running_machine &machine
 	// add overall volume
 	m_sliders.push_back(slider_alloc(SLIDER_ID_VOLUME, _("Master Volume"), -32, 0, 0, 1, nullptr));
 
+	// add frame delay
+	m_sliders.push_back(slider_alloc(SLIDER_ID_FRAMEDELAY, _("Frame Delay"), 0, machine.options().frame_delay(), 9, 1, nullptr));
+
 	// add per-channel volume
 	mixer_input info;
 	for (int item = 0; machine.sound().indexed_mixer_input(item, info); item++)
@@ -1517,6 +1524,8 @@ std::vector<ui::menu_item> mame_ui_manager::slider_init(running_machine &machine
 	}
 #endif
 
+	config_apply();
+
 	std::vector<ui::menu_item> items;
 	for (auto &slider : m_sliders)
 	{
@@ -1540,6 +1549,8 @@ int32_t mame_ui_manager::slider_changed(running_machine &machine, void *arg, int
 {
 	if (id == SLIDER_ID_VOLUME)
 		return slider_volume(machine, arg, id, str, newval);
+	else if (id == SLIDER_ID_FRAMEDELAY)
+		return slider_framedelay(machine, arg, id, str, newval);
 	else if (id >= SLIDER_ID_MIXERVOL && id <= SLIDER_ID_MIXERVOL_LAST)
 		return slider_mixervol(machine, arg, id, str, newval);
 	else if (id >= SLIDER_ID_ADJUSTER && id <= SLIDER_ID_ADJUSTER_LAST)
@@ -1600,6 +1611,21 @@ int32_t mame_ui_manager::slider_volume(running_machine &machine, void *arg, int 
 	if (str)
 		*str = string_format(_("%1$3ddB"), machine.sound().attenuation());
 	return machine.sound().attenuation();
+}
+
+
+//-------------------------------------------------
+//  slider_framedelay - global frame delay slider
+//  callback
+//-------------------------------------------------
+
+int32_t mame_ui_manager::slider_framedelay(running_machine &machine, void *arg, int id, std::string *str, int32_t newval)
+{
+	if (newval != SLIDER_NOCHANGE)
+		machine.video().set_framedelay(newval);
+	if (str)
+		*str = string_format(_("%1$3d"), machine.video().framedelay());
+	return machine.video().framedelay();
 }
 
 
@@ -2233,4 +2259,84 @@ void mame_ui_manager::save_main_option()
 void mame_ui_manager::menu_reset()
 {
 	ui::menu::stack_reset(machine());
+}
+
+//-------------------------------------------------
+//  config_load - read data from the
+//  configuration file
+//-------------------------------------------------
+
+void mame_ui_manager::config_load(config_type cfg_type, util::xml::data_node const *parentnode)
+{
+	// we only care about game files
+	if (cfg_type != config_type::GAME)
+		return;
+
+	// might not have any data
+	if (parentnode == nullptr)
+		return;
+
+	// iterate over slider nodes
+	for (util::xml::data_node const *slider_node = parentnode->get_child("slider"); slider_node; slider_node = slider_node->get_next_sibling("slider"))
+	{
+		const char *desc = slider_node->get_attribute_string("desc", "");
+		int32_t saved_val = slider_node->get_attribute_int("value", 0);
+
+		// create a dummy slider to store the saved value
+		m_sliders_saved.push_back(slider_alloc(0, desc, 0, saved_val, 0, 0, 0));
+	}
+}
+
+
+//-------------------------------------------------
+//  config_appy - apply data from the conf. file
+//  This currently needs to be done on a separate
+//  step because sliders are not created yet when
+//  configuration file is loaded
+//-------------------------------------------------
+
+void mame_ui_manager::config_apply(void)
+{
+	// iterate over sliders and restore saved values
+	for (auto &slider : m_sliders)
+	{
+		for (auto &slider_saved : m_sliders_saved)
+		{
+			if (!strcmp(slider->description.c_str(), slider_saved->description.c_str()))
+			{
+				std::string tempstring;
+				slider->update(machine(), slider->arg, slider->id, &tempstring, slider_saved->defval);
+				break;
+
+			}
+		}
+	}
+}
+
+
+//-------------------------------------------------
+//  config_save - save data to the configuration
+//  file
+//-------------------------------------------------
+
+void mame_ui_manager::config_save(config_type cfg_type, util::xml::data_node *parentnode)
+{
+	// we only care about game files
+	if (cfg_type != config_type::GAME)
+		return;
+
+	std::string tempstring;
+	util::xml::data_node *slider_node;
+
+	// save UI sliders
+	for (auto &slider : m_sliders)
+	{
+		int32_t curval = slider->update(machine(), slider->arg, slider->id, &tempstring, SLIDER_NOCHANGE);
+		if (curval != slider->defval)
+		{
+			slider_node = parentnode->add_child("slider", nullptr);
+			slider_node->set_attribute("desc", slider->description.c_str());
+			slider_node->set_attribute_int("value", curval);
+		}
+	}
 }

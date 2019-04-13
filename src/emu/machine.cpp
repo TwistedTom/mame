@@ -134,6 +134,7 @@ running_machine::running_machine(const machine_config &_config, machine_manager 
 		m_dummy_space(_config, "dummy_space", &root_device(), 0)
 {
 	memset(&m_base_time, 0, sizeof(m_base_time));
+	memset(&switchres, 0, sizeof(switchres));
 
 	m_dummy_space.set_machine(*this);
 	m_dummy_space.config_complete();

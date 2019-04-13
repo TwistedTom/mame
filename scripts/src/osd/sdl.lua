@@ -41,10 +41,17 @@ function maintargetosdoptions(_target,_subtarget)
 	if BASE_TARGETOS=="unix" and _OPTIONS["targetos"]~="macosx" and _OPTIONS["targetos"]~="android" then
 		links {
 			"SDL2_ttf",
+			"Xrandr",
 		}
 		local str = backtick(pkgconfigcmd() .. " --libs fontconfig")
 		addlibfromstring(str)
 		addoptionsfromstring(str)
+	end
+
+	if BASE_TARGETOS=="unix" and _OPTIONS["targetos"]=="linux" then
+		local str = backtick("pkg-config --libs libdrm")
+		addlibfromstring(str)
+		addoptionsfromstring(str)		
 	end
 
 	if _OPTIONS["targetos"]=="windows" then
@@ -417,6 +424,7 @@ project ("osd_" .. _OPTIONS["osd"])
 		MAME_DIR .. "src/osd/sdl/video.cpp",
 		MAME_DIR .. "src/osd/sdl/window.cpp",
 		MAME_DIR .. "src/osd/sdl/window.h",
+		MAME_DIR .. "src/osd/sdl/switchres_sdl.cpp",
 		MAME_DIR .. "src/osd/modules/osdwindow.cpp",
 		MAME_DIR .. "src/osd/modules/osdwindow.h",
 		MAME_DIR .. "src/osd/modules/render/drawsdl.cpp",

@@ -257,6 +257,11 @@ files {
 	MAME_DIR .. "src/emu/video/rgbsse.h",
 	MAME_DIR .. "src/emu/video/rgbvmx.cpp",
 	MAME_DIR .. "src/emu/video/rgbvmx.h",
+	MAME_DIR .. "src/emu/switchres/modeline.cpp",
+	MAME_DIR .. "src/emu/switchres/monitor.cpp",
+	MAME_DIR .. "src/emu/switchres/util.cpp",
+	MAME_DIR .. "src/emu/switchres/switchres.cpp",
+	MAME_DIR .. "src/emu/switchres/switchres.h",
 }
 
 dependency {

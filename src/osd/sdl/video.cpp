@@ -93,6 +93,18 @@ void sdl_osd_interface::video_exit()
 }
 
 //============================================================
+//  poll_input
+//============================================================
+
+void sdl_osd_interface::poll_input(void)
+{
+	// poll the joystick values here
+	downcast<sdl_osd_interface&>(machine().osd()).poll_inputs(machine());
+	check_osd_inputs(machine());
+}
+
+
+//============================================================
 //  update
 //============================================================
 
@@ -109,10 +121,6 @@ void sdl_osd_interface::update(bool skip_redraw)
 //      profiler_mark(PROFILER_END);
 	}
 
-	// poll the joystick values here
-	downcast<sdl_osd_interface&>(machine().osd()).poll_inputs(machine());
-
-	check_osd_inputs(machine());
 	// if we're running, disable some parts of the debugger
 	if ((machine().debug_flags & DEBUG_FLAG_OSD_ENABLED) != 0)
 		debugger_update();
@@ -239,12 +247,7 @@ void sdl_osd_interface::extract_video_config()
 	video_config.centerh       = options().centerh();
 	video_config.centerv       = options().centerv();
 	video_config.waitvsync     = options().wait_vsync();
-	video_config.syncrefresh   = options().sync_refresh();
-	if (!video_config.waitvsync && video_config.syncrefresh)
-	{
-		osd_printf_warning("-syncrefresh specified without -waitvsync. Reverting to -nosyncrefresh\n");
-		video_config.syncrefresh = 0;
-	}
+	video_config.syncrefresh   = machine().options().sync_refresh();
 
 	if (video_config.prescale < 1 || video_config.prescale > 3)
 	{

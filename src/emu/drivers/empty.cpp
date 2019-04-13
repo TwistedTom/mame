@@ -50,7 +50,7 @@ void empty_state::___empty(machine_config &config)
 	screen.set_screen_update(FUNC(empty_state::screen_update));
 	screen.set_size(640, 480);
 	screen.set_visarea(0, 639, 0, 479);
-	screen.set_refresh_hz(30);
+	screen.set_refresh_hz(61);
 }
 
 

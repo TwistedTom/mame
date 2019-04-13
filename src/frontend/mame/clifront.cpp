@@ -1710,6 +1710,7 @@ void cli_frontend::execute_commands(const char *exename)
 void cli_frontend::display_help(const char *exename)
 {
 	osd_printf_info("%s v%s\n%s\n\n", emulator_info::get_appname(),build_version,emulator_info::get_copyright_info());
+	osd_printf_info("GroovyMAME - SwitchRes version %s\n", SWITCHRES_VERSION);
 	osd_printf_info("This software reproduces, more or less faithfully, the behaviour of a wide range\n"
 					"of machines. But hardware is useless without software, so images of the ROMs and\n"
 					"other media which run on that hardware are also required.\n\n");

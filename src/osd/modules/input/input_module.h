@@ -26,6 +26,7 @@ public:
 
 	virtual void input_init(running_machine &machine) = 0;
 	virtual void poll_if_necessary(running_machine &machine) = 0;
+	virtual void poll(running_machine &machine) { };
 	virtual void pause() = 0;
 	virtual void resume() = 0;
 };

@@ -73,7 +73,6 @@ public:
 	// Pointer to next window
 	sdl_window_info *   m_next;
 
-private:
 	// window handle and info
 	char                m_title[256];
 	int                 m_startmaximized;
@@ -105,6 +104,7 @@ private:
 	void update_cursor_state();
 	osd_dim pick_best_mode();
 	void set_fullscreen(int afullscreen) { m_fullscreen = afullscreen; }
+	void reset_fullscreen_renderer();
 
 	// Pointer to machine
 	running_machine &   m_machine;

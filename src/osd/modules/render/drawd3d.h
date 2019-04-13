@@ -39,7 +39,7 @@
 struct d3d_base
 {
 	// internal objects
-	IDirect3D9 *d3dobj;
+	IDirect3D9Ex *d3dobj;
 	bool        post_fx_available;
 
 	osd::dynamic_module::ptr d3d9_dll;
@@ -67,6 +67,8 @@ public:
 	virtual void add_audio_to_recording(const int16_t *buffer, int samples_this_frame) override;
 	virtual std::vector<ui::menu_item> get_slider_list() override;
 	virtual void set_sliders_dirty() override;
+	virtual int restart() override;
+	inline BOOL GetClientRectExceptMenu(HWND hWnd, PRECT pRect, BOOL fullscreen);
 
 	int                     initialize();
 
@@ -74,6 +76,8 @@ public:
 	int                     device_create_resources();
 	void                    device_delete();
 	void                    device_delete_resources();
+	void                    device_flush();
+	void                    update_break_scanlines();
 	void                    update_presentation_parameters();
 	void                    update_gamma_ramp();
 
@@ -114,7 +118,7 @@ public:
 	int                     get_height() const { return m_height; }
 	int                     get_refresh() const { return m_refresh; }
 
-	IDirect3DDevice9 *      get_device() const { return m_device; }
+	IDirect3DDevice9Ex *    get_device() const { return m_device; }
 	D3DPRESENT_PARAMETERS * get_presentation() { return &m_presentation; }
 
 	IDirect3DVertexBuffer9 *get_vertex_buffer() const { return m_vertexbuf; }
@@ -123,7 +127,7 @@ public:
 
 	D3DFORMAT               get_screen_format() const { return m_screen_format; }
 	D3DFORMAT               get_pixel_format() const { return m_pixformat; }
-	D3DDISPLAYMODE          get_origmode() const { return m_origmode; }
+	D3DDISPLAYMODEEX        get_origmode() const { return m_origmode; }
 
 	uint32_t                  get_last_texture_flags() const { return m_last_texture_flags; }
 
@@ -134,16 +138,25 @@ public:
 
 private:
 	int                     m_adapter;                  // ordinal adapter number
+	int                     m_vendor_id;                // adapter vendor id
 	int                     m_width;                    // current width
 	int                     m_height;                   // current height
 	int                     m_refresh;                  // current refresh rate
+	bool                    m_interlace;                // current interlace
+	int                     m_frame_delay;              // current frame delay value
+	int                     m_first_scanline;           // first scanline number (visible)
+	int                     m_last_scanline;            // last scanline number (visible)
+	int                     m_delay_scanline;           // scanline number supposed to be after frame delay
+	int                     m_break_scanline;           // break scanline number, for vsync offset
 	int                     m_create_error_count;       // number of consecutive create errors
 
-	IDirect3DDevice9 *      m_device;                   // pointer to the Direct3DDevice object
+	IDirect3DDevice9Ex *    m_device;                   // pointer to the Direct3DDevice object
 	int                     m_gamma_supported;          // is full screen gamma supported?
 	D3DPRESENT_PARAMETERS   m_presentation;             // set of presentation parameters
-	D3DDISPLAYMODE          m_origmode;                 // original display mode for the adapter
+	D3DDISPLAYMODEEX        m_origmode;                 // original display mode for the adapter
+	D3DDISPLAYMODEEX        m_display_mode;             // full screen display mode
 	D3DFORMAT               m_pixformat;                // pixel format we are using
+	IDirect3DQuery9 *		m_query;
 
 	IDirect3DVertexBuffer9 *m_vertexbuf;                // pointer to the vertex buffer object
 	vertex *                m_lockedbuf;                // pointer to the locked vertex buffer

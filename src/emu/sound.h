@@ -223,7 +223,7 @@ private:
 	void config_load(config_type cfg_type, util::xml::data_node const *parentnode);
 	void config_save(config_type cfg_type, util::xml::data_node *parentnode);
 
-	void update(void *ptr = nullptr, s32 param = 0);
+	void update();
 
 	// internal state
 	running_machine &   m_machine;              // reference to our machine

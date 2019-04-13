@@ -280,10 +280,10 @@ void sdl_osd_interface::customize_input_type_list(simple_list<input_type_entry> 
 
 void sdl_osd_interface::poll_inputs(running_machine &machine)
 {
-	m_keyboard_input->poll_if_necessary(machine);
+	m_keyboard_input->poll(machine);
 	m_mouse_input->poll_if_necessary(machine);
 	m_lightgun_input->poll_if_necessary(machine);
-	m_joystick_input->poll_if_necessary(machine);
+	m_joystick_input->poll(machine);
 }
 
 void sdl_osd_interface::release_keys()

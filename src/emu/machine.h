@@ -257,6 +257,9 @@ public:
 	std::string compose_saveload_filename(std::string &&base_filename, const char **searchpath = nullptr);
 	std::string get_statename(const char *statename_opt) const;
 
+	// SwitchRes manager
+	switchres_manager       switchres;			// SwitchRes data
+
 private:
 	// side effect disable counter
 	u32                     m_side_effects_disabled;

@@ -72,6 +72,8 @@
 #define OPTION_FRAMESKIP            "frameskip"
 #define OPTION_SECONDS_TO_RUN       "seconds_to_run"
 #define OPTION_THROTTLE             "throttle"
+#define OPTION_SYNCREFRESH          "syncrefresh"
+#define OPTION_AUTOSYNC             "autosync"
 #define OPTION_SLEEP                "sleep"
 #define OPTION_SPEED                "speed"
 #define OPTION_REFRESHSPEED         "refreshspeed"
@@ -196,6 +198,38 @@
 #define OPTION_HTTP                 "http"
 #define OPTION_HTTP_PORT            "http_port"
 #define OPTION_HTTP_ROOT            "http_root"
+
+/* Switchres Options */
+#define OPTION_MODELINE_GENERATION	"modeline_generation"
+#define OPTION_MONITOR				"monitor"
+#define OPTION_CONNECTOR			"connector"
+#define OPTION_ORIENTATION			"orientation"
+#define OPTION_INTERLACE			"interlace"
+#define OPTION_DOUBLESCAN			"doublescan"
+#define OPTION_SUPER_WIDTH          "super_width"
+#define OPTION_CHANGERES			"changeres"
+#define OPTION_POWERSTRIP			"powerstrip"
+#define OPTION_LOCK_SYSTEM_MODES	"lock_system_modes"
+#define OPTION_LOCK_UNSUPPORTED_MODES	"lock_unsupported_modes"
+#define OPTION_REFRESH_DONT_CARE	"refresh_dont_care"
+#define OPTION_DOTCLOCK_MIN			"dotclock_min"
+#define OPTION_SYNC_REFRESH_TOLERANCE	"sync_refresh_tolerance"
+#define OPTION_FRAME_DELAY			"frame_delay"
+#define OPTION_VSYNC_OFFSET         "vsync_offset"
+#define OPTION_BLACK_FRAME_INSERTION	"black_frame_insertion"
+#define OPTION_MODELINE				"modeline"
+#define OPTION_PS_TIMING			"ps_timing"
+#define OPTION_LCD_RANGE			"lcd_range"
+#define OPTION_CRT_RANGE0			"crt_range0"
+#define OPTION_CRT_RANGE1			"crt_range1"
+#define OPTION_CRT_RANGE2			"crt_range2"
+#define OPTION_CRT_RANGE3			"crt_range3"
+#define OPTION_CRT_RANGE4			"crt_range4"
+#define OPTION_CRT_RANGE5			"crt_range5"
+#define OPTION_CRT_RANGE6			"crt_range6"
+#define OPTION_CRT_RANGE7			"crt_range7"
+#define OPTION_CRT_RANGE8			"crt_range8"
+#define OPTION_CRT_RANGE9			"crt_range9"
 
 //**************************************************************************
 //  TYPE DEFINITIONS
@@ -354,6 +388,8 @@ public:
 	int frameskip() const { return int_value(OPTION_FRAMESKIP); }
 	int seconds_to_run() const { return int_value(OPTION_SECONDS_TO_RUN); }
 	bool throttle() const { return bool_value(OPTION_THROTTLE); }
+	bool sync_refresh() const { return bool_value(OPTION_SYNCREFRESH); }
+	bool autosync() const { return bool_value(OPTION_AUTOSYNC); }
 	bool sleep() const { return m_sleep; }
 	float speed() const { return float_value(OPTION_SPEED); }
 	bool refresh_speed() const { return m_refresh_speed; }
@@ -451,6 +487,38 @@ public:
 	ui_option ui() const { return m_ui; }
 	const char *ram_size() const { return value(OPTION_RAMSIZE); }
 	bool nvram_save() const { return bool_value(OPTION_NVRAM_SAVE); }
+
+	// Switchres options
+	bool modeline_generation() const { return bool_value(OPTION_MODELINE_GENERATION); }
+	const char *monitor() const { return value(OPTION_MONITOR); }
+	const char *connector() const { return value(OPTION_CONNECTOR); }
+	const char *orientation() const { return value(OPTION_ORIENTATION); }
+	bool doublescan() const { return bool_value(OPTION_DOUBLESCAN); }
+	bool interlace() const { return bool_value(OPTION_INTERLACE); }
+	int super_width() const { return int_value(OPTION_SUPER_WIDTH); }
+	int changeres() const { return int_value(OPTION_CHANGERES); }
+	bool powerstrip() const { return bool_value(OPTION_POWERSTRIP); }
+	bool lock_system_modes() const { return bool_value(OPTION_LOCK_SYSTEM_MODES); }
+	bool lock_unsupported_modes() const { return bool_value(OPTION_LOCK_UNSUPPORTED_MODES); }
+	bool refresh_dont_care() const { return bool_value(OPTION_REFRESH_DONT_CARE); }
+	const char *dotclock_min() const { return value(OPTION_DOTCLOCK_MIN); }
+	const char *sync_refresh_tolerance() const { return value(OPTION_SYNC_REFRESH_TOLERANCE); }
+	int frame_delay() const { return int_value(OPTION_FRAME_DELAY); }
+	int vsync_offset() const { return int_value(OPTION_VSYNC_OFFSET); }
+	bool black_frame_insertion() const { return bool_value(OPTION_BLACK_FRAME_INSERTION); }
+	const char *modeline() const { return value(OPTION_MODELINE); }
+	const char *ps_timing() const { return value(OPTION_PS_TIMING); }
+	const char *lcd_range() const { return value(OPTION_LCD_RANGE); }
+	const char *crt_range0() const { return value(OPTION_CRT_RANGE0); }
+	const char *crt_range1() const { return value(OPTION_CRT_RANGE1); }
+	const char *crt_range2() const { return value(OPTION_CRT_RANGE2); }
+	const char *crt_range3() const { return value(OPTION_CRT_RANGE3); }
+	const char *crt_range4() const { return value(OPTION_CRT_RANGE4); }
+	const char *crt_range5() const { return value(OPTION_CRT_RANGE5); }
+	const char *crt_range6() const { return value(OPTION_CRT_RANGE6); }
+	const char *crt_range7() const { return value(OPTION_CRT_RANGE7); }
+	const char *crt_range8() const { return value(OPTION_CRT_RANGE8); }
+	const char *crt_range9() const { return value(OPTION_CRT_RANGE9); }
 
 	// core comm options
 	const char *comm_localhost() const { return value(OPTION_COMM_LOCAL_HOST); }

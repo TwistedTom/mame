@@ -333,7 +333,7 @@ void sound_sdl::sdl_callback(void *userdata, Uint8 *stream, int len)
 int sound_sdl::init(const osd_options &options)
 {
 	int         n_channels = 2;
-	int         audio_latency;
+	float       audio_latency;
 	SDL_AudioSpec   aspec, obtained;
 	char audio_driver[16] = "";
 

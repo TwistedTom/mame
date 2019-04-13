@@ -86,6 +86,7 @@ public:
 	// static
 
 	static void create(running_machine &machine, int index, std::shared_ptr<osd_monitor_info> monitor, const osd_window_config *config);
+	static DWORD WINAPI blit_loop(LPVOID lpParameter);
 
 	// static callbacks
 
@@ -121,6 +122,13 @@ public:
 	int                                    m_lastclickx;
 	int                                    m_lastclicky;
 
+	// blitting thread
+	HANDLE              m_blit_pending;
+	HANDLE              m_blit_done;
+	DWORD               m_blit_threadid;
+	BOOL                m_blitting_active;
+	BOOL                m_blit_lock;
+
 private:
 	void draw_video_contents(HDC dc, int update);
 	int complete_create();
@@ -136,6 +144,12 @@ private:
 	void adjust_window_position_after_major_change();
 	void set_fullscreen(int fullscreen);
 	std::shared_ptr<osd_monitor_info> monitor_from_rect(const osd_rect* proposed) const;
+	void reset_fullscreen_renderer();
+	void blit_loop_create();
+	void blit_loop_destroy();
+	DWORD blit_loop_wt();
+	void blit_lock_set();
+	void blit_lock_release();
 
 	static POINT        s_saved_cursor_pos;
 

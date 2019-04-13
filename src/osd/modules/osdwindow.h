@@ -213,8 +213,12 @@ public:
 	virtual void record() { };
 	virtual void toggle_fsfx() { };
 	virtual bool sliders_dirty() { return m_sliders_dirty; }
+	virtual int restart() { return 0; }
 
 	static std::unique_ptr<osd_renderer> make_for_type(int mode, std::shared_ptr<osd_window> window, int extra_flags = FLAG_NONE);
+
+	// SwitchRes mode
+	modeline *          m_switchres_mode;
 
 protected:
 	virtual void build_slider_list() { }
@@ -260,6 +264,7 @@ struct osd_video_config
 	int                 waitvsync;                  // spin until vsync
 	int                 syncrefresh;                // sync only to refresh rate
 	int                 switchres;                  // switch resolutions
+	int                 framedelay;					// frame delay
 
 	// d3d, accel, opengl
 	int                 filter;                     // enable filtering

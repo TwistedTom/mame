@@ -83,6 +83,9 @@
 #include "gamedrv.h"
 #include "parameters.h"
 
+// Switchres
+#include "switchres/switchres.h"
+
 // the running machine
 #include "main.h"
 #include "machine.h"
@@ -107,5 +110,8 @@
 
 // member templates that don't like incomplete types
 #include "device.ipp"
+
+// Switchres prototypes
+#include "switchres/switchres_proto.h"
 
 #endif // __EMU_H__

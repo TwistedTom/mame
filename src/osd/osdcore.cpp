@@ -175,13 +175,19 @@ void CLIB_DECL osd_printf_log(const char *format, ...)
 }
 #endif
 
+#ifdef OSD_WINDOWS
+	typedef std::chrono::steady_clock s_clock;
+#else
+    typedef std::chrono::high_resolution_clock s_clock;
+#endif
+
 //============================================================
 //  osd_ticks
 //============================================================
 
 osd_ticks_t osd_ticks(void)
 {
-	return std::chrono::high_resolution_clock::now().time_since_epoch().count();
+	return s_clock::now().time_since_epoch().count();
 }
 
 
@@ -191,7 +197,7 @@ osd_ticks_t osd_ticks(void)
 
 osd_ticks_t osd_ticks_per_second(void)
 {
-	return std::chrono::high_resolution_clock::period::den / std::chrono::high_resolution_clock::period::num;
+	return s_clock::period::den / s_clock::period::num;
 }
 
 //============================================================
@@ -200,7 +206,7 @@ osd_ticks_t osd_ticks_per_second(void)
 
 void osd_sleep(osd_ticks_t duration)
 {
-	std::this_thread::sleep_for(std::chrono::high_resolution_clock::duration(duration));
+	std::this_thread::sleep_for(s_clock::duration(duration));
 }
 
 

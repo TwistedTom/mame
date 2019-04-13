@@ -432,6 +432,7 @@ HRESULT sound_direct_sound::dsound_init()
 		stream_buffer_size = std::max(DWORD(1024), (stream_buffer_size / 1024) * 1024);
 
 		LOG(("stream_buffer_size = %u\n", (unsigned)stream_buffer_size));
+		osd_printf_verbose("stream_buffer_size = %u\n", (unsigned)stream_buffer_size);
 
 		// create the buffers
 		m_bytes_per_sample = stream_format.nBlockAlign;
