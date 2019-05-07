@@ -146,26 +146,26 @@ protected:
 
 	void halt();
 	void leave_halt();
-	uint8_t in(uint16_t port);
-	void out(uint16_t port, uint8_t value);
-	uint8_t rm(uint16_t addr);
+	virtual uint8_t in(uint16_t port);
+	virtual void out(uint16_t port, uint8_t value);
+	virtual uint8_t rm(uint16_t addr);
 	void rm16(uint16_t addr, PAIR &r);
-	void wm(uint16_t addr, uint8_t value);
+	virtual void wm(uint16_t addr, uint8_t value);
 	void wm16(uint16_t addr, PAIR &r);
-	uint8_t rop();
-	uint8_t arg();
-	uint16_t arg16();
+	virtual uint8_t rop();
+	virtual uint8_t arg();
+	virtual uint16_t arg16();
 	void eax();
 	void eay();
 	void pop(PAIR &r);
-	void push(PAIR &r);
+	virtual void push(PAIR &r);
 	void jp(void);
 	void jp_cond(bool cond);
 	void jr();
-	void jr_cond(bool cond, uint8_t opcode);
+	virtual void jr_cond(bool cond, uint8_t opcode);
 	void call();
-	void call_cond(bool cond, uint8_t opcode);
-	void ret_cond(bool cond, uint8_t opcode);
+	virtual void call_cond(bool cond, uint8_t opcode);
+	virtual void ret_cond(bool cond, uint8_t opcode);
 	void retn();
 	void reti();
 	void ld_r_a();
@@ -219,19 +219,21 @@ protected:
 	void cpd();
 	void ind();
 	void outd();
-	void ldir();
-	void cpir();
-	void inir();
-	void otir();
-	void lddr();
-	void cpdr();
-	void indr();
-	void otdr();
+	virtual void ldir();
+	virtual void cpir();
+	virtual void inir();
+	virtual void otir();
+	virtual void lddr();
+	virtual void cpdr();
+	virtual void indr();
+	virtual void otdr();
 	void ei();
 
 	void take_interrupt();
 	void take_nmi();
 
+	virtual void eat_cycles(int type, int cycles);
+	
 	// address spaces
 	const address_space_config m_program_config;
 	const address_space_config m_opcodes_config;
@@ -245,44 +247,44 @@ protected:
 	devcb_write8 m_refresh_cb;
 	devcb_write_line m_halt_cb;
 
-	PAIR            m_prvpc;
-	PAIR            m_pc;
-	PAIR            m_sp;
-	PAIR            m_af;
-	PAIR            m_bc;
-	PAIR            m_de;
-	PAIR            m_hl;
-	PAIR            m_ix;
-	PAIR            m_iy;
-	PAIR            m_wz;
-	PAIR            m_af2;
-	PAIR            m_bc2;
-	PAIR            m_de2;
-	PAIR            m_hl2;
-	uint8_t           m_r;
-	uint8_t           m_r2;
-	uint8_t           m_iff1;
-	uint8_t           m_iff2;
-	uint8_t           m_halt;
-	uint8_t           m_im;
-	uint8_t           m_i;
-	uint8_t           m_nmi_state;          /* nmi line state */
-	uint8_t           m_nmi_pending;        /* nmi pending */
-	uint8_t           m_irq_state;          /* irq line state */
-	int             m_wait_state;         // wait line state
-	int             m_busrq_state;        // bus request line state
-	uint8_t           m_after_ei;           /* are we in the EI shadow? */
-	uint8_t           m_after_ldair;        /* same, but for LD A,I or LD A,R */
-	uint32_t          m_ea;
+	PAIR     m_prvpc;
+	PAIR     m_pc;
+	PAIR     m_sp;
+	PAIR     m_af;
+	PAIR     m_bc;
+	PAIR     m_de;
+	PAIR     m_hl;
+	PAIR     m_ix;
+	PAIR     m_iy;
+	PAIR     m_wz;
+	PAIR     m_af2;
+	PAIR     m_bc2;
+	PAIR     m_de2;
+	PAIR     m_hl2;
+	uint8_t  m_r;
+	uint8_t  m_r2;
+	uint8_t  m_iff1;
+	uint8_t  m_iff2;
+	uint8_t  m_halt;
+	uint8_t  m_im;
+	uint8_t  m_i;
+	uint8_t  m_nmi_state;          /* nmi line state */
+	uint8_t  m_nmi_pending;        /* nmi pending */
+	uint8_t  m_irq_state;          /* irq line state */
+	int      m_wait_state;         // wait line state
+	int      m_busrq_state;        // bus request line state
+	uint8_t  m_after_ei;           /* are we in the EI shadow? */
+	uint8_t  m_after_ldair;        /* same, but for LD A,I or LD A,R */
+	uint32_t m_ea;
 
 	int             m_icount;
-	uint8_t           m_rtemp;
-	const uint8_t *   m_cc_op;
-	const uint8_t *   m_cc_cb;
-	const uint8_t *   m_cc_ed;
-	const uint8_t *   m_cc_xy;
-	const uint8_t *   m_cc_xycb;
-	const uint8_t *   m_cc_ex;
+	uint8_t         m_rtemp;
+	const uint8_t * m_cc_op;
+	const uint8_t * m_cc_cb;
+	const uint8_t * m_cc_ed;
+	const uint8_t * m_cc_xy;
+	const uint8_t * m_cc_xycb;
+	const uint8_t * m_cc_ex;
 };
 
 DECLARE_DEVICE_TYPE(Z80, z80_device)

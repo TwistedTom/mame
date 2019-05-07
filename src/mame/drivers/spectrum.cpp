@@ -278,7 +278,7 @@ SamRam
 #include "emu.h"
 #include "includes/spectrum.h"
 
-#include "cpu/z80/z80.h"
+#include "cpu/z80/specz80.h"
 #include "sound/wave.h"
 #include "machine/spec_snqk.h"
 
@@ -334,7 +334,7 @@ WRITE8_MEMBER(spectrum_state::spectrum_port_fe_w)
 	/* border colour changed? */
 	if ((Changed & 0x07)!=0)
 	{
-		spectrum_UpdateBorderBitmap();
+		if(!m_tstate_info.using_raster_callback) spectrum_UpdateBorderBitmap();
 	}
 
 	if ((Changed & (1<<4))!=0)
@@ -432,9 +432,43 @@ READ8_MEMBER(spectrum_state::spectrum_port_fe_r)
 
 READ8_MEMBER(spectrum_state::spectrum_port_ula_r)
 {
-	int vpos = m_screen->vpos();
+	if(!m_tstate_info.using_raster_callback)
+	{
+		int vpos = m_screen->vpos();
+		return vpos<193 ? m_screen_location[0x1800|(vpos&0xf8)<<2]:0xff;
+	}
+	else
+	{
+		uint8_t retval;
+		unsigned int x, y;
+		uint16_t scrx, scry;
+		device_t *const cpudevice = mconfig().root_device().subdevice("maincpu");
 
-	return vpos<193 ? m_video_ram[(vpos&0xf8)<<2]:0xff;
+		//Make sure our copy of the tstate counter is up-to-date so that we can work out
+		//what part of memory the the ula is touching.
+		m_tstate_info.counter = downcast<specz80_device &>(*cpudevice).get_tstate_counter();
+		spectrum_GetBeamPosition(m_tstate_info.beam_start_floating_bus, &x, &y);
+		scrx = x - SPEC_LEFT_BORDER;
+		scry = y - SPEC_TOP_BORDER;
+		retval = 0xff;
+
+		if (scrx < SPEC_DISPLAY_XSIZE && scry < SPEC_DISPLAY_YSIZE)
+		{
+			switch(scrx & 0xF)
+			{
+			case 0x04: // Bitmap 1 Screen
+			case 0x08: // Bitmap 2 Screen
+				retval = *(m_screen_location + ((scry & 7) << 8) + ((scry & 0x38) << 2) + ((scry & 0xC0) << 5) + (scrx >> 3));
+				break;
+			case 0x06: // Bitmap 1 Attribute
+			case 0x0A: // Bitmap 2 Attribute
+				retval = *(m_screen_location + ((scry & 0xF8) << 2) + (scrx >> 3) + 0x1800);
+				break;
+			}
+		}
+
+		return retval;
+	}
 }
 
 /* Memory Maps */
@@ -458,7 +492,7 @@ void spectrum_state::spectrum_io(address_map &map)
 {
 	map(0x0000, 0xffff).rw(m_exp, FUNC(spectrum_expansion_slot_device::iorq_r), FUNC(spectrum_expansion_slot_device::iorq_w));
 	map(0x00, 0x00).rw(FUNC(spectrum_state::spectrum_port_fe_r), FUNC(spectrum_state::spectrum_port_fe_w)).select(0xfffe);
-	map(0x01, 0x01).r(FUNC(spectrum_state::spectrum_port_ula_r)); // .mirror(0xfffe);
+	map(0x01, 0x01).r(FUNC(spectrum_state::spectrum_port_ula_r)).mirror(0xfffe);
 }
 
 /* Input ports */
@@ -567,7 +601,7 @@ INPUT_PORTS_START( spectrum )
 	PORT_BIT(0x10, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("b    B    *      BIN      BRIGHT   BORDER") PORT_CODE(KEYCODE_B) PORT_CHAR('b') PORT_CHAR('B') PORT_CHAR('*')
 
 	PORT_START("NMI")
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYBOARD) PORT_NAME("NMI") PORT_CODE(KEYCODE_F12)
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYBOARD) PORT_NAME("NMI") PORT_CODE(KEYCODE_BACKSPACE)
 
 	PORT_START("CONFIG")
 	PORT_CONFNAME( 0x80, 0x00, "Hardware Version" )
@@ -664,10 +698,6 @@ void spectrum_state::device_timer(emu_timer &timer, device_timer_id id, int para
 	case TIMER_IRQ_OFF:
 		m_maincpu->set_input_line(0, CLEAR_LINE);
 		break;
-	case TIMER_SCANLINE:
-		m_scanline_timer->adjust(m_maincpu->cycles_to_attotime(m_CyclesPerLine));
-		spectrum_UpdateScreenBitmap();
-		break;
 	default:
 		assert_always(false, "Unknown id in spectrum_state::device_timer");
 	}
@@ -679,10 +709,22 @@ INTERRUPT_GEN_MEMBER(spectrum_state::spec_interrupt)
 	m_irq_off_timer->adjust(m_maincpu->clocks_to_attotime(32));
 }
 
-void spectrum_state::spectrum_common(machine_config &config)
+WRITE32_MEMBER( spectrum_state::update_raster )
+{
+	m_tstate_info.counter = (int)data;
+	//printf("update_raster tstate=%d  border=0x%X\n", m_tstate_info.counter, m_port_fe_data);
+	spectrum_UpdateScreenBitmap();
+	spectrum_UpdateBorderBitmap();
+}
+
+void spectrum_state::spectrum(machine_config &config)
 {
 	/* basic machine hardware */
-	Z80(config, m_maincpu, X1 / 4);        /* This is verified only for the ZX Spectrum. Other clones are reported to have different clocks */
+	/* This is verified only for the ZX Spectrum. Other clones are reported to have different clocks */
+	specz80_device &cpu = SPECZ80(config, m_maincpu, X1 / 4);
+	cpu.configure_contended_memory(ULA_VARIANT_SINCLAIR, "65432100", SPEC_CYCLES_ULA_CONTENTION, SPEC_CYCLES_PER_LINE, SPEC_CYCLES_PER_FRAME, "");
+	cpu.update_raster_cb().set(FUNC(spectrum_state::update_raster));
+	
 	m_maincpu->set_addrmap(AS_PROGRAM, &spectrum_state::spectrum_mem);
 	m_maincpu->set_addrmap(AS_IO, &spectrum_state::spectrum_io);
 	m_maincpu->set_addrmap(AS_OPCODES, &spectrum_state::spectrum_fetch);
@@ -726,11 +768,6 @@ void spectrum_state::spectrum_common(machine_config &config)
 	m_cassette->set_interface("spectrum_cass");
 
 	SOFTWARE_LIST(config, "cass_list").set_original("spectrum_cass");
-}
-
-void spectrum_state::spectrum(machine_config &config)
-{
-	spectrum_common(config);
 
 	/* internal ram */
 	RAM(config, m_ram).set_default_size("48K").set_extra_options("16K").set_default_value(0xff);

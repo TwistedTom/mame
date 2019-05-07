@@ -18,12 +18,18 @@
 #include "emu.h"
 #include "includes/spectrum.h"
 #include "includes/spec128.h"
+#include "includes/specpls3.h"
+#include "cpu/z80/specz80.h"
 
 /***************************************************************************
   Start the video hardware emulation.
 ***************************************************************************/
 VIDEO_START_MEMBER(spectrum_state,spectrum)
 {
+	//The amount of tstates from the very first (top left) display pixel, to the very first screen pixel (top left).
+	int beam_adjust = (SPEC_TOP_BORDER*SPEC_CYCLES_PER_LINE) + SPEC_LEFT_BORDER_CYCLES;
+	device_t *const cpudevice = mconfig().root_device().subdevice("maincpu");
+	
 	m_frame_invert_count = 16;
 	m_frame_number = 0;
 	m_flash_invert = 0;
@@ -39,13 +45,27 @@ VIDEO_START_MEMBER(spectrum_state,spectrum)
 
 	m_irq_off_timer = timer_alloc(TIMER_IRQ_OFF);
 
-	m_CyclesPerLine = SPEC_CYCLES_PER_LINE;
-	m_scanline_timer = timer_alloc(TIMER_SCANLINE);
-	m_scanline_timer->adjust(m_maincpu->cycles_to_attotime(m_CyclesPerLine));
+	m_tstate_info.per_line = SPEC_CYCLES_PER_LINE;
+	//The SPEC_CYCLES_ULA_* defines all relate to the first 'screen' pixel (y=96,x=48). Convert them
+	//so that they all relate to the first 'display' pixel (y=0, x=0)
+	m_tstate_info.beam_start_screen       = SPEC_CYCLES_ULA_SCREEN       - beam_adjust;
+	m_tstate_info.beam_start_border       = SPEC_CYCLES_ULA_BORDER       - beam_adjust;
+	m_tstate_info.beam_start_floating_bus = SPEC_CYCLES_ULA_FLOATING_BUS - beam_adjust;
+	m_tstate_info.using_raster_callback = false;
+	specz80_device * specz80_cpu = dynamic_cast<specz80_device*> (cpudevice);
+	if(specz80_cpu != nullptr)
+	{
+		m_tstate_info.using_raster_callback = specz80_cpu->get_using_raster_callback();
+	}
+	m_border_brush = 0;
 }
 
 VIDEO_START_MEMBER(spectrum_state,spectrum_128)
 {
+	//The amount of tstates from the very first (top left) display pixel, to the very first screen pixel (top left).
+	int beam_adjust = (SPEC128_TOP_BORDER*SPEC128_CYCLES_PER_LINE) + SPEC128_LEFT_BORDER_CYCLES;
+	device_t *const cpudevice = mconfig().root_device().subdevice("maincpu");
+	
 	m_frame_invert_count = 16;
 	m_frame_number = 0;
 	m_flash_invert = 0;
@@ -61,11 +81,57 @@ VIDEO_START_MEMBER(spectrum_state,spectrum_128)
 
 	m_irq_off_timer = timer_alloc(TIMER_IRQ_OFF);
 
-	m_CyclesPerLine = SPEC128_CYCLES_PER_LINE;
-	m_scanline_timer = timer_alloc(TIMER_SCANLINE);
-	m_scanline_timer->adjust(m_maincpu->cycles_to_attotime(m_CyclesPerLine));
+	m_tstate_info.per_line = SPEC128_CYCLES_PER_LINE;
+	//The SPEC_CYCLES_ULA_* defines all relate to the first 'screen' pixel (y=96,x=48). Convert them
+	//so that they all relate to the first 'display' pixel (y=0, x=0)
+	m_tstate_info.beam_start_screen       = SPEC128_CYCLES_ULA_SCREEN       - beam_adjust;
+	m_tstate_info.beam_start_border       = SPEC128_CYCLES_ULA_BORDER       - beam_adjust;
+	m_tstate_info.beam_start_floating_bus = SPEC128_CYCLES_ULA_FLOATING_BUS - beam_adjust;
+	m_tstate_info.using_raster_callback = false;
+	specz80_device * specz80_cpu = dynamic_cast<specz80_device*> (cpudevice);
+	if(specz80_cpu != nullptr)
+	{
+		m_tstate_info.using_raster_callback = specz80_cpu->get_using_raster_callback();
+	}
+	m_border_brush = 0;
 }
 
+// z80
+VIDEO_START_MEMBER(spectrum_state,spectrum_plus3)
+{
+	//The amount of tstates from the very first (top left) display pixel, to the very first screen pixel (top left).
+	int beam_adjust = (SPECPLS3_TOP_BORDER*SPECPLS3_CYCLES_PER_LINE) + SPECPLS3_LEFT_BORDER_CYCLES;
+	device_t *const cpudevice = mconfig().root_device().subdevice("maincpu");
+	
+	m_frame_invert_count = 16;
+	m_frame_number = 0;
+	m_flash_invert = 0;
+
+	m_previous_border_x = 0;
+	m_previous_border_y = 0;
+	m_screen->register_screen_bitmap(m_border_bitmap);
+	m_previous_screen_x = 0;
+	m_previous_screen_y = 0;
+	m_screen->register_screen_bitmap(m_screen_bitmap);
+
+	m_screen_location = m_ram->pointer() + (5 << 14);
+
+	m_irq_off_timer = timer_alloc(TIMER_IRQ_OFF);
+
+	m_tstate_info.per_line = SPECPLS3_CYCLES_PER_LINE;
+	//The SPEC_CYCLES_ULA_* defines all relate to the first 'screen' pixel (y=96,x=48). Convert them
+	//so that they all relate to the first 'display' pixel (y=0, x=0)
+	m_tstate_info.beam_start_screen       = SPECPLS3_CYCLES_ULA_SCREEN       - beam_adjust;
+	m_tstate_info.beam_start_border       = SPECPLS3_CYCLES_ULA_BORDER       - beam_adjust;
+	m_tstate_info.beam_start_floating_bus = SPECPLS3_CYCLES_ULA_FLOATING_BUS - beam_adjust;
+	m_tstate_info.using_raster_callback = false;
+	specz80_device * specz80_cpu = dynamic_cast<specz80_device*> (cpudevice);
+	if(specz80_cpu != nullptr)
+	{
+		m_tstate_info.using_raster_callback = specz80_cpu->get_using_raster_callback();
+	}
+	m_border_brush = 0;  // ?
+}
 
 /* return the color to be used inverting FLASHing colors if necessary */
 inline unsigned char spectrum_state::get_display_color (unsigned char color, int invert)
@@ -83,8 +149,11 @@ WRITE_LINE_MEMBER(spectrum_state::screen_vblank_spectrum)
 	// rising edge
 	if (state)
 	{
-		spectrum_UpdateBorderBitmap();
-		spectrum_UpdateScreenBitmap(true);
+		if(!m_tstate_info.using_raster_callback)
+		{
+			spectrum_UpdateBorderBitmap();
+			spectrum_UpdateScreenBitmap(true);
+		}
 
 		m_frame_number++;
 
@@ -133,7 +202,11 @@ uint32_t spectrum_state::screen_update_spectrum(screen_device &screen, bitmap_in
 	if (m_border_bitmap.valid())
 		copyscrollbitmap(bitmap, m_border_bitmap, 0, nullptr, 0, nullptr, cliprect);
 
-	spectrum_UpdateScreenBitmap();
+	if(!m_tstate_info.using_raster_callback)
+	{
+		spectrum_UpdateScreenBitmap();
+	}
+	
 	if (m_screen_bitmap.valid())
 		copyscrollbitmap(bitmap, m_screen_bitmap, 0, nullptr, 0, nullptr, rect);
 
@@ -211,21 +284,60 @@ void spectrum_state::spectrum_palette(palette_device &palette) const
 	palette.set_pen_colors(0, spectrum_pens);
 }
 
+
+void spectrum_state::spectrum_GetBeamPosition(int beam_start, unsigned int *x, unsigned int *y)
+{
+	if(!m_tstate_info.using_raster_callback)
+	{
+		*x = m_screen->hpos();
+		*y = m_screen->vpos();
+		return;
+	}
+	else
+	{
+		if( m_tstate_info.counter < beam_start)
+		{
+			*x = 0; *y = 0;
+			return;
+		}
+
+		//Ensure y is always 0 to 296 (inclusive)
+		*y = ( m_tstate_info.counter - beam_start)/m_tstate_info.per_line;
+		if (*y >= SPEC_SCREEN_HEIGHT)
+		{
+			*x = 0; *y = 0;
+			return;
+		}
+
+		//Ensure x is always 0 to 352 (inclusive)
+		*x = (( m_tstate_info.counter - beam_start)%m_tstate_info.per_line)*2; //Times 2 because its 2 pixels for every tstate.
+		if (*x >= SPEC_SCREEN_WIDTH)
+		{
+			(*y)++;
+			*x = 0;
+			if(*y>= SPEC_SCREEN_HEIGHT) *y = 0;
+		}
+		return;
+	}
+}
+
+
 void spectrum_state::spectrum_UpdateScreenBitmap(bool eof)
 {
-	unsigned int x = m_screen->hpos();
-	unsigned int y = m_screen->vpos();
+	unsigned int x,y;
+	
 	int width = m_screen_bitmap.width();
 	int height = m_screen_bitmap.height();
-
+	
+	spectrum_GetBeamPosition(m_tstate_info.beam_start_screen, &x, &y);
 
 	if ((m_previous_screen_x == x) && (m_previous_screen_y == y) && !eof)
 		return;
 
 	if (m_screen_bitmap.valid())
 	{
-		//printf("update screen from %d,%d to %d,%d\n", m_previous_screen_x, m_previous_screen_y, x, y);
-
+		//printf("update screen from x=%d,y=%d to x=%d,y=%d\n", m_previous_screen_x, m_previous_screen_y, x, y);
+		
 		do
 		{
 			uint16_t scrx = m_previous_screen_x - SPEC_LEFT_BORDER;
@@ -233,7 +345,10 @@ void spectrum_state::spectrum_UpdateScreenBitmap(bool eof)
 
 			if (scrx < SPEC_DISPLAY_XSIZE && scry < SPEC_DISPLAY_YSIZE)
 			{
-				// this can/must be optimised
+				// This can/must be optimised
+				// On an actual ZX spectrum, you can not change the screen/attribute
+				// data when the ULA is processing an 8-pixel 'chunk'. This code ensures
+				// that whatever scr/attr is shown on pixel 0, is also shown on pixels 1 to 7.
 				if ((scrx & 7) == 0) {
 					uint16_t *bm = &m_screen_bitmap.pix16(m_previous_screen_y, m_previous_screen_x);
 					uint8_t attr = *(m_screen_location + ((scry & 0xF8) << 2) + (scrx >> 3) + 0x1800);
@@ -241,6 +356,8 @@ void spectrum_state::spectrum_UpdateScreenBitmap(bool eof)
 					uint16_t ink = (attr & 0x07) + ((attr >> 3) & 0x08);
 					uint16_t pap = (attr >> 3) & 0x0f;
 
+					//printf("spectrum_UpdateScreenBitmap - y=%d x=%d attr=%x (ink=%x pap=%x)\n", scry, scrx, attr, ink, pap);
+					
 					if (m_flash_invert && (attr & 0x80))
 						scr = ~scr;
 
@@ -262,7 +379,6 @@ void spectrum_state::spectrum_UpdateScreenBitmap(bool eof)
 				}
 			}
 		} while (!((m_previous_screen_x == x) && (m_previous_screen_y == y)));
-
 	}
 }
 
@@ -270,22 +386,45 @@ void spectrum_state::spectrum_UpdateScreenBitmap(bool eof)
 
 void spectrum_state::spectrum_UpdateBorderBitmap()
 {
-	unsigned int x = m_screen->hpos();
-	unsigned int y = m_screen->vpos();
+	unsigned int x,y;
 	int width = m_border_bitmap.width();
 	int height = m_border_bitmap.height();
 
+	spectrum_GetBeamPosition(m_tstate_info.beam_start_border, &x, &y);
+
+	if(m_tstate_info.using_raster_callback)
+	{
+		//This if statement returns if the raster hans't moved
+		//since our last visit (I.e. There is nothing to render).
+		//Doing this check is worthwhile if the raster callback is
+		//implemented. If the raster callback is not implemented, then
+		//this check can not be performed as the original code relied
+		//on the border being totally refreshed every frame.
+		if ((m_previous_border_x == x) && (m_previous_border_y == y))
+			return;
+	}
 
 	if (m_border_bitmap.valid())
 	{
-		uint16_t border = m_port_fe_data & 0x07;
-
-		//printf("update border from %d,%d to %d,%d\n", m_previous_border_x, m_previous_border_y, x, y);
-
+		uint16_t new_border_brush = m_port_fe_data & 0x07;
+		
+		//printf("update border from x=%d,y=%d to x=%d,y=%d border=0x%X\n", m_previous_border_x, m_previous_border_y, x, y, border);
+		
 		do
 		{
-			m_border_bitmap.pix16(m_previous_border_y, m_previous_border_x) = border;
+			//m_border_bitmap.pix16(m_previous_border_y, m_previous_border_x) = border;
+			// On an actual ZX spectrum, you can not change the border colour during.
+			// an 8-pixel 'chunk'. This code ensures that whatever colour is shown
+			// on pixel 0, is also shown on pixels 1 to 7.
+			if ((m_previous_border_x & 0x07) == 0x00) 
+			{
+				uint16_t *bm = &m_border_bitmap.pix16(m_previous_border_y, m_previous_border_x);
 
+				for (uint8_t b = 0x80; b != 0; b >>= 1)
+					*bm++ = new_border_brush;
+
+			}
+			
 			m_previous_border_x += 1;
 
 			if (m_previous_border_x >= width)
@@ -300,12 +439,9 @@ void spectrum_state::spectrum_UpdateBorderBitmap()
 			}
 		}
 		while (!((m_previous_border_x == x) && (m_previous_border_y == y)));
-
 	}
 	else
 	{
 		// no border bitmap allocated? fatalerror?
 	}
-
-
 }

@@ -25,13 +25,13 @@
 #include "emupal.h"
 #include "screen.h"
 
+
 /* Spectrum crystals */
-
 #define X1 XTAL(14'000'000)       // Main clock (48k Spectrum)
-#define X1_128_AMSTRAD  35469000 // Main clock (Amstrad 128K model, +2A?)
-#define X1_128_SINCLAIR 17734475 // Main clock (Sinclair 128K model)
+#define X1_128_AMSTRAD  35469000  // Main clock (Amstrad 128K model, +2A?)
+#define X1_128_SINCLAIR 17734475  // Main clock (Sinclair 128K model)
 
-#define X2 XTAL(4'433'619) // PAL color subcarrier
+#define X2 XTAL(4'433'619)        // PAL color subcarrier
 
 /* Spectrum screen size in pixels */
 #define SPEC_UNSEEN_LINES  16   /* Non-visible scanlines before first border
@@ -52,6 +52,18 @@
 #define SPEC_RETRACE_CYCLES       48   /* Cycles taken for horizontal retrace */
 #define SPEC_CYCLES_PER_LINE      224  /* Number of cycles to display a single line */
 
+// The SPEC_CYCLES_ULA_* values can be tweaked by running ulatest3, btime, stime and
+// timingtest(Patrik Rak) on an actual ZX spectrum, then comparing the results after
+// running the same test programs on mame.
+// The SPEC_CYCLES_ULA_* values set here were based on an actual ZX Spectrum 48K+.
+//  Note: "FSP" stands for First Screen Pixel. This is the pixel at position y=96 x=48
+//   (I.e. The pixel just under the top border and just after the left border).
+#define SPEC_CYCLES_ULA_CONTENTION   14335  /* T-State at which IO and memory contention begins. */
+#define SPEC_CYCLES_ULA_SCREEN       14338  /* T-State when the FSP shows screen data stored at 4000H. */
+#define SPEC_CYCLES_ULA_BORDER       14342  /* T-State when the FSP shows 'port 0xfe' border data (Note. It is not possible to show border data at the FSP, but if it were then this T-State is when it would happen). */
+#define SPEC_CYCLES_ULA_FLOATING_BUS 14337  /* T-State when the colour attributes of the FSP can be read from the floating bus. */
+#define SPEC_CYCLES_PER_FRAME        69888  /* 224 x 312 */
+
 struct EVENT_LIST_ITEM
 {
 	/* driver defined ID for this write */
@@ -60,6 +72,24 @@ struct EVENT_LIST_ITEM
 	int Event_Data;
 	/* time at which this write occurred */
 	int Event_Time;
+};
+
+
+class tstate_information
+{
+public:
+	tstate_information()
+	{
+		using_raster_callback = false;
+		counter = beam_start_screen = beam_start_border = beam_start_floating_bus = per_line = 0;
+	}
+
+	bool using_raster_callback;
+	int  counter;
+	int  beam_start_screen;
+	int  beam_start_border;
+	int  beam_start_floating_bus;
+	int  per_line;
 };
 
 
@@ -98,7 +128,6 @@ public:
 		m_io_joy2(*this, "JOY2")
 	{ }
 
-	void spectrum_common(machine_config &config);
 	void spectrum(machine_config &config);
 	void ts2068(machine_config &config);
 	void uk2086(machine_config &config);
@@ -114,15 +143,14 @@ protected:
 	enum
 	{
 		TIMER_IRQ_ON,
-		TIMER_IRQ_OFF,
-		TIMER_SCANLINE
+		TIMER_IRQ_OFF
 	};
 
 	int m_port_fe_data;
 	int m_port_7ffd_data;
 	int m_port_1ffd_data;   /* scorpion and plus3 */
-	int m_port_ff_data; /* Display enhancement control */
-	int m_port_f4_data; /* Horizontal Select Register */
+	int m_port_ff_data;     /* Display enhancement control */
+	int m_port_f4_data;     /* Horizontal Select Register */
 
 	int m_floppy;
 
@@ -132,22 +160,20 @@ protected:
 	int m_flash_invert;
 	optional_shared_ptr<uint8_t> m_video_ram;
 	uint8_t *m_screen_location;
+	int m_border_brush;
 
 	int m_ROMSelection;
+	
+	tstate_information m_tstate_info;
 
 	emu_timer *m_irq_off_timer;
 
-	// Build up the screen bitmap line-by-line as the z80 uses CPU cycles.
-	// Elimiates sprite flicker on various games (E.g. Marauder and
-	// Stormlord) and makes Firefly playable.
-	emu_timer *m_scanline_timer;
 
 	EVENT_LIST_ITEM *m_pCurrentItem;
 	int m_NumEvents;
 	int m_TotalEvents;
 	char *m_pEventListBuffer;
 	int m_LastFrameStartTime;
-	int m_CyclesPerLine;
 
 	uint8_t *m_ram_0000;
 	uint8_t m_ram_disabled_by_beta;
@@ -184,6 +210,7 @@ protected:
 	DECLARE_MACHINE_RESET(tc2048);
 	DECLARE_VIDEO_START(spectrum_128);
 	DECLARE_MACHINE_RESET(spectrum_128);
+	DECLARE_VIDEO_START(spectrum_plus3);
 	DECLARE_MACHINE_RESET(spectrum_plus3);
 	DECLARE_MACHINE_RESET(ts2068);
 	DECLARE_VIDEO_START(ts2068);
@@ -193,6 +220,7 @@ protected:
 	DECLARE_WRITE_LINE_MEMBER(screen_vblank_spectrum);
 	DECLARE_WRITE_LINE_MEMBER(screen_vblank_timex);
 	INTERRUPT_GEN_MEMBER(spec_interrupt);
+	DECLARE_WRITE32_MEMBER(update_raster);
 
 	// for timex cart only
 	DECLARE_DEVICE_IMAGE_LOAD_MEMBER(timex_cart);
@@ -260,6 +288,7 @@ protected:
 	optional_ioport m_io_joy1;
 	optional_ioport m_io_joy2;
 
+	void spectrum_GetBeamPosition(int top_left_pixel, unsigned int *x, unsigned int *y);
 	void spectrum_UpdateBorderBitmap();
 	void spectrum_UpdateScreenBitmap(bool eof = false);
 	inline unsigned char get_display_color(unsigned char color, int invert);
