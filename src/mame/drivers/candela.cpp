@@ -487,6 +487,7 @@ INPUT_PORTS_END
  * - Map PIA:S
  * - ROM/RAM paging by using the PIAs and the myriad of 74138s on the board
  * - Vram and screen for the 6845 CRTC
+ * - Check actual clock source for CRTC. An 8MHz UKI crystal is also nearby
  * - Keyboard
  * - Serial port
  * - Floppy controller
@@ -521,7 +522,7 @@ protected:
 	required_device<pia6821_device> m_pia1;
 	required_device<ram_device> m_ram;
 	required_memory_bank m_bank1;
-	required_device<h46505_device> m_crtc;
+	required_device<hd6845s_device> m_crtc;
 };
 
 void can09_state::machine_reset()
@@ -640,8 +641,8 @@ void can09_state::can09_map(address_map &map)
 //  AM_RANGE(0x0000, 0x7fff) AM_RAM
 	map(0x0000, 0x7fff).ram().bankrw("bank1");
 	map(0xe000, 0xffff).rom().region("roms", 0);
-	map(0xe020, 0xe020).w(m_crtc, FUNC(h46505_device::address_w));
-	map(0xe021, 0xe021).w(m_crtc, FUNC(h46505_device::register_w));
+	map(0xe020, 0xe020).w(m_crtc, FUNC(hd6845s_device::address_w));
+	map(0xe021, 0xe021).w(m_crtc, FUNC(hd6845s_device::register_w));
 	map(0xe034, 0xe037).rw(m_pia1, FUNC(pia6821_device::read), FUNC(pia6821_device::write));
 
 #if 0
@@ -714,15 +715,16 @@ void can09t_state::can09t(machine_config &config)
 
 #define CAN09_X1_CLOCK 22.1184_MHz_XTAL        /* UKI 22118.40 Khz */
 #define CAN09_CPU_CLOCK (CAN09_X1_CLOCK / 16) /* ~1.38MHz Divider needs to be check but is the most likelly */
-MACHINE_CONFIG_START(can09_state::can09)
-	MCFG_DEVICE_ADD("maincpu", MC6809E, CAN09_CPU_CLOCK) // MC68A09EP
-	MCFG_DEVICE_PROGRAM_MAP(can09_map)
+void can09_state::can09(machine_config &config)
+{
+	MC6809E(config, m_maincpu, CAN09_CPU_CLOCK); // MC68A09EP
+	m_maincpu->set_addrmap(AS_PROGRAM, &can09_state::can09_map);
 
 	/* RAM banks */
 	RAM(config, RAM_TAG).set_default_size("768K");
 
-	// CRTC  init
-	h46505_device &crtc(H46505(config, "crtc", CAN09_CPU_CLOCK)); // TODO: Check actual clock source, An 8MHz UKI crystal is also nearby
+	// CRTC init
+	hd6845s_device &crtc(HD6845S(config, "crtc", CAN09_CPU_CLOCK)); // HD46505SP-1 (HD68A45SP)
 	crtc.set_screen("screen");
 	crtc.set_show_border_area(false);
 	crtc.set_char_width(8);
@@ -752,11 +754,11 @@ MACHINE_CONFIG_START(can09_state::can09)
 
 
 	/* screen - totally faked value for now */
-	MCFG_SCREEN_ADD("screen", RASTER)
-	MCFG_SCREEN_REFRESH_RATE(50)
-	MCFG_SCREEN_RAW_PARAMS(4_MHz_XTAL / 2, 512, 0, 512, 576, 0, 576)
-	MCFG_SCREEN_UPDATE_DRIVER(can09_state, screen_update)
-	MCFG_SCREEN_PALETTE("palette")
+	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen.set_refresh_hz(50);
+	screen.set_raw(4_MHz_XTAL / 2, 512, 0, 512, 576, 0, 576);
+	screen.set_screen_update(FUNC(can09_state::screen_update));
+	screen.set_palette("palette");
 	PALETTE(config, "palette", palette_device::MONOCHROME);
 
 	/* Floppy */
@@ -782,11 +784,11 @@ MACHINE_CONFIG_START(can09_state::can09)
 	/* 0xFF93 0xE034 (PIA1 Port B)    = 0x18 - Write Data on Port B */
 
 #if 1
-	MCFG_DEVICE_ADD(PIA2_TAG, PIA6821, 0) // CPU board
-	MCFG_DEVICE_ADD("acia1", ACIA6850, 0) // CPU board
-	MCFG_DEVICE_ADD("acia2", ACIA6850, 0) // CPU board
+	PIA6821(config, PIA2_TAG, 0); // CPU board
+	ACIA6850(config, "acia1", 0); // CPU board
+	ACIA6850(config, "acia2", 0); // CPU board
 #endif
-MACHINE_CONFIG_END
+}
 
 ROM_START( can09t ) /* The smaller grey computer */
 	ROM_REGION(0x10000, "roms", 0)

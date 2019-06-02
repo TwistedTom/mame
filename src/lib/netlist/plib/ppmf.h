@@ -8,10 +8,10 @@
 #ifndef PPMF_H_
 #define PPMF_H_
 
+#include "pconfig.h"
+
 #include <cstdint>
 #include <utility>
-
-#include "pconfig.h"
 
 /*
  *
@@ -252,9 +252,9 @@ namespace plib {
 		pmfp(MemberFunctionType<O> mftp, O *object)
 		: pmfp_base<R, Targs...>()
 		{
-			this->set(mftp, object);
+			this->set_base(mftp, object);
+			m_obj = reinterpret_cast<generic_class *>(object);
 		}
-
 
 		template<typename O>
 		void set(MemberFunctionType<O> mftp, O *object)

@@ -307,7 +307,7 @@ WRITE16_MEMBER(ngen_state::peripheral_w)
 	case 0x0e:
 	case 0x0f:
 		if(ACCESSING_BITS_0_7)
-			m_dmac->write(space,offset,data & 0xff);
+			m_dmac->write(offset,data & 0xff);
 		break;
 	case 0x80: // DMA page offset?
 	case 0x81:
@@ -381,7 +381,7 @@ READ16_MEMBER(ngen_state::peripheral_r)
 	case 0x0e:
 	case 0x0f:
 		if(ACCESSING_BITS_0_7)
-			ret = m_dmac->read(space,offset);
+			ret = m_dmac->read(offset);
 		logerror("DMA read offset %04x mask %04x returning %04x\n",offset,mem_mask,ret);
 		break;
 	case 0x80: // DMA page offset?
@@ -617,10 +617,9 @@ WRITE_LINE_MEMBER(ngen_state::fdc_drq_w)
 WRITE8_MEMBER(ngen_state::fdc_control_w)
 {
 	m_fdc->set_floppy(m_fd0->get_device());
-	m_fd0->get_device()->mon_w(~data & 0x04);
-	m_fd0->get_device()->ss_w(data & 0x20);
-	if(~data & 0x80)
-		m_fdc->soft_reset();
+	m_fd0->get_device()->mon_w(!BIT(data, 2));
+	m_fd0->get_device()->ss_w(BIT(data, 5));
+	m_fdc->mr_w(BIT(data, 7));
 }
 
 // Hard disk control register

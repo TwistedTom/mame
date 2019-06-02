@@ -364,7 +364,7 @@ class kiwame_state : public seta_state
 public:
 	kiwame_state(const machine_config &mconfig, device_type type, const char *tag) :
 		seta_state(mconfig, type, tag),
-		m_tmp68301(*this, "tmp68301"),
+		m_maincpu(*this, "maincpu"),
 		m_key(*this, "KEY%u", 0U)
 	{ }
 
@@ -377,8 +377,8 @@ private:
 
 	void kiwame_map(address_map &map);
 
-	required_device<tmp68301_device> m_tmp68301;
-	required_ioport_array<5> m_key;
+	required_device<tmp68301_device> m_maincpu;
+	required_ioport_array<10> m_key;
 
 	uint16_t m_kiwame_row_select;
 };

@@ -113,7 +113,7 @@ WRITE_LINE_MEMBER( wangpc_lvc_device::vsync_w )
 }
 
 //-------------------------------------------------
-//  MACHINE_CONFIG_START( wangpc_lvc )
+//  machine_config( wangpc_lvc )
 //-------------------------------------------------
 
 void wangpc_lvc_device::device_add_mconfig(machine_config &config)
@@ -298,11 +298,11 @@ void wangpc_lvc_device::wangpcbus_aiowc_w(offs_t offset, uint16_t mem_mask, uint
 
 				if (OPTION_80_COL)
 				{
-					m_crtc->set_clock(XTAL(14'318'181) / 8);
+					m_crtc->set_unscaled_clock(XTAL(14'318'181) / 8);
 				}
 				else
 				{
-					m_crtc->set_clock(XTAL(14'318'181) / 16);
+					m_crtc->set_unscaled_clock(XTAL(14'318'181) / 16);
 				}
 			}
 			break;

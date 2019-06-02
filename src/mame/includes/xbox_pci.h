@@ -58,16 +58,30 @@ DECLARE_DEVICE_TYPE(NV2A_RAM, nv2a_ram_device)
  * LPC Bus
  */
 
-class mcpx_isalpc_device : public pci_device {
+class lpcbus_host_interface {
+public:
+	virtual void set_virtual_line(int line, int state) = 0;
+};
+
+class lpcbus_device_interface {
+public:
+	virtual void map_extra(address_space *memory_space, address_space *io_space) = 0;
+	virtual void set_host(int index, lpcbus_host_interface *host) = 0;
+};
+
+class mcpx_isalpc_device : public pci_device, public lpcbus_host_interface {
 public:
 	mcpx_isalpc_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock, uint32_t subsystem_id);
 	mcpx_isalpc_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
+	auto smi() { return m_smi_callback.bind(); }
 	auto interrupt_output() { return m_interrupt_output.bind(); }
 	auto boot_state_hook() { return m_boot_state_hook.bind(); }
 
 	uint32_t acknowledge();
 	void debug_generate_irq(int irq, int state);
+
+	virtual void set_virtual_line(int line, int state) override;
 
 	DECLARE_READ32_MEMBER(acpi_r);
 	DECLARE_WRITE32_MEMBER(acpi_w);
@@ -94,12 +108,18 @@ protected:
 private:
 	void internal_io_map(address_map &map);
 	void lpc_io(address_map &map);
+	void update_smi_line();
 
+	devcb_write_line m_smi_callback;
 	devcb_write_line m_interrupt_output;
 	devcb_write8 m_boot_state_hook;
 	required_device<pic8259_device> pic8259_1;
 	required_device<pic8259_device> pic8259_2;
 	required_device<pit8254_device> pit8254;
+
+	uint16_t m_global_smi_control;
+	uint8_t m_smi_command_port;
+	lpcbus_device_interface *lpcdevices[16];
 };
 
 DECLARE_DEVICE_TYPE(MCPX_ISALPC, mcpx_isalpc_device)
@@ -119,8 +139,10 @@ public:
 
 	auto interrupt_handler() { return m_interrupt_handler.bind(); }
 
-	DECLARE_READ32_MEMBER(smbus_r);
-	DECLARE_WRITE32_MEMBER(smbus_w);
+	DECLARE_READ32_MEMBER(smbus0_r);
+	DECLARE_WRITE32_MEMBER(smbus0_w);
+	DECLARE_READ32_MEMBER(smbus1_r);
+	DECLARE_WRITE32_MEMBER(smbus1_w);
 
 protected:
 	virtual void device_start() override;
@@ -137,10 +159,12 @@ private:
 		int rw;
 		smbus_interface *devices[128];
 		uint32_t words[256 / 4];
-	} smbusst;
+	} smbusst[2];
 	void smbus_io0(address_map &map);
 	void smbus_io1(address_map &map);
 	void smbus_io2(address_map &map);
+	uint32_t smbus_read(int bus, offs_t offset, uint32_t mem_mask);
+	void smbus_write(int bus, offs_t offset, uint32_t data, uint32_t mem_mask);
 };
 
 DECLARE_DEVICE_TYPE(MCPX_SMBUS, mcpx_smbus_device)

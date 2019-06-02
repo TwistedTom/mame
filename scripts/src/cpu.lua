@@ -1087,12 +1087,16 @@ if (CPUS["I386"]~=null) then
 	files {
 		MAME_DIR .. "src/devices/cpu/i386/i386.cpp",
 		MAME_DIR .. "src/devices/cpu/i386/i386.h",
+		MAME_DIR .. "src/devices/cpu/i386/athlon.cpp",
+		MAME_DIR .. "src/devices/cpu/i386/athlon.h",
+		MAME_DIR .. "src/devices/cpu/i386/cache.h",
 		MAME_DIR .. "src/devices/cpu/i386/cycles.h",
 		MAME_DIR .. "src/devices/cpu/i386/i386op16.hxx",
 		MAME_DIR .. "src/devices/cpu/i386/i386op32.hxx",
 		MAME_DIR .. "src/devices/cpu/i386/i386ops.h",
 		MAME_DIR .. "src/devices/cpu/i386/i386ops.hxx",
 		MAME_DIR .. "src/devices/cpu/i386/i386priv.h",
+		MAME_DIR .. "src/devices/cpu/i386/i386segs.hxx",
 		MAME_DIR .. "src/devices/cpu/i386/i486ops.hxx",
 		MAME_DIR .. "src/devices/cpu/i386/pentops.hxx",
 		MAME_DIR .. "src/devices/cpu/i386/x87ops.hxx",
@@ -1669,9 +1673,7 @@ if (CPUS["M680X0"]~=null) then
 		MAME_DIR .. "src/devices/cpu/m68000/m68kops.h",
 		MAME_DIR .. "src/devices/cpu/m68000/m68000.h",
 		MAME_DIR .. "src/devices/cpu/m68000/m68kfpu.hxx",
-		--MAME_DIR .. "src/devices/cpu/m68000/m68kmake.cpp",
 		MAME_DIR .. "src/devices/cpu/m68000/m68kmmu.h",
-		--MAME_DIR .. "src/devices/cpu/m68000/m68k_in.cpp",
 	}
 end
 
@@ -2160,6 +2162,11 @@ if (CPUS["UNSP"]~=null) then
 	files {
 		MAME_DIR .. "src/devices/cpu/unsp/unsp.cpp",
 		MAME_DIR .. "src/devices/cpu/unsp/unsp.h",
+		MAME_DIR .. "src/devices/cpu/unsp/unsp_extended.cpp",
+		MAME_DIR .. "src/devices/cpu/unsp/unsp_jumps.cpp",
+		MAME_DIR .. "src/devices/cpu/unsp/unsp_exxx.cpp",
+		MAME_DIR .. "src/devices/cpu/unsp/unsp_fxxx.cpp",
+		MAME_DIR .. "src/devices/cpu/unsp/unsp_other.cpp",
 		MAME_DIR .. "src/devices/cpu/unsp/unspdefs.h",
 		MAME_DIR .. "src/devices/cpu/unsp/unspdrc.cpp",
 		MAME_DIR .. "src/devices/cpu/unsp/unspfe.cpp",
@@ -2170,6 +2177,11 @@ end
 if (CPUS["UNSP"]~=null or _OPTIONS["with-tools"]) then
 	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/unsp/unspdasm.cpp")
 	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/unsp/unspdasm.h")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/unsp/unspdasm_extended.cpp")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/unsp/unspdasm_jumps.cpp")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/unsp/unspdasm_exxx.cpp")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/unsp/unspdasm_fxxx.cpp")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/unsp/unspdasm_other.cpp")
 end
 
 --------------------------------------------------
@@ -2799,4 +2811,72 @@ end
 if (CPUS["ALPHA"]~=null or _OPTIONS["with-tools"]) then
 	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/alpha/alphad.cpp")
 	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/alpha/alphad.h")
+end
+
+--------------------------------------------------
+-- National Semiconductor HPC
+--@src/devices/cpu/hpc/hpc.h,CPUS["HPC"] = true
+--------------------------------------------------
+
+if (CPUS["HPC"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/cpu/hpc/hpc.cpp",
+		MAME_DIR .. "src/devices/cpu/hpc/hpc.h",
+	}
+end
+
+if (CPUS["HPC"]~=null or _OPTIONS["with-tools"]) then
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/hpc/hpcdasm.cpp")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/hpc/hpcdasm.h")
+end
+
+--------------------------------------------------
+-- Yamaha Multiple Effects Generator
+--@src/devices/sound/meg.h,CPUS["MEG"] = true
+--------------------------------------------------
+
+if (CPUS["MEG"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/sound/meg.cpp",
+		MAME_DIR .. "src/devices/sound/meg.h",
+	}
+end
+
+if (CPUS["MEG"]~=null or _OPTIONS["with-tools"]) then
+	table.insert(disasm_files , MAME_DIR .. "src/devices/sound/megd.cpp")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/sound/megd.h")
+end
+
+--------------------------------------------------
+-- Yamaha DSPV
+--@src/devices/sound/dspv.h,CPUS["DSPV"] = true
+--------------------------------------------------
+
+if (CPUS["DSPV"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/sound/dspv.cpp",
+		MAME_DIR .. "src/devices/sound/dspv.h",
+	}
+end
+
+if (CPUS["DSPV"]~=null or _OPTIONS["with-tools"]) then
+	table.insert(disasm_files , MAME_DIR .. "src/devices/sound/dspvd.cpp")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/sound/dspvd.h")
+end
+
+--------------------------------------------------
+--  National Semiconductor NS32000 series
+--@src/devices/cpu/ns32000/ns32000.h,CPUS["NS32000"] = true
+--------------------------------------------------
+
+if (CPUS["NS32000"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/cpu/ns32000/ns32000.cpp",
+		MAME_DIR .. "src/devices/cpu/ns32000/ns32000.h",
+	}
+end
+
+if (CPUS["NS32000"]~=null or _OPTIONS["with-tools"]) then
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/ns32000/ns32000dasm.cpp")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/ns32000/ns32000dasm.h")
 end

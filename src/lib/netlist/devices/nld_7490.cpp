@@ -7,6 +7,7 @@
 
 #include "nld_7490.h"
 #include "netlist/nl_base.h"
+#include "nlid_system.h"
 
 namespace netlist
 {
@@ -25,13 +26,14 @@ namespace netlist
 		, m_last_A(*this, "m_last_A", 0)
 		, m_last_B(*this, "m_last_B", 0)
 		, m_Q(*this, {{"QA", "QB", "QC", "QD"}})
+		, m_power_pins(*this)
 		{
 		}
 
+	private:
 		NETLIB_UPDATEI();
 		NETLIB_RESETI();
 
-	protected:
 		void update_outputs();
 
 		logic_input_t m_A;
@@ -46,28 +48,29 @@ namespace netlist
 		state_var<netlist_sig_t> m_last_B;
 
 		object_array_t<logic_output_t, 4> m_Q;
+		nld_power_pins m_power_pins;
 	};
 
 	NETLIB_OBJECT_DERIVED(7490_dip, 7490)
 	{
 		NETLIB_CONSTRUCTOR_DERIVED(7490_dip, 7490)
 		{
-			register_subalias("1", m_B);
-			register_subalias("2", m_R1);
-			register_subalias("3", m_R2);
+			register_subalias("1", "B");
+			register_subalias("2", "R1");
+			register_subalias("3", "R2");
 
 			// register_subalias("4", ); --> NC
-			// register_subalias("5", ); --> VCC
-			register_subalias("6", m_R91);
-			register_subalias("7", m_R92);
+			register_subalias("5", "VCC");
+			register_subalias("6", "R91");
+			register_subalias("7", "R92");
 
-			register_subalias("8", m_Q[2]);
-			register_subalias("9", m_Q[1]);
-			// register_subalias("10", ); --> GND
-			register_subalias("11", m_Q[3]);
-			register_subalias("12", m_Q[0]);
+			register_subalias("8", "QC");
+			register_subalias("9", "QB");
+			register_subalias("10", "GND");
+			register_subalias("11", "QD");
+			register_subalias("12", "QA");
 			// register_subalias("13", ); --> NC
-			register_subalias("14", m_A);
+			register_subalias("14", "A");
 		}
 	};
 
@@ -126,7 +129,7 @@ namespace netlist
 			m_Q[i].push((m_cnt >> i) & 1, delay[i]);
 	}
 
-	NETLIB_DEVICE_IMPL(7490,     "TTL_7490",        "+A,+B,+R1,+R2,+R91,+R92")
+	NETLIB_DEVICE_IMPL(7490,     "TTL_7490",        "+A,+B,+R1,+R2,+R91,+R92,@VCC,@GND")
 	NETLIB_DEVICE_IMPL(7490_dip, "TTL_7490_DIP",    "")
 
 	} //namespace devices

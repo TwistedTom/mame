@@ -34,13 +34,18 @@ public:
 	using iterator = C *;
 	using const_iterator = const C *;
 
-	uninitialised_array_t() = default;
+	//uninitialised_array_t() noexcept = default;
+	uninitialised_array_t() noexcept
+	: m_initialized(0)
+	{
+	}
 
 	COPYASSIGNMOVE(uninitialised_array_t, delete)
-	~uninitialised_array_t()
+	~uninitialised_array_t() noexcept
 	{
-		for (std::size_t i=0; i<N; i++)
-			(*this)[i].~C();
+		if (m_initialized>=N)
+			for (std::size_t i=0; i<N; i++)
+				(*this)[i].~C();
 	}
 
 	size_t size() const { return N; }
@@ -58,6 +63,7 @@ public:
 	template<typename... Args>
 	void emplace(const std::size_t index, Args&&... args)
 	{
+		m_initialized++;
 		// allocate on buffer
 		new (&m_buf[index]) C(std::forward<Args>(args)...);
 	}
@@ -76,8 +82,9 @@ protected:
 private:
 
 	/* ensure proper alignment */
-	// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays, modernize-avoid-c-arrays)
+	PALIGNAS_VECTOROPT()
 	std::array<typename std::aligned_storage<sizeof(C), alignof(C)>::type, N> m_buf;
+	unsigned m_initialized;
 };
 
 // ----------------------------------------------------------------------------------------
@@ -226,10 +233,10 @@ public:
 
 	void push_front(LC *elem) noexcept
 	{
+		if (m_head)
+			m_head->m_prev = elem;
 		elem->m_next = m_head;
 		elem->m_prev = nullptr;
-		if (elem->m_next)
-			elem->m_next->m_prev = elem;
 		m_head = elem;
 	}
 

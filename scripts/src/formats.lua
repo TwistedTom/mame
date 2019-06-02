@@ -991,6 +991,18 @@ end
 
 --------------------------------------------------
 --
+--@src/lib/formats/os9_dsk.h,FORMATS["OS9_DSK"] = true
+--------------------------------------------------
+
+if (FORMATS["OS9_DSK"]~=null  or _OPTIONS["with-tools"]) then
+	files {
+		MAME_DIR.. "src/lib/formats/os9_dsk.cpp",
+		MAME_DIR.. "src/lib/formats/os9_dsk.h",
+	}
+end
+
+--------------------------------------------------
+--
 --@src/lib/formats/jfd_dsk.h,FORMATS["JFD_DSK"] = true
 --------------------------------------------------
 
@@ -1147,6 +1159,18 @@ end
 
 --------------------------------------------------
 --
+--@src/lib/formats/mtx_dsk.h,FORMATS["MTX_DSK"] = true
+--------------------------------------------------
+
+if (FORMATS["MTX_DSK"]~=null  or _OPTIONS["with-tools"]) then
+	files {
+		MAME_DIR.. "src/lib/formats/mtx_dsk.cpp",
+		MAME_DIR.. "src/lib/formats/mtx_dsk.h",
+	}
+end
+
+--------------------------------------------------
+--
 --@src/lib/formats/mz_cas.h,FORMATS["MZ_CAS"] = true
 --------------------------------------------------
 
@@ -1214,6 +1238,18 @@ if (FORMATS["NFD_DSK"]~=null  or _OPTIONS["with-tools"]) then
 	files {
 		MAME_DIR.. "src/lib/formats/nfd_dsk.cpp",
 		MAME_DIR.. "src/lib/formats/nfd_dsk.h",
+	}
+end
+
+--------------------------------------------------
+--
+--@src/lib/formats/opd_dsk.h,FORMATS["OPD_DSK"] = true
+--------------------------------------------------
+
+if (FORMATS["OPD_DSK"]~=null  or _OPTIONS["with-tools"]) then
+	files {
+		MAME_DIR.. "src/lib/formats/opd_dsk.cpp",
+		MAME_DIR.. "src/lib/formats/opd_dsk.h",
 	}
 end
 

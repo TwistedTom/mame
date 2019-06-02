@@ -45,12 +45,14 @@ namespace devices
 		LIB_ENTRY(function)   // only for macro devices - NO FEEDBACK loops
 		LIB_ENTRY(QBJT_EB)
 		LIB_ENTRY(QBJT_switch)
+		LIB_ENTRY(MOSFET)
 		LIB_ENTRY(logic_input_ttl)
 		LIB_ENTRY(logic_input)
 		LIB_ENTRY(analog_input)
 		LIB_ENTRY(log)
 		LIB_ENTRY(logD)
 		LIB_ENTRY(clock)
+		LIB_ENTRY(varclock)
 		LIB_ENTRY(extclock)
 		LIB_ENTRY(mainclock)
 		LIB_ENTRY(gnd)
@@ -65,8 +67,10 @@ namespace devices
 		LIB_ENTRY(2102A_dip)
 		LIB_ENTRY(2716)
 		LIB_ENTRY(2716_dip)
+#if !(USE_TRUTHTABLE_7448)
 		LIB_ENTRY(7448)
 		LIB_ENTRY(7448_dip)
+#endif
 		LIB_ENTRY(7450)
 		LIB_ENTRY(7450_dip)
 		LIB_ENTRY(7473)
@@ -89,8 +93,10 @@ namespace devices
 		LIB_ENTRY(7493_dip)
 		LIB_ENTRY(7497)
 		LIB_ENTRY(7497_dip)
+#if (!USE_TRUTHTABLE_74107)
 		LIB_ENTRY(74107)
 		LIB_ENTRY(74107_dip)
+#endif
 		LIB_ENTRY(74107A)    // FIXME: implement missing DIP
 		LIB_ENTRY(74123)
 		LIB_ENTRY(74123_dip)
@@ -132,6 +138,9 @@ namespace devices
 		/* entries with suffix WI are legacy only */
 		//ENTRY(4066,                 CD_4066,              "+A,B")
 		LIB_ENTRY(NE555)
+		LIB_ENTRY(NE555_dip)
+		LIB_ENTRY(MC1455P)
+		LIB_ENTRY(MC1455P_dip)
 		LIB_ENTRY(TMS4800)
 		LIB_ENTRY(TMS4800_dip)
 		LIB_ENTRY(r2r_dac)
@@ -155,7 +164,6 @@ namespace devices
 		LIB_ENTRY(9334_dip)
 		LIB_ENTRY(AM2847_dip)
 		LIB_ENTRY(SN74LS629_dip)
-		LIB_ENTRY(NE555_dip)
 		LIB_ENTRY(MM5837_dip)
 	}
 

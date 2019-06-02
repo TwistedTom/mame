@@ -966,7 +966,7 @@ void segas16b_state::memory_mapper(sega_315_5195_mapper_device &mapper, uint8_t 
 WRITE16_MEMBER( segas16b_state::sound_w16 )
 {
 	if (m_soundlatch != nullptr)
-		m_soundlatch->write(space, 0, data & 0xff);
+		m_soundlatch->write(data & 0xff);
 	if (m_soundcpu != nullptr)
 		m_soundcpu->set_input_line(0, HOLD_LINE);
 }
@@ -999,13 +999,13 @@ READ16_MEMBER( segas16b_state::rom_5797_bank_math_r )
 	{
 		case 0x0000/2:
 			// multiply registers
-			return m_multiplier->read(space, offset, mem_mask);
+			return m_multiplier->read(offset);
 
 		case 0x1000/2:
 			// compare registers
-			return m_cmptimer_1->read(space, offset, mem_mask);
+			return m_cmptimer_1->read(offset);
 	}
-	return open_bus_r(space, 0, mem_mask);
+	return open_bus_r(space);
 }
 
 
@@ -1021,12 +1021,12 @@ WRITE16_MEMBER( segas16b_state::rom_5797_bank_math_w )
 	{
 		case 0x0000/2:
 			// multiply registers
-			m_multiplier->write(space, offset, data, mem_mask);
+			m_multiplier->write(offset, data, mem_mask);
 			break;
 
 		case 0x1000/2:
 			// compare registers
-			m_cmptimer_1->write(space, offset, data, mem_mask);
+			m_cmptimer_1->write(offset, data, mem_mask);
 			break;
 
 		case 0x2000/2:
@@ -1045,7 +1045,7 @@ WRITE16_MEMBER( segas16b_state::rom_5797_bank_math_w )
 READ16_MEMBER( segas16b_state::unknown_rgn2_r )
 {
 	logerror("Region 2: read from %04X\n", offset * 2);
-	return m_cmptimer_2->read(space, offset, mem_mask);
+	return m_cmptimer_2->read(offset);
 }
 
 
@@ -1057,7 +1057,7 @@ READ16_MEMBER( segas16b_state::unknown_rgn2_r )
 WRITE16_MEMBER( segas16b_state::unknown_rgn2_w )
 {
 	logerror("Region 2: write to %04X = %04X & %04X\n", offset * 2, data, mem_mask);
-	m_cmptimer_2->write(space, offset, data, mem_mask);
+	m_cmptimer_2->write(offset, data, mem_mask);
 }
 
 
@@ -1080,7 +1080,7 @@ READ16_MEMBER( segas16b_state::standard_io_r )
 			return ioport((offset & 1) ? "DSW1" : "DSW2")->read();
 	}
 	logerror("%06X:standard_io_r - unknown read access to address %04X\n", m_maincpu->pc(), offset * 2);
-	return open_bus_r(space, 0, mem_mask);
+	return open_bus_r(space);
 }
 
 
@@ -2434,7 +2434,9 @@ static INPUT_PORTS_START( dunkshot )
 	PORT_BIT( 0xff, IP_ACTIVE_LOW, IPT_UNUSED )
 
 	PORT_MODIFY("DSW2")
-	//"SW2:1" unused
+	PORT_DIPNAME( 0x01, 0x00, "Winner Advances" ) PORT_DIPLOCATION("SW2:1")
+	PORT_DIPSETTING(    0x01, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
 	PORT_DIPNAME( 0x02, 0x00, DEF_STR( Demo_Sounds ) ) PORT_DIPLOCATION("SW2:2")
 	PORT_DIPSETTING(    0x02, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
@@ -2451,7 +2453,9 @@ static INPUT_PORTS_START( dunkshot )
 	PORT_DIPNAME( 0x40, 0x40, "CPU Starts With +6 Pts." ) PORT_DIPLOCATION("SW2:7")
 	PORT_DIPSETTING(    0x40, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	//"SW2:8" unused
+	PORT_DIPNAME( 0x80, 0x00, DEF_STR( Allow_Continue ) ) PORT_DIPLOCATION("SW2:8")
+	PORT_DIPSETTING(    0x80, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
 
 	PORT_START("ANALOGX1")              // fake analog X
 	PORT_BIT( 0xff, 0x00, IPT_TRACKBALL_X ) PORT_SENSITIVITY(75) PORT_KEYDELTA(5) PORT_PLAYER(1) PORT_REVERSE
@@ -2476,6 +2480,15 @@ static INPUT_PORTS_START( dunkshot )
 
 	PORT_START("ANALOGY4")              // fake analog Y
 	PORT_BIT( 0xff, 0x00, IPT_TRACKBALL_Y ) PORT_SENSITIVITY(75) PORT_KEYDELTA(5) PORT_PLAYER(4) PORT_REVERSE
+INPUT_PORTS_END
+
+
+static INPUT_PORTS_START( dunkshoto )
+	PORT_INCLUDE( dunkshot )
+
+	PORT_MODIFY("DSW2")
+	PORT_DIPUNUSED_DIPLOC( 0x01, IP_ACTIVE_LOW, "SW2:1" )
+	PORT_DIPUNUSED_DIPLOC( 0x80, IP_ACTIVE_LOW, "SW2:8" )
 INPUT_PORTS_END
 
 
@@ -3730,7 +3743,7 @@ void segas16b_state::system16b(machine_config &config)
 
 	// video hardware
 	GFXDECODE(config, m_gfxdecode, m_palette, gfx_segas16b);
-	PALETTE(config, m_palette).set_entries(2048*3);
+	PALETTE(config, m_palette).set_entries(2048*2);
 
 	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
 	m_screen->set_raw(MASTER_CLOCK_25MHz/4, 400, 0, 320, 262, 0, 224);
@@ -3929,7 +3942,7 @@ void segas16b_state::lockonph(machine_config &config)
 
 	// video hardware
 	GFXDECODE(config, m_gfxdecode, m_palette, gfx_lockonph);
-	PALETTE(config, m_palette).set_entries(0x2000*4);
+	PALETTE(config, m_palette).set_entries(4096*2);
 
 	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
 	m_screen->set_raw(MASTER_CLOCK_25MHz/4, 400, 0, 320, 262, 0, 224); // wrong, other XTAL seems to be 17Mhz?
@@ -5288,6 +5301,9 @@ ROM_END
 //  Cotton, Sega System 16B
 //  CPU: FD1094 (317-0181A)
 //  ROM Board type: 171-5704
+//  Sega game ID: 833-8021-02 COTTON
+//    Main board: 837-8023-02
+//     ROM board: 834-8022-02
 //
 ROM_START( cotton )
 	ROM_REGION( 0x80000, "maincpu", 0 ) // 68000 code
@@ -6663,7 +6679,8 @@ ROM_END
 //  Golden Axe (World), Sega System 16B
 //  CPU: FD1094 (317-0120)
 //  ROM Board type: 171-5704
-//  Sega ID# for ROM board: 834-7002-11
+//  Sega game ID: 833-7001-03 GOLDEN AXE
+//     ROM board: 834-7002-03
 //
 ROM_START( goldnaxe3 )
 	ROM_REGION( 0x80000, "maincpu", 0) // 68000 code
@@ -7057,6 +7074,8 @@ ROM_END
 //  MVP (Japan), Sega System 16B
 //  CPU: FD1094 (317-0142)
 //  ROM Board type: 171-5704
+//  Sega game ID: 833-7364
+//     ROM board: 834-7365
 //
 ROM_START( mvpj )
 	ROM_REGION( 0x80000, "maincpu", 0 ) // 68000 code
@@ -8418,7 +8437,9 @@ ROM_END
 //  Tough Turf, Sega System 16B
 //  CPU: 68000 + i8751 (317-0099)
 //  ROM Board type: 171-5358
-//  Sega ID# for ROM board: 834-6949
+//  Sega game ID: 833-6948 TOUGH TURF
+//    Main board: 837-6950
+//     ROM board: 834-6949
 //
 ROM_START( tturfu )
 	ROM_REGION( 0x40000, "maincpu", 0 ) // 68000 code
@@ -9254,9 +9275,9 @@ GAME( 1988, ddux,       0,        system16b_fd1094,      ddux,     segas16b_stat
 GAME( 1988, dduxj,      ddux,     system16b_fd1094,      ddux,     segas16b_state, init_generic_5521,       ROT0,   "Sega", "Dynamite Dux (set 2, Japan) (FD1094 317-0094)", 0 )
 GAME( 1988, ddux1,      ddux,     system16b_i8751,       ddux,     segas16b_state, init_ddux_5704,          ROT0,   "Sega", "Dynamite Dux (set 1) (8751 317-0095)", 0 )
 
-GAME( 1987, dunkshot,   0,        system16b_fd1089a,     dunkshot, segas16b_state, init_dunkshot_5358_small,ROT0,   "Sega", "Dunk Shot (Rev C, FD1089A 317-0022)", 0 )
-GAME( 1987, dunkshota,  dunkshot, system16b_fd1089a,     dunkshot, segas16b_state, init_dunkshot_5358_small,ROT0,   "Sega", "Dunk Shot (Rev A, FD1089A 317-0022)", 0 )
-GAME( 1986, dunkshoto,  dunkshot, system16b_fd1089a,     dunkshot, segas16b_state, init_dunkshot_5358_small,ROT0,   "Sega", "Dunk Shot (FD1089A 317-0022)", 0 )
+GAME( 1987, dunkshot,   0,        system16b_fd1089a,     dunkshot,  segas16b_state, init_dunkshot_5358_small,ROT0,   "Sega", "Dunk Shot (Rev C, FD1089A 317-0022)", 0 )
+GAME( 1987, dunkshota,  dunkshot, system16b_fd1089a,     dunkshot,  segas16b_state, init_dunkshot_5358_small,ROT0,   "Sega", "Dunk Shot (Rev A, FD1089A 317-0022)", 0 )
+GAME( 1986, dunkshoto,  dunkshot, system16b_fd1089a,     dunkshoto, segas16b_state, init_dunkshot_5358_small,ROT0,   "Sega", "Dunk Shot (FD1089A 317-0022)", 0 )
 
 GAME( 1989, eswat,      0,        system16b_fd1094_5797, eswat,    segas16b_state, init_generic_5797,       ROT0,   "Sega", "E-Swat - Cyber Police (set 4, World) (FD1094 317-0130)", 0 )
 GAME( 1989, eswatu,     eswat,    system16b_fd1094_5797, eswat,    segas16b_state, init_generic_5797,       ROT0,   "Sega", "E-Swat - Cyber Police (set 3, US) (FD1094 317-0129)", 0 )
@@ -9843,7 +9864,6 @@ void isgsm_state::machine_reset()
 			m_sprites->set_bank(i, i);
 
 	membank(ISGSM_MAIN_BANK)->set_base(memregion("bios")->base());
-	m_maincpu->reset();
 }
 
 

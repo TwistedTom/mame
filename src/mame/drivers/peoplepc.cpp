@@ -277,7 +277,7 @@ void peoplepc_state::olypeopl(machine_config &config)
 	GFXDECODE(config, m_gfxdecode, m_palette, gfxdecode_device::empty);
 	PALETTE(config, m_palette, palette_device::MONOCHROME);
 
-	h46505_device &crtc(H46505(config, "h46505", XTAL(22'000'000)/8));
+	mc6845_device &crtc(MC6845(config, "h46505", XTAL(22'000'000)/8)); // unknown variant
 	crtc.set_screen("screen");
 	crtc.set_show_border_area(false);
 	crtc.set_char_width(8);
@@ -288,8 +288,8 @@ void peoplepc_state::olypeopl(machine_config &config)
 	m_dmac->out_tc_cb().set(FUNC(peoplepc_state::tc_w));
 	m_dmac->in_memr_cb().set(FUNC(peoplepc_state::memory_read_byte));
 	m_dmac->out_memw_cb().set(FUNC(peoplepc_state::memory_write_byte));
-	m_dmac->in_ior_cb<0>().set("upd765", FUNC(upd765a_device::mdma_r));
-	m_dmac->out_iow_cb<0>().set("upd765", FUNC(upd765a_device::mdma_w));
+	m_dmac->in_ior_cb<0>().set("upd765", FUNC(upd765a_device::dma_r));
+	m_dmac->out_iow_cb<0>().set("upd765", FUNC(upd765a_device::dma_w));
 
 	UPD765A(config, m_fdc, 8'000'000, true, true);
 	m_fdc->intrq_wr_callback().set("pic8259_0", FUNC(pic8259_device::ir2_w));

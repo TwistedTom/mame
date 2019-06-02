@@ -52,7 +52,7 @@ DEFINE_DEVICE_TYPE(A2BUS_SCSI, a2bus_scsi_device, "a2scsi", "Apple II SCSI Card"
 
 static void scsi_devices(device_slot_interface &device)
 {
-	device.option_add("cdrom", NSCSI_CDROM);
+	device.option_add("cdrom", NSCSI_CDROM_APPLE);
 	device.option_add("harddisk", NSCSI_HARDDISK);
 	device.option_add_internal("ncr5380", NCR5380N);
 }
@@ -74,14 +74,13 @@ void a2bus_scsi_device::device_add_mconfig(machine_config &config)
 {
 	NSCSI_BUS(config, m_scsibus);
 	NSCSI_CONNECTOR(config, "scsibus:0", scsi_devices, nullptr, false);
-	NSCSI_CONNECTOR(config, "scsibus:1", scsi_devices, nullptr, false);
+	NSCSI_CONNECTOR(config, "scsibus:1", scsi_devices, "cdrom", false);
 	NSCSI_CONNECTOR(config, "scsibus:2", scsi_devices, nullptr, false);
 	NSCSI_CONNECTOR(config, "scsibus:3", scsi_devices, nullptr, false);
 	NSCSI_CONNECTOR(config, "scsibus:4", scsi_devices, nullptr, false);
 	NSCSI_CONNECTOR(config, "scsibus:5", scsi_devices, nullptr, false);
 	NSCSI_CONNECTOR(config, "scsibus:6", scsi_devices, "harddisk", false);
 	NSCSI_CONNECTOR(config, "scsibus:7", scsi_devices, "ncr5380", true).set_option_machine_config("ncr5380", [this](device_t *device) {
-		device->set_clock(10000000);
 		downcast<ncr5380n_device &>(*device).drq_handler().set(*this, FUNC(a2bus_scsi_device::drq_w));
 	});
 }
@@ -154,7 +153,7 @@ uint8_t a2bus_scsi_device::read_c0nx(uint8_t offset)
 		case 6:
 		case 7:
 //          logerror("Read 5380 @ %x\n", offset);
-			return m_ncr5380->read(machine().dummy_space(), offset);
+			return m_ncr5380->read(offset);
 
 		case 8:     // read and DACK
 			return m_ncr5380->dma_r();
@@ -194,7 +193,7 @@ void a2bus_scsi_device::write_c0nx(uint8_t offset, uint8_t data)
 		case 6:
 		case 7:
 //          logerror("%02x to 5380 reg %x\n", data, offset);
-			m_ncr5380->write(machine().dummy_space(), offset, data);
+			m_ncr5380->write(offset, data);
 			break;
 
 		case 8: // write and DACK

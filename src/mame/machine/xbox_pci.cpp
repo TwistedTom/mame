@@ -102,6 +102,9 @@ void mcpx_isalpc_device::map_extra(uint64_t memory_window_start, uint64_t memory
 	uint64_t io_window_start, uint64_t io_window_end, uint64_t io_offset, address_space *io_space)
 {
 	io_space->install_device(0, 0xffff, *this, &mcpx_isalpc_device::internal_io_map);
+	for (int a = 0; a < 16; a++)
+		if (lpcdevices[a] != nullptr)
+			lpcdevices[a]->map_extra(memory_space, io_space);
 }
 
 mcpx_isalpc_device::mcpx_isalpc_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock, uint32_t subsystem_id)
@@ -112,21 +115,49 @@ mcpx_isalpc_device::mcpx_isalpc_device(const machine_config &mconfig, const char
 
 mcpx_isalpc_device::mcpx_isalpc_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
 	: pci_device(mconfig, MCPX_ISALPC, tag, owner, clock),
+	m_smi_callback(*this),
 	m_interrupt_output(*this),
 	m_boot_state_hook(*this),
 	pic8259_1(*this, "pic8259_1"),
 	pic8259_2(*this, "pic8259_2"),
-	pit8254(*this, "pit8254")
+	pit8254(*this, "pit8254"),
+	m_global_smi_control(0),
+	m_smi_command_port(0)
 {
 }
 
 void mcpx_isalpc_device::device_start()
 {
 	pci_device::device_start();
+	m_smi_callback.resolve_safe();
 	m_interrupt_output.resolve_safe();
 	m_boot_state_hook.resolve_safe();
 	add_map(0x00000100, M_IO, FUNC(mcpx_isalpc_device::lpc_io));
 	bank_infos[0].adr = 0x8000;
+	for (int a = 0; a < 16; a++)
+		lpcdevices[a] = nullptr;
+	for (device_t &d : subdevices())
+	{
+		const char *t = d.basetag();
+		int l = strlen(t);
+
+		if (l == 1)
+		{
+			int address = strtol(t + l, nullptr, 16);
+
+			address = address & 15;
+			if (lpcdevices[address] == nullptr)
+			{
+				lpcbus_device_interface *i = dynamic_cast<lpcbus_device_interface *>(&d);
+				lpcdevices[address] = i;
+				if (i)
+					i->set_host(address, this);
+			}
+			else
+				logerror("Duplicate address for LPC bus device with tag %s\n", t);
+			break;
+		}
+	}
 }
 
 void mcpx_isalpc_device::device_reset()
@@ -162,15 +193,44 @@ void mcpx_isalpc_device::device_add_mconfig(machine_config &config)
 	*/
 }
 
+void mcpx_isalpc_device::update_smi_line()
+{
+	if (m_global_smi_control)
+		m_smi_callback(1);
+	else
+		m_smi_callback(0);
+}
+
 READ32_MEMBER(mcpx_isalpc_device::acpi_r)
 {
-	logerror("Acpi read from %04X mask %08X\n", bank_infos[0].adr + offset, mem_mask);
+	logerror("Acpi read from %04X mask %08X\n", bank_infos[0].adr + offset * 4, mem_mask);
+	if ((offset == 0xa) && ACCESSING_BITS_0_15)
+		return m_global_smi_control;
+	if ((offset == 0xb) && ACCESSING_BITS_16_23)
+		return m_smi_command_port << 16;
 	return 0;
 }
 
 WRITE32_MEMBER(mcpx_isalpc_device::acpi_w)
 {
-	logerror("Acpi write %08X to %04X mask %08X\n", data, bank_infos[0].adr + offset, mem_mask);
+	// Seen using word registers at the following offsets
+	// 0x00 0x02 0x04 0x08 0x20 0x22 0x28 0xa0 0xa2 0xc0-0xd8
+	if ((offset == 0xa) && ACCESSING_BITS_0_15)
+	{
+		// Global SMI Control
+		m_global_smi_control = m_global_smi_control & (~data & 0xffff);
+		update_smi_line();
+	}
+	if ((offset == 0xb) && ACCESSING_BITS_16_23)
+	{
+		// SMI Command Port
+		// write to byte 0x2e must generate a SMI interrupt
+		m_smi_command_port = (data >> 16) & 0xff;
+		m_global_smi_control |= 0x200;
+		update_smi_line();
+		logerror("Generate software SMI with value %02X\n", m_smi_command_port);
+	}
+	logerror("Acpi write %08X to %04X mask %08X\n", data, bank_infos[0].adr + offset * 4, mem_mask);
 }
 
 WRITE8_MEMBER(mcpx_isalpc_device::boot_state_w)
@@ -233,54 +293,64 @@ uint32_t mcpx_isalpc_device::acknowledge()
 
 void mcpx_isalpc_device::debug_generate_irq(int irq, int state)
 {
-	switch (irq)
+	set_virtual_line(irq, state);
+}
+
+void mcpx_isalpc_device::set_virtual_line(int line, int state)
+{
+	if (line < 16)
 	{
-	case 0:
-		pic8259_1->ir0_w(state);
-		break;
-	case 1:
-		pic8259_1->ir1_w(state);
-		break;
-	case 3:
-		pic8259_1->ir3_w(state);
-		break;
-	case 4:
-		pic8259_1->ir4_w(state);
-		break;
-	case 5:
-		pic8259_1->ir5_w(state);
-		break;
-	case 6:
-		pic8259_1->ir6_w(state);
-		break;
-	case 7:
-		pic8259_1->ir7_w(state);
-		break;
-	case 8:
-		pic8259_2->ir0_w(state);
-		break;
-	case 9:
-		pic8259_2->ir1_w(state);
-		break;
-	case 10:
-		pic8259_2->ir2_w(state);
-		break;
-	case 11:
-		pic8259_2->ir3_w(state);
-		break;
-	case 12:
-		pic8259_2->ir4_w(state);
-		break;
-	case 13:
-		pic8259_2->ir5_w(state);
-		break;
-	case 14:
-		pic8259_2->ir6_w(state);
-		break;
-	case 15:
-		pic8259_2->ir7_w(state);
-		break;
+		switch (line)
+		{
+		case 0:
+			pic8259_1->ir0_w(state);
+			break;
+		case 1:
+			pic8259_1->ir1_w(state);
+			break;
+		case 3:
+			pic8259_1->ir3_w(state);
+			break;
+		case 4:
+			pic8259_1->ir4_w(state);
+			break;
+		case 5:
+			pic8259_1->ir5_w(state);
+			break;
+		case 6:
+			pic8259_1->ir6_w(state);
+			break;
+		case 7:
+			pic8259_1->ir7_w(state);
+			break;
+		case 8:
+			pic8259_2->ir0_w(state);
+			break;
+		case 9:
+			pic8259_2->ir1_w(state);
+			break;
+		case 10:
+			pic8259_2->ir2_w(state);
+			break;
+		case 11:
+			pic8259_2->ir3_w(state);
+			break;
+		case 12:
+			pic8259_2->ir4_w(state);
+			break;
+		case 13:
+			pic8259_2->ir5_w(state);
+			break;
+		case 14:
+			pic8259_2->ir6_w(state);
+			break;
+		case 15:
+			pic8259_2->ir7_w(state);
+			break;
+		}
+		return;
 	}
+	//line = line - 16;
 }
 
 /*
@@ -291,12 +361,12 @@ DEFINE_DEVICE_TYPE(MCPX_SMBUS, mcpx_smbus_device, "mcpx_smbus", "MCPX SMBus Cont
 
 void mcpx_smbus_device::smbus_io0(address_map &map)
 {
-	map(0x00000000, 0x0000000f).noprw();
+	map(0x00000000, 0x0000000f).rw(FUNC(mcpx_smbus_device::smbus0_r), FUNC(mcpx_smbus_device::smbus0_w));
 }
 
 void mcpx_smbus_device::smbus_io1(address_map &map)
 {
-	map(0x00000000, 0x0000000f).rw(FUNC(mcpx_smbus_device::smbus_r), FUNC(mcpx_smbus_device::smbus_w));
+	map(0x00000000, 0x0000000f).rw(FUNC(mcpx_smbus_device::smbus1_r), FUNC(mcpx_smbus_device::smbus1_w));
 }
 
 void mcpx_smbus_device::smbus_io2(address_map &map)
@@ -322,8 +392,9 @@ void mcpx_smbus_device::device_start()
 	add_map(0x00000020, M_IO, FUNC(mcpx_smbus_device::smbus_io2));
 	bank_infos[2].adr = 0xc200;
 	memset(&smbusst, 0, sizeof(smbusst));
-	for (int n = 0; n < 128; n++)
-		smbusst.devices[n] = nullptr;
+	for (int b = 0; b < 2; b++)
+		for (int a = 0; a < 128; a++)
+			smbusst[b].devices[a] = nullptr;
 	for (device_t &d : subdevices())
 	{
 		const char *t = d.tag();
@@ -336,12 +407,16 @@ void mcpx_smbus_device::device_start()
 			{
 				l++;
 				int address = strtol(t + l, nullptr, 16);
-				if ((address > 0) && (address < 128))
+				int bus;
+
+				bus = address >> 8;
+				address = address & 0xff;
+				if ((address > 0) && (address < 128) && (bus >= 0) && (bus <= 1))
 				{
-					if (smbusst.devices[address] == nullptr)
+					if (smbusst[bus].devices[address] == nullptr)
 					{
 						smbus_interface *i = dynamic_cast<smbus_interface *>(&d);
-						smbusst.devices[address] = i;
+						smbusst[bus].devices[address] = i;
 					}
 					else
 						logerror("Duplicate address for SMBus device with tag %s\n", t);
@@ -359,44 +434,44 @@ void mcpx_smbus_device::device_reset()
 	pci_device::device_reset();
 }
 
-READ32_MEMBER(mcpx_smbus_device::smbus_r)
+uint32_t mcpx_smbus_device::smbus_read(int bus, offs_t offset, uint32_t mem_mask)
 {
 	if (offset == 0) // 0 smbus status
-		smbusst.words[offset] = (smbusst.words[offset] & ~0xffff) | ((smbusst.status & 0xffff) << 0);
+		smbusst[bus].words[offset] = (smbusst[bus].words[offset] & ~0xffff) | ((smbusst[bus].status & 0xffff) << 0);
 	if (offset == 1) // 6 smbus data
-		smbusst.words[offset] = (smbusst.words[offset] & ~(0xffff << 16)) | ((smbusst.data & 0xffff) << 16);
-	return smbusst.words[offset];
+		smbusst[bus].words[offset] = (smbusst[bus].words[offset] & ~(0xffff << 16)) | ((smbusst[bus].data & 0xffff) << 16);
+	return smbusst[bus].words[offset];
 }
 
-WRITE32_MEMBER(mcpx_smbus_device::smbus_w)
+void mcpx_smbus_device::smbus_write(int bus, offs_t offset, uint32_t data, uint32_t mem_mask)
 {
-	COMBINE_DATA(smbusst.words);
+	COMBINE_DATA(smbusst[bus].words);
 	if ((offset == 0) && (ACCESSING_BITS_0_7 || ACCESSING_BITS_8_15)) // 0 smbus status
 	{
-		if (!((smbusst.status ^ data) & 0x10)) // clearing interrupt
+		if (!((smbusst[bus].status ^ data) & 0x10)) // clearing interrupt
 		{
 			if (m_interrupt_handler)
 				m_interrupt_handler(0);
 		}
-		smbusst.status &= ~data;
+		smbusst[bus].status &= ~data;
 	}
 	if ((offset == 0) && ACCESSING_BITS_16_23) // 2 smbus control
 	{
 		data = data >> 16;
-		smbusst.control = data;
-		int cycletype = smbusst.control & 7;
-		if (smbusst.control & 8) { // start
+		smbusst[bus].control = data;
+		int cycletype = smbusst[bus].control & 7;
+		if (smbusst[bus].control & 8) { // start
 			if ((cycletype & 6) == 2)
 			{
-				if (smbusst.devices[smbusst.address])
-					if (smbusst.rw == 0)
-						smbusst.devices[smbusst.address]->execute_command(smbusst.command, smbusst.rw, smbusst.data);
+				if (smbusst[bus].devices[smbusst[bus].address])
+					if (smbusst[bus].rw == 0)
+						smbusst[bus].devices[smbusst[bus].address]->execute_command(smbusst[bus].command, smbusst[bus].rw, smbusst[bus].data);
 					else
-						smbusst.data = smbusst.devices[smbusst.address]->execute_command(smbusst.command, smbusst.rw, smbusst.data);
+						smbusst[bus].data = smbusst[bus].devices[smbusst[bus].address]->execute_command(smbusst[bus].command, smbusst[bus].rw, smbusst[bus].data);
 				else
-					logerror("SMBUS: access to missing device at address %d\n", smbusst.address);
-				smbusst.status |= 0x10;
-				if (smbusst.control & 0x10)
+					logerror("SMBUS: access to missing device at bus %d address %d\n", bus, smbusst[bus].address);
+				smbusst[bus].status |= 0x10;
+				if (smbusst[bus].control & 0x10)
 				{
 					if (m_interrupt_handler)
 						m_interrupt_handler(1);
@@ -406,16 +481,36 @@ WRITE32_MEMBER(mcpx_smbus_device::smbus_w)
 	}
 	if ((offset == 1) && ACCESSING_BITS_0_7) // 4 smbus address
 	{
-		smbusst.address = data >> 1;
-		smbusst.rw = data & 1;
+		smbusst[bus].address = data >> 1;
+		smbusst[bus].rw = data & 1;
 	}
 	if ((offset == 1) && (ACCESSING_BITS_16_23 || ACCESSING_BITS_16_31)) // 6 smbus data
 	{
 		data = data >> 16;
-		smbusst.data = data;
+		smbusst[bus].data = data;
 	}
 	if ((offset == 2) && ACCESSING_BITS_0_7) // 8 smbus command
-		smbusst.command = data;
+		smbusst[bus].command = data;
+}
+
+READ32_MEMBER(mcpx_smbus_device::smbus0_r)
+{
+	return smbus_read(0, offset, mem_mask);
+}
+
+WRITE32_MEMBER(mcpx_smbus_device::smbus0_w)
+{
+	smbus_write(0, offset, data, mem_mask);
+}
+
+READ32_MEMBER(mcpx_smbus_device::smbus1_r)
+{
+	return smbus_read(1, offset, mem_mask);
+}
+
+WRITE32_MEMBER(mcpx_smbus_device::smbus1_w)
+{
+	smbus_write(1, offset, data, mem_mask);
 }
 
 /*

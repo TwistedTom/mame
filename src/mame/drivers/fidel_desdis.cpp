@@ -1,8 +1,8 @@
 // license:BSD-3-Clause
 // copyright-holders:hap
-// thanks-to:Berger,yoyo_chessboard
+// thanks-to:Berger, yoyo_chessboard
 /******************************************************************************
-*
+
 * fidel_desdis.cpp, subdriver of machine/fidelbase.cpp, machine/chessbase.cpp
 
 Fidelity Designer Display series, 6502 and 68000

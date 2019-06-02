@@ -78,7 +78,7 @@ private:
 			offset |= 0x1000;
 		}
 
-		return m_k056832->piratesh_rom_r(space, offset, mem_mask);
+		return m_k056832->piratesh_rom_r(offset);
 	}
 
 	void kzaurus_main(address_map &map);
@@ -294,26 +294,27 @@ void konmedal68k_state::machine_reset()
 	m_control = m_control2 = 0;
 }
 
-MACHINE_CONFIG_START(konmedal68k_state::kzaurus)
+void konmedal68k_state::kzaurus(machine_config &config)
+{
 	/* basic machine hardware */
-	MCFG_DEVICE_ADD("maincpu", M68000, XTAL(33'868'800)/4 )    // 33.8688 MHz crystal verified on PCB
-	MCFG_DEVICE_PROGRAM_MAP(kzaurus_main)
+	M68000(config, m_maincpu, XTAL(33'868'800)/4);    // 33.8688 MHz crystal verified on PCB
+	m_maincpu->set_addrmap(AS_PROGRAM, &konmedal68k_state::kzaurus_main);
 	TIMER(config, "scantimer").configure_scanline(FUNC(konmedal68k_state::scanline), "screen", 0, 1);
 
 	/* video hardware */
-	MCFG_SCREEN_ADD("screen", RASTER)
-	MCFG_SCREEN_REFRESH_RATE(59.62)  /* verified on pcb */
-	MCFG_SCREEN_VBLANK_TIME(ATTOSECONDS_IN_USEC(0))
-	MCFG_SCREEN_SIZE(64*8, 32*8)
-	MCFG_SCREEN_VISIBLE_AREA(40, 400-1, 16, 240-1)
-	MCFG_SCREEN_UPDATE_DRIVER(konmedal68k_state, screen_update_konmedal68k)
-	MCFG_SCREEN_PALETTE("palette")
+	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen.set_refresh_hz(59.62);  /* verified on pcb */
+	screen.set_vblank_time(ATTOSECONDS_IN_USEC(0));
+	screen.set_size(64*8, 32*8);
+	screen.set_visarea(40, 400-1, 16, 240-1);
+	screen.set_screen_update(FUNC(konmedal68k_state::screen_update_konmedal68k));
+	screen.set_palette("palette");
 
 	PALETTE(config, "palette").set_format(palette_device::xBGR_888, 8192).enable_shadows();
 
 	K056832(config, m_k056832, 0);
 	m_k056832->set_tile_callback(FUNC(konmedal68k_state::tile_callback), this);
-	m_k056832->set_config("gfx1", K056832_BPP_4dj, 1, 0);
+	m_k056832->set_config(K056832_BPP_4dj, 1, 0);
 	m_k056832->set_palette(m_palette);
 
 	K055555(config, m_k055555, 0);
@@ -322,16 +323,16 @@ MACHINE_CONFIG_START(konmedal68k_state::kzaurus)
 	SPEAKER(config, "lspeaker").front_left();
 	SPEAKER(config, "rspeaker").front_right();
 
-	MCFG_DEVICE_ADD("ymz", YMZ280B, XTAL(33'868'800)/2) // 33.8688 MHz xtal verified on PCB
-	MCFG_SOUND_ROUTE(0, "lspeaker", 1.0)
-	MCFG_SOUND_ROUTE(1, "rspeaker", 1.0)
-MACHINE_CONFIG_END
+	YMZ280B(config, m_ymz, XTAL(33'868'800)/2); // 33.8688 MHz xtal verified on PCB
+	m_ymz->add_route(0, "lspeaker", 1.0);
+	m_ymz->add_route(1, "rspeaker", 1.0);
+}
 
 ROM_START( kzaurus )
 	ROM_REGION( 0x80000, "maincpu", 0 ) /* main program */
 	ROM_LOAD16_WORD_SWAP( "540-b05-2n.bin", 0x000000, 0x080000, CRC(110d4ecb) SHA1(8903783f62ad5a983242a0fe8d835857964abc43) )
 
-	ROM_REGION( 0x100000, "gfx1", 0 )   /* tilemaps */
+	ROM_REGION( 0x100000, "k056832", 0 )   /* tilemaps */
 	ROM_LOAD( "540-a06-14n.bin", 0x000000, 0x080000, CRC(260ad79e) SHA1(fb56bf6e59e78b2bd1f8df17c9c8fd0d1700dced) )
 	ROM_LOAD( "540-a07-17n.bin", 0x080000, 0x080000, CRC(442bcec2) SHA1(3100de8c146a28284ae3ab8763e5b1c6fb1755c2) )
 

@@ -7,6 +7,7 @@
 
 #include "nld_7493.h"
 #include "netlist/nl_base.h"
+#include "nlid_system.h"
 
 namespace netlist
 {
@@ -22,7 +23,6 @@ namespace netlist
 		NETLIB_CONSTRUCTOR(7493)
 		, m_R1(*this, "R1")
 		, m_R2(*this, "R2")
-		, m_reset(*this, "_m_reset", 0)
 		, m_a(*this, "_m_a", 0)
 		, m_bcd(*this, "_m_b", 0)
 		, m_CLKA(*this, "CLKA", NETLIB_DELEGATE(7493, updA))
@@ -31,38 +31,54 @@ namespace netlist
 		, m_QB(*this, "QB")
 		, m_QC(*this, "QC")
 		, m_QD(*this, "QD")
+		, m_power_pins(*this)
 		{
 		}
 
 	private:
-		NETLIB_RESETI();
-		NETLIB_UPDATEI();
+		NETLIB_RESETI()
+		{
+			m_a = m_bcd = 0;
+			m_CLKA.set_state(logic_t::STATE_INP_HL);
+			m_CLKB.set_state(logic_t::STATE_INP_HL);
+		}
+
+		NETLIB_UPDATEI()
+		{
+			if (!(m_R1() & m_R2()))
+			{
+				m_CLKA.activate_hl();
+				m_CLKB.activate_hl();
+			}
+			else
+			{
+				m_CLKA.inactivate();
+				m_CLKB.inactivate();
+				m_QA.push(0, NLTIME_FROM_NS(40));
+				m_QB.push(0, NLTIME_FROM_NS(40));
+				m_QC.push(0, NLTIME_FROM_NS(40));
+				m_QD.push(0, NLTIME_FROM_NS(40));
+				m_a = m_bcd = 0;
+			}
+		}
 
 		NETLIB_HANDLERI(updA)
 		{
-			//if (m_reset)
-			{
-				m_a ^= 1;
-				m_QA.push(m_a, out_delay);
-			}
+			m_a ^= 1;
+			m_QA.push(m_a, out_delay);
 		}
 
 		NETLIB_HANDLERI(updB)
 		{
-			//if (m_reset)
-			{
-				//++m_bcd &= 0x07;
-				auto cnt = (++m_bcd &= 0x07);
-				m_QD.push((cnt >> 2) & 1, out_delay3);
-				m_QC.push((cnt >> 1) & 1, out_delay2);
-				m_QB.push(cnt & 1, out_delay);
-			}
+			auto cnt = (++m_bcd &= 0x07);
+			m_QD.push((cnt >> 2) & 1, out_delay3);
+			m_QC.push((cnt >> 1) & 1, out_delay2);
+			m_QB.push(cnt & 1, out_delay);
 		}
 
 		logic_input_t m_R1;
 		logic_input_t m_R2;
 
-		state_var_sig m_reset;
 		state_var_sig m_a;
 		state_var_u8  m_bcd;
 
@@ -73,6 +89,7 @@ namespace netlist
 		logic_output_t m_QB;
 		logic_output_t m_QC;
 		logic_output_t m_QD;
+		nld_power_pins m_power_pins;
 	};
 
 	NETLIB_OBJECT_DERIVED(7493_dip, 7493)
@@ -84,13 +101,13 @@ namespace netlist
 			register_subalias("3", "R2");
 
 			// register_subalias("4", ); --> NC
-			// register_subalias("5", ); --> VCC
+			register_subalias("5", "VCC");
 			// register_subalias("6", ); --> NC
 			// register_subalias("7", ); --> NC
 
 			register_subalias("8", "QC");
 			register_subalias("9", "QB");
-			// register_subalias("10", ); -. GND
+			register_subalias("10", "GND");
 			register_subalias("11", "QD");
 			register_subalias("12", "QA");
 			// register_subalias("13", ); -. NC
@@ -98,36 +115,8 @@ namespace netlist
 		}
 	};
 
-	NETLIB_RESET(7493)
-	{
-		m_reset = 1;
-		m_a = m_bcd = 0;
-		m_CLKA.set_state(logic_t::STATE_INP_HL);
-		m_CLKB.set_state(logic_t::STATE_INP_HL);
-	}
 
-	NETLIB_UPDATE(7493)
-	{
-		m_reset = (m_R1() & m_R2()) ^ 1;
-
-		if (m_reset)
-		{
-			m_CLKA.activate_hl();
-			m_CLKB.activate_hl();
-		}
-		else
-		{
-			m_CLKA.inactivate();
-			m_CLKB.inactivate();
-			m_QA.push(0, NLTIME_FROM_NS(40));
-			m_QB.push(0, NLTIME_FROM_NS(40));
-			m_QC.push(0, NLTIME_FROM_NS(40));
-			m_QD.push(0, NLTIME_FROM_NS(40));
-			m_a = m_bcd = 0;
-		}
-	}
-
-	NETLIB_DEVICE_IMPL(7493,        "TTL_7493", "+CLKA,+CLKB,+R1,+R2")
+	NETLIB_DEVICE_IMPL(7493,        "TTL_7493", "+CLKA,+CLKB,+R1,+R2,@VCC,@GND")
 	NETLIB_DEVICE_IMPL(7493_dip,    "TTL_7493_DIP", "")
 
 	} //namespace devices

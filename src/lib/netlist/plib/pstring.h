@@ -7,6 +7,8 @@
 #ifndef PSTRING_H_
 #define PSTRING_H_
 
+#include "ptypes.h"
+
 #include <cstring>
 #include <exception>
 #include <iterator>
@@ -14,8 +16,6 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
-
-#include "ptypes.h"
 
 // ----------------------------------------------------------------------------------------
 // pstring: semi-immutable strings ...
@@ -75,7 +75,7 @@ public:
 	using string_type = typename traits_type::string_type;
 
 	// FIXME: this is ugly
-	class ref_value_type final
+	struct ref_value_type final
 	{
 	public:
 		ref_value_type() = delete;
@@ -202,11 +202,9 @@ public:
 
 	size_type mem_t_size() const { return m_str.size(); }
 
-	pstring_t rpad(const pstring_t &ws, const size_type cnt) const;
-
 	const string_type &cpp_string() const { return m_str; }
 
-	static const size_type npos = static_cast<size_type>(-1);
+	static constexpr const size_type npos = static_cast<size_type>(-1);
 
 private:
 	string_type m_str;
@@ -512,76 +510,6 @@ namespace plib
 		return pwstring(std::to_wstring(v));
 	}
 
-	template <typename T, typename E = void>
-	struct pstonum_helper;
-
-	template<typename T>
-	struct pstonum_helper<T, typename std::enable_if<std::is_integral<T>::value
-		&& std::is_signed<T>::value>::type>
-	{
-		template <typename S>
-		long long operator()(const S &arg, std::size_t *idx)
-		{
-			return std::stoll(arg, idx);
-		}
-	};
-
-	template<typename T>
-	struct pstonum_helper<T, typename std::enable_if<std::is_integral<T>::value
-		&& !std::is_signed<T>::value>::type>
-	{
-		template <typename S>
-		unsigned long long operator()(const S &arg, std::size_t *idx)
-		{
-			return std::stoull(arg, idx);
-		}
-	};
-
-	template<typename T>
-	struct pstonum_helper<T, typename std::enable_if<std::is_floating_point<T>::value>::type>
-	{
-		template <typename S>
-		long double operator()(const S &arg, std::size_t *idx)
-		{
-			return std::stold(arg, idx);
-		}
-	};
-
-	template<typename T, typename S>
-	T pstonum(const S &arg)
-	{
-		decltype(arg.c_str()) cstr = arg.c_str();
-		std::size_t idx(0);
-		auto ret = pstonum_helper<T>()(cstr, &idx);
-		using ret_type = decltype(ret);
-		if (ret >= static_cast<ret_type>(std::numeric_limits<T>::lowest())
-			&& ret <= static_cast<ret_type>(std::numeric_limits<T>::max()))
-			//&& (ret == T(0) || std::abs(ret) >= std::numeric_limits<T>::min() ))
-		{
-			if (cstr[idx] != 0)
-				throw std::invalid_argument(std::string("Continuation after numeric value ends: ") + cstr);
-		}
-		else
-		{
-			throw std::out_of_range(std::string("Out of range: ") + cstr);
-		}
-		return static_cast<T>(ret);
-	}
-
-	template<typename R, typename T>
-	R pstonum_ne(const T &str, bool &err) noexcept
-	{
-		try
-		{
-			err = false;
-			return pstonum<R>(str);
-		}
-		catch (...)
-		{
-			err = true;
-			return R(0);
-		}
-	}
 
 	template<typename T>
 	typename T::size_type find_first_not_of(const T &str, const T &no)

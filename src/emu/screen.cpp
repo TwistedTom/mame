@@ -119,22 +119,7 @@ screen_device::svg_renderer::svg_renderer(memory_region *region)
 	m_sx = m_sy = 0;
 	m_scale = 1.0;
 
-#if 0
-	double ar = m_image->width / m_image->height;
-	int w,h;
-	if (ar < (16.0/9.0))
-	{
-		h = 1080;
-		w = (h * ar) + 0.5;
-	}
-	else
-	{
-		w = 1920;
-		h = (w / ar) + 0.5;
-	}
-
-	printf("\n\nMCFG_SCREEN_SIZE(%d, %d)\nMCFG_SCREEN_VISIBLE_AREA(0, %d-1, 0, %d-1)\n", w, h, w, h);
-#endif
+	osd_printf_verbose("Parsed SVG '%s', aspect ratio %f\n", region->name(), (m_image->height == 0.0f) ? 0 : m_image->width / m_image->height);
 }
 
 screen_device::svg_renderer::~svg_renderer()
@@ -730,6 +715,10 @@ void screen_device::device_resolve_objects()
 
 void screen_device::device_start()
 {
+	// if we have a palette and it's not started, wait for it
+	if (m_palette && !m_palette->device().started())
+		throw device_missing_dependencies();
+
 	if (m_type == SCREEN_TYPE_SVG)
 	{
 		memory_region *reg = owner()->memregion(m_svg_region);
@@ -748,10 +737,6 @@ void screen_device::device_start()
 			m_visarea.set(0, m_width - 1, 0, m_height - 1);
 		}
 	}
-
-	// if we have a palette and it's not started, wait for it
-	if (m_palette && !m_palette->device().started())
-		throw device_missing_dependencies();
 
 	// configure bitmap formats and allocate screen bitmaps
 	// svg is RGB32 too, and doesn't have any update method
@@ -1166,20 +1151,12 @@ void screen_device::update_now()
 		// if the line before us was incomplete, we must do it in two pieces
 		if (m_partial_scan_hpos > 0)
 		{
-			if (current_vpos > 1)
-			{
-				s32 save_scan = m_partial_scan_hpos;
-				update_partial(current_vpos - 2);
-				m_partial_scan_hpos = save_scan;
-			}
-
 			// now finish the previous partial scanline
-			int scanline = current_vpos - 1;
 			clip.set(
 					(std::max)(clip.left(), m_partial_scan_hpos),
-					(std::min)(clip.right(), current_hpos),
+					clip.right(),
 					(std::max)(clip.top(), m_last_partial_scan),
-					(std::min)(clip.bottom(), scanline));
+					(std::min)(clip.bottom(), m_last_partial_scan));
 
 			// if there's something to draw, do it
 			if (!clip.empty())
@@ -1197,10 +1174,10 @@ void screen_device::update_now()
 				m_partial_updates_this_frame++;
 				g_profiler.stop();
 				m_partial_scan_hpos = 0;
-				m_last_partial_scan = current_vpos + 1;
+				m_last_partial_scan++;
 			}
 		}
-		else
+		if (current_vpos > m_last_partial_scan)
 		{
 			update_partial(current_vpos - 1);
 		}
@@ -1272,7 +1249,7 @@ void screen_device::reset_partial_updates()
 
 u32 screen_device::pixel(s32 x, s32 y)
 {
-	screen_bitmap &curbitmap = m_bitmap[m_curtexture];
+	screen_bitmap &curbitmap = m_bitmap[m_curbitmap];
 	if (!curbitmap.valid())
 		return 0;
 
@@ -1312,7 +1289,7 @@ u32 screen_device::pixel(s32 x, s32 y)
 
 void screen_device::pixels(u32 *buffer)
 {
-	screen_bitmap &curbitmap = m_bitmap[m_curtexture];
+	screen_bitmap &curbitmap = m_bitmap[m_curbitmap];
 	if (!curbitmap.valid())
 		return;
 

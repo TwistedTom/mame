@@ -56,7 +56,7 @@ namespace netlist { namespace factory
 	{
 		for (auto & e : *this)
 			if (e->name() == factory->name())
-				m_log.fatal(MF_1_FACTORY_ALREADY_CONTAINS_1, factory->name());
+				m_log.fatal(MF_FACTORY_ALREADY_CONTAINS_1(factory->name()));
 		push_back(std::move(factory));
 	}
 
@@ -68,7 +68,7 @@ namespace netlist { namespace factory
 				return e.get();
 		}
 
-		m_log.fatal(MF_1_CLASS_1_NOT_FOUND, devname);
+		m_log.fatal(MF_CLASS_1_NOT_FOUND(devname));
 		return nullptr; // appease code analysis
 	}
 
@@ -76,7 +76,7 @@ namespace netlist { namespace factory
 	// factory_lib_entry_t: factory class to wrap macro based chips/elements
 	// -----------------------------------------------------------------------------
 
-	poolptr<device_t> library_element_t::Create(netlist_state_t &anetlist, const pstring &name)
+	pool_owned_ptr<device_t> library_element_t::Create(netlist_state_t &anetlist, const pstring &name)
 	{
 		return pool().make_poolptr<NETLIB_NAME(wrapper)>(anetlist, name);
 	}

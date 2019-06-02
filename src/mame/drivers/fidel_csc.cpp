@@ -1,8 +1,8 @@
 // license:BSD-3-Clause
-// copyright-holders:Kevin Horton,Jonathan Gevaryahu,Sandro Ronco,hap
-// thanks-to:Berger,yoyo_chessboard
+// copyright-holders:Kevin Horton, Jonathan Gevaryahu, Sandro Ronco, hap
+// thanks-to:Berger, yoyo_chessboard
 /******************************************************************************
-*
+
 * fidel_csc.cpp, subdriver of machine/fidelbase.cpp, machine/chessbase.cpp
 
 Fidelity CSC(and derived) hardware
@@ -202,7 +202,7 @@ PCB label 510-1035A01
 #include "speaker.h"
 
 // internal artwork
-#include "fidel_csc.lh" // clickable, with preliminary boardpieces simulation
+#include "fidel_csc.lh" // clickable
 #include "fidel_rsc_v2.lh" // clickable
 #include "fidel_su9.lh" // clickable
 
@@ -372,7 +372,7 @@ WRITE8_MEMBER(csc_state::pia1_pb_w)
 	m_speech->start_w(data >> 1 & 1);
 
 	// d4: lower TSI volume
-	m_speech->set_output_gain(0, (data & 0x10) ? 0.5 : 1.0);
+	m_speech->set_output_gain(0, (data & 0x10) ? 0.25 : 1.0);
 }
 
 READ8_MEMBER(csc_state::pia1_pb_r)

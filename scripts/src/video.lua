@@ -605,6 +605,18 @@ end
 
 --------------------------------------------------
 --
+--@src/devices/video/mm5445.h,VIDEOS["MM5445"] = true
+--------------------------------------------------
+
+if (VIDEOS["MM5445"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/video/mm5445.cpp",
+		MAME_DIR .. "src/devices/video/mm5445.h",
+	}
+end
+
+--------------------------------------------------
+--
 --@src/devices/video/msm6222b.h,VIDEOS["MSM6222B"] = true
 --------------------------------------------------
 
@@ -799,6 +811,18 @@ if (VIDEOS["STVVDP"]~=null) then
 		MAME_DIR .. "src/devices/video/stvvdp1.h",
 		MAME_DIR .. "src/devices/video/stvvdp2.cpp",
 		MAME_DIR .. "src/devices/video/stvvdp2.h",
+	}
+end
+
+--------------------------------------------------
+--
+--@src/devices/video/t6963c.h,VIDEOS["T6963C"] = true
+--------------------------------------------------
+
+if (VIDEOS["T6963C"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/video/t6963c.cpp",
+		MAME_DIR .. "src/devices/video/t6963c.h",
 	}
 end
 

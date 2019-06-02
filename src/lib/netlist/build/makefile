@@ -19,14 +19,9 @@ TIDY_FLAGSX += -llvm-header-guard,-cppcoreguidelines-pro-type-reinterpret-cast,
 TIDY_FLAGSX += -cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-owning-memory, 
 TIDY_FLAGSX += -modernize-use-default-member-init,-cppcoreguidelines-pro-bounds-constant-array-index,
 TIDY_FLAGSX += -modernize-pass-by-value,-cppcoreguidelines-pro-type-static-cast-downcast,
-#TIDY_FLAGSX += -cppcoreguidelines-special-member-functions,
-#TIDY_FLAGSX += -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
-TIDY_FLAGSX += performance-unnecessary-value-param,-cppcoreguidelines-avoid-magic-numbers,
+TIDY_FLAGSX += -cppcoreguidelines-avoid-magic-numbers,
 TIDY_FLAGSX += -cppcoreguidelines-macro-usage,
 TIDY_FLAGSX += -cppcoreguidelines-non-private-member-variables-in-classes,-misc-non-private-member-variables-in-classes,
-#TIDY_FLAGSX += -cppcoreguidelines-avoid-c-arrays,-modernize-avoid-c-arrays,
-#TIDY_FLAGSX += -modernize-use-using,
-TIDY_FLAGSX += performance-unnecessary-copy-initialization,
 TIDY_FLAGSX += -bugprone-macro-parentheses,-misc-macro-parentheses
 
 space := 
@@ -99,6 +94,7 @@ NLOBJS := \
 	$(NLOBJ)/nl_setup.o \
 	$(NLOBJ)/nl_factory.o \
 	$(NLOBJ)/analog/nld_bjt.o \
+	$(NLOBJ)/analog/nld_mosfet.o \
 	$(NLOBJ)/analog/nlid_fourterm.o \
 	$(NLOBJ)/analog/nld_switches.o \
 	$(NLOBJ)/analog/nlid_twoterm.o \
@@ -233,6 +229,9 @@ maketree: $(sort $(OBJDIRS))
 
 native: 
 	$(MAKE) CEXTRAFLAGS="-march=native -msse4.2 -Wall -Wpedantic -Wsign-compare -Wextra "
+
+gcc5: 
+	$(MAKE) CC=g++-5 LD=g++-5 CEXTRAFLAGS="-march=native -msse4.2 -Wall -Wpedantic -Wsign-compare -Wextra "
 
 clang:
 	$(MAKE) CC=clang++-9 LD=clang++-9 CEXTRAFLAGS="-march=native -Weverything -Werror -Wno-padded -Wno-weak-vtables -Wno-unused-template -Wno-missing-variable-declarations -Wno-float-equal -Wconversion -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-format-nonliteral  -Wno-exit-time-destructors"

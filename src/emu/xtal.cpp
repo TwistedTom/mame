@@ -123,6 +123,7 @@ const double XTAL::known_xtals[] = {
 	  6'900'000, /* 6.9_MHz_XTAL           BBN BitGraph CPU */
 	  7'000'000, /* 7_MHz_XTAL             Jaleco Mega System PCBs */
 	  7'159'090, /* 7.15909_MHz_XTAL       Blood Bros (2x NTSC subcarrier) */
+	  7'200'000, /* 7.2_MHz_XTAL           Image Fight bootleg I80C031 MCU */
 	  7'372'800, /* 7.3728_MHz_XTAL        - */
 	  7'864'300, /* 7.8643_MHz_XTAL        Used on InterFlip games as video clock */
 	  7'987'000, /* 7.987_MHz_XTAL         PC9801-86 YM2608 clock */
@@ -159,6 +160,7 @@ const double XTAL::known_xtals[] = {
 	 10'733'000, /* 10.733_MHz_XTAL        The Fairyland Story */
 	 10'738'635, /* 10.738635_MHz_XTAL     TMS9918 family (3x NTSC subcarrier) */
 	 10'816'000, /* 10.816_MHz_XTAL        Universal 1979-1980 (Cosmic Alien, etc) */
+	 10'886'400, /* 10.8864_MHz_XTAL       Systel System 100 */
 	 10'920'000, /* 10.92_MHz_XTAL         ADDS Viewpoint 60, Viewpoint A2 */
 	 11'000'000, /* 11_MHz_XTAL            Mario I8039 sound */
 	 11'004'000, /* 11.004_MHz_XTAL        TI 911 VDT */
@@ -202,6 +204,7 @@ const double XTAL::known_xtals[] = {
 	 14'318'181, /* 14.318181_MHz_XTAL     Extremely common, used on 100's of PCBs (4x NTSC subcarrier) */
 	 14'580'000, /* 14.58_MHz_XTAL         Fortune 32:16 Video Controller */
 	 14'705'882, /* 14.705882_MHz_XTAL     Aleck64 */
+	 14'728'000, /* 14.728_MHz_XTAL        ADM 36 */
 	 14'742'800, /* 14.7428_MHz_XTAL       ADM 23 */
 	 14'745'600, /* 14.7456_MHz_XTAL       Namco System 12 & System Super 22/23 for JVS */
 	 14'784'000, /* 14.784_MHz_XTAL        Zenith Z-29 */
@@ -224,6 +227,7 @@ const double XTAL::known_xtals[] = {
 	 16'000'000, /* 16_MHz_XTAL            Extremely common, used on 100's of PCBs */
 	 16'097'280, /* 16.09728_MHz_XTAL      DEC VT240 (1024 * 262 * 60) */
 	 16'128'000, /* 16.128_MHz_XTAL        Fujitsu FM-7 */
+	 16'200'000, /* 16.2_MHz_XTAL          Debut */
 	 16'257'000, /* 16.257_MHz_XTAL        IBM PC MDA & EGA */
 	 16'364'000, /* 16.364_MHz_XTAL        Corvus Concept */
 	 16'384'000, /* 16.384_MHz_XTAL        - */
@@ -283,6 +287,7 @@ const double XTAL::known_xtals[] = {
 	 23'961'600, /* 23.9616_MHz_XTAL       Osborne 4 (Vixen) */
 	 24'000'000, /* 24_MHz_XTAL            Mario, 80's Data East games, 80's Konami games */
 	 24'073'400, /* 24.0734_MHz_XTAL       DEC Rainbow 100 */
+	 24'300'000, /* 24.3_MHz_XTAL          ADM 36 132-column display clock */
 	 24'576'000, /* 24.576_MHz_XTAL        Pole Position h/w, Model 3 CPU board */
 	 24'883'200, /* 24.8832_MHz_XTAL       DEC VT100 */
 	 25'000'000, /* 25_MHz_XTAL            Namco System 22, Taito GNET, Dogyuun h/w */
@@ -292,13 +297,13 @@ const double XTAL::known_xtals[] = {
 	 25'398'360, /* 25.39836_MHz_XTAL      Tandberg TDV 2324 */
 	 25'400'000, /* 25.4_MHz_XTAL          PC9801-86 PCM base clock */
 	 25'447'000, /* 25.447_MHz_XTAL        Namco EVA3A (Funcube2) */
-	 25'590'906, /* 25.590906_MHz_XTAL     Atari Jaguar NTSC */
-	 25'593'900, /* 25.5939_MHz_XTAL       Atari Jaguar PAL */
 	 25'771'500, /* 25.7715_MHz_XTAL       HP-2622A */
 	 25'920'000, /* 25.92_MHz_XTAL         ADDS Viewpoint 60 */
 	 26'000'000, /* 26_MHz_XTAL            Gaelco PCBs */
 	 26'366'000, /* 26.366_MHz_XTAL        DEC VT320 */
 	 26'580'000, /* 26.58_MHz_XTAL         Wyse WY-60 80-column display clock */
+	 26'590'906, /* 26.590906_MHz_XTAL     Atari Jaguar NTSC */
+	 26'593'900, /* 26.5939_MHz_XTAL       Atari Jaguar PAL */
 	 26'601'712, /* 26.601712_MHz_XTAL     Astro Corp.'s Show Hand, PAL Vtech/Yeno Socrates (6x PAL subcarrier) */
 	 26'666'000, /* 26.666_MHz_XTAL        Imagetek I4100/I4220/I4300 */
 	 26'666'666, /* 26.666666_MHz_XTAL     Irem M92 but most use 27MHz */
@@ -319,6 +324,7 @@ const double XTAL::known_xtals[] = {
 	 29'376'000, /* 29.376_MHz_XTAL        Qume QVT-103 */
 	 29'491'200, /* 29.4912_MHz_XTAL       Xerox Alto-II system clock (tagged 29.4MHz in the schematics) */
 	 30'000'000, /* 30_MHz_XTAL            Impera Magic Card */
+	 30'209'800, /* 30.2098_MHz_XTAL       Philips CD-i NTSC (1920x NTSC line rate) */
 	 30'476'100, /* 30.4761_MHz_XTAL       Taito JC */
 	 30'800'000, /* 30.8_MHz_XTAL          15IE-00-013 */
 	 31'279'500, /* 31.2795_MHz_XTAL       Wyse WY-30+ */
@@ -327,10 +333,12 @@ const double XTAL::known_xtals[] = {
 	 32'000'000, /* 32_MHz_XTAL            - */
 	 32'147'000, /* 32.147_MHz_XTAL        Ampex 210+ 132-column display clock */
 	 32'220'000, /* 32.22_MHz_XTAL         Typically used on 90's Data East PCBs (close to 9x NTSC subcarrier which is 32.215905Mhz */
+	 32'256'000, /* 32.256_MHz_XTAL        Hitachi MB-6890 */
 	 32'317'400, /* 32.3174_MHz_XTAL       DEC VT330, VT340 */
 	 32'530'400, /* 32.5304_MHz_XTAL       Seta 2 */
 	 33'000'000, /* 33_MHz_XTAL            Sega Model 3 video board */
 	 33'264'000, /* 33.264_MHz_XTAL        Hazeltine 1500 terminal */
+	 33'330'000, /* 33.33_MHz_XTAL         Sharp X68000 XVI */
 	 33'333'000, /* 33.333_MHz_XTAL        Sega Model 3 CPU board, Vegas */
 	 33'833'000, /* 33.833_MHz_XTAL        - */
 	 33'868'800, /* 33.8688_MHz_XTAL       Usually used to drive 90's Yamaha OPL/FM chips with /2 divider */
@@ -356,7 +364,7 @@ const double XTAL::known_xtals[] = {
 	 44'452'800, /* 44.4528_MHz_XTAL       TeleVideo 965 */
 	 44'900'000, /* 44.9_MHz_XTAL          IBM 8514 1024x768 43.5Hz graphics */
 	 45'000'000, /* 45_MHz_XTAL            Eolith with Hyperstone CPUs */
-	 45'158'000, /* 45.158_MHz_XTAL        Sega Model 2A video board, Model 3 CPU board */
+	 45'158'400, /* 45.1584_MHz_XTAL       Philips CD-i CDIC, Sega Model 2A video, Sega Model 3 CPU */
 	 45'619'200, /* 45.6192_MHz_XTAL       DEC VK100 */
 	 45'830'400, /* 45.8304_MHz_XTAL       Microterm 5510 */
 	 46'615'120, /* 46.61512_Mhz_XTAL      Soundblaster 16 PCM base clock */
@@ -371,6 +379,7 @@ const double XTAL::known_xtals[] = {
 	 50'000'000, /* 50_MHz_XTAL            Williams/Midway T/W/V-unit system */
 	 50'113'000, /* 50.113_MHz_XTAL        Namco NA-1 (14x NTSC subcarrier)*/
 	 50'349'000, /* 50.349_MHz_XTAL        Sega System 18 (~3200x NTSC line rate) */
+	 50'350'000, /* 50.35_MHz_XTAL         Sharp X68030 video */
 	 51'200'000, /* 51.2_MHz_XTAL          Namco Super System 22 video clock */
 	 52'000'000, /* 52_MHz_XTAL            Cojag */
 	 52'832'000, /* 52.832_MHz_XTAL        Wang PC TIG video controller */

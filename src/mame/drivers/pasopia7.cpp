@@ -551,9 +551,9 @@ WRITE8_MEMBER( pasopia7_state::pasopia7_6845_w )
 
 		/* double pump the pixel clock if we are in 640 x 200 mode */
 		if(m_screen_type == 1) // raster
-			m_crtc->set_clock( (m_x_width) ? VDP_CLOCK*2 : VDP_CLOCK);
+			m_crtc->set_unscaled_clock( (m_x_width) ? VDP_CLOCK*2 : VDP_CLOCK);
 		else // lcd
-			m_crtc->set_clock( (m_x_width) ? LCD_CLOCK*2 : LCD_CLOCK);
+			m_crtc->set_unscaled_clock( (m_x_width) ? LCD_CLOCK*2 : LCD_CLOCK);
 	}
 }
 
@@ -572,8 +572,8 @@ READ8_MEMBER( pasopia7_state::pasopia7_fdc_r )
 {
 	switch(offset)
 	{
-		case 4: return m_fdc->msr_r(space, 0, 0xff);
-		case 5: return m_fdc->fifo_r(space, 0, 0xff);
+		case 4: return m_fdc->msr_r();
+		case 5: return m_fdc->fifo_r();
 		//case 6: bit 7 interrupt bit
 	}
 
@@ -586,7 +586,7 @@ WRITE8_MEMBER( pasopia7_state::pasopia7_fdc_w )
 	{
 		case 0: m_fdc->tc_w(false); break;
 		case 2: m_fdc->tc_w(true); break;
-		case 5: m_fdc->fifo_w(space, 0, data, 0xff); break;
+		case 5: m_fdc->fifo_w(data); break;
 		case 6:
 			if(data & 0x80)
 				m_fdc->reset();
@@ -630,10 +630,10 @@ READ8_MEMBER( pasopia7_state::pasopia7_io_r )
 	}
 	else
 	if(io_port >= 0x28 && io_port <= 0x2b)
-		return m_ctc->read(space,io_port & 3);
+		return m_ctc->read(io_port & 3);
 	else
 	if(io_port >= 0x30 && io_port <= 0x33)
-		return m_pio->read(space, io_port & 3);
+		return m_pio->read(io_port & 3);
 //  else if(io_port == 0x3a)                    { SN1 }
 //  else if(io_port == 0x3b)                    { SN2 }
 //  else if(io_port == 0x3c)                    { bankswitch }
@@ -681,10 +681,10 @@ WRITE8_MEMBER( pasopia7_state::pasopia7_io_w )
 	}
 	else
 	if(io_port >= 0x28 && io_port <= 0x2b)
-		m_ctc->write(space, io_port & 3, data);
+		m_ctc->write(io_port & 3, data);
 	else
 	if(io_port >= 0x30 && io_port <= 0x33)
-		m_pio->write(space, io_port & 3, data);
+		m_pio->write(io_port & 3, data);
 	else
 	if(io_port == 0x3a)
 		m_sn1->write(data);
@@ -984,7 +984,7 @@ void pasopia7_state::p7_raster(machine_config &config)
 	PALETTE(config, m_palette, palette_device::BRG_3BIT);
 	GFXDECODE(config, "gfxdecode", m_palette, gfx_pasopia7);
 
-	H46505(config, m_crtc, VDP_CLOCK); /* unknown clock, hand tuned to get ~60 fps */
+	MC6845(config, m_crtc, VDP_CLOCK); /* unknown variant, unknown clock, hand tuned to get ~60 fps */
 	m_crtc->set_screen(m_screen);
 	m_crtc->set_show_border_area(false);
 	m_crtc->set_char_width(8);
@@ -1007,7 +1007,7 @@ void pasopia7_state::p7_lcd(machine_config &config)
 	PALETTE(config, m_palette, FUNC(pasopia7_state::p7_lcd_palette), 8);
 	GFXDECODE(config, "gfxdecode", m_palette, gfx_pasopia7);
 
-	H46505(config, m_crtc, LCD_CLOCK); /* unknown clock, hand tuned to get ~60 fps */
+	MC6845(config, m_crtc, LCD_CLOCK); /* unknown variant, unknown clock, hand tuned to get ~60 fps */
 	m_crtc->set_screen(m_screen);
 	m_crtc->set_show_border_area(false);
 	m_crtc->set_char_width(8);
