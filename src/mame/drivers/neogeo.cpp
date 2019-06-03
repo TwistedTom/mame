@@ -11718,11 +11718,14 @@ ROM_START( mslug5b )  // 268
 	ROM_LOAD16_WORD_SWAP( "268-p1b.p1", 0x000000, 0x100000, CRC(1376f43c) SHA1(7ca4a8b11c7effda2603d04e793cf664e7aa39bf) ) /* MX29F1615PC-10     16Mbit  2nd half empty */
 	ROM_LOAD16_WORD_SWAP( "268-p2b.p2", 0x100000, 0x400000, CRC(4becfba0) SHA1(fd3708f6c8fa26133b29b4b033148dff54dc1e7d) ) /* LH28F320BJD-TTL80  32Mbit  3.3v */
 	
-	// TODO: dump
-	NEO_SFIX_128K( "268-s1d.s1", CRC(64952683) SHA1(88ec728c2fe18a11fdd218bed5d73bb3affe2ec1) ) /* W29C011A-15  1Mbit */
+	// scrambled?  has "PLUS" tiles
+	//NEO_SFIX_128K( "268-s1b.s1", CRC(3a427c9f) SHA1(6c6050640adb7148d42d35e3017cc171e53ae957) ) /* W29C011A-15  1Mbit */
 	
-	// TODO: dump  128KB
-	NEO_BIOS_AUDIO_256K( "268-m1d.m1", CRC(c946ea6d) SHA1(78f6511b4da5cfec5a6ffb5eb38632a5d6e91fab) ) /* W29EE011-15  1Mbit */
+	// S_decrypt opt 6
+	// very similar to mslug5c but with "PLUS" tiles, doesn't match ms5plus
+	NEO_SFIX_128K( "268-s1b_decoded.s1", CRC(99ef577b) SHA1(82f30b61ea4439a6673e0b70b7a9aceaaafd8943) ) /* W29C011A-15  1Mbit */
+	
+	NEO_BIOS_AUDIO_128K( "268-m1b.m1", CRC(bf1601bc) SHA1(5e285c98c65acefd77e893247482af0d09f3e1e4) ) /* W29EE011-15  1Mbit */
 
 	// TODO: dump
 	ROM_REGION( 0x1000000, "cslot1:ymsnd", 0 )
