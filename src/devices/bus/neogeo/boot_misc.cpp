@@ -284,3 +284,20 @@ void neogeo_kog_cart_device::decrypt_all(DECRYPT_ALL_PARAMS)
 	m_prot->sx_decrypt(fix_region, fix_region_size, 1);
 	m_prot->cx_decrypt(spr_region, spr_region_size);
 }
+
+
+/*************************************************
+ mslug5b
+**************************************************/
+
+DEFINE_DEVICE_TYPE(NEOGEO_MSLUG5B_CART, neogeo_mslug5b_cart_device, "neocart_mslug5b", "Neo Geo Metal Slug 5 Bootleg Cart")
+
+neogeo_mslug5b_cart_device::neogeo_mslug5b_cart_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock) :
+	neogeo_bootleg_cart_device(mconfig, NEOGEO_MSLUG5B_CART, tag, owner, clock)
+{
+}
+
+void neogeo_mslug5b_cart_device::decrypt_all(DECRYPT_ALL_PARAMS)
+{
+	m_prot->sx_decrypt(fix_region, fix_region_size, 2);
+}

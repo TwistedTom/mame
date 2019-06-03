@@ -199,6 +199,7 @@ static const neogeo_slot slot_list[] =
 	{ NEOGEO_KOG, "boot_kog" },
 	{ NEOGEO_SBP, "boot_sbp" },
 	{ NEOGEO_KOF10TH, "boot_kf10th" },
+	{ NEOGEO_MSLUG5B, "boot_mslug5b" }
 };
 
 

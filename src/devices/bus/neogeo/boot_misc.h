@@ -208,4 +208,19 @@ private:
 DECLARE_DEVICE_TYPE(NEOGEO_KOG_CART, neogeo_kog_cart_device)
 
 
+/*************************************************
+ mslug5b
+**************************************************/
+
+class neogeo_mslug5b_cart_device : public neogeo_bootleg_cart_device
+{
+public:
+	neogeo_mslug5b_cart_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	virtual void decrypt_all(DECRYPT_ALL_PARAMS) override;
+	virtual int get_fixed_bank_type() override { return 0; }
+};
+
+DECLARE_DEVICE_TYPE(NEOGEO_MSLUG5B_CART, neogeo_mslug5b_cart_device)
+
+
 #endif // MAME_BUS_NEOGEO_BOOT_MISC_H
