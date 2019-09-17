@@ -11380,17 +11380,19 @@ ROM_END
  bootleg: mslug3b6, metal slug 6 hack, uses NEO-CMC for gfx encryption (but has external S rom)
 */
 ROM_START( mslug3c )  // 256
+	// mslug3h (bk1 version, not encrypted)
 	ROM_REGION( 0x500000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
-	// mslug3h (mslug3, mslug3a are encrypted)
-	ROM_LOAD16_WORD_SWAP( "256-ph1.p1",  0x000000, 0x100000, CRC(9c42ca85) SHA1(7a8f77a89867b889295ae9b9dfd4ba28f02d234d) ) /* TC538200  8Mbit  27c800 */
+	ROM_LOAD16_WORD_SWAP( "256-ph1.p1",  0x000000, 0x100000, CRC(9c42ca85) SHA1(7a8f77a89867b889295ae9b9dfd4ba28f02d234d) ) /* TC538200    8Mbit  27c800 */
 	ROM_LOAD16_WORD_SWAP( "256-ph2.sp2", 0x100000, 0x400000, CRC(1f3d8ce8) SHA1(08b05a8abfb86ec09a5e758d6273acf1489961f9) ) /* TC5332205  32Mbit  27c322 */
 
-	// mame ram dump
+	// decrypted sfix (s1grab) page 2
 	NEO_SFIX_128K( "256-s1d.s1", CRC(8458fff9) SHA1(b120d096deae8abf0ad98362ce230b66e7315a14) ) /* TC531000  1Mbit  27c1000 */
 
+	// original z80 code, split 1/2
 	//NEO_BIOS_AUDIO_512K( "256-m1.m1", CRC(eaeec116) SHA1(54419dbb21edc8c4b37eaac2e7ad9496d2de037a) ) /* TC534000  4Mbit  27c040 */
-  NEO_BIOS_AUDIO_256K( "256-m1.m1", CRC(1c9a67c6) SHA1(144484f24f4ac57e53c501569e571785e7a4201f) ) /* 2Mbit  27c020 */
+	NEO_BIOS_AUDIO_256K( "256-m1.m1", CRC(1c9a67c6) SHA1(144484f24f4ac57e53c501569e571785e7a4201f) ) /* 2Mbit  27c020 */
 
+	// original sound samples
 	ROM_REGION( 0x1000000, "cslot1:ymsnd", 0 )
 	ROM_LOAD( "256-v1.v1", 0x000000, 0x400000, CRC(f2690241) SHA1(fd56babc1934d10e0d27c32f032f9edda7ca8ce9) ) /* TC5332204  32Mbit  28f320 */
 	ROM_LOAD( "256-v2.v2", 0x400000, 0x400000, CRC(7e2a10bd) SHA1(0d587fb9f64cba0315ce2d8a03e2b8fe34936dff) ) /* TC5332204  32Mbit  28f320 */
@@ -11417,11 +11419,12 @@ ROM_END
  bootleg: ms4plus, uses NEO-CMC for gfx encryption (but has external S rom), no M rom encryption
 */
 ROM_START( mslug4c )  // 263
+	// original
 	ROM_REGION( 0x500000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
-	ROM_LOAD16_WORD_SWAP( "263-p1.p1",  0x000000, 0x100000, CRC(27e4def3) SHA1(a08785e8145981bb6b5332a3b2df7eb321253cca) ) /* TC538200  8Mbit  27c800 */
+	ROM_LOAD16_WORD_SWAP( "263-p1.p1",  0x000000, 0x100000, CRC(27e4def3) SHA1(a08785e8145981bb6b5332a3b2df7eb321253cca) ) /* TC538200    8Mbit  27c800 */
 	ROM_LOAD16_WORD_SWAP( "263-p2.sp2", 0x100000, 0x400000, CRC(fdb7aed8) SHA1(dbeaec38f44e58ffedba99e70fa1439c2bf0dfa3) ) /* TC5332205  32Mbit  27c322 */
 
-	// mame ram dump
+	// decrypted sfix (s1grab) page 2 (could be 2 or 3?)
 	NEO_SFIX_128K( "263-s1d.s1", CRC(62575f68) SHA1(3972bac3d865f45982fdc387eb3d8684168aaa08) ) /* TC531000  1Mbit  27c1000 */
 
 	// decrypted z80 code (m1crypt)
@@ -11455,9 +11458,9 @@ ROM_END
  original rom crashes at title screen on real BK1
 */
 ROM_START( mslugxc )  // 250
+	// hacked p1 w/ protection removed, original p2
 	ROM_REGION( 0x500000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
-	// hacked p1
-	ROM_LOAD16_WORD_SWAP( "250-p1h.p1", 0x000000, 0x100000, CRC(0a570b39) SHA1(3e332847c931c532c2e85ff853fd84529baf6be9) ) /* TC538200  8Mbit  27c800 */
+	ROM_LOAD16_WORD_SWAP( "250-p1h.p1", 0x000000, 0x100000, CRC(0a570b39) SHA1(3e332847c931c532c2e85ff853fd84529baf6be9) ) /* TC538200    8Mbit  27c800 */
 	ROM_LOAD16_WORD_SWAP( "250-p2.ep1", 0x100000, 0x400000, CRC(1fda2e12) SHA1(18aaa7a3ba8da99f78c430e9be69ccde04bc04d9) ) /* TC5332205  32Mbit  27c322 */
 
 	NEO_SFIX_128K( "250-s1.s1", CRC(fb6f441d) SHA1(2cc392ecde5d5afb28ddbaa1030552b48571dcfb) ) /* TC531000  1Mbit  27c1000 */
@@ -11486,18 +11489,18 @@ ROM_END
  bootleg: ms5plus, uses NEO-CMC for gfx + z80 code encryption (but has external S rom), NEO-PCM2 for sound sample scrambling
 */
 ROM_START( mslug5c )  // 268
+	// mslug5d (hbmame, protection fixes, watermark removed)
 	ROM_REGION( 0x500000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
-	// mslug5d hbmame (watermark removed)
-	ROM_LOAD16_WORD_SWAP( "268-p1d.p1", 0x000000, 0x100000, CRC(376282ce) SHA1(f9068cb41bff2432c7bed69e3754ee279496b44b) ) /* TC538200  8Mbit  27c800 */
+	ROM_LOAD16_WORD_SWAP( "268-p1d.p1", 0x000000, 0x100000, CRC(376282ce) SHA1(f9068cb41bff2432c7bed69e3754ee279496b44b) ) /* TC538200    8Mbit  27c800 */
 	ROM_LOAD16_WORD_SWAP( "268-p2d.p2", 0x100000, 0x400000, CRC(768ee64a) SHA1(76a65a69aee749758a2101aabdd44f3404838b54) ) /* TC5332205  32Mbit  27c322 */
-	// mslug5 neoragex  no watermark, 2 extra nops (0x93e, 0x946)
-	//ROM_LOAD16_WORD_SWAP( "268d-p1.rom", 0x000000, 0x100000, CRC(24ae2e4d) SHA1(65eb727731de208e64e155df743d8c1a581980f2) ) /* TC538200  8Mbit  27c800 */
+	// mslug5 (neoragex, no watermark, 2 extra nops: 0x93e, 0x946)
+	//ROM_LOAD16_WORD_SWAP( "268d-p1.rom", 0x000000, 0x100000, CRC(24ae2e4d) SHA1(65eb727731de208e64e155df743d8c1a581980f2) ) /* TC538200    8Mbit  27c800 */
 	//ROM_LOAD16_WORD_SWAP( "268d-p2.rom", 0x100000, 0x400000, CRC(768ee64a) SHA1(76a65a69aee749758a2101aabdd44f3404838b54) ) /* TC5332205  32Mbit  27c322 */
 	
-	// mame ram dump
+	// decrypted sfix (kawaks)
 	NEO_SFIX_128K( "268-s1d.s1", CRC(64952683) SHA1(88ec728c2fe18a11fdd218bed5d73bb3affe2ec1) ) /* TC531000  1Mbit  27c1000 */
 	
-	// decrypted z80 code (m1crypt)
+	// decrypted z80 code (m1crypt), split
 	//NEO_BIOS_AUDIO_512K( "268-m1d.m1", CRC(39f3cbba) SHA1(56f9ba6a1ecfc28733b7b88c9796415cba0461f2) ) /* TC534000  4Mbit  27c040 */
 	NEO_BIOS_AUDIO_256K( "268-m1d.m1", CRC(c946ea6d) SHA1(78f6511b4da5cfec5a6ffb5eb38632a5d6e91fab) ) /* 2Mbit  27c020 */
 
@@ -11528,12 +11531,12 @@ ROM_END
  bootleg: matrimbl, uses NEO-CMC for gfx encryption (no S rom), additional 68k code (P roms) scrambling, additional bootleg unique stuff ?
 */
 ROM_START( matrimc )  // 266
-	ROM_REGION( 0x500000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
 	// unscrambled (mame dump)
-	ROM_LOAD16_WORD_SWAP( "266-p1d.p1", 0x000000, 0x100000, CRC(5d4c2dc7) SHA1(8d723b0d28ec344eef26009b361a2b97d300dd51) ) /* TC538200  8Mbit  27c800 */
+	ROM_REGION( 0x500000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
+	ROM_LOAD16_WORD_SWAP( "266-p1d.p1", 0x000000, 0x100000, CRC(5d4c2dc7) SHA1(8d723b0d28ec344eef26009b361a2b97d300dd51) ) /* TC538200    8Mbit  27c800 */
 	ROM_LOAD16_WORD_SWAP( "266-p2d.p2", 0x100000, 0x400000, CRC(b0132cef) SHA1(3780db1b8947a8371a46b67ca1a14a12bf97986b) ) /* TC5332205  32Mbit  27c322 */
 	
-	// mame ram dump
+	// decrypted sfix (s1grab) page 3
 	NEO_SFIX_128K( "266-s1d.s1", CRC(aff2a3be) SHA1(57aba048573eacf8fbdd228f04a7f30da64cebe5) ) /* TC531000  1Mbit  27c1000 */
 	
 	// decrypted z80 code (m1crypt)
@@ -11565,6 +11568,7 @@ ROM_END
    FIO: NEO-CMC(CMC42) - gfx encryption (C, S roms)
 */
 ROM_START( sengoku3c ) // 261
+	// original
 	ROM_REGION( 0x200000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
 	ROM_LOAD16_WORD_SWAP( "261-ph1.p1", 0x100000, 0x100000, CRC(e0d4bc0a) SHA1(8df366097f224771ca6d1aa5c1691cd46776cd12) ) /* TC5316200  16Mbit  27c160 */
 	ROM_CONTINUE( 0x000000, 0x100000 )
@@ -11572,10 +11576,11 @@ ROM_START( sengoku3c ) // 261
 	// decrypted sfix (kawaks)
 	NEO_SFIX_128K( "261-s1d.s1", CRC(c1e27cc7) SHA1(7d38319f517059f60287a8ce393a4901719db8a9) ) /* TC531000  1Mbit  27c1000 */
 
+	// original z80 code, split 1/4
 	//NEO_BIOS_AUDIO_512K( "261-m1.m1", CRC(7d501c39) SHA1(8e6bcc428f5ac7532d9c9be7e07ad0821461a080) ) /* TC534000  4Mbit  27c040 */
 	NEO_BIOS_AUDIO_128K( "261-m1.m1", CRC(36ed9cdd) SHA1(78a7d755e9e9f52255ac6228d9d402fd6a02c126) ) /* 1Mbit  27c010 */
 
-	// v4 reduced
+	// original sound samples, v4 reduced
 	ROM_REGION( 0x0e00000, "cslot1:ymsnd", 0 )
 	ROM_LOAD( "261-v1.v1", 0x000000, 0x400000, CRC(64c30081) SHA1(f9ebd20cf59b72e864b7274c1bdb6d99ecaf4595) ) /* TC5332204  32Mbit  28f320 */
 	ROM_LOAD( "261-v2.v2", 0x400000, 0x400000, CRC(392a9c47) SHA1(7ab90a54089236ca6c3ef1af8e566a8025d38159) ) /* TC5332204  32Mbit  28f320 */
@@ -11597,9 +11602,9 @@ ROM_END
    FIO: NEO-CMC(CMC50) - gfx encryption (C, S roms) + z80 code encryption (M rom)
 */
 ROM_START( rotdc ) // 264
+	// rotdh (rotd are 8MB + use new bank switching)
 	ROM_REGION( 0x300000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
-	// rotdh (rotd are 8MB)
-	ROM_LOAD16_WORD_SWAP( "264-pk1.p1",  0x000000, 0x100000, CRC(ff2fa719) SHA1(03009e3693648ac0d892390c3bba2ceac6c9564b) ) /* TC538200  8Mbit  27c800 */
+	ROM_LOAD16_WORD_SWAP( "264-pk1.p1",  0x000000, 0x100000, CRC(ff2fa719) SHA1(03009e3693648ac0d892390c3bba2ceac6c9564b) ) /* TC538200    8Mbit  27c800 */
 	ROM_LOAD16_WORD_SWAP( "264-pk2.sp2", 0x100000, 0x200000, CRC(0df2e112) SHA1(c521783483117859a2b250190be77f6d49412ae8) ) /* TC5316200  16Mbit  27c160 */
 
 	// decrypted sfix (kawaks)
@@ -11637,34 +11642,40 @@ ROM_END
  needs h/w mod for bank switching (5th bank)
 */
 ROM_START( svcc )  // 269
-	// neoragex
+	// neoragex (protection fixes)
 	//ROM_REGION( 0x600000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
 	//ROM_LOAD16_WORD_SWAP( "269-p1d.p1", 0x000000, 0x600000, CRC(3c98343b) SHA1(5dd52e84bb11313d372b25250d5a3644746e3429) ) /* ?? */
 	
-	ROM_REGION( 0x580000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
-	//ROM_LOAD16_WORD_SWAP( "269-p1d.p1", 0x000000, 0x100000, CRC(6fe0d8eb) SHA1(741877c096c62db7af9955620f9321f5a14e6f02) ) /* 8Mbit  27c800 */
-	ROM_LOAD16_WORD_SWAP( "269-p1d.p1", 0x000000, 0x100000, CRC(ea6a729d) SHA1(086aac650ba56c83cd1027e0a0c85fc32ccd429f) ) /* 8Mbit  27c800 */
-	ROM_LOAD16_WORD_SWAP( "269-p2d.p2", 0x100000, 0x400000, CRC(447e100d) SHA1(06c80e06ad483c774bc0e9172b399bcb26ae656a) ) /* 32Mbit  27c322 */
-	ROM_LOAD16_WORD_SWAP( "269-p3d.p3", 0x500000,  0x80000, CRC(4239220a) SHA1(f2e33ddaa89009cf0fea6788888fcc05d543eda3) ) /* 4Mbit  27c4096 */
+	// neoragex (protection fixes, split)
+	//ROM_REGION( 0x580000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
+	//ROM_LOAD16_WORD_SWAP( "269-p1d.p1", 0x000000, 0x100000, CRC(6fe0d8eb) SHA1(741877c096c62db7af9955620f9321f5a14e6f02) ) /*  8Mbit  27c800 */
+	//ROM_LOAD16_WORD_SWAP( "269-p2d.p2", 0x100000, 0x400000, CRC(447e100d) SHA1(06c80e06ad483c774bc0e9172b399bcb26ae656a) ) /* 32Mbit  27c322 */
+	//ROM_LOAD16_WORD_SWAP( "269-p3d.p3", 0x500000,  0x80000, CRC(4239220a) SHA1(f2e33ddaa89009cf0fea6788888fcc05d543eda3) ) /*  4Mbit  27c4096 */
 	
-	// kawaks
+	// neoragex (protection fixes, split, bouncy mai patch)
+	ROM_REGION( 0x580000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
+	ROM_LOAD16_WORD_SWAP( "269-p1d.p1", 0x000000, 0x100000, CRC(ea6a729d) SHA1(086aac650ba56c83cd1027e0a0c85fc32ccd429f) ) /*  8Mbit  27c800 */
+	ROM_LOAD16_WORD_SWAP( "269-p2d.p2", 0x100000, 0x400000, CRC(447e100d) SHA1(06c80e06ad483c774bc0e9172b399bcb26ae656a) ) /* 32Mbit  27c322 */
+	ROM_LOAD16_WORD_SWAP( "269-p3d.p3", 0x500000,  0x80000, CRC(4239220a) SHA1(f2e33ddaa89009cf0fea6788888fcc05d543eda3) ) /*  4Mbit  27c4096 */
+	
+	// decrypted sfix (kawaks)  seems to use other (all?) pages for flickering power bar effect etc.
 	NEO_SFIX_128K( "269-s1d.s1", CRC(ba3bcaa3) SHA1(d10875127c1399941e7de6710000413951aa9bb4) ) /* TC531000  1Mbit  27c1000 */
 	//NEO_SFIX_128K( "269-s1d.s1", CRC(87635a10) SHA1(666145873f5f3d23968d7ccd5a748a7a248b549b) ) /* TC531000  1Mbit  27c1000 */
 	//NEO_SFIX_128K( "269-s1d.s1", CRC(b3c072d0) SHA1(f4475182f340720a58156c56a8edc280ccbbe6d6) ) /* TC531000  1Mbit  27c1000 */
 	//NEO_SFIX_128K( "269-s1d.s1", CRC(3334ac31) SHA1(ea7c676d5913ca1d524bd3df3d98f216564cfbb5) ) /* TC531000  1Mbit  27c1000 */
 	
-	// m1decrypt
+	// decrypted z80 code (m1crypt), split 1/4
 	//NEO_BIOS_AUDIO_512K( "269-m1d.m1", CRC(7b7bf462) SHA1(7466a6962de5242f71b9c52d7bd21a9832115e11) ) /* TC534000  4Mbit  27c040 */
 	NEO_BIOS_AUDIO_128K( "269-m1d.m1", CRC(447b3123) SHA1(a09adc2c0ee2ee0f01287ceb97474a1a58093bd2) ) /* 1Mbit  27c010 */
 
-	// neoconv v2
+	// decrypted sound samples (neoconv v2 + split into 4x 32Mbit)
 	ROM_REGION( 0x1000000, "cslot1:ymsnd", 0 )
 	ROM_LOAD( "269-v1d.v1", 0x000000, 0x400000, CRC(42b25939) SHA1(a702dc6a27c3d7e29bfbf34741ce7b73264449bd) ) /* TC5332204  32Mbit  28f320 */
 	ROM_LOAD( "269-v2d.v2", 0x400000, 0x400000, CRC(1cbe5aa6) SHA1(b40c74c52587092dfb858872f6ac8fc97b6b245e) ) /* TC5332204  32Mbit  28f320 */
 	ROM_LOAD( "269-v3d.v3", 0x800000, 0x400000, CRC(f6267114) SHA1(096fab8610fcd90a798166cc11a28999311773ef) ) /* TC5332204  32Mbit  28f320 */
 	ROM_LOAD( "269-v4d.v4", 0xc00000, 0x400000, CRC(40d3ba59) SHA1(0faa0bbdb496923d943b7ca99f068ac41d44204d) ) /* TC5332204  32Mbit  28f320 */
 
-	// kawaks
+	// decrypted gfx (kawaks)
 	ROM_REGION( 0x4000000, "cslot1:sprites", 0 )
 	ROM_LOAD16_BYTE( "269-c1d.c1", 0x0000000, 0x800000, CRC(465d473b) SHA1(0b2be2b2657c2ae021ec91515d1d6306179751d5) ) /* TC5364205  64Mbit  28f640 */
 	ROM_LOAD16_BYTE( "269-c2d.c2", 0x0000001, 0x800000, CRC(3eb28f78) SHA1(df1b096fe95796db1515b69f74266ed13dd9ee56) ) /* TC5364205  64Mbit  28f640 */
@@ -11686,15 +11697,15 @@ ROM_END
  seems p can't be reduced any further, h/w mod might be possible??
 */
 ROM_START( samsho5c )  // 270
+	// unscrambled (mame dump)
 	ROM_REGION( 0x800000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
-	//  unscrambled (mame dump)
 	ROM_LOAD16_WORD_SWAP( "270-p1d.p1", 0x000000, 0x400000, CRC(4f8f86bd) SHA1(765c1e576bf8ac6d8cc59bd688973799c0187e09) )
 	ROM_LOAD16_WORD_SWAP( "270-p2d.p2", 0x400000, 0x400000, CRC(91979dee) SHA1(0e03a2a2e3aa493bd839f3754260ddd3935ba25b) )
 	
-	// kawaks
+	// decrypted sfix (kawaks)
 	NEO_SFIX_128K( "270-s1d.s1", CRC(2ad6048b) SHA1(173c8561f0633e0d6e4a9750e632f2e46766e674) ) /* TC531000  1Mbit  27c1000 */
 	
-	// decrypted z80 code (m1crypt)
+	// decrypted z80 code (m1crypt), split 1/2
 	//NEO_BIOS_AUDIO_512K( "270-m1d.m1", CRC(5218a10a) SHA1(da4968e55d4a56249d85d6742a6acffcff4ad65d) ) /* TC534000  4Mbit  27c040 */
 	NEO_BIOS_AUDIO_256K( "270-m1d.m1", CRC(2fbed8b2) SHA1(0823e9f61005ad5a79818f41277094edaeb7c330) ) /* 2Mbit  27c020 */
 
