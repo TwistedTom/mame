@@ -62,7 +62,7 @@ Top board: MOTHER PCB-C K11X0838A  M43E0325A
 |4218160                 (QFP208)                                                 |
 |                                    10MHz    MC68EC000     LC321664AJ-80         |
 |E23-27.13  TC0780FPA                                                             |
-|           (QFP240)                                        ENSONIC               |
+|           (QFP240)                                        ENSONIQ               |
 |                      D482445                TC51832       ESPR6 ES5510          |
 |                                             TC51832                             |
 |4218160               D482445                                                    |
@@ -70,7 +70,7 @@ Top board: MOTHER PCB-C K11X0838A  M43E0325A
 |                      D482445    (QFP144)                                        |
 |4218160                                      16MHz         MB87078               |
 |           TC0780FPA  D482445           30.4761MHz                               |
-|           (QFP240)              ENSONIC                                         |
+|           (QFP240)              ENSONIQ                                         |
 |E23-28.18                        OTISR2                                          |
 |                                                                                 |
 |---------------------------------------------------------------------------------|
@@ -197,7 +197,7 @@ Top board: MOTHER PCB  K11X0835A  M43E0304A
 |                              E07-07.49    CY7B991                               |
 |TC528257   TC514260           E07-03.50                     TC511664             |
 |                     TC0780FPA                                                   |
-|TC528257   TC514260  (QFP240)           10MHz   MC68EC000   ENSONIC              |
+|TC528257   TC514260  (QFP240)           10MHz   MC68EC000   ENSONIQ              |
 |                                 CY7B991                    ESPR6 ES5510         |
 |TC528257   TC514260                                                              |
 |                                                                                 |
@@ -206,7 +206,7 @@ Top board: MOTHER PCB  K11X0835A  M43E0304A
 |TC528257   TC514260                             16MHz      MB87078               |
 |                     TC0780FPA          30.4761MHz                               |
 |TC528257   TC514260  (QFP240)                                                    |
-|                                           ENSONIC                               |
+|                                           ENSONIQ                               |
 |TC528257             E07-05.22             OTISR2                                |
 |---------------------------------------------------------------------------------|
 
@@ -290,7 +290,7 @@ Top board: MOTHER PCB-C K11X0838A  M43E0325A
 |4218160                 (QFP208)                                                 |
 |                                    10MHz    MC68EC000     LC321664AJ-80         |
 |E23-27.13  TC0780FPA  D482445                                                    |
-|           (QFP240)                                        ENSONIC               |
+|           (QFP240)                                        ENSONIQ               |
 |                      D482445                TC51832       ESPR6 ES5510          |
 |                                             TC51832                             |
 |4218160                                                                          |
@@ -298,7 +298,7 @@ Top board: MOTHER PCB-C K11X0838A  M43E0325A
 |                                 (QFP144)                                        |
 |4218160               D482445                16MHz         MB87078               |
 |           TC0780FPA                    30.4761MHz                               |
-|           (QFP240)   D482445    ENSONIC                                         |
+|           (QFP240)   D482445    ENSONIQ                                         |
 |E23-28.18                        OTISR2                                          |
 |                                                                                 |
 |---------------------------------------------------------------------------------|
@@ -324,6 +324,10 @@ Notes:
                    OTISR2 - 3.80950MHz (pin12)
                    ES5510 - 2.22MHz, 2.666MHz, 3.8095125MHz (30.4761/8), 8.000MHz (16/2)
 
+      X1 is labeled "54/33.333MHz" on MOTHER PCB-C, but only 54 MHz appears to have been used.
+
+      X3 is labeled "30.47610MHz" on MOTHER PCB-C and "30.4762MHz" on at least one actual XTAL. Both of these values
+      are likely rounded off from the 30.47618 MHz frequency used with the same Ensoniq chips in other Taito games.
 
 Bottom board: JCG DAUGHTERL PCB-C K9100633A J9100434A (Sticker K91J0633A)
 |---------------------------------------------------------------------------------|
@@ -524,7 +528,7 @@ WRITE16_MEMBER(taitojc_state::main_to_dsp_7ff_w)
 void taitojc_state::cpu_space_map(address_map &map)
 {
 	map(0xfffffff0, 0xffffffff).m(m_maincpu, FUNC(m68000_base_device::autovectors_map));
-	map(0xfffffff4, 0xfffffff5).lr16("vblank irq", []() -> u16 { return 0x82; });
+	map(0xfffffff4, 0xfffffff5).lr16(NAME([] () -> u16 { return 0x82; }));
 }
 
 INTERRUPT_GEN_MEMBER(taitojc_state::taitojc_vblank)
@@ -1096,7 +1100,7 @@ void taitojc_state::taitojc(machine_config &config)
 	m_dsp->set_addrmap(AS_PROGRAM, &taitojc_state::tms_program_map);
 	m_dsp->set_addrmap(AS_DATA, &taitojc_state::tms_data_map);
 
-	config.m_minimum_quantum = attotime::from_hz(6000);
+	config.set_maximum_quantum(attotime::from_hz(6000));
 
 	EEPROM_93C46_16BIT(config, "eeprom");
 
@@ -1135,7 +1139,7 @@ void taitojc_state::dendego(machine_config &config)
 	m_screen->set_screen_update(FUNC(taitojc_state::screen_update_dendego));
 
 	/* sound hardware */
-	SPEAKER(config, "vibration").subwoofer();
+	SPEAKER(config, "vibration").seat();
 
 	/* clock frequency & pin 7 not verified */
 	OKIM6295(config, "oki", 1056000, okim6295_device::PIN7_HIGH).add_route(ALL_OUTPUTS, "vibration", 0.20);
@@ -1172,7 +1176,7 @@ void taitojc_state::init_taitojc()
 	m_has_dsp_hack = 1;
 
 	if (DSP_IDLESKIP)
-		m_dsp->space(AS_DATA).install_read_handler(0x7ff0, 0x7ff0, read16_delegate(FUNC(taitojc_state::taitojc_dsp_idle_skip_r),this));
+		m_dsp->space(AS_DATA).install_read_handler(0x7ff0, 0x7ff0, read16_delegate(*this, FUNC(taitojc_state::taitojc_dsp_idle_skip_r)));
 }
 
 void taitojc_state::init_dendego2()
@@ -1180,7 +1184,7 @@ void taitojc_state::init_dendego2()
 	init_taitojc();
 
 	if (DSP_IDLESKIP)
-		m_dsp->space(AS_DATA).install_read_handler(0x7ff0, 0x7ff0, read16_delegate(FUNC(taitojc_state::dendego2_dsp_idle_skip_r),this));
+		m_dsp->space(AS_DATA).install_read_handler(0x7ff0, 0x7ff0, read16_delegate(*this, FUNC(taitojc_state::dendego2_dsp_idle_skip_r)));
 }
 
 void taitojc_state::init_dangcurv()

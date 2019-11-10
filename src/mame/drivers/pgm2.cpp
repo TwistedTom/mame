@@ -509,7 +509,7 @@ READ32_MEMBER(pgm2_state::pio_pdsr_r)
 
 void pgm2_state::pgm2_map(address_map &map)
 {
-	map(0x00000000, 0x00003fff).rom(); //AM_REGION("mainrom", 0x00000) // internal ROM
+	map(0x00000000, 0x00003fff).rom(); //.region("mainrom", 0x00000); // internal ROM
 
 	map(0x02000000, 0x0200ffff).ram().share("sram"); // 'battery RAM' (in CPU?)
 
@@ -553,17 +553,17 @@ void pgm2_state::pgm2_map(address_map &map)
 	map(0x40000000, 0x40000003).r("ymz774", FUNC(ymz774_device::read)).w("ymz774", FUNC(ymz774_device::write));
 
 	// internal IGS036 - most of them is standard ATMEL peripherals followed by custom bits
-	// AM_RANGE(0xfffa0000, 0xfffa00ff) TC (Timer Counter) not used, mentioned in disabled / unused code
-	// AM_RANGE(0xffffec00, 0xffffec7f) SMC (Static Memory Controller)
-	// AM_RANGE(0xffffee00, 0xffffee57) MATRIX (Bus Matrix)
+	// map(0xfffa0000, 0xfffa00ff) TC (Timer Counter) not used, mentioned in disabled / unused code
+	// map(0xffffec00, 0xffffec7f) SMC (Static Memory Controller)
+	// map(0xffffee00, 0xffffee57) MATRIX (Bus Matrix)
 	map(0xfffff000, 0xfffff14b).m(m_arm_aic, FUNC(arm_aic_device::regs_map));
-	// AM_RANGE(0xfffff200, 0xfffff247) DBGU (Debug Unit)
-	// AM_RANGE(0xfffff400, 0xfffff4af) PIO (Parallel Input Output Controller)
+	// map(0xfffff200, 0xfffff247) DBGU (Debug Unit)
+	// map(0xfffff400, 0xfffff4af) PIO (Parallel Input Output Controller)
 	map(0xfffff430, 0xfffff437).nopw(); // often
-	// AM_RANGE(0xfffffd00, 0xfffffd0b) RSTC (Reset Controller)
-	// AM_RANGE(0xfffffd20, 0xfffffd2f) RTTC (Real Time Timer)
+	// map(0xfffffd00, 0xfffffd0b) RSTC (Reset Controller)
+	// map(0xfffffd20, 0xfffffd2f) RTTC (Real Time Timer)
 	map(0xfffffd28, 0xfffffd2b).r(FUNC(pgm2_state::rtc_r));
-	// AM_RANGE(0xfffffd40, 0xfffffd4b) WDTC (Watch Dog Timer)
+	// map(0xfffffd40, 0xfffffd4b) WDTC (Watch Dog Timer)
 	// custom IGS036 stuff starts here
 	map(0xfffffa08, 0xfffffa0b).w(FUNC(pgm2_state::encryption_do_w)); // after uploading encryption? table might actually send it or enable external ROM? when read bits0-1 called FUSE 0 and 1, must be 0
 	map(0xfffffa0c, 0xfffffa0f).r(FUNC(pgm2_state::unk_startup_r)); // written 0, then 0x1c, then expected to return (result&0x180)==0x180, then written 0x7c
@@ -754,7 +754,7 @@ void pgm2_state::pgm2(machine_config &config)
 	IGS036(config, m_maincpu, 100000000); // Unknown clock / divider
 	m_maincpu->set_addrmap(AS_PROGRAM, &pgm2_state::pgm2_rom_map);
 
-	TIMER(config, m_mcu_timer, 0).configure_generic(timer_device::expired_delegate(FUNC(pgm2_state::mcu_interrupt), this));
+	TIMER(config, m_mcu_timer, 0).configure_generic(FUNC(pgm2_state::mcu_interrupt));
 
 	ARM_AIC(config, m_arm_aic, 0).irq_callback().set(FUNC(pgm2_state::irq));
 
@@ -1394,20 +1394,20 @@ void pgm2_state::common_encryption_init()
 void pgm2_state::init_orleg2()
 {
 	common_encryption_init();
-	m_maincpu->space(AS_PROGRAM).install_read_handler(0x20020114, 0x20020117, read32_delegate(FUNC(pgm2_state::orleg2_speedup_r),this));
+	m_maincpu->space(AS_PROGRAM).install_read_handler(0x20020114, 0x20020117, read32_delegate(*this, FUNC(pgm2_state::orleg2_speedup_r)));
 }
 
 void pgm2_state::init_kov2nl()
 {
 	common_encryption_init();
-	m_maincpu->space(AS_PROGRAM).install_read_handler(0x20020470, 0x20020473, read32_delegate(FUNC(pgm2_state::kov2nl_speedup_r), this));
+	m_maincpu->space(AS_PROGRAM).install_read_handler(0x20020470, 0x20020473, read32_delegate(*this, FUNC(pgm2_state::kov2nl_speedup_r)));
 }
 
 void pgm2_state::init_ddpdojt()
 {
 	common_encryption_init();
-	m_maincpu->space(AS_PROGRAM).install_read_handler(0x20000060, 0x20000063, read32_delegate(FUNC(pgm2_state::ddpdojt_speedup_r), this));
-	m_maincpu->space(AS_PROGRAM).install_read_handler(0x20021e04, 0x20021e07, read32_delegate(FUNC(pgm2_state::ddpdojt_speedup2_r), this));
+	m_maincpu->space(AS_PROGRAM).install_read_handler(0x20000060, 0x20000063, read32_delegate(*this, FUNC(pgm2_state::ddpdojt_speedup_r)));
+	m_maincpu->space(AS_PROGRAM).install_read_handler(0x20021e04, 0x20021e07, read32_delegate(*this, FUNC(pgm2_state::ddpdojt_speedup2_r)));
 }
 
 // currently we don't know how to derive address/data xor values from real keys, so we need both
@@ -1419,7 +1419,7 @@ static const kov3_module_key kov3_100_key = { { 0x40,0xac,0x30,0x00,0x47,0x49,0x
 void pgm2_state::init_kov3()
 {
 	common_encryption_init();
-	m_maincpu->space(AS_PROGRAM).install_read_handler(0x200000b4, 0x200000b7, read32_delegate(FUNC(pgm2_state::kov3_speedup_r),this));
+	m_maincpu->space(AS_PROGRAM).install_read_handler(0x200000b4, 0x200000b7, read32_delegate(*this, FUNC(pgm2_state::kov3_speedup_r)));
 }
 
 void pgm2_state::decrypt_kov3_module(u32 addrxor, u16 dataxor)
@@ -1464,7 +1464,7 @@ void pgm2_state::init_kov3_100()
 void pgm2_state::init_kof98umh()
 {
 	common_encryption_init();
-	m_maincpu->space(AS_PROGRAM).install_read_handler(0x20000060, 0x20000063, read32_delegate(FUNC(pgm2_state::kof98umh_speedup_r),this));
+	m_maincpu->space(AS_PROGRAM).install_read_handler(0x20000060, 0x20000063, read32_delegate(*this, FUNC(pgm2_state::kof98umh_speedup_r)));
 }
 
 
