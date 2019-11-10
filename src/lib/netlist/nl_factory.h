@@ -1,10 +1,9 @@
 // license:GPL-2.0+
 // copyright-holders:Couriersud
-/*
- * nl_factory.h
- *
- *
- */
+
+///
+/// \file nl_factory.h
+///
 
 #ifndef NLFACTORY_H_
 #define NLFACTORY_H_
@@ -28,7 +27,7 @@
 	static plib::unique_ptr<factory::element_t> NETLIB_NAME(p_alias ## _c) \
 			(const pstring &classname) \
 	{ \
-		return plib::make_unique<factory::device_element_t<ns :: NETLIB_NAME(chip)>>(p_name, classname, p_def_param, pstring(__FILE__)); \
+		return plib::make_unique<factory::device_element_t<ns :: NETLIB_NAME(chip)>>(p_name, classname, p_def_param, __FILE__); \
 	} \
 	\
 	factory::constructor_ptr_t decl_ ## p_alias = NETLIB_NAME(p_alias ## _c);
@@ -55,7 +54,7 @@ namespace factory {
 
 		COPYASSIGNMOVE(element_t, default)
 
-		virtual pool_owned_ptr<device_t> Create(netlist_state_t &anetlist, const pstring &name) = 0;
+		virtual unique_pool_ptr<device_t> Create(netlist_state_t &anetlist, const pstring &name) = 0;
 		virtual void macro_actions(nlparse_t &nparser, const pstring &name)
 		{
 			plib::unused_var(nparser);
@@ -68,10 +67,10 @@ namespace factory {
 		const pstring &sourcefile() const { return m_sourcefile; }
 
 	private:
-		pstring m_name;                             /* device name */
-		pstring m_classname;                        /* device class name */
-		pstring m_def_param;                        /* default parameter */
-		pstring m_sourcefile;                       /* source file */
+		pstring m_name;                             ///< device name
+		pstring m_classname;                        ///< device class name
+		pstring m_def_param;                        ///< default parameter
+		pstring m_sourcefile;                       ///< source file
 	};
 
 	template <class C>
@@ -85,9 +84,9 @@ namespace factory {
 				const pstring &def_param, const pstring &sourcefile)
 		: element_t(name, classname, def_param, sourcefile) { }
 
-		pool_owned_ptr<device_t> Create(netlist_state_t &anetlist, const pstring &name) override
+		unique_pool_ptr<device_t> Create(netlist_state_t &anetlist, const pstring &name) override
 		{
-			return pool().make_poolptr<C>(anetlist, name);
+			return pool().make_unique<C>(anetlist, name);
 		}
 	};
 
@@ -147,7 +146,7 @@ namespace factory {
 		{
 		}
 
-		pool_owned_ptr<device_t> Create(netlist_state_t &anetlist, const pstring &name) override;
+		unique_pool_ptr<device_t> Create(netlist_state_t &anetlist, const pstring &name) override;
 
 		void macro_actions(nlparse_t &nparser, const pstring &name) override;
 
@@ -161,4 +160,4 @@ namespace factory {
 	} // namespace devices
 } // namespace netlist
 
-#endif /* NLFACTORY_H_ */
+#endif // NLFACTORY_H_

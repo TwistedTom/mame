@@ -1,15 +1,15 @@
 // license:GPL-2.0+
 // copyright-holders:Couriersud
-/*
- * nl_parser.c
- *
- */
+
+///
+/// \file nl_parser.h
+///
 
 #ifndef NL_PARSER_H_
 #define NL_PARSER_H_
 
 #include "nl_setup.h"
-#include "plib/pparser.h"
+#include "plib/ptokenizer.h"
 
 namespace netlist
 {
@@ -42,13 +42,10 @@ namespace netlist
 		void net_local_source();
 		void net_truthtable_start(const pstring &nlname);
 
-		/* for debugging messages */
-		//netlist_state_t &netlist() { return m_setup.netlist(); }
-
-		void verror(const pstring &msg, int line_num, const pstring &line) override;
+		void verror(const pstring &msg) override;
 	private:
 
-		nl_double eval_param(const token_t &tok);
+		nl_fptype eval_param(const token_t &tok);
 
 		token_id_t m_tok_param_left;
 		token_id_t m_tok_param_right;
@@ -77,4 +74,4 @@ namespace netlist
 
 } // namespace netlist
 
-#endif /* NL_PARSER_H_ */
+#endif // NL_PARSER_H_

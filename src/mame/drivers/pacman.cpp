@@ -1023,14 +1023,14 @@ void pacman_state::birdiy_map(address_map &map)
 	map(0x0000, 0x3fff).mirror(0x8000).rom();
 	map(0x4000, 0x43ff).mirror(0xa000).ram().w(FUNC(pacman_state::pacman_videoram_w)).share("videoram");
 	map(0x4400, 0x47ff).mirror(0xa000).ram().w(FUNC(pacman_state::pacman_colorram_w)).share("colorram");
-//  AM_RANGE(0x4800, 0x4bff) AM_MIRROR(0xa000) AM_READ(pacman_read_nop) AM_WRITENOP
+//  map(0x4800, 0x4bff).mirror(0xa000).r(FUNC(pacman_state::pacman_read_nop)).nopw();
 	map(0x4c00, 0x4fef).mirror(0xa000).ram();
 	map(0x4ff0, 0x4fff).mirror(0xa000).ram().share("spriteram");
 	map(0x5000, 0x5007).mirror(0xaf38).w(m_mainlatch, FUNC(ls259_device::write_d0));
 	map(0x5080, 0x509f).mirror(0xaf00).w(m_namco_sound, FUNC(namco_device::pacman_sound_w));
 	map(0x50a0, 0x50af).mirror(0xaf00).writeonly().share("spriteram2");
-//  AM_RANGE(0x5070, 0x507f) AM_MIRROR(0xaf00) AM_WRITENOP
-//  AM_RANGE(0x5080, 0x5080) AM_MIRROR(0xaf3f) AM_WRITENOP
+//  map(0x5070, 0x507f).mirror(0xaf00).nopw();
+//  map(0x5080, 0x5080).mirror(0xaf3f).nopw();
 	map(0x50c0, 0x50c0).mirror(0xaf3f).w(m_watchdog, FUNC(watchdog_timer_device::reset_w));
 	map(0x5000, 0x5000).mirror(0xaf3f).portr("IN0");
 	map(0x5040, 0x5040).mirror(0xaf3f).portr("IN1");
@@ -1112,13 +1112,13 @@ void pacman_state::numcrash_map(address_map &map)
 	map(0x5000, 0x5007).w(m_mainlatch, FUNC(ls259_device::write_d0));
 	map(0x5040, 0x505f).w(m_namco_sound, FUNC(namco_device::pacman_sound_w));
 	map(0x5060, 0x506f).writeonly().share("spriteram2");
-//  AM_RANGE(0x5070, 0x507f) AM_WRITENOP
-//  AM_RANGE(0x5080, 0x5080) AM_WRITENOP
+//  map(0x5070, 0x507f).nopw();
+//  map(0x5080, 0x5080).nopw();
 	map(0x50c0, 0x50c0).w(m_watchdog, FUNC(watchdog_timer_device::reset_w));
 	map(0x5000, 0x5000).portr("IN0");
 	map(0x5040, 0x5040).portr("IN1");
 	map(0x5080, 0x5080).portr("DSW1");
-//  AM_RANGE(0x50c0, 0x50c0) AM_READ_PORT("DSW2") // only one DSW on the PCB
+//  map(0x50c0, 0x50c0).portr("DSW2"); // only one DSW on the PCB
 }
 
 
@@ -1158,7 +1158,7 @@ void pacman_state::dremshpr_map(address_map &map)
 	map(0x4800, 0x4fef).mirror(0xa000).ram();
 	map(0x4ff0, 0x4fff).mirror(0xa000).ram().share("spriteram");
 	map(0x5000, 0x5007).mirror(0xaf38).w(m_mainlatch, FUNC(ls259_device::write_d0));
-//  AM_RANGE(0x5040, 0x505f) AM_MIRROR(0xaf00) AM_DEVWRITE("namco", namco_device, pacman_sound_w)
+//  map(0x5040, 0x505f).mirror(0xaf00).w("namco", FUNC(namco_device::pacman_sound_w));
 	map(0x5060, 0x506f).mirror(0xaf00).writeonly().share("spriteram2");
 	map(0x5070, 0x507f).mirror(0xaf00).nopw();
 	map(0x5080, 0x5080).mirror(0xaf3f).nopw();
@@ -1336,14 +1336,14 @@ void pacman_state::crushs_map(address_map &map)
 void pacman_state::pengojpm_map(address_map &map)
 {
 	map(0x0000, 0x0fff).rom();
-//  AM_RANGE(0x1000, 0x1fff) // header check for 0x55aa at POST, diagnostic ROM?
+//  map(0x1000, 0x1fff) // header check for 0x55aa at POST, diagnostic ROM?
 	map(0x4000, 0x7fff).rom();
 
 	map(0x8000, 0x83ff).ram().w(FUNC(pacman_state::pacman_videoram_w)).share("videoram");
 	map(0x8400, 0x87ff).ram().w(FUNC(pacman_state::pacman_colorram_w)).share("colorram");
 
 	map(0x8800, 0x8bff).ram();
-//  AM_RANGE(0x8800, 0x8bff) AM_READ(pacman_read_nop) AM_WRITENOP
+//  map(0x8800, 0x8bff).r(FUNC(pacman_state::pacman_read_nop)).nopw();
 	map(0x8c00, 0x8fef).ram();
 	map(0x8ff0, 0x8fff).ram().share("spriteram");
 	map(0x9000, 0x9007).w(m_mainlatch, FUNC(ls259_device::write_d0));
@@ -2343,7 +2343,7 @@ static INPUT_PORTS_START( theglobp )
 INPUT_PORTS_END
 
 
-static INPUT_PORTS_START( eeekk )
+static INPUT_PORTS_START( eeekkp )
 	PORT_INCLUDE(pacman)
 	PORT_MODIFY("IN0")
 	PORT_SERVICE_NO_TOGGLE( 0x10, 0x10 )
@@ -3713,7 +3713,7 @@ void pacman_state::acitya(machine_config &config)
 }
 
 
-void pacman_state::eeekk(machine_config &config)
+void pacman_state::eeekkp(machine_config &config)
 {
 	pacman(config);
 
@@ -3721,8 +3721,8 @@ void pacman_state::eeekk(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &pacman_state::epos_map);
 	m_maincpu->set_addrmap(AS_IO, &pacman_state::epos_portmap);
 
-	MCFG_MACHINE_START_OVERRIDE(pacman_state,eeekk)
-	MCFG_MACHINE_RESET_OVERRIDE(pacman_state,eeekk)
+	MCFG_MACHINE_START_OVERRIDE(pacman_state,eeekkp)
+	MCFG_MACHINE_RESET_OVERRIDE(pacman_state,eeekkp)
 }
 
 
@@ -6430,7 +6430,7 @@ ROM_START( beastfp )
 ROM_END
 
 
-ROM_START( eeekk ) // Pac-Man PCB conversion kit. Includes a small daughtercard (2 roms + 4 PLDs, plugs in through the Z80 socket), 2 roms + 2 BPROMs
+ROM_START( eeekkp ) // Pac-Man PCB conversion kit. Includes a small daughtercard (2 roms + 4 PLDs, plugs in through the Z80 socket), 2 roms + 2 BPROMs
 	ROM_REGION( 0x20000, "maincpu", 0 )
 	ROM_LOAD( "u_2_eeekk_pg03094.u2",   0x0000, 0x2000, CRC(701e37f2) SHA1(15bbd983e9112ce15dd229f126f2bccfa8b9807c) ) // encrypted  - located on daughtercard
 	ROM_LOAD( "u_3_eeekk_pg03094.u3",   0x2000, 0x2000, CRC(bcf524ae) SHA1(be2a1a2984ea1439c63d8c353e4ae85bf42c8a55) ) // encrypted  - located on daughtercard
@@ -7190,9 +7190,9 @@ ROM_END
 void pacman_state::init_maketrax()
 {
 	/* set up protection handlers */
-	m_maincpu->space(AS_PROGRAM).install_write_handler(0x5004, 0x5004, write8_delegate(FUNC(pacman_state::maketrax_protection_w),this));
-	m_maincpu->space(AS_PROGRAM).install_read_handler(0x5080, 0x50bf, read8_delegate(FUNC(pacman_state::maketrax_special_port2_r),this));
-	m_maincpu->space(AS_PROGRAM).install_read_handler(0x50c0, 0x50ff, read8_delegate(FUNC(pacman_state::maketrax_special_port3_r),this));
+	m_maincpu->space(AS_PROGRAM).install_write_handler(0x5004, 0x5004, write8_delegate(*this, FUNC(pacman_state::maketrax_protection_w)));
+	m_maincpu->space(AS_PROGRAM).install_read_handler(0x5080, 0x50bf, read8_delegate(*this, FUNC(pacman_state::maketrax_special_port2_r)));
+	m_maincpu->space(AS_PROGRAM).install_read_handler(0x50c0, 0x50ff, read8_delegate(*this, FUNC(pacman_state::maketrax_special_port3_r)));
 
 	save_item(NAME(m_maketrax_disable_protection));
 	save_item(NAME(m_maketrax_offset));
@@ -7202,7 +7202,7 @@ void pacman_state::init_maketrax()
 void pacman_state::init_mbrush()
 {
 	/* set up protection handlers */
-	m_maincpu->space(AS_PROGRAM).install_read_handler(0x5080, 0x50ff, read8_delegate(FUNC(pacman_state::mbrush_prot_r),this));
+	m_maincpu->space(AS_PROGRAM).install_read_handler(0x5080, 0x50ff, read8_delegate(*this, FUNC(pacman_state::mbrush_prot_r)));
 }
 
 void pacman_state::init_ponpoko()
@@ -7493,7 +7493,7 @@ READ8_MEMBER(pacman_state::mspacii_protection_r)
 void pacman_state::init_mspacii()
 {
 	// protection
-	m_maincpu->space(AS_PROGRAM).install_read_handler(0x504d, 0x506f, read8_delegate(FUNC(pacman_state::mspacii_protection_r), this));
+	m_maincpu->space(AS_PROGRAM).install_read_handler(0x504d, 0x506f, read8_delegate(*this, FUNC(pacman_state::mspacii_protection_r)));
 }
 
 void pacman_state::init_superabc()
@@ -7556,7 +7556,7 @@ void pacman_state::init_cannonbp()
 	m_maincpu->space(AS_PROGRAM).install_ram(0x4800, 0x4bff);
 
 	/* protection? */
-	m_maincpu->space(AS_PROGRAM).install_read_handler(0x3000, 0x3fff, read8_delegate(FUNC(pacman_state::cannonbp_protection_r),this));
+	m_maincpu->space(AS_PROGRAM).install_read_handler(0x3000, 0x3fff, read8_delegate(*this, FUNC(pacman_state::cannonbp_protection_r)));
 }
 
 void pacman_state::init_pengomc1()
@@ -7710,8 +7710,8 @@ GAME( 1983, theglobp, suprglob, theglobp, theglobp, pacman_state,  empty_init,  
 GAME( 1983, sprglobp, suprglob, theglobp, theglobp, pacman_state,  empty_init,    ROT90,  "Epos Corporation", "Super Glob (Pac-Man hardware)", MACHINE_SUPPORTS_SAVE )
 GAME( 1984, sprglbpg, suprglob, pacman,   theglobp, pacman_state,  empty_init,    ROT90,  "bootleg (Software Labor)", "Super Glob (Pac-Man hardware) (German bootleg)", MACHINE_SUPPORTS_SAVE )
 GAME( 1983, theglobme,suprglob, woodpek,  theglobp, pacman_state,  empty_init,    ROT90,  "Magic Electronics Inc.", "The Glob (Pacman hardware, Magic Electronics Inc. license)", MACHINE_SUPPORTS_SAVE )
-GAME( 1984, beastfp,  suprglob, theglobp, theglobp, pacman_state,  empty_init,    ROT90,  "Epos Corporation", "Beastie Feastie (conversion kit)", MACHINE_SUPPORTS_SAVE )
-GAME( 1984, eeekk,    0,        eeekk,    eeekk,    pacman_state,  empty_init,    ROT90,  "Epos Corporation", "Eeekk!", MACHINE_SUPPORTS_SAVE )
+GAME( 1984, beastfp,  suprglob, theglobp, theglobp, pacman_state,  empty_init,    ROT90,  "Epos Corporation", "Beastie Feastie (Pac-Man conversion)", MACHINE_SUPPORTS_SAVE )
+GAME( 1984, eeekkp,   eeekk,    eeekkp,   eeekkp,   pacman_state,  empty_init,    ROT90,  "Epos Corporation", "Eeekk! (Pac-Man conversion)", MACHINE_SUPPORTS_SAVE )
 
 GAME( 1984, drivfrcp, 0,        drivfrcp, drivfrcp, pacman_state,  init_drivfrcp, ROT90,  "Shinkai Inc. (Magic Electronics Inc. license)", "Driving Force (Pac-Man conversion)", MACHINE_SUPPORTS_SAVE )
 

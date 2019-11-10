@@ -6,7 +6,7 @@
 #include "emu.h"
 #include "elan_eu3a05.h"
 
-DEFINE_DEVICE_TYPE(RADICA6502_SOUND, radica6502_sound_device, "radica6502sound", "Elan EU3A05 / EU3A14 Sound")
+DEFINE_DEVICE_TYPE(ELAN_EU3A05_SOUND, elan_eu3a05_sound_device, "elan_eu3a05sound", "Elan EU3A05 / EU3A14 Sound")
 
 #define LOG_AUDIO       (1U << 0)
 
@@ -16,21 +16,35 @@ DEFINE_DEVICE_TYPE(RADICA6502_SOUND, radica6502_sound_device, "radica6502sound",
 #include "logmacro.h"
 
 
-radica6502_sound_device::radica6502_sound_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: device_t(mconfig, RADICA6502_SOUND, tag, owner, clock)
-	, device_sound_interface(mconfig, *this)
-	, m_stream(nullptr)
-	, m_space_read_cb(*this)
+elan_eu3a05_sound_device::elan_eu3a05_sound_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock) :
+	device_t(mconfig, ELAN_EU3A05_SOUND, tag, owner, clock),
+	device_sound_interface(mconfig, *this),
+	m_stream(nullptr),
+	m_space_read_cb(*this),
+	m_sound_end_cb{ { *this }, { *this }, { *this }, { *this }, { *this }, { *this } }
 {
 }
 
-void radica6502_sound_device::device_start()
+void elan_eu3a05_sound_device::device_start()
 {
 	m_space_read_cb.resolve_safe(0);
 	m_stream = stream_alloc(0, 1, 8000);
+
+	for (devcb_write_line &cb : m_sound_end_cb)
+		cb.resolve_safe();
+
+	save_item(NAME(m_sound_byte_address));
+	save_item(NAME(m_sound_byte_len));
+	save_item(NAME(m_sound_current_nib_pos));
+	save_item(NAME(m_isstopped));
+	save_item(NAME(m_sound_trigger));
+	save_item(NAME(m_sound_unk));
+	save_item(NAME(m_volumes));
+	save_item(NAME(m_5024));
+	save_item(NAME(m_50a9));
 }
 
-void radica6502_sound_device::device_reset()
+void elan_eu3a05_sound_device::device_reset()
 {
 	for (int i = 0; i < 6; i++)
 	{
@@ -40,13 +54,22 @@ void radica6502_sound_device::device_reset()
 	}
 
 	m_isstopped = 0x3f;
+
+	m_sound_trigger = 0x00;
+	m_sound_unk = 0x00;
+
+	m_volumes[0] = 0xff;
+	m_volumes[1] = 0x0f;
+
+	m_5024 = 0x00;
+	m_50a9 = 0x00;
 }
 
 //-------------------------------------------------
 //  sound_stream_update - handle a stream update
 //-------------------------------------------------
 
-void radica6502_sound_device::sound_stream_update(sound_stream &stream, stream_sample_t **inputs, stream_sample_t **outputs, int samples)
+void elan_eu3a05_sound_device::sound_stream_update(sound_stream &stream, stream_sample_t **inputs, stream_sample_t **outputs, int samples)
 {
 	// reset the output stream
 	memset(outputs[0], 0, samples * sizeof(*outputs[0]));
@@ -81,8 +104,7 @@ void radica6502_sound_device::sound_stream_update(sound_stream &stream, stream_s
 					m_sound_current_nib_pos[channel] = 0;
 					m_isstopped |= (1 << channel);
 
-					// maybe should generate an interrupt with vector
-					// ffb8, ffbc, ffc0, ffc4, ffc8, or ffcc depending on which channel finished??
+					m_sound_end_cb[channel](1); // generate interrupt based on which channel just stopped?
 				}
 			}
 			else
@@ -95,7 +117,9 @@ void radica6502_sound_device::sound_stream_update(sound_stream &stream, stream_s
 }
 
 
-void radica6502_sound_device::handle_sound_addr_w(int which, int offset, uint8_t data)
+
+
+void elan_eu3a05_sound_device::handle_sound_addr_w(int which, int offset, uint8_t data)
 {
 	switch (offset)
 	{
@@ -116,7 +140,7 @@ void radica6502_sound_device::handle_sound_addr_w(int which, int offset, uint8_t
 	}
 }
 
-uint8_t radica6502_sound_device::handle_sound_addr_r(int which, int offset)
+uint8_t elan_eu3a05_sound_device::handle_sound_addr_r(int which, int offset)
 {
 	switch (offset)
 	{
@@ -136,19 +160,19 @@ uint8_t radica6502_sound_device::handle_sound_addr_r(int which, int offset)
 	return 0x00;
 }
 
-WRITE8_MEMBER(radica6502_sound_device::radicasi_sound_addr_w)
+WRITE8_MEMBER(elan_eu3a05_sound_device::elan_eu3a05_sound_addr_w)
 {
 	m_stream->update();
 	handle_sound_addr_w(offset / 3, offset % 3, data);
 }
 
-READ8_MEMBER(radica6502_sound_device::radicasi_sound_addr_r)
+READ8_MEMBER(elan_eu3a05_sound_device::elan_eu3a05_sound_addr_r)
 {
 	m_stream->update();
 	return handle_sound_addr_r(offset / 3, offset % 3);
 }
 
-void radica6502_sound_device::handle_sound_size_w(int which, int offset, uint8_t data)
+void elan_eu3a05_sound_device::handle_sound_size_w(int which, int offset, uint8_t data)
 {
 	switch (offset)
 	{
@@ -169,7 +193,7 @@ void radica6502_sound_device::handle_sound_size_w(int which, int offset, uint8_t
 	}
 }
 
-uint8_t radica6502_sound_device::handle_sound_size_r(int which, int offset)
+uint8_t elan_eu3a05_sound_device::handle_sound_size_r(int which, int offset)
 {
 	switch (offset)
 	{
@@ -189,19 +213,19 @@ uint8_t radica6502_sound_device::handle_sound_size_r(int which, int offset)
 	return 0x00;
 }
 
-WRITE8_MEMBER(radica6502_sound_device::radicasi_sound_size_w)
+WRITE8_MEMBER(elan_eu3a05_sound_device::elan_eu3a05_sound_size_w)
 {
 	m_stream->update();
 	handle_sound_size_w(offset / 3, offset % 3, data);
 }
 
-READ8_MEMBER(radica6502_sound_device::radicasi_sound_size_r)
+READ8_MEMBER(elan_eu3a05_sound_device::elan_eu3a05_sound_size_r)
 {
 	m_stream->update();
 	return handle_sound_size_r(offset / 3, offset % 3);
 }
 
-READ8_MEMBER(radica6502_sound_device::radicasi_sound_trigger_r)
+READ8_MEMBER(elan_eu3a05_sound_device::elan_eu3a05_sound_trigger_r)
 {
 	m_stream->update();
 
@@ -210,7 +234,7 @@ READ8_MEMBER(radica6502_sound_device::radicasi_sound_trigger_r)
 }
 
 
-WRITE8_MEMBER(radica6502_sound_device::radicasi_sound_trigger_w)
+WRITE8_MEMBER(elan_eu3a05_sound_device::elan_eu3a05_sound_trigger_w)
 {
 	m_stream->update();
 
@@ -231,16 +255,16 @@ WRITE8_MEMBER(radica6502_sound_device::radicasi_sound_trigger_w)
 
 /* this is read/written with the same individual bits for each channel as the trigger
    maybe related to interrupts? */
-READ8_MEMBER(radica6502_sound_device::radicasi_sound_unk_r)
+READ8_MEMBER(elan_eu3a05_sound_device::elan_eu3a05_sound_unk_r)
 {
-	LOGMASKED( LOG_AUDIO, "%s: radicasi_sound_unk_r\n", machine().describe_context());
+	LOGMASKED( LOG_AUDIO, "%s: elan_eu3a05_sound_unk_r\n", machine().describe_context());
 	// don't think this reads back what was written probably a status of something instead?
 	return 0x00; //m_sound_unk;
 }
 
-WRITE8_MEMBER(radica6502_sound_device::radicasi_sound_unk_w)
+WRITE8_MEMBER(elan_eu3a05_sound_device::elan_eu3a05_sound_unk_w)
 {
-	LOGMASKED( LOG_AUDIO, "%s: radicasi_sound_unk_w %02x\n", machine().describe_context(), data);
+	LOGMASKED( LOG_AUDIO, "%s: elan_eu3a05_sound_unk_w %02x\n", machine().describe_context(), data);
 
 	for (int i = 0; i < 6; i++)
 	{
@@ -256,19 +280,126 @@ WRITE8_MEMBER(radica6502_sound_device::radicasi_sound_unk_w)
 		LOGMASKED( LOG_AUDIO, "  UNEXPECTED BITS SET");
 }
 
-void radica6502_sound_device::handle_sound_trigger(int which)
+void elan_eu3a05_sound_device::handle_sound_trigger(int which)
 {
 	LOGMASKED( LOG_AUDIO, "Triggering operation on channel (%d) with params %08x %08x\n", which, m_sound_byte_address[which], m_sound_byte_len[which]);
 
-	m_sound_current_nib_pos[which] = 0;
-	m_isstopped &= ~(1 << which);
+	if (m_isstopped & (1 << which)) // golden tee will repeatedly try to start the music on the title screen (although could depend on a status read first?)
+	{
+		m_sound_current_nib_pos[which] = 0;
+		m_isstopped &= ~(1 << which);
+	}
 }
 
 
-READ8_MEMBER(radica6502_sound_device::radicasi_50a8_r)
+READ8_MEMBER(elan_eu3a05_sound_device::elan_eu3a05_50a8_r)
 {
 	m_stream->update();
 
-	LOGMASKED( LOG_AUDIO, "%s: radicasi_50a8_r\n", machine().describe_context());
+	LOGMASKED( LOG_AUDIO, "%s: elan_eu3a05_50a8_r\n", machine().describe_context());
 	return m_isstopped;
+}
+
+READ8_MEMBER(elan_eu3a05_sound_device::elan_eu3a05_sound_volume_r)
+{
+	return m_volumes[offset];
+}
+
+WRITE8_MEMBER(elan_eu3a05_sound_device::elan_eu3a05_sound_volume_w)
+{
+	m_volumes[offset] = data;
+}
+
+WRITE8_MEMBER(elan_eu3a05_sound_device::write)
+{
+	switch (offset)
+	{
+	case 0x00: case 0x01: case 0x02: // channel 0 address
+	case 0x03: case 0x04: case 0x05: // channel 1 address
+	case 0x06: case 0x07: case 0x08: // channel 2 address
+	case 0x09: case 0x0a: case 0x0b: // channel 3 address
+	case 0x0c: case 0x0d: case 0x0e: // channel 4 address
+	case 0x0f: case 0x10: case 0x11: // channel 5 address
+		elan_eu3a05_sound_addr_w(space, offset, data);
+		break;
+
+	case 0x12: case 0x13: case 0x14: // channel 0 length
+	case 0x15: case 0x16: case 0x17: // channel 1 length
+	case 0x18: case 0x19: case 0x1a: // channel 2 length
+	case 0x1b: case 0x1c: case 0x1d: // channel 3 length
+	case 0x1e: case 0x1f: case 0x20: // channel 4 length
+	case 0x21: case 0x22: case 0x23: // channel 5 length
+		elan_eu3a05_sound_size_w(space, offset - 0x12, data);
+		break;
+
+	case 0x24: // unk
+		m_5024 = data;
+		break;
+
+	case 0x25: // trigger
+		elan_eu3a05_sound_trigger_w(space, offset - 0x25, data);
+		break;
+
+	case 0x26: // volume channels 0,1,2,3 ? (lunar rescue sets 0x03 here and 0x00 below and just uses a single channel)
+	case 0x27: // volume channels 5,6 ?
+		elan_eu3a05_sound_volume_w(space, offset - 0x26, data);
+		break;
+
+	case 0x28: // stopped status?
+		LOGMASKED( LOG_AUDIO, "%s: write to stop state register? %02x\n", machine().describe_context(), data);
+		break;
+
+	case 0x29: // interrupt enable? or looping?
+		m_50a9 = data;
+		break;
+	}
+}
+
+READ8_MEMBER(elan_eu3a05_sound_device::read)
+{
+	uint8_t ret = 0x00;
+
+	switch (offset)
+	{
+	case 0x00: case 0x01: case 0x02: // channel 0 address
+	case 0x03: case 0x04: case 0x05: // channel 1 address
+	case 0x06: case 0x07: case 0x08: // channel 2 address
+	case 0x09: case 0x0a: case 0x0b: // channel 3 address
+	case 0x0c: case 0x0d: case 0x0e: // channel 4 address
+	case 0x0f: case 0x10: case 0x11: // channel 5 address
+		ret = elan_eu3a05_sound_addr_r(space, offset);
+		break;
+
+	case 0x12: case 0x13: case 0x14: // channel 0 length
+	case 0x15: case 0x16: case 0x17: // channel 1 length
+	case 0x18: case 0x19: case 0x1a: // channel 2 length
+	case 0x1b: case 0x1c: case 0x1d: // channel 3 length
+	case 0x1e: case 0x1f: case 0x20: // channel 4 length
+	case 0x21: case 0x22: case 0x23: // channel 5 length
+		ret = elan_eu3a05_sound_size_r(space, offset - 0x12);
+		break;
+
+	case 0x24: // unk
+		ret = m_5024;
+		break;
+
+	case 0x25: // trigger
+		ret = elan_eu3a05_sound_trigger_r(space, offset - 0x25);
+		break;
+
+	case 0x26: // volume channels 0,1,2,3 ?
+	case 0x27: // volume channels 5,6 ?
+		ret = elan_eu3a05_sound_volume_r(space, offset - 0x26);
+		break;
+
+	case 0x28: // stopped status?
+		ret = elan_eu3a05_50a8_r(space, offset - 0x28);
+		break;
+
+	case 0x29: // interrupt enable? or looping?
+		ret = m_50a9;
+		break;
+	}
+
+	return ret;
 }
