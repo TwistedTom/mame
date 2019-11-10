@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -124,7 +124,6 @@ namespace bgfx
 
 	static const char* s_textureArray[] =
 	{
-		"sampler2DArray",
 		"texture2DArray",
 		"texture2DArrayLod",
 		"shadow2DArray",
@@ -156,33 +155,6 @@ namespace bgfx
 	};
 	BX_STATIC_ASSERT(BX_COUNTOF(s_uniformTypeName) == UniformType::Count*2);
 
-	static const char* s_allowedVertexShaderInputs[] =
-	{
-		"a_position",
-		"a_normal",
-		"a_tangent",
-		"a_bitangent",
-		"a_color0",
-		"a_color1",
-		"a_color2",
-		"a_color3",
-		"a_indices",
-		"a_weight",
-		"a_texcoord0",
-		"a_texcoord1",
-		"a_texcoord2",
-		"a_texcoord3",
-		"a_texcoord4",
-		"a_texcoord5",
-		"a_texcoord6",
-		"a_texcoord7",
-		"i_data0",
-		"i_data1",
-		"i_data2",
-		"i_data3",
-		"i_data4",
-		NULL
-	};
 
 	Options::Options()
 		: shaderType(' ')
@@ -421,6 +393,7 @@ namespace bgfx
 			return size;
 		}
 
+		std::string m_filePath;
 		bx::StringView m_name;
 		typedef std::vector<uint8_t> Buffer;
 		Buffer m_buffer;
@@ -527,7 +500,7 @@ namespace bgfx
 
 	void printCode(const char* _code, int32_t _line, int32_t _start, int32_t _end, int32_t _column)
 	{
-		bx::printf("Code:\n---\n");
+		fprintf(stderr, "Code:\n---\n");
 
 		bx::Error err;
 		LineReader reader(_code);
@@ -539,26 +512,26 @@ namespace bgfx
 			if (err.isOk()
 			&&  line >= _start)
 			{
-				bx::StringView strLine(str, len);
+				std::string strLine(str, len);
 
 				if (_line == line)
 				{
-					bx::printf("\n");
-					bx::printf(">>> %3d: %.*s", line, strLine.getLength(), strLine.getPtr() );
+					fprintf(stderr, "\n");
+					fprintf(stderr, ">>> %3d: %s", line, strLine.c_str() );
 					if (-1 != _column)
 					{
-						bx::printf(">>> %3d: %*s\n", _column, _column, "^");
+						fprintf(stderr, ">>> %3d: %*s\n", _column, _column, "^");
 					}
-					bx::printf("\n");
+					fprintf(stderr, "\n");
 				}
 				else
 				{
-					bx::printf("    %3d: %.*s", line, strLine.getLength(), strLine.getPtr() );
+					fprintf(stderr, "    %3d: %s", line, strLine.c_str() );
 				}
 			}
 		}
 
-		bx::printf("---\n");
+		fprintf(stderr, "---\n");
 	}
 
 	void writeFile(const char* _filePath, const void* _data, int32_t _size)
@@ -739,7 +712,7 @@ namespace bgfx
 
 		static void fppError(void* /*_userData*/, char* _format, va_list _vargs)
 		{
-			bx::vprintf(_format, _vargs);
+			vfprintf(stderr, _format, _vargs);
 		}
 
 		char* scratch(const char* _str)
@@ -765,31 +738,27 @@ namespace bgfx
 
 	typedef std::vector<std::string> InOut;
 
-	uint32_t parseInOut(InOut& _inout, const bx::StringView& _str)
+	uint32_t parseInOut(InOut& _inout, const char* _str, const char* _eol)
 	{
 		uint32_t hash = 0;
-		bx::StringView str = bx::strLTrimSpace(_str);
+		_str = bx::strLTrimSpace(_str).getPtr();
 
-		if (!str.isEmpty() )
+		if (_str < _eol)
 		{
-			bx::StringView delim;
+			const char* delim;
 			do
 			{
-				delim = bx::strFind(str, ',');
-				if (delim.isEmpty() )
+				delim = strpbrk(_str, " ,");
+				if (NULL != delim)
 				{
-					delim = bx::strFind(str, ' ');
-				}
-
-				const bx::StringView token(bx::strRTrim(bx::StringView(str.getPtr(), delim.getPtr() ), " ") );
-
-				if (!token.isEmpty() )
-				{
-					_inout.push_back(std::string(token.getPtr(), token.getTerm() ) );
-					str = bx::strLTrimSpace(bx::StringView(delim.getPtr() + 1, str.getTerm() ) );
+					delim = delim > _eol ? _eol : delim;
+					std::string token;
+					token.assign(_str, delim-_str);
+					_inout.push_back(token);
+					_str = bx::strLTrimSpace(delim + 1).getPtr();
 				}
 			}
-			while (!delim.isEmpty() );
+			while (delim < _eol && _str < _eol && NULL != delim);
 
 			std::sort(_inout.begin(), _inout.end() );
 
@@ -860,20 +829,20 @@ namespace bgfx
 	{
 		if (NULL != _error)
 		{
-			bx::printf("Error:\n%s\n\n", _error);
+			fprintf(stderr, "Error:\n%s\n\n", _error);
 		}
 
-		bx::printf(
-			  "shaderc, bgfx shader compiler tool, version %d.%d.%d.\n"
-			  "Copyright 2011-2019 Branimir Karadzic. All rights reserved.\n"
+		fprintf(stderr
+			, "shaderc, bgfx shader compiler tool, version %d.%d.%d.\n"
+			  "Copyright 2011-2018 Branimir Karadzic. All rights reserved.\n"
 			  "License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause\n\n"
 			, BGFX_SHADERC_VERSION_MAJOR
 			, BGFX_SHADERC_VERSION_MINOR
 			, BGFX_API_VERSION
 			);
 
-		bx::printf(
-			  "Usage: shaderc -f <in> -o <out> --type <v/f> --platform <platform>\n"
+		fprintf(stderr
+			, "Usage: shaderc -f <in> -o <out> --type <v/f> --platform <platform>\n"
 
 			  "\n"
 			  "Options:\n"
@@ -889,17 +858,9 @@ namespace bgfx
 			  "           asm.js\n"
 			  "           ios\n"
 			  "           linux\n"
-			  "           orbis\n"
+			  "           nacl\n"
 			  "           osx\n"
 			  "           windows\n"
-				"      -p, --profile <profile>   Shader model (default GLSL).\n"
-				"           s_3\n"
-				"           s_4\n"
-				"           s_4_0_level\n"
-				"           s_5\n"
-				"           metal\n"
-				"           pssl\n"
-				"           spirv\n"
 			  "      --preprocess              Preprocess only.\n"
 			  "      --define <defines>        Add defines to preprocessor (semicolon separated).\n"
 			  "      --raw                     Do not process shader. No preprocessor, and no glsl-optimizer (GLSL only).\n"
@@ -913,6 +874,7 @@ namespace bgfx
 			  "\n"
 			  "      --debug                   Debug information.\n"
 			  "      --disasm                  Disassemble compiled shader.\n"
+			  "  -p, --profile <profile>       Shader model (f.e. ps_3_0).\n"
 			  "  -O <level>                    Optimization level (0, 1, 2, 3).\n"
 			  "      --Werror                  Treat warnings as errors.\n"
 
@@ -1037,14 +999,7 @@ namespace bgfx
 		else if (0 == bx::strCmpI(platform, "ios") )
 		{
 			preprocessor.setDefine("BX_PLATFORM_IOS=1");
-			if (metal)
-			{
-				preprocessor.setDefine("BGFX_SHADER_LANGUAGE_METAL=1");
-			}
-			else
-			{
-				preprocessor.setDefine("BGFX_SHADER_LANGUAGE_GLSL=1");
-			}
+			preprocessor.setDefine("BGFX_SHADER_LANGUAGE_GLSL=1");
 		}
 		else if (0 == bx::strCmpI(platform, "linux") )
 		{
@@ -1061,10 +1016,7 @@ namespace bgfx
 		else if (0 == bx::strCmpI(platform, "osx") )
 		{
 			preprocessor.setDefine("BX_PLATFORM_OSX=1");
-			if (!metal)
-			{
-				preprocessor.setDefine(glslDefine);
-			}
+			preprocessor.setDefine(glslDefine);
 			char temp[256];
 			bx::snprintf(temp, sizeof(temp), "BGFX_SHADER_LANGUAGE_METAL=%d", metal);
 			preprocessor.setDefine(temp);
@@ -1100,7 +1052,7 @@ namespace bgfx
 			break;
 
 		default:
-			bx::printf("Unknown type: %c?!", _options.shaderType);
+			fprintf(stderr, "Unknown type: %c?!", _options.shaderType);
 			return false;
 		}
 
@@ -1142,15 +1094,9 @@ namespace bgfx
 				||  0 == bx::strCmp(typen, "noperspective", 13)
 				||  0 == bx::strCmp(typen, "centroid", 8) )
 				{
-					if ('f' == _options.shaderType
-					||    0 != glsl
-					||    0 != essl)
-					{
-						interpolation = typen;
-						usesInterpolationQualifiers = true;
-					}
-
+					interpolation = typen;
 					typen = nextWord(parse);
+					usesInterpolationQualifiers = true;
 				}
 
 				bx::StringView name   = nextWord(parse);
@@ -1246,61 +1192,36 @@ namespace bgfx
 			input = const_cast<char*>(bx::strLTrimSpace(data).getPtr() );
 			while (input[0] == '$')
 			{
-				bx::StringView str = bx::strLTrimSpace(input+1);
+				const char* str = bx::strLTrimSpace(input+1).getPtr();
 				bx::StringView eol = bx::strFindEol(str);
 				bx::StringView nl  = bx::strFindNl(eol);
 				input = const_cast<char*>(nl.getPtr() );
 
 				if (0 == bx::strCmp(str, "input", 5) )
 				{
-					str = bx::StringView(str.getPtr() + 5, str.getTerm() );
+					str += 5;
 					bx::StringView comment = bx::strFind(str, "//");
 					eol = !comment.isEmpty() && comment.getPtr() < eol.getPtr() ? comment.getPtr() : eol;
-					inputHash = parseInOut(shaderInputs, bx::StringView(str.getPtr(), eol.getPtr() ) );
+					inputHash = parseInOut(shaderInputs, str, eol.getPtr() );
 				}
 				else if (0 == bx::strCmp(str, "output", 6) )
 				{
-					str = bx::StringView(str.getPtr() + 6, str.getTerm() );
+					str += 6;
 					bx::StringView comment = bx::strFind(str, "//");
 					eol = !comment.isEmpty() && comment.getPtr() < eol.getPtr() ? comment.getPtr() : eol;
-					outputHash = parseInOut(shaderOutputs, bx::StringView(str.getPtr(), eol.getPtr() ) );
+					outputHash = parseInOut(shaderOutputs, str, eol.getPtr() );
 				}
 				else if (0 == bx::strCmp(str, "raw", 3) )
 				{
 					raw = true;
-					str = bx::StringView(str.getPtr() + 3, str.getTerm() );
+					str += 3;
 				}
 
 				input = const_cast<char*>(bx::strLTrimSpace(input).getPtr() );
 			}
 		}
 
-		bool invalidShaderAttribute = false;
-		if ('v' == _options.shaderType)
-		{
-			for (InOut::const_iterator it = shaderInputs.begin(), itEnd = shaderInputs.end(); it != itEnd; ++it)
-			{
-				if (bx::findIdentifierMatch(it->c_str(), s_allowedVertexShaderInputs).isEmpty() )
-				{
-					invalidShaderAttribute = true;
-					bx::printf(
-						  "Invalid vertex shader input attribute '%s'.\n"
-						  "\n"
-						  "Valid input attributes:\n"
-						  "  a_position, a_normal, a_tangent, a_bitangent, a_color0, a_color1, a_color2, a_color3, a_indices, a_weight,\n"
-						  "  a_texcoord0, a_texcoord1, a_texcoord2, a_texcoord3, a_texcoord4, a_texcoord5, a_texcoord6, a_texcoord7,\n"
-						  "  i_data0, i_data1, i_data2, i_data3, i_data4.\n"
-						  "\n"
-						, it->c_str() );
-					break;
-				}
-			}
-		}
-
-		if (invalidShaderAttribute)
-		{
-		}
-		else if (raw)
+		if (raw)
 		{
 			if ('f' == _options.shaderType)
 			{
@@ -1346,12 +1267,13 @@ namespace bgfx
 			bx::StringView entry = bx::strFind(input, "void main()");
 			if (entry.isEmpty() )
 			{
-				bx::printf("Shader entry point 'void main()' is not found.\n");
+				fprintf(stderr, "Shader entry point 'void main()' is not found.\n");
 			}
 			else
 			{
 				if (0 != glsl
-				||  0 != essl)
+				||  0 != essl
+				||  0 != metal)
 				{
 				}
 				else
@@ -1479,11 +1401,7 @@ namespace bgfx
 							code += _comment;
 							code += preprocessor.m_preprocessed;
 
-							if (0 != metal)
-							{
-								compiled = compileMetalShader(_options, BX_MAKEFOURCC('M', 'T', 'L', 0), code, _writer);
-							}
-							else if (0 != spirv)
+							if (0 != spirv)
 							{
 								compiled = compileSPIRVShader(_options, 0, code, _writer);
 							}
@@ -1521,12 +1439,13 @@ namespace bgfx
 			bx::StringView entry = bx::strFind(shader, "void main()");
 			if (entry.isEmpty() )
 			{
-				bx::printf("Shader entry point 'void main()' is not found.\n");
+				fprintf(stderr, "Shader entry point 'void main()' is not found.\n");
 			}
 			else
 			{
 				if (0 != glsl
-				||  0 != essl)
+				||  0 != essl
+				||  0 != metal)
 				{
 					if (0 == essl)
 					{
@@ -1549,23 +1468,21 @@ namespace bgfx
 							if (0 == bx::strCmp(name, "a_", 2)
 							||  0 == bx::strCmp(name, "i_", 2) )
 							{
-								preprocessor.writef(
-									  "attribute %s %s %s %s;\n"
-									, var.m_precision.c_str()
-									, var.m_interpolation.c_str()
-									, var.m_type.c_str()
-									, name
-									);
+								preprocessor.writef("attribute %s %s %s %s;\n"
+										, var.m_precision.c_str()
+										, var.m_interpolation.c_str()
+										, var.m_type.c_str()
+										, name
+										);
 							}
 							else
 							{
-								preprocessor.writef(
-									  "%s varying %s %s %s;\n"
-									, var.m_interpolation.c_str()
-									, var.m_precision.c_str()
-									, var.m_type.c_str()
-									, name
-									);
+								preprocessor.writef("%s varying %s %s %s;\n"
+										, var.m_interpolation.c_str()
+										, var.m_precision.c_str()
+										, var.m_type.c_str()
+										, name
+										);
 							}
 						}
 					}
@@ -1746,7 +1663,7 @@ namespace bgfx
 							}
 							else
 							{
-								bx::printf("gl_PrimitiveID builtin is not supported by this D3D9 HLSL.\n");
+								fprintf(stderr, "gl_PrimitiveID builtin is not supported by this D3D9 HLSL.\n");
 								return false;
 							}
 						}
@@ -1840,7 +1757,7 @@ namespace bgfx
 							}
 							else
 							{
-								bx::printf("gl_VertexID builtin is not supported by this D3D9 HLSL.\n");
+								fprintf(stderr, "gl_VertexID builtin is not supported by this D3D9 HLSL.\n");
 								return false;
 							}
 						}
@@ -1856,7 +1773,7 @@ namespace bgfx
 							}
 							else
 							{
-								bx::printf("gl_InstanceID builtin is not supported by this D3D9 HLSL.\n");
+								fprintf(stderr, "gl_InstanceID builtin is not supported by this D3D9 HLSL.\n");
 								return false;
 							}
 						}
@@ -1954,12 +1871,10 @@ namespace bgfx
 						}
 
 						if (0 != glsl
-						||  0 != essl)
+						||  0 != essl
+						||  0 != metal)
 						{
-							const bx::StringView preprocessedInput(preprocessor.m_preprocessed.c_str() );
-
-							if (!bx::strFind(preprocessedInput, "layout(std430").isEmpty()
-							||  !bx::strFind(preprocessedInput, "image2D").isEmpty() )
+							if (!bx::strFind(preprocessor.m_preprocessed.c_str(), "layout(std430").isEmpty() )
 							{
 								glsl = 430;
 							}
@@ -1980,14 +1895,21 @@ namespace bgfx
 
 								if (0 == essl)
 								{
-									const bool need130 = (120 == glsl && (false
+									const bool need130 = 120 == glsl && (false
 										|| !bx::findIdentifierMatch(input, s_130).isEmpty()
 										|| usesInterpolationQualifiers
 										|| usesTexelFetch
-										) );
+										);
 
-									bx::stringPrintf(code, "#version %s\n", need130 ? "130" : _options.profile.c_str());
-									glsl = 130;
+									if (0 != metal)
+									{
+										bx::stringPrintf(code, "#version 120\n");
+									}
+									else
+									{
+										bx::stringPrintf(code, "#version %s\n", need130 ? "130" : _options.profile.c_str());
+										glsl = 130;
+									}
 
 									if (need130)
 									{
@@ -2098,7 +2020,7 @@ namespace bgfx
 									{
 										bx::stringPrintf(code
 											, "#define bgfxShadow2D     shadow2D\n"
-											  "#define bgfxShadow2DProj shadow2DProj\n"
+												"#define bgfxShadow2DProj shadow2DProj\n"
 											);
 									}
 								}
@@ -2223,10 +2145,7 @@ namespace bgfx
 										, "#define ivec2 vec2\n"
 										  "#define ivec3 vec3\n"
 										  "#define ivec4 vec4\n"
-										  "#define uvec2 vec2\n"
-										  "#define uvec3 vec3\n"
-										  "#define uvec4 vec4\n"
-									);
+										);
 								}
 							}
 							else
@@ -2280,11 +2199,7 @@ namespace bgfx
 							code += _comment;
 							code += preprocessor.m_preprocessed;
 
-							if (0 != metal)
-							{
-								compiled = compileMetalShader(_options, BX_MAKEFOURCC('M', 'T', 'L', 0), code, _writer);
-							}
-							else if (0 != spirv)
+							if (0 != spirv)
 							{
 								compiled = compileSPIRVShader(_options, 0, code, _writer);
 							}
@@ -2327,8 +2242,8 @@ namespace bgfx
 
 		if (cmdLine.hasArg('v', "version") )
 		{
-			bx::printf(
-				  "shaderc, bgfx shader compiler tool, version %d.%d.%d.\n"
+			fprintf(stderr
+				, "shaderc, bgfx shader compiler tool, version %d.%d.%d.\n"
 				, BGFX_SHADERC_VERSION_MAJOR
 				, BGFX_SHADERC_VERSION_MINOR
 				, BGFX_API_VERSION
@@ -2488,7 +2403,7 @@ namespace bgfx
 		bx::FileReader reader;
 		if (!bx::open(&reader, filePath) )
 		{
-			bx::printf("Unable to open file '%s'.\n", filePath);
+			fprintf(stderr, "Unable to open file '%s'.\n", filePath);
 		}
 		else
 		{
@@ -2508,7 +2423,7 @@ namespace bgfx
 				}
 				else
 				{
-					bx::printf("ERROR: Failed to parse varying def file: \"%s\" No input/output semantics will be generated in the code!\n", varyingdef);
+					fprintf(stderr, "ERROR: Failed to parse varying def file: \"%s\" No input/output semantics will be generated in the code!\n", varyingdef);
 				}
 			}
 
@@ -2544,7 +2459,7 @@ namespace bgfx
 
 			if (!bx::open(writer, outFilePath) )
 			{
-				bx::printf("Unable to open output file '%s'.", outFilePath);
+				fprintf(stderr, "Unable to open output file '%s'.", outFilePath);
 				return bx::kExitFailure;
 			}
 
@@ -2559,9 +2474,9 @@ namespace bgfx
 			return bx::kExitSuccess;
 		}
 
-		bx::remove(outFilePath);
+		remove(outFilePath);
 
-		bx::printf("Failed to build shader.\n");
+		fprintf(stderr, "Failed to build shader.\n");
 		return bx::kExitFailure;
 	}
 

@@ -229,13 +229,13 @@ INPUT_PORTS_END
 
 void m68705prg_state_base::m68705prg(machine_config &config)
 {
-	config.set_perfect_quantum("mcu");
+	config.m_perfect_cpu_quantum = subtag("mcu");
 
 	GENERIC_SOCKET(config, m_eprom_image, generic_plain_slot, "eprom", "bin,rom");
-	m_eprom_image->set_device_load(FUNC(m68705prg_state_base::eprom_load));
+	m_eprom_image->set_device_load(FUNC(m68705prg_state_base::eprom_load), this);
 
 	GENERIC_SOCKET(config, m_mcu_image, generic_plain_slot, "mcu", "bin,rom");
-	m_mcu_image->set_device_load(FUNC(m68705prg_state_base::mcu_load));
+	m_mcu_image->set_device_load(FUNC(m68705prg_state_base::mcu_load), this);
 
 	config.set_default_layout(layout_m68705prg);
 }

@@ -44,9 +44,6 @@ OpCapability DerivativeControl
      << " %f32_var_input"
      << " %f32vec4_var_input"
      << "\n";
-  if (execution_model == "Fragment") {
-    ss << "OpExecutionMode %main OriginUpperLeft\n";
-  }
 
   ss << R"(
 %void = OpTypeVoid
@@ -119,9 +116,11 @@ TEST_F(ValidateDerivatives, OpDPdxWrongResultType) {
 )";
 
   CompileSuccessfully(GenerateShaderCode(body).c_str());
-  ASSERT_EQ(SPV_ERROR_INVALID_ID, ValidateInstructions());
-  EXPECT_THAT(getDiagnosticString(), HasSubstr("Operand 10[%v4float] cannot "
-                                               "be a type"));
+  ASSERT_EQ(SPV_ERROR_INVALID_DATA, ValidateInstructions());
+  EXPECT_THAT(
+      getDiagnosticString(),
+      HasSubstr("Expected Result Type to be float scalar or vector type: "
+                "DPdx"));
 }
 
 TEST_F(ValidateDerivatives, OpDPdxWrongPType) {
@@ -145,9 +144,10 @@ TEST_F(ValidateDerivatives, OpDPdxWrongExecutionModel) {
 
   CompileSuccessfully(GenerateShaderCode(body, "", "Vertex").c_str());
   ASSERT_EQ(SPV_ERROR_INVALID_ID, ValidateInstructions());
-  EXPECT_THAT(getDiagnosticString(),
-              HasSubstr("Derivative instructions require Fragment or GLCompute "
-                        "execution model: DPdx"));
+  EXPECT_THAT(
+      getDiagnosticString(),
+      HasSubstr(
+          "Derivative instructions require Fragment execution model: DPdx"));
 }
 
 }  // namespace

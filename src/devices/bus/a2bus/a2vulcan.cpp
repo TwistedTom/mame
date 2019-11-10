@@ -55,6 +55,7 @@
 
 #include "emu.h"
 #include "a2vulcan.h"
+#include "machine/ataintf.h"
 #include "imagedev/harddriv.h"
 
 //**************************************************************************

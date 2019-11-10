@@ -6,6 +6,7 @@
 
 **********************************************************************/
 
+
 #ifndef MAME_BUS_SAT_CTRL_CTRL_H
 #define MAME_BUS_SAT_CTRL_CTRL_H
 
@@ -20,7 +21,7 @@ class saturn_control_port_device;
 
 // ======================> device_saturn_control_port_interface
 
-class device_saturn_control_port_interface : public device_interface
+class device_saturn_control_port_interface : public device_slot_card_interface
 {
 public:
 	// construction/destruction
@@ -40,7 +41,8 @@ protected:
 
 // ======================> saturn_control_port_device
 
-class saturn_control_port_device : public device_t, public device_single_card_slot_interface<device_saturn_control_port_interface>
+class saturn_control_port_device : public device_t,
+								public device_slot_interface
 {
 public:
 	// construction/destruction

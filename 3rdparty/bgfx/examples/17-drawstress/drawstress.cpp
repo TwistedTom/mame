@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -37,17 +37,17 @@ struct PosColorVertex
 
 	static void init()
 	{
-		ms_layout
+		ms_decl
 			.begin()
 			.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
 			.add(bgfx::Attrib::Color0,   4, bgfx::AttribType::Uint8, true)
 			.end();
 	}
 
-	static bgfx::VertexLayout ms_layout;
+	static bgfx::VertexDecl ms_decl;
 };
 
-bgfx::VertexLayout PosColorVertex::ms_layout;
+bgfx::VertexDecl PosColorVertex::ms_decl;
 
 static PosColorVertex s_cubeVertices[8] =
 {
@@ -100,8 +100,8 @@ int32_t threadFunc(bx::Thread* _thread, void* _userData);
 class ExampleDrawStress : public entry::AppI
 {
 public:
-	ExampleDrawStress(const char* _name, const char* _description, const char* _url)
-		: entry::AppI(_name, _description, _url)
+	ExampleDrawStress(const char* _name, const char* _description)
+		: entry::AppI(_name, _description)
 	{
 	}
 
@@ -163,7 +163,7 @@ public:
 		// Create static vertex buffer.
 		m_vbh = bgfx::createVertexBuffer(
 			  bgfx::makeRef(s_cubeVertices, sizeof(s_cubeVertices) )
-			, PosColorVertex::ms_layout
+			, PosColorVertex::ms_decl
 			);
 
 		// Create static index buffer.
@@ -459,9 +459,4 @@ int32_t threadFunc(bx::Thread* _thread, void* _userData)
 
 } // namespace
 
-ENTRY_IMPLEMENT_MAIN(
-	  ExampleDrawStress
-	, "17-drawstress"
-	, "Draw stress, maximizing number of draw calls."
-	, "https://bkaradzic.github.io/bgfx/examples.html#drawstress"
-	);
+ENTRY_IMPLEMENT_MAIN(ExampleDrawStress, "17-drawstress", "Draw stress, maximizing number of draw calls.");

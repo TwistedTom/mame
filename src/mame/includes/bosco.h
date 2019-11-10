@@ -25,8 +25,6 @@ public:
 	uint8_t *m_bosco_radarx;
 	uint8_t *m_bosco_radary;
 
-	uint8_t m_bosco_starclr;
-
 	uint8_t *m_spriteram;
 	uint8_t *m_spriteram2;
 	uint32_t m_spriteram_size;

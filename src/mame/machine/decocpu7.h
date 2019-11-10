@@ -13,7 +13,7 @@ public:
 	deco_cpu7_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
 protected:
-	class mi_decrypt : public mi_default {
+	class mi_decrypt : public mi_default_normal {
 	public:
 		bool had_written;
 

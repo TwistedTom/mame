@@ -68,7 +68,7 @@ void devi()
 #extension GL_EXT_device_group : enable
 #endif
 
-#ifdef GL_EXT_multiview
+#ifdef GL_EXT_device_group
 #extension GL_EXT_multiview : enable
 #endif
 

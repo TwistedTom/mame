@@ -40,11 +40,12 @@ public:
 			device_t *owner,
 			u32 clock);
 
-	template <typename... T>
-	void set_keyboard_callback(T &&... args)
+	template <class FunctionClass>
+	void set_keyboard_callback(void (FunctionClass::*callback)(u16 character), const char *name)
 	{
-		m_keyboard_cb.set(std::forward<T>(args)...);
+		set_keyboard_callback(output_delegate(callback, name, nullptr, static_cast<FunctionClass *>(nullptr)));
 	}
+	void set_keyboard_callback(output_delegate callback) { m_keyboard_cb = callback; }
 
 	virtual ioport_constructor device_input_ports() const override;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Eric Arneb√§ck. All rights reserved.
+ * Copyright 2018 Eric Arneb‰ck. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -43,16 +43,16 @@ struct PosVertex
 
 	static void init()
 	{
-		ms_layout
+		ms_decl
 			.begin()
 			.add(bgfx::Attrib::Position,  3, bgfx::AttribType::Float)
 			.end();
 	}
 
-	static bgfx::VertexLayout ms_layout;
+	static bgfx::VertexDecl ms_decl;
 };
 
-bgfx::VertexLayout PosVertex::ms_layout;
+bgfx::VertexDecl PosVertex::ms_decl;
 
 struct PosTexCoord0Vertex
 {
@@ -64,17 +64,17 @@ struct PosTexCoord0Vertex
 
 	static void init()
 	{
-		ms_layout
+		ms_decl
 			.begin()
 			.add(bgfx::Attrib::Position,  3, bgfx::AttribType::Float)
 			.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
 			.end();
 	}
 
-	static bgfx::VertexLayout ms_layout;
+	static bgfx::VertexDecl ms_decl;
 };
 
-bgfx::VertexLayout PosTexCoord0Vertex::ms_layout;
+bgfx::VertexDecl PosTexCoord0Vertex::ms_decl;
 
 constexpr float cs = 0.29f;
 
@@ -126,10 +126,10 @@ static const uint16_t s_cubeIndices[36] =
 
 void screenSpaceQuad(float _textureWidth, float _textureHeight, float _texelHalf, bool _originBottomLeft, float _width = 1.0f, float _height = 1.0f)
 {
-	if (3 == bgfx::getAvailTransientVertexBuffer(3, PosTexCoord0Vertex::ms_layout) )
+	if (3 == bgfx::getAvailTransientVertexBuffer(3, PosTexCoord0Vertex::ms_decl) )
 	{
 		bgfx::TransientVertexBuffer vb;
-		bgfx::allocTransientVertexBuffer(&vb, 3, PosTexCoord0Vertex::ms_layout);
+		bgfx::allocTransientVertexBuffer(&vb, 3, PosTexCoord0Vertex::ms_decl);
 		PosTexCoord0Vertex* vertex = (PosTexCoord0Vertex*)vb.data;
 
 		const float minx = -_width;
@@ -182,8 +182,8 @@ void screenSpaceQuad(float _textureWidth, float _textureHeight, float _texelHalf
 class ExampleDeferred : public entry::AppI
 {
 public:
-	ExampleDeferred(const char* _name, const char* _description, const char* _url)
-		: entry::AppI(_name, _description, _url)
+	ExampleDeferred(const char* _name, const char* _description)
+		: entry::AppI(_name, _description)
 	{
 	}
 
@@ -238,15 +238,15 @@ public:
 		// Create static vertex buffer.
 		m_vbh = bgfx::createVertexBuffer(
 			  bgfx::makeRef(s_cubeVertices, sizeof(s_cubeVertices) )
-			, PosVertex::ms_layout
+			, PosVertex::ms_decl
 			);
 
 		m_ibh = bgfx::createIndexBuffer(bgfx::makeRef(s_cubeIndices, sizeof(s_cubeIndices) ) );
 
-		s_albedo    = bgfx::createUniform("s_albedo",    bgfx::UniformType::Sampler);
-		s_tex       = bgfx::createUniform("s_tex",       bgfx::UniformType::Sampler);
-		s_depth     = bgfx::createUniform("s_depth",     bgfx::UniformType::Sampler);
-		s_light     = bgfx::createUniform("s_light",     bgfx::UniformType::Sampler);
+		s_albedo    = bgfx::createUniform("s_albedo",    bgfx::UniformType::Int1);
+		s_tex       = bgfx::createUniform("s_tex",       bgfx::UniformType::Int1);
+		s_depth     = bgfx::createUniform("s_depth",     bgfx::UniformType::Int1);
+		s_light     = bgfx::createUniform("s_light",     bgfx::UniformType::Int1);
 		u_pixelSize = bgfx::createUniform("u_pixelSize", bgfx::UniformType::Vec4);
 		u_intensity = bgfx::createUniform("u_intensity", bgfx::UniformType::Vec4);
 		u_color     = bgfx::createUniform("u_color",     bgfx::UniformType::Vec4);
@@ -283,7 +283,8 @@ public:
 
 		cameraCreate();
 
-		cameraSetPosition({ 0.0f, 0.0f, -15.0f });
+		const float initialPos[3] = { 0.0f, 0.0f, -15.0f };
+		cameraSetPosition(initialPos);
 		cameraSetVerticalAngle(0.0f);
 	}
 
@@ -491,9 +492,7 @@ public:
 				const uint32_t kNum = 9;
 				const int kNumColors = 5;
 				const float color[4*kNumColors] =
-				{   // Reference(s):
-					// - Palette
-					//   https://web.archive.org/web/20180219034657/http://www.colourlovers.com/palette/3647908/RGB_Ice_Cream
+				{   // Palette: http://www.colourlovers.com/palette/3647908/RGB_Ice_Cream
 					0.847f*0.2f, 0.365f*0.2f, 0.408f*0.2f, 1.0f,
 					0.976f*0.2f, 0.827f*0.2f, 0.533f*0.2f, 1.0f,
 					0.533f*0.2f, 0.867f*0.2f, 0.741f*0.2f, 1.0f,
@@ -658,9 +657,4 @@ public:
 
 } // namespace
 
-ENTRY_IMPLEMENT_MAIN(
-	  ExampleDeferred
-	, "38-bloom"
-	, "Bloom."
-	, "https://bkaradzic.github.io/bgfx/examples.html#bloom"
-	);
+ENTRY_IMPLEMENT_MAIN(ExampleDeferred, "38-bloom", "Bloom.");

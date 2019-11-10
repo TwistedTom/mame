@@ -79,17 +79,17 @@ void mcs96_device::device_reset()
 	inst_state = STATE_FETCH;
 }
 
-uint32_t mcs96_device::execute_min_cycles() const noexcept
+uint32_t mcs96_device::execute_min_cycles() const
 {
 	return 4;
 }
 
-uint32_t mcs96_device::execute_max_cycles() const noexcept
+uint32_t mcs96_device::execute_max_cycles() const
 {
 	return 33;
 }
 
-uint32_t mcs96_device::execute_input_lines() const noexcept
+uint32_t mcs96_device::execute_input_lines() const
 {
 	return 1;
 }

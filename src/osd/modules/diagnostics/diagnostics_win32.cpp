@@ -670,20 +670,16 @@ sampling_profiler::~sampling_profiler()
 void sampling_profiler::start()
 {
 	// do the dance to get a handle to ourself
-	BOOL const result = DuplicateHandle(
-			GetCurrentProcess(), GetCurrentThread(),
-			GetCurrentProcess(), &m_target_thread,
-			THREAD_GET_CONTEXT | THREAD_SUSPEND_RESUME | THREAD_QUERY_INFORMATION, FALSE, 0);
-	if (!result)
-		throw emu_fatalerror("sampling_profiler::start: Failed to get thread handle for main thread");
+	BOOL result = DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &m_target_thread,
+		THREAD_GET_CONTEXT | THREAD_SUSPEND_RESUME | THREAD_QUERY_INFORMATION, FALSE, 0);
+	assert_always(result, "Failed to get thread handle for main thread");
 
 	// reset the exit flag
 	m_thread_exit = false;
 
 	// start the thread
 	m_thread = CreateThread(nullptr, 0, thread_entry, (LPVOID)this, 0, &m_thread_id);
-	if (!m_thread)
-		throw emu_fatalerror("sampling_profiler::start: Failed to create profiler thread");
+	assert_always(m_thread != nullptr, "Failed to create profiler thread\n");
 
 	// max out the priority
 	SetThreadPriority(m_thread, THREAD_PRIORITY_TIME_CRITICAL);

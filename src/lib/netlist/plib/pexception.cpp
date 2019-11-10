@@ -1,5 +1,9 @@
 // license:GPL-2.0+
 // copyright-holders:Couriersud
+/*
+ * palloc.c
+ *
+ */
 
 #include "pexception.h"
 #include "pfmtlog.h"
@@ -73,7 +77,7 @@ namespace plib {
 
 
 	fpexception_e::fpexception_e(const pstring &text)
-		: pexception(pfmt("Exception error: {}")(text))
+		: pexception(pfmt("Out of memory: {}")(text))
 	{
 	}
 

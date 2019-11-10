@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -48,7 +48,7 @@ static const bgfx::EmbeddedShader s_embeddedShaders[] =
 
 namespace
 {
-	static bgfx::VertexLayout s_nvgLayout;
+	static bgfx::VertexDecl s_nvgDecl;
 
 	enum GLNVGshaderType
 	{
@@ -271,7 +271,7 @@ namespace
 		gl->u_scissorExtScale = bgfx::createUniform("u_scissorExtScale", bgfx::UniformType::Vec4);
 		gl->u_extentRadius    = bgfx::createUniform("u_extentRadius",    bgfx::UniformType::Vec4);
 		gl->u_params          = bgfx::createUniform("u_params",          bgfx::UniformType::Vec4);
-		gl->s_tex             = bgfx::createUniform("s_tex",             bgfx::UniformType::Sampler);
+		gl->s_tex             = bgfx::createUniform("s_tex",             bgfx::UniformType::Int1);
 
 		if (bgfx::getRendererType() == bgfx::RendererType::Direct3D9)
 		{
@@ -282,7 +282,7 @@ namespace
 			gl->u_halfTexel.idx = bgfx::kInvalidHandle;
 		}
 
-		s_nvgLayout
+		s_nvgDecl
 			.begin()
 			.add(bgfx::Attrib::Position,  2, bgfx::AttribType::Float)
 			.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
@@ -370,11 +370,7 @@ namespace
 		uint32_t pitch = tex->width * bytesPerPixel;
 
 		const bgfx::Memory* mem = bgfx::alloc(w * h * bytesPerPixel);
-		bx::gather(mem->data,                            // dst
-		           data + y * pitch + x * bytesPerPixel, // src
-		           pitch,                                // srcStride
-		           w * bytesPerPixel,                    // stride
-		           h);                                   // num
+		bx::gather(mem->data, data + y * pitch + x * bytesPerPixel, w * bytesPerPixel, h, pitch);
 
 		bgfx::updateTexture2D(
 			  tex->id
@@ -558,11 +554,11 @@ namespace
 		gl->th = handle;
 	}
 
-	static void nvgRenderViewport(void* _userPtr, float width, float height, float devicePixelRatio)
+	static void nvgRenderViewport(void* _userPtr, int width, int height, float devicePixelRatio)
 	{
 		struct GLNVGcontext* gl = (struct GLNVGcontext*)_userPtr;
-		gl->view[0] = width;
-		gl->view[1] = height;
+		gl->view[0] = (float)width;
+		gl->view[1] = (float)height;
 		bgfx::setViewRect(gl->viewId, 0, 0, width * devicePixelRatio, height * devicePixelRatio);
 	}
 
@@ -762,7 +758,7 @@ namespace
 
 		if (gl->ncalls > 0)
 		{
-			bgfx::allocTransientVertexBuffer(&gl->tvb, gl->nverts, s_nvgLayout);
+			bgfx::allocTransientVertexBuffer(&gl->tvb, gl->nverts, s_nvgDecl);
 
 			int allocated = gl->tvb.size/gl->tvb.stride;
 

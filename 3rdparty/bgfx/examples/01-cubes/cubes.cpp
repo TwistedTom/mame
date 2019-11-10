@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -19,17 +19,17 @@ struct PosColorVertex
 
 	static void init()
 	{
-		ms_layout
+		ms_decl
 			.begin()
 			.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
 			.add(bgfx::Attrib::Color0,   4, bgfx::AttribType::Uint8, true)
 			.end();
 	};
 
-	static bgfx::VertexLayout ms_layout;
+	static bgfx::VertexDecl ms_decl;
 };
 
-bgfx::VertexLayout PosColorVertex::ms_layout;
+bgfx::VertexDecl PosColorVertex::ms_decl;
 
 static PosColorVertex s_cubeVertices[] =
 {
@@ -125,8 +125,8 @@ BX_STATIC_ASSERT(BX_COUNTOF(s_ptState) == BX_COUNTOF(s_ptNames) );
 class ExampleCubes : public entry::AppI
 {
 public:
-	ExampleCubes(const char* _name, const char* _description, const char* _url)
-		: entry::AppI(_name, _description, _url)
+	ExampleCubes(const char* _name, const char* _description)
+		: entry::AppI(_name, _description)
 		, m_pt(0)
 		, m_r(true)
 		, m_g(true)
@@ -170,7 +170,7 @@ public:
 		m_vbh = bgfx::createVertexBuffer(
 			// Static data can be passed with bgfx::makeRef
 			  bgfx::makeRef(s_cubeVertices, sizeof(s_cubeVertices) )
-			, PosColorVertex::ms_layout
+			, PosColorVertex::ms_decl
 			);
 
 		// Create static index buffer for triangle list rendering.
@@ -362,9 +362,4 @@ public:
 
 } // namespace
 
-ENTRY_IMPLEMENT_MAIN(
-	  ExampleCubes
-	, "01-cubes"
-	, "Rendering simple static mesh."
-	, "https://bkaradzic.github.io/bgfx/examples.html#cubes"
-	);
+ENTRY_IMPLEMENT_MAIN(ExampleCubes, "01-cubes", "Rendering simple static mesh.");

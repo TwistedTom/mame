@@ -58,8 +58,7 @@ base_28fxxx_device::base_28fxxx_device(const machine_config &mconfig, device_typ
 	, m_program_power(CLEAR_LINE)
 	, m_state(STATE_READ_MEMORY)
 {
-	if (m_size & (m_size - 1))
-		throw emu_fatalerror("%s(%s): memory size must be an exact power of two", type.shortname(), tag);
+	assert_always((m_size & (m_size - 1)) == 0, "memory size must be an exact power of two");
 }
 
 intel_28f010_device::intel_28f010_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock)

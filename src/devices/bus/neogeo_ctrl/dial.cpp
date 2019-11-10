@@ -22,7 +22,7 @@ static INPUT_PORTS_START( neogeo_dial )
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_JOYSTICK_DOWN ) PORT_PLAYER(1)
 	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_JOYSTICK_LEFT ) PORT_PLAYER(1)
 	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_JOYSTICK_RIGHT ) PORT_PLAYER(1)
-	PORT_BIT( 0x90, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_PLAYER(1) // note it needs it from 0x80 when using paddle
+	PORT_BIT( 0x90, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_PLAYER(1) /* note it needs it from 0x80 when using paddle */
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_BUTTON2 ) PORT_PLAYER(1)
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_PLAYER(1)
 
@@ -31,7 +31,7 @@ static INPUT_PORTS_START( neogeo_dial )
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_JOYSTICK_DOWN ) PORT_PLAYER(2)
 	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_JOYSTICK_LEFT ) PORT_PLAYER(2)
 	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_JOYSTICK_RIGHT ) PORT_PLAYER(2)
-	PORT_BIT( 0x90, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_PLAYER(2) // note it needs it from 0x80 when using paddle
+	PORT_BIT( 0x90, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_PLAYER(2) /* note it needs it from 0x80 when using paddle */
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_BUTTON2 ) PORT_PLAYER(2)
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_PLAYER(2)
 
@@ -84,8 +84,17 @@ neogeo_dial_device::neogeo_dial_device(const machine_config &mconfig, const char
 
 void neogeo_dial_device::device_start()
 {
-	m_ctrl_sel = 0;
 	save_item(NAME(m_ctrl_sel));
+}
+
+
+//-------------------------------------------------
+//  device_reset - device-specific reset
+//-------------------------------------------------
+
+void neogeo_dial_device::device_reset()
+{
+	m_ctrl_sel = 0;
 }
 
 
@@ -93,18 +102,30 @@ void neogeo_dial_device::device_start()
 //  in0_r
 //-------------------------------------------------
 
-uint8_t neogeo_dial_device::in0_r()
+READ8_MEMBER(neogeo_dial_device::in0_r)
 {
-	return BIT(m_ctrl_sel, 0) ? m_joy1->read() : m_dial1->read();
+	uint8_t res = 0;
+	if (m_ctrl_sel & 0x01)
+		res = m_joy1->read();
+	else
+		res = m_dial1->read();
+
+	return res;
 }
 
 //-------------------------------------------------
 //  in1_r
 //-------------------------------------------------
 
-uint8_t neogeo_dial_device::in1_r()
+READ8_MEMBER(neogeo_dial_device::in1_r)
 {
-	return BIT(m_ctrl_sel, 0) ? m_joy2->read() : m_dial2->read();
+	uint8_t res = 0;
+	if (m_ctrl_sel & 0x01)
+		res = m_joy2->read();
+	else
+		res = m_dial2->read();
+
+	return res;
 }
 
 //-------------------------------------------------

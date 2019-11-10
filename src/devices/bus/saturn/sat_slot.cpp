@@ -37,7 +37,7 @@ DEFINE_DEVICE_TYPE(SATURN_CART_SLOT, sat_cart_slot_device, "sat_cart_slot", "Sat
 //-------------------------------------------------
 
 device_sat_cart_interface::device_sat_cart_interface(const machine_config &mconfig, device_t &device, int cart_type) :
-	device_interface(device, "saturncart"),
+	device_slot_card_interface(mconfig, device),
 	m_cart_type(cart_type),
 	m_rom(nullptr),
 	m_rom_size(0)
@@ -105,8 +105,7 @@ void device_sat_cart_interface::dram1_alloc(uint32_t size)
 sat_cart_slot_device::sat_cart_slot_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock) :
 	device_t(mconfig, SATURN_CART_SLOT, tag, owner, clock),
 	device_image_interface(mconfig, *this),
-	device_single_card_slot_interface<device_sat_cart_interface>(mconfig, *this),
-	m_cart(nullptr)
+	device_slot_interface(mconfig, *this), m_cart(nullptr)
 {
 }
 
@@ -125,7 +124,7 @@ sat_cart_slot_device::~sat_cart_slot_device()
 
 void sat_cart_slot_device::device_start()
 {
-	m_cart = get_card_device();
+	m_cart = dynamic_cast<device_sat_cart_interface *>(get_card_device());
 }
 
 

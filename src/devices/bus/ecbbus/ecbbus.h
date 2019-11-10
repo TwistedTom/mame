@@ -50,28 +50,34 @@
 
 
 //**************************************************************************
+//  CONSTANTS
+//**************************************************************************
+
+#define ECBBUS_TAG          "ecbbus"
+
+
+//**************************************************************************
 //  TYPE DEFINITIONS
 //**************************************************************************
 
-class device_ecbbus_card_interface;
-class ecbbus_device;
-
-
 // ======================> ecbbus_slot_device
 
-class ecbbus_slot_device : public device_t, public device_single_card_slot_interface<device_ecbbus_card_interface>
+class ecbbus_device;
+
+class ecbbus_slot_device : public device_t,
+							public device_slot_interface
 {
 public:
 	// construction/destruction
-	template <typename T, typename U>
-	ecbbus_slot_device(machine_config const &mconfig, char const *tag, device_t *owner, T &&bustag, int num, U &&opts, char const *dflt)
+	template <typename T>
+	ecbbus_slot_device(machine_config const &mconfig, char const *tag, device_t *owner, int num, T &&opts, char const *dflt)
 		: ecbbus_slot_device(mconfig, tag, owner, 0)
 	{
 		option_reset();
 		opts(*this);
 		set_default_option(dflt);
 		set_fixed(false);
-		set_ecbbus_slot(std::forward<T>(bustag), num);
+		set_ecbbus_slot(ECBBUS_TAG, num);
 	}
 
 	ecbbus_slot_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
@@ -80,21 +86,23 @@ public:
 	virtual void device_start() override;
 
 	// inline configuration
-	template <typename T> void set_ecbbus_slot(T &&tag, int num)
-	{
-		m_bus.set_tag(std::forward<T>(tag));
-		m_bus_num = num;
-	}
+	void set_ecbbus_slot(const char *tag, int num) { m_bus_tag = tag; m_bus_num = num; }
 
 private:
 	// configuration
-	required_device<ecbbus_device> m_bus;
+	const char *m_bus_tag;
 	int m_bus_num;
+	ecbbus_device  *m_bus;
 };
 
 
 // device type definition
 DECLARE_DEVICE_TYPE(ECBBUS_SLOT, ecbbus_slot_device)
+
+
+// ======================> ecbbus_interface
+
+class device_ecbbus_card_interface;
 
 
 // ======================> ecbbus_device
@@ -108,7 +116,7 @@ public:
 	auto irq_wr_callback() { return m_write_irq.bind(); }
 	auto nmi_wr_callback() { return m_write_nmi.bind(); }
 
-	void add_card(device_ecbbus_card_interface &card, int pos);
+	void add_card(device_ecbbus_card_interface *card, int pos);
 
 	DECLARE_READ8_MEMBER( mem_r );
 	DECLARE_WRITE8_MEMBER( mem_w );
@@ -140,16 +148,16 @@ DECLARE_DEVICE_TYPE(ECBBUS, ecbbus_device)
 // ======================> device_ecbbus_card_interface
 
 // class representing interface-specific live ecbbus card
-class device_ecbbus_card_interface : public device_interface
+class device_ecbbus_card_interface : public device_slot_card_interface
 {
 	friend class ecbbus_device;
 
 public:
 	// optional operation overrides
-	virtual uint8_t ecbbus_mem_r(offs_t offset) { return 0; }
-	virtual void ecbbus_mem_w(offs_t offset, uint8_t data) { }
-	virtual uint8_t ecbbus_io_r(offs_t offset) { return 0; }
-	virtual void ecbbus_io_w(offs_t offset, uint8_t data) { }
+	virtual uint8_t ecbbus_mem_r(offs_t offset) { return 0; };
+	virtual void ecbbus_mem_w(offs_t offset, uint8_t data) { };
+	virtual uint8_t ecbbus_io_r(offs_t offset) { return 0; };
+	virtual void ecbbus_io_w(offs_t offset, uint8_t data) { };
 
 protected:
 	// construction/destruction

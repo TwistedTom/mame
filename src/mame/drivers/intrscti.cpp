@@ -109,13 +109,13 @@ void intrscti_state::intrscti_sub_map(address_map &map)
 {
 	map(0x0000, 0x07ff).rom();
 	map(0x2000, 0x23ff).ram();
-//  map(0x0000, 0xffff).nopw();
+//  AM_RANGE(0x0000, 0xffff) AM_WRITENOP
 }
 
 void intrscti_state::intrscti_sub_io_map(address_map &map)
 {
 	map.global_mask(0xff);
-//  map(0x00, 0xff).noprw();
+//  AM_RANGE(0x00, 0xff) AM_NOP
 }
 
 

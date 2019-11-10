@@ -345,8 +345,7 @@ void device_palette_interface::allocate_palette(u32 numentries)
 		m_shadow_group = numgroups++;
 	if (palette_hilights_enabled())
 		m_hilight_group = numgroups++;
-	if (numentries * numgroups > 65536)
-		throw emu_fatalerror("%s(%s): Palette has more than 65536 colors.", device().shortname(), device().tag());
+	assert_always(numentries * numgroups <= 65536, "Palette has more than 65536 colors.");
 
 	// allocate a palette object containing all the colors and groups
 	m_palette = palette_t::alloc(numentries, numgroups);

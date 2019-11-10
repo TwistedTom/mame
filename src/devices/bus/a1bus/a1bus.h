@@ -17,9 +17,8 @@
 //**************************************************************************
 
 class a1bus_device;
-class device_a1bus_card_interface;
 
-class a1bus_slot_device : public device_t, public device_single_card_slot_interface<device_a1bus_card_interface>
+class a1bus_slot_device : public device_t, public device_slot_interface
 {
 public:
 	// construction/destruction
@@ -39,6 +38,7 @@ protected:
 	a1bus_slot_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock);
 
 	// device-level overrides
+	virtual void device_validity_check(validity_checker &valid) const override;
 	virtual void device_resolve_objects() override;
 	virtual void device_start() override;
 
@@ -50,6 +50,7 @@ protected:
 DECLARE_DEVICE_TYPE(A1BUS_SLOT, a1bus_slot_device)
 
 
+class device_a1bus_card_interface;
 // ======================> a1bus_device
 class a1bus_device : public device_t
 {
@@ -98,7 +99,7 @@ DECLARE_DEVICE_TYPE(A1BUS, a1bus_device)
 // ======================> device_a1bus_card_interface
 
 // class representing interface-specific live a1bus card
-class device_a1bus_card_interface : public device_interface
+class device_a1bus_card_interface : public device_slot_card_interface
 {
 	friend class a1bus_device;
 public:

@@ -28,6 +28,4 @@ private:
 	required_device<cpu_device> m_maincpu;
 };
 
-INPUT_PORTS_EXTERN( bfm_ad5 );
-
 #endif // MAME_INCLUDES_BFM_AD5_H

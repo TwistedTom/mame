@@ -36,8 +36,7 @@ class ReduceLoadSize : public Pass {
            IRContext::kAnalysisInstrToBlockMapping |
            IRContext::kAnalysisCombinators | IRContext::kAnalysisCFG |
            IRContext::kAnalysisDominatorAnalysis |
-           IRContext::kAnalysisLoopAnalysis | IRContext::kAnalysisNameMap |
-           IRContext::kAnalysisConstants | IRContext::kAnalysisTypes;
+           IRContext::kAnalysisLoopAnalysis | IRContext::kAnalysisNameMap;
   }
 
  private:

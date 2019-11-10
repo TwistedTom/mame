@@ -37,8 +37,8 @@ TrueTypeHandle loadTtf(FontManager* _fm, const char* _filePath)
 class ExampleFontSDF : public entry::AppI
 {
 public:
-	ExampleFontSDF(const char* _name, const char* _description, const char* _url)
-		: entry::AppI(_name, _description, _url)
+	ExampleFontSDF(const char* _name, const char* _description)
+		: entry::AppI(_name, _description)
 	{
 	}
 
@@ -73,9 +73,7 @@ public:
 		// Imgui.
 		imguiCreate();
 
-		uint32_t size;
-		m_txtFile = load("text/sherlock_holmes_a_scandal_in_bohemia_arthur_conan_doyle.txt", &size);
-		m_bigText = bx::StringView( (const char*)m_txtFile, size);
+		m_bigText = (char*)load("text/sherlock_holmes_a_scandal_in_bohemia_arthur_conan_doyle.txt");
 
 		// Init the text rendering system.
 		m_fontManager = new FontManager(512);
@@ -113,7 +111,7 @@ public:
 	{
 		imguiDestroy();
 
-		unload(m_txtFile);
+		BX_FREE(entry::getAllocator(), m_bigText);
 
 		m_fontManager->destroyTtf(m_font);
 		// Destroy the fonts.
@@ -255,8 +253,7 @@ public:
 	uint32_t m_debug;
 	uint32_t m_reset;
 
-	void* m_txtFile;
-	bx::StringView m_bigText;
+	char* m_bigText;
 
 	// Init the text rendering system.
 	FontManager* m_fontManager;
@@ -282,9 +279,4 @@ public:
 
 } // namespace
 
-ENTRY_IMPLEMENT_MAIN(
-	  ExampleFontSDF
-	, "11-fontsdf"
-	, "Use a single distance field font to render text of various size."
-	, "https://bkaradzic.github.io/bgfx/examples.html#fontsdf"
-	);
+ENTRY_IMPLEMENT_MAIN(ExampleFontSDF, "11-fontsdf", "Use a single distance field font to render text of various size.");

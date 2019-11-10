@@ -28,7 +28,6 @@
 
 int main() {
   const std::string source =
-      "         OpCapability Linkage "
       "         OpCapability Shader "
       "         OpMemoryModel Logical GLSL450 "
       "         OpSource GLSL 450 "
@@ -37,8 +36,8 @@ int main() {
       " %spec = OpSpecConstant %int 0 "
       "%const = OpConstant %int 42";
 
-  spvtools::SpirvTools core(SPV_ENV_UNIVERSAL_1_3);
-  spvtools::Optimizer opt(SPV_ENV_UNIVERSAL_1_3);
+  spvtools::SpirvTools core(SPV_ENV_VULKAN_1_0);
+  spvtools::Optimizer opt(SPV_ENV_VULKAN_1_0);
 
   auto print_msg_to_stderr = [](spv_message_level_t, const char*,
                                 const spv_position_t&, const char* m) {

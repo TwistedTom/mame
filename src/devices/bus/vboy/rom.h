@@ -1,5 +1,5 @@
 // license:BSD-3-Clause
-// copyright-holders:Vas Crabb
+// copyright-holders:Fabio Priuli
 #ifndef MAME_BUS_VBOY_ROM_H
 #define MAME_BUS_VBOY_ROM_H
 
@@ -8,43 +8,41 @@
 #include "slot.h"
 
 
-//**************************************************************************
-//  CLASS DECLARATIONS
-//**************************************************************************
+// ======================> vboy_rom_device
 
-class vboy_flat_rom_device : public device_t, public device_vboy_cart_interface
+class vboy_rom_device : public device_t,
+						public device_vboy_cart_interface
 {
 public:
-	vboy_flat_rom_device(machine_config const &mconfig, char const *tag, device_t *owner, u32 clock);
+	// construction/destruction
+	vboy_rom_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
-	// device_vboy_cart_interface implementation
-	virtual image_init_result load() override ATTR_COLD;
+	// reading and writing
+	virtual DECLARE_READ32_MEMBER(read_cart) override;
 
 protected:
-	vboy_flat_rom_device(machine_config const &mconfig, device_type type, char const *tag, device_t *owner, u32 clock);
+	vboy_rom_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock);
 
-	// device_t implementation
-	virtual void device_start() override ATTR_COLD;
+	// device-level overrides
+	virtual void device_start() override { }
 };
 
+// ======================> vboy_eeprom_device
 
-class vboy_flat_rom_sram_device : public vboy_flat_rom_device
+class vboy_eeprom_device : public vboy_rom_device
 {
 public:
-	vboy_flat_rom_sram_device(machine_config const &mconfig, char const *tag, device_t *owner, u32 clock);
+	// construction/destruction
+	vboy_eeprom_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
-	// device_vboy_cart_interface implementation
-	virtual image_init_result load() override ATTR_COLD;
-	virtual void unload() override ATTR_COLD;
+	// reading and writing
+	virtual DECLARE_READ32_MEMBER(read_eeprom) override;
+	virtual DECLARE_WRITE32_MEMBER(write_eeprom) override;
 };
 
 
-
-//**************************************************************************
-//  DEVICE TYPE DECLARATIONS
-//**************************************************************************
-
-DECLARE_DEVICE_TYPE(VBOY_FLAT_ROM, vboy_flat_rom_device)
-DECLARE_DEVICE_TYPE(VBOY_FLAT_ROM_SRAM, vboy_flat_rom_sram_device)
+// device type definition
+DECLARE_DEVICE_TYPE(VBOY_ROM_STD,    vboy_rom_device)
+DECLARE_DEVICE_TYPE(VBOY_ROM_EEPROM, vboy_eeprom_device)
 
 #endif // MAME_BUS_VBOY_ROM_H

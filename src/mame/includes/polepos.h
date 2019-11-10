@@ -11,7 +11,6 @@
 #pragma once
 
 #include "machine/74259.h"
-#include "machine/adc0804.h"
 #include "machine/gen_latch.h"
 #include "machine/timer.h"
 #include "sound/namco.h"
@@ -32,7 +31,6 @@ public:
 		m_soundlatch(*this, "soundlatch"),
 		m_namco_sound(*this, "namco"),
 		m_latch(*this, "latch"),
-		m_adc(*this, "adc"),
 		m_sprite16_memory(*this, "sprite16_memory"),
 		m_road16_memory(*this, "road16_memory"),
 		m_alpha16_memory(*this, "alpha16_memory"),
@@ -63,7 +61,6 @@ private:
 	optional_device<generic_latch_8_device> m_soundlatch;
 	optional_device<namco_device> m_namco_sound;
 	required_device<ls259_device> m_latch;
-	required_device<adc0804_device> m_adc;
 	required_shared_ptr<uint16_t> m_sprite16_memory;
 	required_shared_ptr<uint16_t> m_road16_memory;
 	required_shared_ptr<uint16_t> m_alpha16_memory;
@@ -90,7 +87,7 @@ private:
 	uint8_t m_sub_irq_mask;
 
 	DECLARE_READ16_MEMBER(polepos2_ic25_r);
-	uint8_t analog_r();
+	DECLARE_READ8_MEMBER(adc_r);
 	DECLARE_READ8_MEMBER(ready_r);
 	DECLARE_WRITE_LINE_MEMBER(iosel_w);
 	DECLARE_WRITE_LINE_MEMBER(gasel_w);

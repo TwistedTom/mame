@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -37,7 +37,7 @@ struct PosColorTexCoord0Vertex
 
 	static void init()
 	{
-		ms_layout
+		ms_decl
 			.begin()
 			.add(bgfx::Attrib::Position,  3, bgfx::AttribType::Float)
 			.add(bgfx::Attrib::Color0,    4, bgfx::AttribType::Uint8, true)
@@ -45,10 +45,10 @@ struct PosColorTexCoord0Vertex
 			.end();
 	}
 
-	static bgfx::VertexLayout ms_layout;
+	static bgfx::VertexDecl ms_decl;
 };
 
-bgfx::VertexLayout PosColorTexCoord0Vertex::ms_layout;
+bgfx::VertexDecl PosColorTexCoord0Vertex::ms_decl;
 
 void EmitterUniforms::reset()
 {
@@ -375,37 +375,32 @@ namespace ps
 				const bx::Vec3 vdir = { _mtxView[1]*scale, _mtxView[5]*scale, _mtxView[9]*scale };
 
 				PosColorTexCoord0Vertex* vertex = &_outVertices[current*4];
-
-				const bx::Vec3 ul = bx::sub(bx::sub(pos, udir), vdir);
-				bx::store(&vertex->m_x, ul);
-				aabbExpand(aabb, ul);
+				bx::store(&vertex->m_x, bx::sub(bx::sub(pos, udir), vdir) );
+				aabbExpand(aabb, &vertex->m_x);
 				vertex->m_abgr  = abgr;
 				vertex->m_u     = _uv[0];
 				vertex->m_v     = _uv[1];
 				vertex->m_blend = blend;
 				++vertex;
 
-				const bx::Vec3 ur = bx::sub(bx::add(pos, udir), vdir);
-				bx::store(&vertex->m_x, ur);
-				aabbExpand(aabb, ur);
+				bx::store(&vertex->m_x, bx::sub(bx::add(pos, udir), vdir) );
+				aabbExpand(aabb, &vertex->m_x);
 				vertex->m_abgr  = abgr;
 				vertex->m_u     = _uv[2];
 				vertex->m_v     = _uv[1];
 				vertex->m_blend = blend;
 				++vertex;
 
-				const bx::Vec3 br = bx::add(bx::add(pos, udir), vdir);
-				bx::store(&vertex->m_x, br);
-				aabbExpand(aabb, br);
+				bx::store(&vertex->m_x, bx::add(bx::add(pos, udir), vdir) );
+				aabbExpand(aabb, &vertex->m_x);
 				vertex->m_abgr  = abgr;
 				vertex->m_u     = _uv[2];
 				vertex->m_v     = _uv[3];
 				vertex->m_blend = blend;
 				++vertex;
 
-				const bx::Vec3 bl = bx::add(bx::sub(pos, udir), vdir);
-				bx::store(&vertex->m_x, bl);
-				aabbExpand(aabb, bl);
+				bx::store(&vertex->m_x, bx::add(bx::sub(pos, udir), vdir) );
+				aabbExpand(aabb, &vertex->m_x);
 				vertex->m_abgr  = abgr;
 				vertex->m_u     = _uv[0];
 				vertex->m_v     = _uv[3];
@@ -458,7 +453,7 @@ namespace ps
 
 			m_num = 0;
 
-			s_texColor = bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
+			s_texColor = bgfx::createUniform("s_texColor", bgfx::UniformType::Int1);
 			m_texture  = bgfx::createTexture2D(
 				  SPRITE_TEXTURE_SIZE
 				, SPRITE_TEXTURE_SIZE
@@ -535,7 +530,7 @@ namespace ps
 				bgfx::TransientVertexBuffer tvb;
 				bgfx::TransientIndexBuffer tib;
 
-				const uint32_t numVertices = bgfx::getAvailTransientVertexBuffer(m_num*4, PosColorTexCoord0Vertex::ms_layout);
+				const uint32_t numVertices = bgfx::getAvailTransientVertexBuffer(m_num*4, PosColorTexCoord0Vertex::ms_decl);
 				const uint32_t numIndices  = bgfx::getAvailTransientIndexBuffer(m_num*6);
 				const uint32_t max = bx::uint32_min(numVertices/4, numIndices/6);
 				BX_WARN(m_num == max
@@ -547,7 +542,7 @@ namespace ps
 				if (0 < max)
 				{
 					bgfx::allocTransientBuffers(&tvb
-						, PosColorTexCoord0Vertex::ms_layout
+						, PosColorTexCoord0Vertex::ms_decl
 						, max*4
 						, &tib
 						, max*6

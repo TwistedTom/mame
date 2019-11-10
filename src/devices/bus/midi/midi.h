@@ -8,7 +8,8 @@
 
 class device_midi_port_interface;
 
-class midi_port_device : public device_t, public device_single_card_slot_interface<device_midi_port_interface>
+class midi_port_device : public device_t,
+	public device_slot_interface
 {
 	friend class device_midi_port_interface;
 
@@ -46,7 +47,7 @@ private:
 	device_midi_port_interface *m_dev;
 };
 
-class device_midi_port_interface : public device_interface
+class device_midi_port_interface : public device_slot_card_interface
 {
 	friend class midi_port_device;
 

@@ -133,7 +133,7 @@
 		end
 
 		-- Identify the system
-		local arch = ""
+		local arch
 		if _OS == "windows" then
 			arch = os.getenv("PROCESSOR_ARCHITECTURE")
 		elseif _OS == "macosx" then
@@ -142,16 +142,13 @@
 			arch = os.outputof("uname -m")
 		end
 
-		if nil ~= arch then
-			-- Check our known 64-bit identifiers
-			arch = arch:lower()
-			for _, hosttype in ipairs(_64BitHostTypes) do
-				if arch:find(hosttype) then
-					return true
-				end
+		-- Check our known 64-bit identifiers
+		arch = arch:lower()
+		for _, hosttype in ipairs(_64BitHostTypes) do
+			if arch:find(hosttype) then
+				return true
 			end
 		end
-
 		return false
 	end
 
@@ -295,3 +292,4 @@
 		-- remove this directory
 		builtin_rmdir(p)
 	end
+

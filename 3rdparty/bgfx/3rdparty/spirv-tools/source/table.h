@@ -15,8 +15,9 @@
 #ifndef SOURCE_TABLE_H_
 #define SOURCE_TABLE_H_
 
-#include "source/extensions.h"
 #include "source/latest_version_spirv_header.h"
+
+#include "source/extensions.h"
 #include "spirv-tools/libspirv.hpp"
 
 typedef struct spv_opcode_desc_t {
@@ -41,7 +42,6 @@ typedef struct spv_opcode_desc_t {
   // extensions. ~0u means reserved for future use. ~0u and non-empty extension
   // lists means only available in extensions.
   const uint32_t minVersion;
-  const uint32_t lastVersion;
 } spv_opcode_desc_t;
 
 typedef struct spv_operand_desc_t {
@@ -60,7 +60,6 @@ typedef struct spv_operand_desc_t {
   // extensions. ~0u means reserved for future use. ~0u and non-empty extension
   // lists means only available in extensions.
   const uint32_t minVersion;
-  const uint32_t lastVersion;
 } spv_operand_desc_t;
 
 typedef struct spv_operand_desc_group_t {

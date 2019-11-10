@@ -30,8 +30,7 @@ class EliminateDeadFunctionsPass : public MemPass {
   Status Process() override;
 
   IRContext::Analysis GetPreservedAnalyses() override {
-    return IRContext::kAnalysisDefUse | IRContext::kAnalysisConstants |
-           IRContext::kAnalysisTypes;
+    return IRContext::kAnalysisDefUse;
   }
 
  private:

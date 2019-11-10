@@ -76,7 +76,6 @@ sam6883_device::sam6883_device(const machine_config &mconfig, const char *tag, d
 	, sam6883_friend_device_interface(mconfig, *this, 4)
 	, m_cpu_space(nullptr)
 	, m_read_res(*this)
-	, m_banks{ { *this }, { *this }, { *this }, { *this }, { *this }, { *this }, { *this }, { *this } }
 	, m_space_0000(*this)
 	, m_space_8000(*this)
 	, m_space_A000(*this)
@@ -111,8 +110,8 @@ void sam6883_device::device_start()
 	m_read_res.resolve_safe(0);
 
 	// install SAM handlers
-	m_cpu_space->install_read_handler(0xFFC0, 0xFFDF, read8_delegate(*this, FUNC(sam6883_device::read)));
-	m_cpu_space->install_write_handler(0xFFC0, 0xFFDF, write8_delegate(*this, FUNC(sam6883_device::write)));
+	m_cpu_space->install_read_handler(0xFFC0, 0xFFDF, read8_delegate(FUNC(sam6883_device::read), this));
+	m_cpu_space->install_write_handler(0xFFC0, 0xFFDF, write8_delegate(FUNC(sam6883_device::write), this));
 
 	// save state support
 	save_item(NAME(m_sam_state));
@@ -128,7 +127,7 @@ void sam6883_device::device_start()
 
 void sam6883_device::configure_bank(int bank, uint8_t *memory, uint32_t memory_size, bool is_read_only)
 {
-	configure_bank(bank, memory, memory_size, is_read_only, read8_delegate(*this), write8_delegate(*this));
+	configure_bank(bank, memory, memory_size, is_read_only, read8_delegate(), write8_delegate());
 }
 
 
@@ -213,7 +212,7 @@ void sam6883_device::device_post_load()
 //  update_state
 //-------------------------------------------------
 
-void sam6883_device::update_state()
+void sam6883_device::update_state(void)
 {
 	update_memory();
 	update_cpu_clock();
@@ -225,7 +224,7 @@ void sam6883_device::update_state()
 //  update_memory
 //-------------------------------------------------
 
-void sam6883_device::update_memory()
+void sam6883_device::update_memory(void)
 {
 	// Memory size - allowed restricting memory accesses to something less than
 	// 32k
@@ -308,7 +307,7 @@ void sam6883_device::update_memory()
 //  clock
 //-------------------------------------------------
 
-void sam6883_friend_device_interface::update_cpu_clock()
+void sam6883_friend_device_interface::update_cpu_clock(void)
 {
 	// The infamous speed up poke.
 	//
@@ -386,7 +385,7 @@ WRITE8_MEMBER( sam6883_device::write )
 //  horizontal_sync
 //-------------------------------------------------
 
-void sam6883_device::horizontal_sync()
+void sam6883_device::horizontal_sync(void)
 {
 	bool carry;
 
@@ -513,7 +512,7 @@ void sam6883_device::sam_space<_addrstart, _addrend>::point_specific_bank(const 
 		// name the bank
 		auto tag = string_format("bank%04X_%c", addrstart, is_write ? 'w' : 'r');
 
-		// determine "nop_addrstart" - where the bank ends, and above which is .noprw();
+		// determine "nop_addrstart" - where the bank ends, and above which is AM_NOP
 		uint32_t nop_addrstart = (length != ~0)
 			? std::min(addrend + 1, addrstart + length)
 			: addrend + 1;

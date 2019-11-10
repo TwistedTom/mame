@@ -110,10 +110,8 @@ protected:
 	}
 
 
-	struct vga_t
+	struct
 	{
-		vga_t(device_t &owner) : read_dipswitch(owner) { }
-
 		read8_delegate read_dipswitch;
 		struct
 		{

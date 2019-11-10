@@ -79,70 +79,6 @@ TEST_F(ValidateLimits, IdEqualToBoundBad) {
       HasSubstr("Result <id> '64' must be less than the ID bound '64'."));
 }
 
-TEST_F(ValidateLimits, IdBoundTooBigDeaultLimit) {
-  std::string str = header;
-
-  CompileSuccessfully(str);
-
-  // The largest ID used in this program is 64. Let's overwrite the ID bound in
-  // the header to be 64. This should result in an error because all IDs must
-  // satisfy: 0 < id < bound.
-  OverwriteAssembledBinary(3, 0x4FFFFF);
-
-  ASSERT_EQ(SPV_ERROR_INVALID_BINARY, ValidateInstructions());
-  EXPECT_THAT(getDiagnosticString(),
-              HasSubstr("Invalid SPIR-V.  The id bound is larger than the max "
-                        "id bound 4194303."));
-}
-
-TEST_F(ValidateLimits, IdBoundAtSetLimit) {
-  std::string str = header;
-
-  CompileSuccessfully(str);
-
-  // The largest ID used in this program is 64. Let's overwrite the ID bound in
-  // the header to be 64. This should result in an error because all IDs must
-  // satisfy: 0 < id < bound.
-  uint32_t id_bound = 0x4FFFFF;
-
-  OverwriteAssembledBinary(3, id_bound);
-  getValidatorOptions()->universal_limits_.max_id_bound = id_bound;
-
-  ASSERT_EQ(SPV_SUCCESS, ValidateInstructions());
-}
-
-TEST_F(ValidateLimits, IdBoundJustAboveSetLimit) {
-  std::string str = header;
-
-  CompileSuccessfully(str);
-
-  // The largest ID used in this program is 64. Let's overwrite the ID bound in
-  // the header to be 64. This should result in an error because all IDs must
-  // satisfy: 0 < id < bound.
-  uint32_t id_bound = 5242878;
-
-  OverwriteAssembledBinary(3, id_bound);
-  getValidatorOptions()->universal_limits_.max_id_bound = id_bound - 1;
-
-  ASSERT_EQ(SPV_ERROR_INVALID_BINARY, ValidateInstructions());
-  EXPECT_THAT(getDiagnosticString(),
-              HasSubstr("Invalid SPIR-V.  The id bound is larger than the max "
-                        "id bound 5242877."));
-}
-
-TEST_F(ValidateLimits, IdBoundAtInMaxLimit) {
-  std::string str = header;
-
-  CompileSuccessfully(str);
-
-  uint32_t id_bound = std::numeric_limits<uint32_t>::max();
-
-  OverwriteAssembledBinary(3, id_bound);
-  getValidatorOptions()->universal_limits_.max_id_bound = id_bound;
-
-  ASSERT_EQ(SPV_SUCCESS, ValidateInstructions());
-}
-
 TEST_F(ValidateLimits, StructNumMembersGood) {
   std::ostringstream spirv;
   spirv << header << R"(
@@ -212,7 +148,7 @@ TEST_F(ValidateLimits, SwitchNumBranchesGood) {
 %5 = OpFunction %1 None %2
 %7 = OpLabel
 %8 = OpIAdd %3 %4 %4
-     OpSwitch %4 %10)";
+%9 = OpSwitch %4 %10)";
 
   // Now add the (literal, label) pairs
   for (int i = 0; i < 16383; ++i) {
@@ -240,7 +176,7 @@ TEST_F(ValidateLimits, SwitchNumBranchesBad) {
 %5 = OpFunction %1 None %2
 %7 = OpLabel
 %8 = OpIAdd %3 %4 %4
-     OpSwitch %4 %10)";
+%9 = OpSwitch %4 %10)";
 
   // Now add the (literal, label) pairs
   for (int i = 0; i < 16384; ++i) {
@@ -271,7 +207,7 @@ TEST_F(ValidateLimits, CustomizedSwitchNumBranchesGood) {
 %5 = OpFunction %1 None %2
 %7 = OpLabel
 %8 = OpIAdd %3 %4 %4
-     OpSwitch %4 %10)";
+%9 = OpSwitch %4 %10)";
 
   // Now add the (literal, label) pairs
   for (int i = 0; i < 10; ++i) {
@@ -301,7 +237,7 @@ TEST_F(ValidateLimits, CustomizedSwitchNumBranchesBad) {
 %5 = OpFunction %1 None %2
 %7 = OpLabel
 %8 = OpIAdd %3 %4 %4
-     OpSwitch %4 %10)";
+%9 = OpSwitch %4 %10)";
 
   // Now add the (literal, label) pairs
   for (int i = 0; i < 11; ++i) {
@@ -353,7 +289,7 @@ TEST_F(ValidateLimits, OpTypeFunctionBad) {
   EXPECT_EQ(SPV_ERROR_INVALID_ID, ValidateInstructions());
   EXPECT_THAT(getDiagnosticString(),
               HasSubstr("OpTypeFunction may not take more than 255 arguments. "
-                        "OpTypeFunction <id> '2[%2]' has 256 arguments."));
+                        "OpTypeFunction <id> '2' has 256 arguments."));
 }
 
 // Valid: OpTypeFunction with 100 arguments (Custom limit: 100)
@@ -389,7 +325,7 @@ TEST_F(ValidateLimits, CustomizedOpTypeFunctionBad) {
   EXPECT_EQ(SPV_ERROR_INVALID_ID, ValidateInstructions());
   EXPECT_THAT(getDiagnosticString(),
               HasSubstr("OpTypeFunction may not take more than 100 arguments. "
-                        "OpTypeFunction <id> '2[%2]' has 101 arguments."));
+                        "OpTypeFunction <id> '2' has 101 arguments."));
 }
 
 // Valid: module has 65,535 global variables.
@@ -713,6 +649,14 @@ void GenerateSpirvProgramWithCfgNestingDepth(std::string& str, int depth) {
 }
 // clang-format on
 
+// Valid: Control Flow Nesting depth is 1023.
+TEST_F(ValidateLimits, ControlFlowDepthGood) {
+  std::string spirv;
+  GenerateSpirvProgramWithCfgNestingDepth(spirv, 1023);
+  CompileSuccessfully(spirv);
+  EXPECT_EQ(SPV_SUCCESS, ValidateInstructions());
+}
+
 // Invalid: Control Flow Nesting depth is 1024. (limit is 1023).
 TEST_F(ValidateLimits, ControlFlowDepthBad) {
   std::string spirv;
@@ -754,17 +698,13 @@ TEST_F(ValidateLimits, ControlFlowNoEntryToLoopGood) {
            OpName %loop "loop"
            OpName %exit "exit"
 %voidt   = OpTypeVoid
-%boolt   = OpTypeBool
-%undef   = OpUndef %boolt
 %funct   = OpTypeFunction %voidt
 %main    = OpFunction %voidt None %funct
 %entry   = OpLabel
            OpBranch %exit
 %loop    = OpLabel
-           OpLoopMerge %dead %loop None
-           OpBranchConditional %undef %loop %loop
-%dead    = OpLabel
-           OpUnreachable
+           OpLoopMerge %loop %loop None
+           OpBranch %loop
 %exit    = OpLabel
            OpReturn
            OpFunctionEnd

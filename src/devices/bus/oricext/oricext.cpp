@@ -7,11 +7,11 @@
 
 DEFINE_DEVICE_TYPE(ORICEXT_CONNECTOR, oricext_connector, "oricext_connector", "ORIC extension connector")
 
-oricext_connector::oricext_connector(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock) :
-	device_t(mconfig, ORICEXT_CONNECTOR, tag, owner, clock),
-	device_single_card_slot_interface<device_oricext_interface>(mconfig, *this),
-	irq_handler(*this),
-	cputag(nullptr)
+oricext_connector::oricext_connector(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
+	: device_t(mconfig, ORICEXT_CONNECTOR, tag, owner, clock)
+	, device_slot_interface(mconfig, *this)
+	, irq_handler(*this)
+	, cputag(nullptr)
 {
 }
 
@@ -36,13 +36,14 @@ void oricext_connector::irq_w(int state)
 
 void oricext_connector::device_config_complete()
 {
-	device_oricext_interface *dev = get_card_device();
+	oricext_device *dev = dynamic_cast<oricext_device *>(get_card_device());
 	if(dev)
 		dev->set_cputag(cputag);
 }
 
-device_oricext_interface::device_oricext_interface(const machine_config &mconfig, device_t &device) :
-	device_interface(device, "oricext"),
+oricext_device::oricext_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock) :
+	device_t(mconfig, type, tag, owner, clock),
+	device_slot_card_interface(mconfig, *this),
 	cputag(nullptr),
 	cpu(nullptr),
 	connector(nullptr),
@@ -57,35 +58,35 @@ device_oricext_interface::device_oricext_interface(const machine_config &mconfig
 {
 }
 
-void device_oricext_interface::set_cputag(const char *tag)
+void oricext_device::set_cputag(const char *tag)
 {
 	cputag = tag;
 }
 
-void device_oricext_interface::interface_pre_start()
+void oricext_device::device_start()
 {
-	cpu = device().machine().device<m6502_device>(cputag);
-	connector = downcast<oricext_connector *>(device().owner());
-	bank_c000_r = device().membank(":bank_c000_r");
-	bank_e000_r = device().membank(":bank_e000_r");
-	bank_f800_r = device().membank(":bank_f800_r");
-	bank_c000_w = device().membank(":bank_c000_w");
-	bank_e000_w = device().membank(":bank_e000_w");
-	bank_f800_w = device().membank(":bank_f800_w");
-	rom = (uint8_t *)device().machine().root_device().memregion(cputag)->base();
-	ram = (uint8_t *)device().memshare(":ram")->ptr();
+	cpu = machine().device<m6502_device>(cputag);
+	connector = downcast<oricext_connector *>(owner());
+	bank_c000_r = membank(":bank_c000_r");
+	bank_e000_r = membank(":bank_e000_r");
+	bank_f800_r = membank(":bank_f800_r");
+	bank_c000_w = membank(":bank_c000_w");
+	bank_e000_w = membank(":bank_e000_w");
+	bank_f800_w = membank(":bank_f800_w");
+	rom = (uint8_t *)machine().root_device().memregion(cputag)->base();
+	ram = (uint8_t *)memshare(":ram")->ptr();
 
 	memset(junk_read, 0xff, sizeof(junk_read));
 	memset(junk_write, 0x00, sizeof(junk_write));
 }
 
-WRITE_LINE_MEMBER(device_oricext_interface::irq_w)
+WRITE_LINE_MEMBER(oricext_device::irq_w)
 {
 	connector->irq_w(state);
 }
 
 void oricext_intf(device_slot_interface &device)
 {
-	device.option_add("jasmin", ORIC_JASMIN);
-	device.option_add("microdisc", ORIC_MICRODISC);
+	device.option_add("jasmin", JASMIN);
+	device.option_add("microdisc", MICRODISC);
 }

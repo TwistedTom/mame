@@ -106,7 +106,6 @@ i8275_device::i8275_device(const machine_config &mconfig, device_type type, cons
 	m_write_hrtc(*this),
 	m_write_vrtc(*this),
 	m_write_lc(*this),
-	m_display_cb(*this),
 	m_refresh_hack(false),
 	m_status(0),
 	m_param_idx(0),
@@ -150,12 +149,12 @@ void i8275_device::device_start()
 	screen().register_screen_bitmap(m_bitmap);
 
 	// resolve callbacks
+	m_display_cb.bind_relative_to(*owner());
 	m_write_drq.resolve_safe();
 	m_write_irq.resolve_safe();
 	m_write_hrtc.resolve_safe();
 	m_write_vrtc.resolve_safe();
 	m_write_lc.resolve_safe();
-	m_display_cb.resolve();
 
 	// allocate timers
 	m_hrtc_on_timer = timer_alloc(TIMER_HRTC_ON);
@@ -470,7 +469,7 @@ void i8275_device::device_timer(emu_timer &timer, device_timer_id id, int param,
 //  read -
 //-------------------------------------------------
 
-uint8_t i8275_device::read(offs_t offset)
+READ8_MEMBER( i8275_device::read )
 {
 	if (offset & 0x01)
 	{
@@ -511,7 +510,7 @@ uint8_t i8275_device::read(offs_t offset)
 //  write -
 //-------------------------------------------------
 
-void i8275_device::write(offs_t offset, uint8_t data)
+WRITE8_MEMBER( i8275_device::write )
 {
 	if (offset & 0x01)
 	{
@@ -625,9 +624,9 @@ void i8275_device::write(offs_t offset, uint8_t data)
 //  dack_w -
 //-------------------------------------------------
 
-void i8275_device::dack_w(uint8_t data)
+WRITE8_MEMBER( i8275_device::dack_w )
 {
-	//LOG("I8275 y %u x %u DACK %02x %u (%u)\n", screen().vpos(), screen().hpos(), data, m_buffer_idx, m_dma_idx);
+	//LOG("I8275 y %u x %u DACK %04x:%02x %u (%u)\n", screen().vpos(), screen().hpos(), offset, data, m_buffer_idx, m_dma_idx);
 
 	m_write_drq(0);
 

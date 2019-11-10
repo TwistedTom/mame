@@ -1,12 +1,11 @@
 // license:GPL-2.0+
 // copyright-holders:Couriersud
+/*
+ * pdynlib.h
+ */
 
 #ifndef PDYNLIB_H_
 #define PDYNLIB_H_
-
-///
-/// \file pdynlib.h
-///
 
 #include "pstring.h"
 #include "ptypes.h"
@@ -63,11 +62,11 @@ public:
 		//return m_sym(args...);
 	}
 
-	bool resolved() const { return m_sym != nullptr; }
+	bool resolved() { return m_sym != nullptr; }
 private:
 	calltype m_sym;
 };
 
 } // namespace plib
 
-#endif // PSTRING_H_
+#endif /* PSTRING_H_ */

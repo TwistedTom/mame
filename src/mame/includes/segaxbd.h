@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "machine/segaic16.h"
 #include "video/segaic16.h"
 #include "video/segaic16_road.h"
 #include "video/sega16sp.h"
@@ -21,7 +22,6 @@
 #include "machine/i8251.h"
 #include "machine/mb3773.h"
 #include "machine/mb8421.h"
-#include "machine/segaic16.h"
 #include "video/resnet.h"
 #include "emupal.h"
 #include "screen.h"
@@ -60,7 +60,8 @@ public:
 
 protected:
 	// main CPU read/write handlers
-	uint8_t analog_r();
+	DECLARE_READ16_MEMBER(adc_r);
+	DECLARE_WRITE16_MEMBER(adc_w);
 	DECLARE_WRITE16_MEMBER(iocontrol_w);
 
 	// video updates

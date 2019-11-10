@@ -37,8 +37,7 @@ DEFINE_DEVICE_TYPE(PET_EXPANSION_SLOT, pet_expansion_slot_device, "pet_expansion
 
 pet_expansion_slot_device::pet_expansion_slot_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock) :
 	device_t(mconfig, PET_EXPANSION_SLOT, tag, owner, clock),
-	device_single_card_slot_interface<device_pet_expansion_card_interface>(mconfig, *this),
-	m_card(nullptr),
+	device_slot_interface(mconfig, *this), m_card(nullptr),
 	m_read_dma(*this),
 	m_write_dma(*this)
 {
@@ -59,7 +58,7 @@ pet_expansion_slot_device::~pet_expansion_slot_device()
 //-------------------------------------------------
 
 device_pet_expansion_card_interface::device_pet_expansion_card_interface(const machine_config &mconfig, device_t &device)
-	: device_interface(device, "petexp")
+	: device_slot_card_interface(mconfig, device)
 {
 	m_slot = dynamic_cast<pet_expansion_slot_device *>(device.owner());
 }
@@ -75,16 +74,40 @@ device_pet_expansion_card_interface::~device_pet_expansion_card_interface()
 
 
 //-------------------------------------------------
+//  device_validity_check -
+//-------------------------------------------------
+
+void pet_expansion_slot_device::device_validity_check(validity_checker &valid) const
+{
+	device_t *const carddev = get_card_device();
+	if (carddev && !dynamic_cast<device_pet_expansion_card_interface *>(carddev))
+		osd_printf_error("Card device %s (%s) does not implement device_pet_expansion_card_interface\n", carddev->tag(), carddev->name());
+}
+
+
+//-------------------------------------------------
 //  device_start - device-specific startup
 //-------------------------------------------------
 
 void pet_expansion_slot_device::device_start()
 {
-	m_card = get_card_device();
+	device_t *const carddev = get_card_device();
+	m_card = dynamic_cast<device_pet_expansion_card_interface *>(carddev);
+	if (carddev && !m_card)
+		fatalerror("Card device %s (%s) does not implement device_pet_expansion_card_interface\n", carddev->tag(), carddev->name());
 
 	// resolve callbacks
 	m_read_dma.resolve_safe(0);
 	m_write_dma.resolve_safe();
+}
+
+
+//-------------------------------------------------
+//  device_reset - device-specific reset
+//-------------------------------------------------
+
+void pet_expansion_slot_device::device_reset()
+{
 }
 
 
@@ -104,8 +127,10 @@ int pet_expansion_slot_device::norom_r(offs_t offset, int sel)
 
 uint8_t pet_expansion_slot_device::read(offs_t offset, uint8_t data, int &sel)
 {
-	if (m_card)
+	if (m_card != nullptr)
+	{
 		data = m_card->pet_bd_r(offset, data, sel);
+	}
 
 	return data;
 }

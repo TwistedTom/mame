@@ -29,9 +29,8 @@ DEFINE_DEVICE_TYPE(ECBBUS_SLOT, ecbbus_slot_device, "ecbbus_slot", "ECB bus slot
 
 ecbbus_slot_device::ecbbus_slot_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock) :
 	device_t(mconfig, ECBBUS_SLOT, tag, owner, clock),
-	device_single_card_slot_interface<device_ecbbus_card_interface>(mconfig, *this),
-	m_bus(*this, finder_base::DUMMY_TAG),
-	m_bus_num(0)
+	device_slot_interface(mconfig, *this),
+	m_bus_tag(nullptr), m_bus_num(0), m_bus(nullptr)
 {
 }
 
@@ -42,9 +41,9 @@ ecbbus_slot_device::ecbbus_slot_device(const machine_config &mconfig, const char
 
 void ecbbus_slot_device::device_start()
 {
-	device_ecbbus_card_interface *const dev = get_card_device();
-	if (dev)
-		m_bus->add_card(*dev, m_bus_num);
+	m_bus = machine().device<ecbbus_device>(m_bus_tag);
+	device_ecbbus_card_interface *dev = dynamic_cast<device_ecbbus_card_interface *>(get_card_device());
+	if (dev) m_bus->add_card(dev, m_bus_num);
 }
 
 
@@ -66,7 +65,7 @@ DEFINE_DEVICE_TYPE(ECBBUS, ecbbus_device, "ecbbus", "ECB bus")
 //-------------------------------------------------
 
 device_ecbbus_card_interface::device_ecbbus_card_interface(const machine_config &mconfig, device_t &device) :
-	device_interface(device, "ecbbus")
+	device_slot_card_interface(mconfig, device)
 {
 	m_slot = dynamic_cast<ecbbus_slot_device *>(device.owner());
 }
@@ -106,9 +105,9 @@ void ecbbus_device::device_start()
 //  add_card - add ECB bus card
 //-------------------------------------------------
 
-void ecbbus_device::add_card(device_ecbbus_card_interface &card, int pos)
+void ecbbus_device::add_card(device_ecbbus_card_interface *card, int pos)
 {
-	m_ecbbus_device[pos] = &card;
+	m_ecbbus_device[pos] = card;
 }
 
 

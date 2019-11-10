@@ -717,11 +717,6 @@ dcs_audio_device::dcs_audio_device(const machine_config &mconfig, device_type ty
 	m_last_output_full(0),
 	m_last_input_empty(0),
 	m_progflags(0),
-	m_output_full_cb(*this),
-	m_input_empty_cb(*this),
-	m_fifo_data_r(*this),
-	m_fifo_status_r(*this),
-	m_fifo_reset_w(*this),
 	m_timer_enable(0),
 	m_timer_ignore(false),
 	m_timer_start_cycles(0),
@@ -909,13 +904,13 @@ void dcs_audio_device::install_speedup(void)
 {
 	if (m_polling_offset) {
 		if (m_rev < REV_DSIO) {
-			m_cpu->space(AS_DATA).install_readwrite_handler(m_polling_offset, m_polling_offset, read16_delegate(*this, FUNC(dcs_audio_device::dcs_polling_r)), write16_delegate(*this, FUNC(dcs_audio_device::dcs_polling_w)));
+			m_cpu->space(AS_DATA).install_readwrite_handler(m_polling_offset, m_polling_offset, read16_delegate(FUNC(dcs_audio_device::dcs_polling_r), this), write16_delegate(FUNC(dcs_audio_device::dcs_polling_w), this));
 		}
 		else {
 			// ADSP 2181 (DSIO and DENVER) use program memory
-			m_cpu->space(AS_PROGRAM).install_readwrite_handler(m_polling_offset, m_polling_offset, read32_delegate(*this, FUNC(dcs_audio_device::dcs_polling32_r)), write32_delegate(*this, FUNC(dcs_audio_device::dcs_polling32_w)));
+			m_cpu->space(AS_PROGRAM).install_readwrite_handler(m_polling_offset, m_polling_offset, read32_delegate(FUNC(dcs_audio_device::dcs_polling32_r), this), write32_delegate(FUNC(dcs_audio_device::dcs_polling32_w), this));
 			// DSIO and DENVER poll in two spots.  This offset covers all three machines (mwskins, sf2049, roadburn).
-			m_cpu->space(AS_PROGRAM).install_readwrite_handler(m_polling_offset + 9, m_polling_offset + 9, read32_delegate(*this, FUNC(dcs_audio_device::dcs_polling32_r)), write32_delegate(*this, FUNC(dcs_audio_device::dcs_polling32_w)));
+			m_cpu->space(AS_PROGRAM).install_readwrite_handler(m_polling_offset + 9, m_polling_offset + 9, read32_delegate(FUNC(dcs_audio_device::dcs_polling32_r), this), write32_delegate(FUNC(dcs_audio_device::dcs_polling32_w), this));
 		}
 	}
 }
@@ -2725,9 +2720,9 @@ void dcs2_audio_denver_5ch_device::device_add_mconfig(machine_config &config)
 
 	SPEAKER(config, "flspeaker").front_left();
 	SPEAKER(config, "frspeaker").front_right();
-	SPEAKER(config, "rlspeaker").headrest_left();
-	SPEAKER(config, "rrspeaker").headrest_right();
-	SPEAKER(config, "subwoofer").backrest();
+	SPEAKER(config, "rlspeaker").rear_left();
+	SPEAKER(config, "rrspeaker").rear_right();
+	SPEAKER(config, "subwoofer").subwoofer();
 
 	DMADAC(config, "dac1").add_route(ALL_OUTPUTS, "flspeaker", 1.0);
 	DMADAC(config, "dac2").add_route(ALL_OUTPUTS, "frspeaker", 1.0);

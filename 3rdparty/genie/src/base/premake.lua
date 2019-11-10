@@ -22,18 +22,13 @@
 --
 
 	function premake.generate(obj, filename, callback)
-		local prev  = io.capture()
-		local abort = (callback(obj) == false)
-		local new   = io.endcapture(prev)
-
-		if abort then
-			premake.stats.num_skipped = premake.stats.num_skipped + 1
-			return
-		end
-
 		filename = premake.project.getfilename(obj, filename)
 
 		if (premake._checkgenerate) then
+			io.capture()
+			callback(obj)
+			local new = io.endcapture()
+
 			local delta = false
 
 			local f, err = io.open(filename, "rb")
@@ -74,7 +69,8 @@
 				error(err, 0)
 			end
 
-			f:write(new)
+			io.output(f)
+			callback(obj)
 			f:close()
 			premake.stats.num_generated = premake.stats.num_generated + 1
 		end

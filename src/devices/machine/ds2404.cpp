@@ -10,9 +10,7 @@
 
 #include "emu.h"
 #include "ds2404.h"
-
-#include <algorithm>
-#include <time.h> // FIXME: re-write in terms of device_rtc_interface and remove this
+#include <time.h>
 
 
 //**************************************************************************
@@ -36,7 +34,7 @@ ds2404_device::ds2404_device(const machine_config &mconfig, const char *tag, dev
 		m_a2(0),
 		m_state_ptr(0)
 {
-	std::fill(std::begin(m_ram), std::end(m_ram), 0);
+	memset(m_ram, 0, sizeof(m_ram));
 }
 
 
@@ -317,17 +315,23 @@ void ds2404_device::device_timer(emu_timer &timer, device_timer_id id, int param
 	switch(id)
 	{
 		case 0:
+		{
 			// tick
-			for(auto &elem : m_rtc)
+			for(auto & elem : m_rtc)
 			{
 				elem++;
 				if(elem != 0)
+				{
 					break;
+				}
 			}
+
 			break;
+		}
 
 		default:
-			throw emu_fatalerror("Unknown id in ds2404_device::device_timer");
+			assert_always(false, "Unknown id in ds2404_device::device_timer");
+			break;
 	}
 }
 

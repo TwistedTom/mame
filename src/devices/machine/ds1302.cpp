@@ -189,20 +189,18 @@ void ds1302_device::rtc_clock_updated(int year, int month, int day, int day_of_w
 
 WRITE_LINE_MEMBER( ds1302_device::ce_w )
 {
-	if (state && !m_ce)
-	{
-		LOG("DS1302 CE: 1\n");
+	LOG("DS1302 CE: %u\n", state);
 
+	if (!state && m_ce)
+	{
 		// synchronize user buffers
 		for (int i = 0; i < 9; i++)
 		{
 			m_user[i] = m_reg[i];
 		}
 	}
-	else if (!state && m_ce)
+	else if (state && !m_ce)
 	{
-		LOG("DS1302 CE: 0\n");
-
 		// terminate data transfer
 		m_state = STATE_COMMAND;
 		m_bits = 0;
@@ -264,8 +262,6 @@ void ds1302_device::input_bit()
 		m_cmd |= (m_io << 7);
 		m_bits++;
 
-		LOG("DS1302 Input Bit: %u\n", m_io);
-
 		if (m_bits == 8)
 		{
 			LOG("DS1302 Command: %02x\n", m_cmd);
@@ -302,8 +298,6 @@ void ds1302_device::input_bit()
 		m_data >>= 1;
 		m_data |= (m_io << 7);
 		m_bits++;
-
-		LOG("DS1302 Input Bit: %u\n", m_io);
 
 		if (m_bits == 8)
 		{
@@ -369,8 +363,6 @@ void ds1302_device::output_bit()
 			m_state = STATE_COMMAND;
 		}
 	}
-
-	LOG("DS1302 Output Bit: %u\n", m_io);
 }
 
 
@@ -380,14 +372,17 @@ void ds1302_device::output_bit()
 
 WRITE_LINE_MEMBER( ds1302_device::sclk_w )
 {
-	//LOG("DS1302 CLK: %u\n", state);
+	LOG("DS1302 CLK: %u\n", state);
 
-	if (m_ce)
+	if (!m_ce) return;
+
+	if (!m_clk && state) // rising edge
 	{
-		if (!m_clk && state) // rising edge
-			input_bit();
-		else if (m_clk && !state) // falling edge
-			output_bit();
+		input_bit();
+	}
+	else if (m_clk && !state) // falling edge
+	{
+		output_bit();
 	}
 
 	m_clk = state;
@@ -400,7 +395,7 @@ WRITE_LINE_MEMBER( ds1302_device::sclk_w )
 
 WRITE_LINE_MEMBER( ds1302_device::io_w )
 {
-	//LOG("DS1302 I/O: %u\n", state);
+	LOG("DS1302 I/O: %u\n", state);
 
 	m_io = state;
 }

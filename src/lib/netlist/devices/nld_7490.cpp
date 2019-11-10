@@ -11,17 +11,8 @@
 
 namespace netlist
 {
-namespace devices
-{
-
-	static constexpr const std::array<netlist_time, 4> delay =
+	namespace devices
 	{
-			NLTIME_FROM_NS(18),
-			NLTIME_FROM_NS(36) - NLTIME_FROM_NS(18),
-			NLTIME_FROM_NS(54) - NLTIME_FROM_NS(18),
-			NLTIME_FROM_NS(72) - NLTIME_FROM_NS(18)
-	};
-
 	NETLIB_OBJECT(7490)
 	{
 		NETLIB_CONSTRUCTOR(7490)
@@ -43,11 +34,7 @@ namespace devices
 		NETLIB_UPDATEI();
 		NETLIB_RESETI();
 
-		void update_outputs() noexcept
-		{
-			for (std::size_t i=0; i<4; i++)
-				m_Q[i].push((m_cnt >> i) & 1, delay[i]);
-		}
+		void update_outputs();
 
 		logic_input_t m_A;
 		logic_input_t m_B;
@@ -94,6 +81,14 @@ namespace devices
 		m_last_B = 0;
 	}
 
+	static constexpr const netlist_time delay[4] =
+	{
+			NLTIME_FROM_NS(18),
+			NLTIME_FROM_NS(36) - NLTIME_FROM_NS(18),
+			NLTIME_FROM_NS(54) - NLTIME_FROM_NS(18),
+			NLTIME_FROM_NS(72) - NLTIME_FROM_NS(18)
+	};
+
 	NETLIB_UPDATE(7490)
 	{
 		const netlist_sig_t new_A = m_A();
@@ -128,8 +123,14 @@ namespace devices
 		m_last_B = new_B;
 	}
 
+	NETLIB_FUNC_VOID(7490, update_outputs, ())
+	{
+		for (std::size_t i=0; i<4; i++)
+			m_Q[i].push((m_cnt >> i) & 1, delay[i]);
+	}
+
 	NETLIB_DEVICE_IMPL(7490,     "TTL_7490",        "+A,+B,+R1,+R2,+R91,+R92,@VCC,@GND")
 	NETLIB_DEVICE_IMPL(7490_dip, "TTL_7490_DIP",    "")
 
-} // namespace devices
+	} //namespace devices
 } // namespace netlist

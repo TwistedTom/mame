@@ -395,7 +395,7 @@ std::unique_ptr<util::disasm_interface> m6809_base_device::create_disassembler()
 //  clock into cycles per second
 //-------------------------------------------------
 
-uint64_t m6809_base_device::execute_clocks_to_cycles(uint64_t clocks) const noexcept
+uint64_t m6809_base_device::execute_clocks_to_cycles(uint64_t clocks) const
 {
 	return (clocks + m_clock_divider - 1) / m_clock_divider;
 }
@@ -406,7 +406,7 @@ uint64_t m6809_base_device::execute_clocks_to_cycles(uint64_t clocks) const noex
 //  count back to raw clocks
 //-------------------------------------------------
 
-uint64_t m6809_base_device::execute_cycles_to_clocks(uint64_t cycles) const noexcept
+uint64_t m6809_base_device::execute_cycles_to_clocks(uint64_t cycles) const
 {
 	return cycles * m_clock_divider;
 }
@@ -417,7 +417,7 @@ uint64_t m6809_base_device::execute_cycles_to_clocks(uint64_t cycles) const noex
 //  cycles it takes for one instruction to execute
 //-------------------------------------------------
 
-uint32_t m6809_base_device::execute_min_cycles() const noexcept
+uint32_t m6809_base_device::execute_min_cycles() const
 {
 	return 1;
 }
@@ -428,7 +428,7 @@ uint32_t m6809_base_device::execute_min_cycles() const noexcept
 //  cycles it takes for one instruction to execute
 //-------------------------------------------------
 
-uint32_t m6809_base_device::execute_max_cycles() const noexcept
+uint32_t m6809_base_device::execute_max_cycles() const
 {
 	return 19;
 }
@@ -439,7 +439,7 @@ uint32_t m6809_base_device::execute_max_cycles() const noexcept
 //  input/interrupt lines
 //-------------------------------------------------
 
-uint32_t m6809_base_device::execute_input_lines() const noexcept
+uint32_t m6809_base_device::execute_input_lines() const
 {
 	return 3;
 }

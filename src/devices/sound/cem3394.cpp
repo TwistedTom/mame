@@ -16,7 +16,6 @@
 #include "emu.h"
 #include "cem3394.h"
 
-#include <algorithm>
 
 
 /* waveform generation parameters */
@@ -119,7 +118,6 @@ DEFINE_DEVICE_TYPE(CEM3394, cem3394_device, "cem3394", "CEM3394 Synthesizer Voic
 cem3394_device::cem3394_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
 	: device_t(mconfig, CEM3394, tag, owner, clock),
 		device_sound_interface(mconfig, *this),
-		m_ext_cb(*this),
 		m_stream(nullptr),
 		m_vco_zero_freq(0.0),
 		m_filter_zero_freq(0.0),
@@ -139,7 +137,7 @@ cem3394_device::cem3394_device(const machine_config &mconfig, const char *tag, d
 		m_mixer_buffer(nullptr),
 		m_external_buffer(nullptr)
 {
-	std::fill(std::begin(m_values), std::end(m_values), 0.0);
+	memset(m_values, 0, 8*sizeof(double));
 }
 
 
@@ -335,7 +333,7 @@ void cem3394_device::device_start()
 	/* allocate stream channels, 1 per chip */
 	m_stream = stream_alloc(0, 1, m_sample_rate);
 
-	m_ext_cb.resolve();
+	m_ext_cb.bind_relative_to(*owner());
 
 	/* allocate memory for a mixer buffer and external buffer (1 second should do it!) */
 	m_mixer_buffer = std::make_unique<int16_t[]>(m_sample_rate);

@@ -20,7 +20,7 @@
 
 namespace bgfx
 {
-	int32_t read(bx::ReaderI* _reader, bgfx::VertexLayout& _layout, bx::Error* _err = NULL);
+	int32_t read(bx::ReaderI* _reader, bgfx::VertexDecl& _decl, bx::Error* _err = NULL);
 }
 
 namespace
@@ -184,12 +184,10 @@ static bgfx::UniformHandle s_shadowMap[ShadowMapRenderTargets::Count];
 static bgfx::FrameBufferHandle s_rtShadowMap[ShadowMapRenderTargets::Count];
 static bgfx::FrameBufferHandle s_rtBlur;
 
-void mtxBillboard(
-	  float* _result
-	, const float* _view
-	, const float* _pos
-	, const float* _scale
-	)
+void mtxBillboard(float* __restrict _result
+				  , const float* __restrict _view
+				  , const float* __restrict _pos
+				  , const float* __restrict _scale)
 {
 	_result[ 0] = _view[0]  * _scale[0];
 	_result[ 1] = _view[4]  * _scale[0];
@@ -209,7 +207,7 @@ void mtxBillboard(
 	_result[15] = 1.0f;
 }
 
-void mtxYawPitchRoll(float* _result
+void mtxYawPitchRoll(float* __restrict _result
 		            , float _yaw
 		            , float _pitch
 		            , float _roll
@@ -814,15 +812,15 @@ struct Group
 
 struct Mesh
 {
-	void load(const void* _vertices, uint32_t _numVertices, const bgfx::VertexLayout _layout, const uint16_t* _indices, uint32_t _numIndices)
+	void load(const void* _vertices, uint32_t _numVertices, const bgfx::VertexDecl _decl, const uint16_t* _indices, uint32_t _numIndices)
 	{
 		Group group;
 		const bgfx::Memory* mem;
 		uint32_t size;
 
-		size = _numVertices*_layout.getStride();
+		size = _numVertices*_decl.getStride();
 		mem = bgfx::makeRef(_vertices, size);
-		group.m_vbh = bgfx::createVertexBuffer(mem, _layout);
+		group.m_vbh = bgfx::createVertexBuffer(mem, _decl);
 
 		size = _numIndices*2;
 		mem = bgfx::makeRef(_indices, size);
@@ -853,15 +851,15 @@ struct Mesh
 					bx::read(reader, group.m_aabb);
 					bx::read(reader, group.m_obb);
 
-					bgfx::read(reader, m_layout);
-					uint16_t stride = m_layout.getStride();
+					bgfx::read(reader, m_decl);
+					uint16_t stride = m_decl.getStride();
 
 					uint16_t numVertices;
 					bx::read(reader, numVertices);
 					const bgfx::Memory* mem = bgfx::alloc(numVertices*stride);
 					bx::read(reader, mem->data, mem->size);
 
-					group.m_vbh = bgfx::createVertexBuffer(mem, m_layout);
+					group.m_vbh = bgfx::createVertexBuffer(mem, m_decl);
 				}
 				break;
 
@@ -979,7 +977,7 @@ struct Mesh
 		}
 	}
 
-	bgfx::VertexLayout m_layout;
+	bgfx::VertexDecl m_decl;
 	typedef std::vector<Group> GroupArray;
 	GroupArray m_groups;
 };
@@ -995,7 +993,7 @@ struct PosColorTexCoord0Vertex
 
 	static void init()
 	{
-		ms_layout
+		ms_decl
 			.begin()
 			.add(bgfx::Attrib::Position,  3, bgfx::AttribType::Float)
 			.add(bgfx::Attrib::Color0,    4, bgfx::AttribType::Uint8, true)
@@ -1003,17 +1001,17 @@ struct PosColorTexCoord0Vertex
 			.end();
 	}
 
-	static bgfx::VertexLayout ms_layout;
+	static bgfx::VertexDecl ms_decl;
 };
 
-bgfx::VertexLayout PosColorTexCoord0Vertex::ms_layout;
+bgfx::VertexDecl PosColorTexCoord0Vertex::ms_decl;
 
 void screenSpaceQuad(float _textureWidth, float _textureHeight, bool _originBottomLeft = true, float _width = 1.0f, float _height = 1.0f)
 {
-	if (3 == bgfx::getAvailTransientVertexBuffer(3, PosColorTexCoord0Vertex::ms_layout) )
+	if (3 == bgfx::getAvailTransientVertexBuffer(3, PosColorTexCoord0Vertex::ms_decl) )
 	{
 		bgfx::TransientVertexBuffer vb;
-		bgfx::allocTransientVertexBuffer(&vb, 3, PosColorTexCoord0Vertex::ms_layout);
+		bgfx::allocTransientVertexBuffer(&vb, 3, PosColorTexCoord0Vertex::ms_decl);
 		PosColorTexCoord0Vertex* vertex = (PosColorTexCoord0Vertex*)vb.data;
 
 		const float zz = 0.0f;
@@ -1063,13 +1061,12 @@ void screenSpaceQuad(float _textureWidth, float _textureHeight, bool _originBott
 	}
 }
 
-void worldSpaceFrustumCorners(
-	  float* _corners24f
+void worldSpaceFrustumCorners(float* _corners24f
 	, float _near
 	, float _far
 	, float _projWidth
 	, float _projHeight
-	, const float* _invViewMtx
+	, const float* __restrict _invViewMtx
 	)
 {
 	// Define frustum corners in view space.
@@ -1079,7 +1076,7 @@ void worldSpaceFrustumCorners(
 	const float fh = _far  * _projHeight;
 
 	const uint8_t numCorners = 8;
-	const bx::Vec3 corners[numCorners] =
+	const float corners[numCorners][3] =
 	{
 		{ -nw,  nh, _near },
 		{  nw,  nh, _near },
@@ -1095,7 +1092,7 @@ void worldSpaceFrustumCorners(
 	float (*out)[3] = (float(*)[3])_corners24f;
 	for (uint8_t ii = 0; ii < numCorners; ++ii)
 	{
-		bx::store(&out[ii], bx::mul(corners[ii], _invViewMtx) );
+		bx::vec3MulMtx( (float*)&out[ii], (float*)&corners[ii], _invViewMtx);
 	}
 }
 
@@ -1287,8 +1284,8 @@ struct SceneSettings
 class ExampleShadowmaps : public entry::AppI
 {
 public:
-	ExampleShadowmaps(const char* _name, const char* _description, const char* _url)
-		: entry::AppI(_name, _description, _url)
+	ExampleShadowmaps(const char* _name, const char* _description)
+		: entry::AppI(_name, _description)
 	{
 	}
 
@@ -1337,26 +1334,26 @@ public:
 
 		// Uniforms.
 		s_uniforms.init();
-		s_texColor = bgfx::createUniform("s_texColor",  bgfx::UniformType::Sampler);
-		s_shadowMap[0] = bgfx::createUniform("s_shadowMap0", bgfx::UniformType::Sampler);
-		s_shadowMap[1] = bgfx::createUniform("s_shadowMap1", bgfx::UniformType::Sampler);
-		s_shadowMap[2] = bgfx::createUniform("s_shadowMap2", bgfx::UniformType::Sampler);
-		s_shadowMap[3] = bgfx::createUniform("s_shadowMap3", bgfx::UniformType::Sampler);
+		s_texColor = bgfx::createUniform("s_texColor",  bgfx::UniformType::Int1);
+		s_shadowMap[0] = bgfx::createUniform("s_shadowMap0", bgfx::UniformType::Int1);
+		s_shadowMap[1] = bgfx::createUniform("s_shadowMap1", bgfx::UniformType::Int1);
+		s_shadowMap[2] = bgfx::createUniform("s_shadowMap2", bgfx::UniformType::Int1);
+		s_shadowMap[3] = bgfx::createUniform("s_shadowMap3", bgfx::UniformType::Int1);
 
 		// Programs.
 		s_programs.init();
 
 		// Vertex declarations.
-		bgfx::VertexLayout PosNormalTexcoordLayout;
-		PosNormalTexcoordLayout.begin()
+		bgfx::VertexDecl PosNormalTexcoordDecl;
+		PosNormalTexcoordDecl.begin()
 			.add(bgfx::Attrib::Position,  3, bgfx::AttribType::Float)
 			.add(bgfx::Attrib::Normal,    4, bgfx::AttribType::Uint8, true, true)
 			.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
 			.end();
 
-		m_posLayout.begin();
-		m_posLayout.add(bgfx::Attrib::Position,  3, bgfx::AttribType::Float);
-		m_posLayout.end();
+		m_posDecl.begin();
+		m_posDecl.add(bgfx::Attrib::Position,  3, bgfx::AttribType::Float);
+		m_posDecl.end();
 
 		PosColorTexCoord0Vertex::init();
 
@@ -1370,8 +1367,8 @@ public:
 		m_treeMesh.load("meshes/tree.bin");
 		m_cubeMesh.load("meshes/cube.bin");
 		m_hollowcubeMesh.load("meshes/hollowcube.bin");
-		m_hplaneMesh.load(s_hplaneVertices, BX_COUNTOF(s_hplaneVertices), PosNormalTexcoordLayout, s_planeIndices, BX_COUNTOF(s_planeIndices) );
-		m_vplaneMesh.load(s_vplaneVertices, BX_COUNTOF(s_vplaneVertices), PosNormalTexcoordLayout, s_planeIndices, BX_COUNTOF(s_planeIndices) );
+		m_hplaneMesh.load(s_hplaneVertices, BX_COUNTOF(s_hplaneVertices), PosNormalTexcoordDecl, s_planeIndices, BX_COUNTOF(s_planeIndices) );
+		m_vplaneMesh.load(s_vplaneVertices, BX_COUNTOF(s_vplaneVertices), PosNormalTexcoordDecl, s_planeIndices, BX_COUNTOF(s_planeIndices) );
 
 		// Materials.
 		m_defaultMaterial =
@@ -1904,8 +1901,9 @@ public:
 		s_rtBlur = bgfx::createFrameBuffer(m_currentShadowMapSize, m_currentShadowMapSize, bgfx::TextureFormat::BGRA8);
 
 		// Setup camera.
+		float initialPos[3] = { 0.0f, 60.0f, -105.0f };
 		cameraCreate();
-		cameraSetPosition({ 0.0f, 60.0f, -105.0f });
+		cameraSetPosition(initialPos);
 		cameraSetVerticalAngle(-0.45f);
 
 		m_timeAccumulatorLight = 0.0f;
@@ -2315,45 +2313,6 @@ public:
 						 , caps->homogeneousDepth
 						 );
 
-			// Update render target size.
-			uint16_t shadowMapSize = 1 << uint32_t(currentSmSettings->m_sizePwrTwo);
-			if (bLtChanged || m_currentShadowMapSize != shadowMapSize)
-			{
-				m_currentShadowMapSize = shadowMapSize;
-				s_uniforms.m_shadowMapTexelSize = 1.0f / currentShadowMapSizef;
-
-				{
-					bgfx::destroy(s_rtShadowMap[0]);
-
-					bgfx::TextureHandle fbtextures[] =
-					{
-						bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT),
-						bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::D24S8, BGFX_TEXTURE_RT),
-					};
-					s_rtShadowMap[0] = bgfx::createFrameBuffer(BX_COUNTOF(fbtextures), fbtextures, true);
-				}
-
-				if (LightType::DirectionalLight == m_settings.m_lightType)
-				{
-					for (uint8_t ii = 1; ii < ShadowMapRenderTargets::Count; ++ii)
-					{
-						{
-							bgfx::destroy(s_rtShadowMap[ii]);
-
-							bgfx::TextureHandle fbtextures[] =
-							{
-								bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT),
-								bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::D24S8, BGFX_TEXTURE_RT),
-							};
-							s_rtShadowMap[ii] = bgfx::createFrameBuffer(BX_COUNTOF(fbtextures), fbtextures, true);
-						}
-					}
-				}
-
-				bgfx::destroy(s_rtBlur);
-				s_rtBlur = bgfx::createFrameBuffer(m_currentShadowMapSize, m_currentShadowMapSize, bgfx::TextureFormat::BGRA8);
-			}
-
 			if (LightType::SpotLight == m_settings.m_lightType)
 			{
 				const float fovy = m_settings.m_coverageSpotL;
@@ -2374,8 +2333,9 @@ public:
 					lightProj[ProjType::Horizontal][14] /= currentSmSettings->m_far;
 				}
 
-				const bx::Vec3 at = bx::add(bx::load<bx::Vec3>(m_pointLight.m_position.m_v), bx::load<bx::Vec3>(m_pointLight.m_spotDirectionInner.m_v) );
-				bx::mtxLookAt(lightView[TetrahedronFaces::Green], bx::load<bx::Vec3>(m_pointLight.m_position.m_v), at);
+				float at[3];
+				bx::vec3Add(at, m_pointLight.m_position.m_v, m_pointLight.m_spotDirectionInner.m_v);
+				bx::mtxLookAt(lightView[TetrahedronFaces::Green], bx::load(m_pointLight.m_position.m_v), bx::load(at) );
 			}
 			else if (LightType::PointLight == m_settings.m_lightType)
 			{
@@ -2444,9 +2404,9 @@ public:
 
 					float tmp[3] =
 					{
-						-bx::dot(bx::load<bx::Vec3>(m_pointLight.m_position.m_v), bx::load<bx::Vec3>(&mtxTmp[0]) ),
-						-bx::dot(bx::load<bx::Vec3>(m_pointLight.m_position.m_v), bx::load<bx::Vec3>(&mtxTmp[4]) ),
-						-bx::dot(bx::load<bx::Vec3>(m_pointLight.m_position.m_v), bx::load<bx::Vec3>(&mtxTmp[8]) ),
+						-bx::vec3Dot(m_pointLight.m_position.m_v, &mtxTmp[0]),
+						-bx::vec3Dot(m_pointLight.m_position.m_v, &mtxTmp[4]),
+						-bx::vec3Dot(m_pointLight.m_position.m_v, &mtxTmp[8]),
 					};
 
 					bx::mtxTranspose(mtxYpr[ii], mtxTmp);
@@ -2495,16 +2455,16 @@ public:
 
 				float mtxProj[16];
 				bx::mtxOrtho(
-					  mtxProj
-					, 1.0f
-					, -1.0f
-					, 1.0f
-					, -1.0f
-					, -currentSmSettings->m_far
-					, currentSmSettings->m_far
-					, 0.0f
-					, caps->homogeneousDepth
-					);
+							 mtxProj
+							 , 1.0f
+							 , -1.0f
+							 , 1.0f
+							 , -1.0f
+							 , -currentSmSettings->m_far
+							 , currentSmSettings->m_far
+							 , 0.0f
+							 , caps->homogeneousDepth
+							 );
 
 				const uint8_t numCorners = 8;
 				float frustumCorners[maxNumSplits][numCorners][3];
@@ -2513,24 +2473,34 @@ public:
 					// Compute frustum corners for one split in world space.
 					worldSpaceFrustumCorners( (float*)frustumCorners[ii], splitSlices[nn], splitSlices[ff], projWidth, projHeight, mtxViewInv);
 
-					bx::Vec3 min = {  9000.0f,  9000.0f,  9000.0f };
-					bx::Vec3 max = { -9000.0f, -9000.0f, -9000.0f };
+					float min[3] = {  9000.0f,  9000.0f,  9000.0f };
+					float max[3] = { -9000.0f, -9000.0f, -9000.0f };
 
 					for (uint8_t jj = 0; jj < numCorners; ++jj)
 					{
 						// Transform to light space.
-						const bx::Vec3 xyz = bx::mul(bx::load<bx::Vec3>(frustumCorners[ii][jj]), lightView[0]);
+						float lightSpaceFrustumCorner[3];
+						bx::vec3MulMtx(lightSpaceFrustumCorner, frustumCorners[ii][jj], lightView[0]);
 
 						// Update bounding box.
-						min = bx::min(min, xyz);
-						max = bx::max(max, xyz);
+						min[0] = bx::min(min[0], lightSpaceFrustumCorner[0]);
+						max[0] = bx::max(max[0], lightSpaceFrustumCorner[0]);
+						min[1] = bx::min(min[1], lightSpaceFrustumCorner[1]);
+						max[1] = bx::max(max[1], lightSpaceFrustumCorner[1]);
+						min[2] = bx::min(min[2], lightSpaceFrustumCorner[2]);
+						max[2] = bx::max(max[2], lightSpaceFrustumCorner[2]);
 					}
 
-					const bx::Vec3 minproj = bx::mulH(min, mtxProj);
-					const bx::Vec3 maxproj = bx::mulH(max, mtxProj);
+					float minproj[3];
+					float maxproj[3];
+					bx::vec3MulMtxH(minproj, min, mtxProj);
+					bx::vec3MulMtxH(maxproj, max, mtxProj);
 
-					float scalex = 2.0f / (maxproj.x - minproj.x);
-					float scaley = 2.0f / (maxproj.y - minproj.y);
+					float offsetx, offsety;
+					float scalex, scaley;
+
+					scalex = 2.0f / (maxproj[0] - minproj[0]);
+					scaley = 2.0f / (maxproj[1] - minproj[1]);
 
 					if (m_settings.m_stabilize)
 					{
@@ -2539,8 +2509,8 @@ public:
 						scaley = quantizer / bx::ceil(quantizer / scaley);
 					}
 
-					float offsetx = 0.5f * (maxproj.x + minproj.x) * scalex;
-					float offsety = 0.5f * (maxproj.y + minproj.y) * scaley;
+					offsetx = 0.5f * (maxproj[0] + minproj[0]) * scalex;
+					offsety = 0.5f * (maxproj[1] + minproj[1]) * scaley;
 
 					if (m_settings.m_stabilize)
 					{
@@ -2565,7 +2535,6 @@ public:
 			for (uint8_t ii = 0; ii < RENDERVIEW_DRAWDEPTH_3_ID+1; ++ii)
 			{
 				bgfx::setViewFrameBuffer(ii, invalidRt);
-				bgfx::setViewRect(ii, 0, 0, m_viewState.m_width, m_viewState.m_height);
 			}
 
 			// Determine on-screen rectangle size where depth buffer will be drawn.
@@ -2804,7 +2773,7 @@ public:
 				// Craft stencil mask for point light shadow map packing.
 				if(LightType::PointLight == m_settings.m_lightType && m_settings.m_stencilPack)
 				{
-					if (6 == bgfx::getAvailTransientVertexBuffer(6, m_posLayout) )
+					if (6 == bgfx::getAvailTransientVertexBuffer(6, m_posDecl) )
 					{
 						struct Pos
 						{
@@ -2812,7 +2781,7 @@ public:
 						};
 
 						bgfx::TransientVertexBuffer vb;
-						bgfx::allocTransientVertexBuffer(&vb, 6, m_posLayout);
+						bgfx::allocTransientVertexBuffer(&vb, 6, m_posDecl);
 						Pos* vertex = (Pos*)vb.data;
 
 						const float min = 0.0f;
@@ -3202,6 +3171,44 @@ public:
 				}
 			}
 
+			// Update render target size.
+			uint16_t shadowMapSize = 1 << uint32_t(currentSmSettings->m_sizePwrTwo);
+			if (bLtChanged || m_currentShadowMapSize != shadowMapSize)
+			{
+				m_currentShadowMapSize = shadowMapSize;
+				s_uniforms.m_shadowMapTexelSize = 1.0f / currentShadowMapSizef;
+
+				{
+					bgfx::destroy(s_rtShadowMap[0]);
+
+					bgfx::TextureHandle fbtextures[] =
+					{
+						bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT),
+						bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::D24S8, BGFX_TEXTURE_RT),
+					};
+					s_rtShadowMap[0] = bgfx::createFrameBuffer(BX_COUNTOF(fbtextures), fbtextures, true);
+				}
+
+				if (LightType::DirectionalLight == m_settings.m_lightType)
+				{
+					for (uint8_t ii = 1; ii < ShadowMapRenderTargets::Count; ++ii)
+					{
+						{
+							bgfx::destroy(s_rtShadowMap[ii]);
+
+							bgfx::TextureHandle fbtextures[] =
+							{
+								bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT),
+								bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::D24S8, BGFX_TEXTURE_RT),
+							};
+							s_rtShadowMap[ii] = bgfx::createFrameBuffer(BX_COUNTOF(fbtextures), fbtextures, true);
+						}
+					}
+				}
+
+				bgfx::destroy(s_rtBlur);
+				s_rtBlur = bgfx::createFrameBuffer(m_currentShadowMapSize, m_currentShadowMapSize, bgfx::TextureFormat::BGRA8);
+			}
 
 			// Advance to next frame. Rendering thread will be kicked to
 			// process submitted rendering primitives.
@@ -3222,7 +3229,7 @@ public:
 	ViewState m_viewState;
 	ClearValues m_clearValues;
 
-	bgfx::VertexLayout m_posLayout;
+	bgfx::VertexDecl m_posDecl;
 
 	bgfx::TextureHandle m_texFigure;
 	bgfx::TextureHandle m_texFlare;
@@ -3254,9 +3261,4 @@ public:
 
 } // namespace
 
-ENTRY_IMPLEMENT_MAIN(
-	  ExampleShadowmaps
-	, "16-shadowmaps"
-	, "Shadow maps example."
-	, "https://bkaradzic.github.io/bgfx/examples.html#shadowmaps"
-	);
+ENTRY_IMPLEMENT_MAIN(ExampleShadowmaps, "16-shadowmaps", "Shadow maps example.");

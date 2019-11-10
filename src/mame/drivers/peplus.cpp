@@ -957,7 +957,7 @@ TILE_GET_INFO_MEMBER(peplus_state::get_bg_tile_info)
 
 void peplus_state::video_start()
 {
-	m_bg_tilemap = &machine().tilemap().create(*m_gfxdecode, tilemap_get_info_delegate(*this, FUNC(peplus_state::get_bg_tile_info)), TILEMAP_SCAN_ROWS, 8, 8, 40, 25);
+	m_bg_tilemap = &machine().tilemap().create(*m_gfxdecode, tilemap_get_info_delegate(FUNC(peplus_state::get_bg_tile_info),this), TILEMAP_SCAN_ROWS, 8, 8, 40, 25);
 	m_palette_ram[0] = std::make_unique<uint8_t[]>(0x3000);
 	memset(m_palette_ram[0].get(), 0, 0x3000);
 	m_palette_ram[1] = std::make_unique<uint8_t[]>(0x3000);
@@ -1400,7 +1400,7 @@ void peplus_state::peplus(machine_config &config)
 	m_crtc->set_screen(m_screen);
 	m_crtc->set_show_border_area(false);
 	m_crtc->set_char_width(8);
-	m_crtc->set_on_update_addr_change_callback(FUNC(peplus_state::crtc_addr));
+	m_crtc->set_on_update_addr_change_callback(FUNC(peplus_state::crtc_addr), this);
 	m_crtc->out_vsync_callback().set(FUNC(peplus_state::crtc_vsync));
 
 	I2C_X2404P(config, m_i2cmem);
@@ -1568,7 +1568,7 @@ ROM_START( peset100 ) /* Normal board : Set Chip (Set100) - PE+ Set Denomination
 	ROM_LOAD( "cap740.u50", 0x0000, 0x0100, CRC(6fe619c4) SHA1(49e43dafd010ce0fe9b2a63b96a4ddedcb933c6d) )
 ROM_END
 
-ROM_START( peset117 ) /* Normal board : Set Chip (Set117) - PE+ Set Denomination / Enable Validator */
+ROM_START( peset117 ) /* Normal board : Set Chip (Set100) - PE+ Set Denomination / Enable Validator */
 	ROM_REGION( 0x10000, "maincpu", 0 )
 	ROM_LOAD( "set117.u68",   0x00000, 0x10000, CRC(91f6e10e) SHA1(905ea19b2d031cdb4b4a51578ca42008c29c3e19) )
 

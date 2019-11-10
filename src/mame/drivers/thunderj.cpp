@@ -255,7 +255,7 @@ void thunderj_state::thunderj(machine_config &config)
 	WATCHDOG_TIMER(config, "watchdog");
 
 	/* perfect synchronization due to shared RAM */
-	config.set_perfect_quantum(m_maincpu);
+	config.m_perfect_cpu_quantum = subtag("maincpu");
 
 	/* video hardware */
 	GFXDECODE(config, "gfxdecode", "palette", gfx_thunderj);

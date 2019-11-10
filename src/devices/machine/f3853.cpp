@@ -47,7 +47,6 @@ f3853_device::f3853_device(const machine_config &mconfig, device_type type, cons
 	device_t(mconfig, type, tag, owner, clock),
 	m_int_req_callback(*this),
 	m_pri_out_callback(*this),
-	m_int_daisy_chain_callback(*this),
 	m_int_vector(0),
 	m_prescaler(31),
 	m_priority_line(false),
@@ -90,7 +89,7 @@ void f3853_device::device_resolve_objects()
 {
 	m_int_req_callback.resolve_safe();
 	m_pri_out_callback.resolve_safe(); // TODO: not implemented
-	m_int_daisy_chain_callback.resolve();
+	m_int_daisy_chain_callback.bind_relative_to(*owner());
 }
 
 void f3851_device::device_resolve_objects()

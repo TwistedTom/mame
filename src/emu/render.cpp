@@ -460,8 +460,7 @@ void render_texture::get_scaled(u32 dwidth, u32 dheight, render_texinfo &texinfo
 			for (scalenum = 0; scalenum < ARRAY_LENGTH(m_scaled); scalenum++)
 				if ((lowest == -1 || m_scaled[scalenum].seqid < m_scaled[lowest].seqid) && !primlist.has_reference(m_scaled[scalenum].bitmap))
 					lowest = scalenum;
-			if (-1 == lowest)
-				throw emu_fatalerror("render_texture::get_scaled: Too many live texture instances!");
+			assert_always(lowest != -1, "Too many live texture instances!");
 
 			// throw out any existing entries
 			scaled = &m_scaled[lowest];
@@ -496,7 +495,7 @@ void render_texture::get_scaled(u32 dwidth, u32 dheight, render_texinfo &texinfo
 //  palette for a texture
 //-------------------------------------------------
 
-const rgb_t *render_texture::get_adjusted_palette(render_container &container, u32 &out_length)
+const rgb_t *render_texture::get_adjusted_palette(render_container &container)
 {
 	// override the palette with our adjusted palette
 	switch (m_format)
@@ -506,7 +505,7 @@ const rgb_t *render_texture::get_adjusted_palette(render_container &container, u
 			assert(m_bitmap->palette() != nullptr);
 
 			// return our adjusted palette
-			return container.bcg_lookup_table(m_format, out_length, m_bitmap->palette());
+			return container.bcg_lookup_table(m_format, m_bitmap->palette());
 
 		case TEXFORMAT_RGB32:
 		case TEXFORMAT_ARGB32:
@@ -515,7 +514,7 @@ const rgb_t *render_texture::get_adjusted_palette(render_container &container, u
 			// if no adjustment necessary, return nullptr
 			if (!container.has_brightness_contrast_gamma_changes())
 				return nullptr;
-			return container.bcg_lookup_table(m_format, out_length);
+			return container.bcg_lookup_table(m_format);
 
 		default:
 			assert(false);
@@ -679,7 +678,7 @@ float render_container::apply_brightness_contrast_gamma_fp(float value)
 //  given texture mode
 //-------------------------------------------------
 
-const rgb_t *render_container::bcg_lookup_table(int texformat, u32 &out_length, palette_t *palette)
+const rgb_t *render_container::bcg_lookup_table(int texformat, palette_t *palette)
 {
 	switch (texformat)
 	{
@@ -691,17 +690,14 @@ const rgb_t *render_container::bcg_lookup_table(int texformat, u32 &out_length, 
 				recompute_lookups();
 			}
 			assert (palette == &m_palclient->palette());
-			out_length = palette->max_index();
 			return &m_bcglookup[0];
 
 		case TEXFORMAT_RGB32:
 		case TEXFORMAT_ARGB32:
 		case TEXFORMAT_YUY16:
-			out_length = 256;
 			return m_bcglookup256;
 
 		default:
-			out_length = 0;
 			return nullptr;
 	}
 }
@@ -1995,10 +1991,11 @@ bool render_target::load_layout_file(const char *dirname, const internal_layout 
 	z_stream stream;
 	int zerr;
 
-	// initialize the stream
+	/* initialize the stream */
 	memset(&stream, 0, sizeof(stream));
 	stream.next_out = tempout.get();
 	stream.avail_out = layout_data.decompressed_size;
+
 
 	zerr = inflateInit(&stream);
 	if (zerr != Z_OK)
@@ -2007,12 +2004,12 @@ bool render_target::load_layout_file(const char *dirname, const internal_layout 
 		return false;
 	}
 
-	// decompress this chunk
+	/* decompress this chunk */
 	stream.next_in = (unsigned char *)layout_data.data;
 	stream.avail_in = layout_data.compressed_size;
 	zerr = inflate(&stream, Z_NO_FLUSH);
 
-	// stop at the end of the stream
+	/* stop at the end of the stream */
 	if (zerr == Z_STREAM_END)
 	{
 		// OK
@@ -2023,7 +2020,7 @@ bool render_target::load_layout_file(const char *dirname, const internal_layout 
 		return false;
 	}
 
-	// clean up
+	/* clean up */
 	zerr = inflateEnd(&stream);
 	if (zerr != Z_OK)
 	{
@@ -2269,7 +2266,7 @@ void render_target::add_container_primitives(render_primitive_list &list, const 
 					curitem.texture()->get_scaled(width, height, prim->texture, list, curitem.flags());
 
 					// set the palette
-					prim->texture.palette = curitem.texture()->get_adjusted_palette(container, prim->texture.palette_length);
+					prim->texture.palette = curitem.texture()->get_adjusted_palette(container);
 
 					// determine UV coordinates
 					prim->texcoords = oriented_texcoords[finalorient];
@@ -2714,8 +2711,7 @@ bool render_target::remove_clear_extent(const render_bounds &bounds)
 				// make a copy of this extent
 				memmove(&ext[ext[1] + 2], &ext[0], (last - ext) * sizeof(*ext));
 				last += ext[1] + 2;
-				if (last >= max)
-					throw emu_fatalerror("render_target::remove_clear_extent: Ran out of clear extents!");
+				assert_always(last < max, "Ran out of clear extents!\n");
 
 				// split the extent between pieces
 				ext[ext[1] + 2] = -(-ext[0] - diff);
@@ -2735,8 +2731,7 @@ bool render_target::remove_clear_extent(const render_bounds &bounds)
 				// make a copy of this extent
 				memmove(&ext[ext[1] + 2], &ext[0], (last - ext) * sizeof(*ext));
 				last += ext[1] + 2;
-				if (last >= max)
-					throw emu_fatalerror("render_target::remove_clear_extent: Ran out of clear extents!");
+				assert_always(last < max, "Ran out of clear extents!\n");
 
 				// split the extent between pieces
 				ext[ext[1] + 2] = -diff;
@@ -2761,8 +2756,7 @@ bool render_target::remove_clear_extent(const render_bounds &bounds)
 					memmove(&xext[2], &xext[0], (last - xext) * sizeof(*xext));
 					last += 2;
 					linelast += 2;
-					if (last >= max)
-						throw emu_fatalerror("render_target::remove_clear_extent: Ran out of clear extents!");
+					assert_always(last < max, "Ran out of clear extents!\n");
 
 					// split this extent into three parts
 					xext[0] = boundsx0 - x0;

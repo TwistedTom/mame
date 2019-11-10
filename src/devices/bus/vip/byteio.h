@@ -53,7 +53,8 @@
 
 class device_vip_byteio_port_interface;
 
-class vip_byteio_port_device : public device_t, public device_single_card_slot_interface<device_vip_byteio_port_interface>
+class vip_byteio_port_device : public device_t,
+								public device_slot_interface
 {
 public:
 	// construction/destruction
@@ -95,7 +96,7 @@ protected:
 // ======================> device_vip_byteio_port_interface
 
 // class representing interface-specific live c64_expansion card
-class device_vip_byteio_port_interface : public device_interface
+class device_vip_byteio_port_interface : public device_slot_card_interface
 {
 public:
 	virtual uint8_t vip_in_r() { return 0xff; }

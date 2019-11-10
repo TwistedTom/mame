@@ -23,81 +23,70 @@
 namespace spvtools {
 namespace opt {
 
-Pass::Status LICMPass::Process() { return ProcessIRContext(); }
+Pass::Status LICMPass::Process() {
+  return ProcessIRContext() ? Status::SuccessWithChange
+                            : Status::SuccessWithoutChange;
+}
 
-Pass::Status LICMPass::ProcessIRContext() {
-  Status status = Status::SuccessWithoutChange;
+bool LICMPass::ProcessIRContext() {
+  bool modified = false;
   Module* module = get_module();
 
   // Process each function in the module
-  for (auto func = module->begin();
-       func != module->end() && status != Status::Failure; ++func) {
-    status = CombineStatus(status, ProcessFunction(&*func));
+  for (Function& f : *module) {
+    modified |= ProcessFunction(&f);
   }
-  return status;
+  return modified;
 }
 
-Pass::Status LICMPass::ProcessFunction(Function* f) {
-  Status status = Status::SuccessWithoutChange;
+bool LICMPass::ProcessFunction(Function* f) {
+  bool modified = false;
   LoopDescriptor* loop_descriptor = context()->GetLoopDescriptor(f);
 
   // Process each loop in the function
-  for (auto it = loop_descriptor->begin();
-       it != loop_descriptor->end() && status != Status::Failure; ++it) {
-    Loop& loop = *it;
+  for (Loop& loop : *loop_descriptor) {
     // Ignore nested loops, as we will process them in order in ProcessLoop
     if (loop.IsNested()) {
       continue;
     }
-    status = CombineStatus(status, ProcessLoop(&loop, f));
+    modified |= ProcessLoop(&loop, f);
   }
-  return status;
+  return modified;
 }
 
-Pass::Status LICMPass::ProcessLoop(Loop* loop, Function* f) {
-  Status status = Status::SuccessWithoutChange;
+bool LICMPass::ProcessLoop(Loop* loop, Function* f) {
+  bool modified = false;
 
   // Process all nested loops first
-  for (auto nl = loop->begin(); nl != loop->end() && status != Status::Failure;
-       ++nl) {
-    Loop* nested_loop = *nl;
-    status = CombineStatus(status, ProcessLoop(nested_loop, f));
+  for (Loop* nested_loop : *loop) {
+    modified |= ProcessLoop(nested_loop, f);
   }
 
   std::vector<BasicBlock*> loop_bbs{};
-  status = CombineStatus(
-      status,
-      AnalyseAndHoistFromBB(loop, f, loop->GetHeaderBlock(), &loop_bbs));
+  modified |= AnalyseAndHoistFromBB(loop, f, loop->GetHeaderBlock(), &loop_bbs);
 
-  for (size_t i = 0; i < loop_bbs.size() && status != Status::Failure; ++i) {
+  for (size_t i = 0; i < loop_bbs.size(); ++i) {
     BasicBlock* bb = loop_bbs[i];
     // do not delete the element
-    status =
-        CombineStatus(status, AnalyseAndHoistFromBB(loop, f, bb, &loop_bbs));
+    modified |= AnalyseAndHoistFromBB(loop, f, bb, &loop_bbs);
   }
 
-  return status;
+  return modified;
 }
 
-Pass::Status LICMPass::AnalyseAndHoistFromBB(
-    Loop* loop, Function* f, BasicBlock* bb,
-    std::vector<BasicBlock*>* loop_bbs) {
+bool LICMPass::AnalyseAndHoistFromBB(Loop* loop, Function* f, BasicBlock* bb,
+                                     std::vector<BasicBlock*>* loop_bbs) {
   bool modified = false;
-  std::function<bool(Instruction*)> hoist_inst =
+  std::function<void(Instruction*)> hoist_inst =
       [this, &loop, &modified](Instruction* inst) {
         if (loop->ShouldHoistInstruction(this->context(), inst)) {
-          if (!HoistInstruction(loop, inst)) {
-            return false;
-          }
+          HoistInstruction(loop, inst);
           modified = true;
         }
-        return true;
       };
 
   if (IsImmediatelyContainedInLoop(loop, f, bb)) {
-    if (!bb->WhileEachInst(hoist_inst, false)) {
-      return Status::Failure;
-    }
+    bb->ForEachInst(hoist_inst, false);
   }
 
   DominatorAnalysis* dom_analysis = context()->GetDominatorAnalysis(f);
@@ -109,7 +98,7 @@ Pass::Status LICMPass::AnalyseAndHoistFromBB(
     }
   }
 
-  return (modified ? Status::SuccessWithChange : Status::SuccessWithoutChange);
+  return modified;
 }
 
 bool LICMPass::IsImmediatelyContainedInLoop(Loop* loop, Function* f,
@@ -118,22 +107,10 @@ bool LICMPass::IsImmediatelyContainedInLoop(Loop* loop, Function* f,
   return loop == (*loop_descriptor)[bb->id()];
 }
 
-bool LICMPass::HoistInstruction(Loop* loop, Instruction* inst) {
-  // TODO(1841): Handle failure to create pre-header.
+void LICMPass::HoistInstruction(Loop* loop, Instruction* inst) {
   BasicBlock* pre_header_bb = loop->GetOrCreatePreHeaderBlock();
-  if (!pre_header_bb) {
-    return false;
-  }
-  Instruction* insertion_point = &*pre_header_bb->tail();
-  Instruction* previous_node = insertion_point->PreviousNode();
-  if (previous_node && (previous_node->opcode() == SpvOpLoopMerge ||
-                        previous_node->opcode() == SpvOpSelectionMerge)) {
-    insertion_point = previous_node;
-  }
-
-  inst->InsertBefore(insertion_point);
+  inst->InsertBefore(std::move(&(*pre_header_bb->tail())));
   context()->set_instr_block(inst, pre_header_bb);
-  return true;
 }
 
 }  // namespace opt

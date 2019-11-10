@@ -31,8 +31,7 @@ DEFINE_DEVICE_TYPE(PCD8544, pcd8544_device, "pcd8544_device", "Philips PCD8544 L
 //-------------------------------------------------
 
 pcd8544_device::pcd8544_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock) :
-	device_t(mconfig, PCD8544, tag, owner, clock),
-	m_screen_update_cb(*this)
+	device_t(mconfig, PCD8544, tag, owner, clock)
 {
 }
 
@@ -42,7 +41,7 @@ pcd8544_device::pcd8544_device(const machine_config &mconfig, const char *tag, d
 
 void pcd8544_device::device_start()
 {
-	m_screen_update_cb.resolve();
+	m_screen_update_cb.bind_relative_to(*owner());
 
 	// state saving
 	save_item(NAME(m_sdin));

@@ -1,6 +1,6 @@
 //
 // Copyright (C) 2014-2015 LunarG, Inc.
-// Copyright (C) 2015-2018 Google, Inc.
+// Copyright (C) 2015-2016 Google, Inc.
 //
 // All rights reserved.
 //
@@ -46,9 +46,7 @@
 
 #include "SpvBuilder.h"
 
-#ifndef GLSLANG_WEB
 #include "hex_float.h"
-#endif
 
 #ifndef _WIN32
     #include <cstdio>
@@ -62,7 +60,6 @@ Builder::Builder(unsigned int spvVersion, unsigned int magicNumber, SpvBuildLogg
     sourceVersion(0),
     sourceFileStringId(NoResult),
     currentLine(0),
-    currentFile(nullptr),
     emitOpLines(false),
     addressModel(AddressingModelLogical),
     memoryModel(MemoryModelGLSL450),
@@ -90,35 +87,14 @@ Id Builder::import(const char* name)
     return import->getResultId();
 }
 
-// Emit instruction for non-filename-based #line directives (ie. no filename
-// seen yet): emit an OpLine if we've been asked to emit OpLines and the line
-// number has changed since the last time, and is a valid line number.
+// Emit an OpLine if we've been asked to emit OpLines and the line number
+// has changed since the last time, and is a valid line number.
 void Builder::setLine(int lineNum)
 {
     if (lineNum != 0 && lineNum != currentLine) {
         currentLine = lineNum;
         if (emitOpLines)
             addLine(sourceFileStringId, currentLine, 0);
-    }
-}
-
-// If no filename, do non-filename-based #line emit. Else do filename-based emit.
-// Emit OpLine if we've been asked to emit OpLines and the line number or filename
-// has changed since the last time, and line number is valid.
-void Builder::setLine(int lineNum, const char* filename)
-{
-    if (filename == nullptr) {
-        setLine(lineNum);
-        return;
-    }
-    if ((lineNum != 0 && lineNum != currentLine) || currentFile == nullptr ||
-            strncmp(filename, currentFile, strlen(currentFile) + 1) != 0) {
-        currentLine = lineNum;
-        currentFile = filename;
-        if (emitOpLines) {
-            spv::Id strId = getStringId(filename);
-            addLine(strId, currentLine, 0);
-        }
     }
 }
 
@@ -196,47 +172,8 @@ Id Builder::makePointer(StorageClass storageClass, Id pointee)
     return type->getResultId();
 }
 
-Id Builder::makeForwardPointer(StorageClass storageClass)
-{
-    // Caching/uniquifying doesn't work here, because we don't know the
-    // pointee type and there can be multiple forward pointers of the same
-    // storage type. Somebody higher up in the stack must keep track.
-    Instruction* type = new Instruction(getUniqueId(), NoType, OpTypeForwardPointer);
-    type->addImmediateOperand(storageClass);
-    constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
-    module.mapInstruction(type);
-
-    return type->getResultId();
-}
-
-Id Builder::makePointerFromForwardPointer(StorageClass storageClass, Id forwardPointerType, Id pointee)
-{
-    // try to find it
-    Instruction* type;
-    for (int t = 0; t < (int)groupedTypes[OpTypePointer].size(); ++t) {
-        type = groupedTypes[OpTypePointer][t];
-        if (type->getImmediateOperand(0) == (unsigned)storageClass &&
-            type->getIdOperand(1) == pointee)
-            return type->getResultId();
-    }
-
-    type = new Instruction(forwardPointerType, NoType, OpTypePointer);
-    type->addImmediateOperand(storageClass);
-    type->addIdOperand(pointee);
-    groupedTypes[OpTypePointer].push_back(type);
-    constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
-    module.mapInstruction(type);
-
-    return type->getResultId();
-}
-
 Id Builder::makeIntegerType(int width, bool hasSign)
 {
-#ifdef GLSLANG_WEB
-    assert(width == 32);
-    width = 32;
-#endif
-
     // try to find it
     Instruction* type;
     for (int t = 0; t < (int)groupedTypes[OpTypeInt].size(); ++t) {
@@ -272,11 +209,6 @@ Id Builder::makeIntegerType(int width, bool hasSign)
 
 Id Builder::makeFloatType(int width)
 {
-#ifdef GLSLANG_WEB
-    assert(width == 32);
-    width = 32;
-#endif
-
     // try to find it
     Instruction* type;
     for (int t = 0; t < (int)groupedTypes[OpTypeFloat].size(); ++t) {
@@ -400,33 +332,6 @@ Id Builder::makeMatrixType(Id component, int cols, int rows)
     return type->getResultId();
 }
 
-Id Builder::makeCooperativeMatrixType(Id component, Id scope, Id rows, Id cols)
-{
-    // try to find it
-    Instruction* type;
-    for (int t = 0; t < (int)groupedTypes[OpTypeCooperativeMatrixNV].size(); ++t) {
-        type = groupedTypes[OpTypeCooperativeMatrixNV][t];
-        if (type->getIdOperand(0) == component &&
-            type->getIdOperand(1) == scope &&
-            type->getIdOperand(2) == rows &&
-            type->getIdOperand(3) == cols)
-            return type->getResultId();
-    }
-
-    // not found, make it
-    type = new Instruction(getUniqueId(), NoType, OpTypeCooperativeMatrixNV);
-    type->addIdOperand(component);
-    type->addIdOperand(scope);
-    type->addIdOperand(rows);
-    type->addIdOperand(cols);
-    groupedTypes[OpTypeCooperativeMatrixNV].push_back(type);
-    constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
-    module.mapInstruction(type);
-
-    return type->getResultId();
-}
-
-
 // TODO: performance: track arrays per stride
 // If a stride is supplied (non-zero) make an array.
 // If no stride (0), reuse previous array types.
@@ -528,7 +433,6 @@ Id Builder::makeImageType(Id sampledType, Dim dim, bool depth, bool arrayed, boo
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
     module.mapInstruction(type);
 
-#ifndef GLSLANG_WEB
     // deal with capabilities
     switch (dim) {
     case DimBuffer:
@@ -574,7 +478,6 @@ Id Builder::makeImageType(Id sampledType, Dim dim, bool depth, bool arrayed, boo
                 addCapability(CapabilityImageMSArray);
         }
     }
-#endif
 
     return type->getResultId();
 }
@@ -600,13 +503,12 @@ Id Builder::makeSampledImageType(Id imageType)
     return type->getResultId();
 }
 
-#ifndef GLSLANG_WEB
+#ifdef NV_EXTENSIONS
 Id Builder::makeAccelerationStructureNVType()
 {
     Instruction *type;
     if (groupedTypes[OpTypeAccelerationStructureNV].size() == 0) {
         type = new Instruction(getUniqueId(), NoType, OpTypeAccelerationStructureNV);
-        groupedTypes[OpTypeAccelerationStructureNV].push_back(type);
         constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
         module.mapInstruction(type);
     } else {
@@ -616,7 +518,6 @@ Id Builder::makeAccelerationStructureNVType()
     return type->getResultId();
 }
 #endif
-
 Id Builder::getDerefTypeId(Id resultId) const
 {
     Id typeId = getTypeId(resultId);
@@ -653,7 +554,6 @@ int Builder::getNumTypeConstituents(Id typeId) const
     case OpTypeBool:
     case OpTypeInt:
     case OpTypeFloat:
-    case OpTypePointer:
         return 1;
     case OpTypeVector:
     case OpTypeMatrix:
@@ -665,9 +565,6 @@ int Builder::getNumTypeConstituents(Id typeId) const
     }
     case OpTypeStruct:
         return instr->getNumOperands();
-    case OpTypeCooperativeMatrixNV:
-        // has only one constituent when used with OpCompositeConstruct.
-        return 1;
     default:
         assert(0);
         return 1;
@@ -714,7 +611,6 @@ Id Builder::getContainedTypeId(Id typeId, int member) const
     case OpTypeMatrix:
     case OpTypeArray:
     case OpTypeRuntimeArray:
-    case OpTypeCooperativeMatrixNV:
         return instr->getIdOperand(0);
     case OpTypePointer:
         return instr->getIdOperand(1);
@@ -751,33 +647,14 @@ bool Builder::containsType(Id typeId, spv::Op typeOp, unsigned int width) const
                 return true;
         }
         return false;
-    case OpTypePointer:
-        return false;
     case OpTypeVector:
     case OpTypeMatrix:
     case OpTypeArray:
     case OpTypeRuntimeArray:
+    case OpTypePointer:
         return containsType(getContainedTypeId(typeId), typeOp, width);
     default:
         return typeClass == typeOp;
-    }
-}
-
-// return true if the type is a pointer to PhysicalStorageBufferEXT or an
-// array of such pointers. These require restrict/aliased decorations.
-bool Builder::containsPhysicalStorageBufferOrArray(Id typeId) const
-{
-    const Instruction& instr = *module.getInstruction(typeId);
-
-    Op typeClass = instr.getOpCode();
-    switch (typeClass)
-    {
-    case OpTypePointer:
-        return getTypeStorageClass(typeId) == StorageClassPhysicalStorageBufferEXT;
-    case OpTypeArray:
-        return containsPhysicalStorageBufferOrArray(getContainedTypeId(typeId));
-    default:
-        return false;
     }
 }
 
@@ -954,10 +831,6 @@ Id Builder::makeFloatConstant(float f, bool specConstant)
 
 Id Builder::makeDoubleConstant(double d, bool specConstant)
 {
-#ifdef GLSLANG_WEB
-    assert(0);
-    return NoResult;
-#else
     Op opcode = specConstant ? OpSpecConstant : OpConstant;
     Id typeId = makeFloatType(64);
     union { double db; unsigned long long ull; } u;
@@ -982,15 +855,10 @@ Id Builder::makeDoubleConstant(double d, bool specConstant)
     module.mapInstruction(c);
 
     return c->getResultId();
-#endif
 }
 
 Id Builder::makeFloat16Constant(float f16, bool specConstant)
 {
-#ifdef GLSLANG_WEB
-    assert(0);
-    return NoResult;
-#else
     Op opcode = specConstant ? OpSpecConstant : OpConstant;
     Id typeId = makeFloatType(16);
 
@@ -1015,43 +883,36 @@ Id Builder::makeFloat16Constant(float f16, bool specConstant)
     module.mapInstruction(c);
 
     return c->getResultId();
-#endif
 }
 
 Id Builder::makeFpConstant(Id type, double d, bool specConstant)
 {
-#ifdef GLSLANG_WEB
-    const int width = 32;
-    assert(width == getScalarTypeWidth(type));
-#else
-    const int width = getScalarTypeWidth(type);
-#endif
+        assert(isFloatType(type));
 
-    assert(isFloatType(type));
+        switch (getScalarTypeWidth(type)) {
+        case 16:
+                return makeFloat16Constant((float)d, specConstant);
+        case 32:
+                return makeFloatConstant((float)d, specConstant);
+        case 64:
+                return makeDoubleConstant(d, specConstant);
+        default:
+                break;
+        }
 
-    switch (width) {
-    case 16:
-            return makeFloat16Constant((float)d, specConstant);
-    case 32:
-            return makeFloatConstant((float)d, specConstant);
-    case 64:
-            return makeDoubleConstant(d, specConstant);
-    default:
-            break;
-    }
-
-    assert(false);
-    return NoResult;
+        assert(false);
+        return NoResult;
 }
 
-Id Builder::findCompositeConstant(Op typeClass, Id typeId, const std::vector<Id>& comps)
+Id Builder::findCompositeConstant(Op typeClass, const std::vector<Id>& comps)
 {
     Instruction* constant = 0;
     bool found = false;
     for (int i = 0; i < (int)groupedConstants[typeClass].size(); ++i) {
         constant = groupedConstants[typeClass][i];
 
-        if (constant->getTypeId() != typeId)
+        // same shape?
+        if (constant->getNumOperands() != (int)comps.size())
             continue;
 
         // same contents?
@@ -1106,9 +967,8 @@ Id Builder::makeCompositeConstant(Id typeId, const std::vector<Id>& members, boo
     case OpTypeVector:
     case OpTypeArray:
     case OpTypeMatrix:
-    case OpTypeCooperativeMatrixNV:
         if (! specConstant) {
-            Id existing = findCompositeConstant(typeClass, typeId, members);
+            Id existing = findCompositeConstant(typeClass, members);
             if (existing)
                 return existing;
         }
@@ -1338,13 +1198,11 @@ void Builder::makeDiscard()
 }
 
 // Comments in header
-Id Builder::createVariable(StorageClass storageClass, Id type, const char* name, Id initializer)
+Id Builder::createVariable(StorageClass storageClass, Id type, const char* name)
 {
     Id pointerType = makePointer(storageClass, type);
     Instruction* inst = new Instruction(getUniqueId(), pointerType, OpVariable);
     inst->addImmediateOperand(storageClass);
-    if (initializer != NoResult)
-        inst->addIdOperand(initializer);
 
     switch (storageClass) {
     case StorageClassFunction:
@@ -1372,39 +1230,15 @@ Id Builder::createUndefined(Id type)
   return inst->getResultId();
 }
 
-// av/vis/nonprivate are unnecessary and illegal for some storage classes.
-spv::MemoryAccessMask Builder::sanitizeMemoryAccessForStorageClass(spv::MemoryAccessMask memoryAccess, StorageClass sc) const
-{
-    switch (sc) {
-    case spv::StorageClassUniform:
-    case spv::StorageClassWorkgroup:
-    case spv::StorageClassStorageBuffer:
-    case spv::StorageClassPhysicalStorageBufferEXT:
-        break;
-    default:
-        memoryAccess = spv::MemoryAccessMask(memoryAccess & 
-                        ~(spv::MemoryAccessMakePointerAvailableKHRMask |
-                          spv::MemoryAccessMakePointerVisibleKHRMask |
-                          spv::MemoryAccessNonPrivatePointerKHRMask));
-        break;
-    }
-    return memoryAccess;
-}
-
 // Comments in header
-void Builder::createStore(Id rValue, Id lValue, spv::MemoryAccessMask memoryAccess, spv::Scope scope, unsigned int alignment)
+void Builder::createStore(Id rValue, Id lValue, spv::MemoryAccessMask memoryAccess, spv::Scope scope)
 {
     Instruction* store = new Instruction(OpStore);
     store->addIdOperand(lValue);
     store->addIdOperand(rValue);
 
-    memoryAccess = sanitizeMemoryAccessForStorageClass(memoryAccess, getStorageClass(lValue));
-
     if (memoryAccess != MemoryAccessMaskNone) {
         store->addImmediateOperand(memoryAccess);
-        if (memoryAccess & spv::MemoryAccessAlignedMask) {
-            store->addImmediateOperand(alignment);
-        }
         if (memoryAccess & spv::MemoryAccessMakePointerAvailableKHRMask) {
             store->addIdOperand(makeUintConstant(scope));
         }
@@ -1414,18 +1248,13 @@ void Builder::createStore(Id rValue, Id lValue, spv::MemoryAccessMask memoryAcce
 }
 
 // Comments in header
-Id Builder::createLoad(Id lValue, spv::MemoryAccessMask memoryAccess, spv::Scope scope, unsigned int alignment)
+Id Builder::createLoad(Id lValue, spv::MemoryAccessMask memoryAccess, spv::Scope scope)
 {
     Instruction* load = new Instruction(getUniqueId(), getDerefTypeId(lValue), OpLoad);
     load->addIdOperand(lValue);
 
-    memoryAccess = sanitizeMemoryAccessForStorageClass(memoryAccess, getStorageClass(lValue));
-
     if (memoryAccess != MemoryAccessMaskNone) {
         load->addImmediateOperand(memoryAccess);
-        if (memoryAccess & spv::MemoryAccessAlignedMask) {
-            load->addImmediateOperand(alignment);
-        }
         if (memoryAccess & spv::MemoryAccessMakePointerVisibleKHRMask) {
             load->addIdOperand(makeUintConstant(scope));
         }
@@ -1468,23 +1297,6 @@ Id Builder::createArrayLength(Id base, unsigned int member)
     Instruction* length = new Instruction(getUniqueId(), intType, OpArrayLength);
     length->addIdOperand(base);
     length->addImmediateOperand(member);
-    buildPoint->addInstruction(std::unique_ptr<Instruction>(length));
-
-    return length->getResultId();
-}
-
-Id Builder::createCooperativeMatrixLength(Id type)
-{
-    spv::Id intType = makeUintType(32);
-
-    // Generate code for spec constants if in spec constant operation
-    // generation mode.
-    if (generatingOpCodeForSpecConst) {
-        return createSpecConstantOp(OpCooperativeMatrixLengthNV, intType, std::vector<Id>(1, type), std::vector<Id>());
-    }
-
-    Instruction* length = new Instruction(getUniqueId(), intType, OpCooperativeMatrixLengthNV);
-    length->addIdOperand(type);
     buildPoint->addInstruction(std::unique_ptr<Instruction>(length));
 
     return length->getResultId();
@@ -1840,7 +1652,7 @@ Id Builder::createBuiltinCall(Id resultType, Id builtins, int entryPoint, const 
 // Accept all parameters needed to create a texture instruction.
 // Create the correct instruction based on the inputs, and make the call.
 Id Builder::createTextureCall(Decoration precision, Id resultType, bool sparse, bool fetch, bool proj, bool gather,
-    bool noImplicitLod, const TextureParameters& parameters, ImageOperandsMask signExtensionMask)
+    bool noImplicitLod, const TextureParameters& parameters)
 {
     static const int maxTextureArgs = 10;
     Id texArgs[maxTextureArgs] = {};
@@ -1857,7 +1669,7 @@ Id Builder::createTextureCall(Decoration precision, Id resultType, bool sparse, 
     if (parameters.component != NoResult)
         texArgs[numArgs++] = parameters.component;
 
-#ifndef GLSLANG_WEB
+#ifdef NV_EXTENSIONS
     if (parameters.granularity != NoResult)
         texArgs[numArgs++] = parameters.granularity;
     if (parameters.coarse != NoResult)
@@ -1867,8 +1679,8 @@ Id Builder::createTextureCall(Decoration precision, Id resultType, bool sparse, 
     //
     // Set up the optional arguments
     //
-    int optArgNum = numArgs;    // track which operand, if it exists, is the mask of optional arguments
-    ++numArgs;                  // speculatively make room for the mask operand
+    int optArgNum = numArgs;                        // track which operand, if it exists, is the mask of optional arguments
+    ++numArgs;                                      // speculatively make room for the mask operand
     ImageOperandsMask mask = ImageOperandsMaskNone; // the mask operand
     if (parameters.bias) {
         mask = (ImageOperandsMask)(mask | ImageOperandsBiasMask);
@@ -1904,7 +1716,6 @@ Id Builder::createTextureCall(Decoration precision, Id resultType, bool sparse, 
         mask = (ImageOperandsMask)(mask | ImageOperandsConstOffsetsMask);
         texArgs[numArgs++] = parameters.offsets;
     }
-#ifndef GLSLANG_WEB
     if (parameters.sample) {
         mask = (ImageOperandsMask)(mask | ImageOperandsSampleMask);
         texArgs[numArgs++] = parameters.sample;
@@ -1922,8 +1733,6 @@ Id Builder::createTextureCall(Decoration precision, Id resultType, bool sparse, 
     if (parameters.volatil) {
         mask = mask | ImageOperandsVolatileTexelKHRMask;
     }
-#endif
-    mask = mask | signExtensionMask;
     if (mask == ImageOperandsMaskNone)
         --numArgs;  // undo speculative reservation for the mask argument
     else
@@ -1938,9 +1747,10 @@ Id Builder::createTextureCall(Decoration precision, Id resultType, bool sparse, 
             opCode = OpImageSparseFetch;
         else
             opCode = OpImageFetch;
-#ifndef GLSLANG_WEB
+#ifdef NV_EXTENSIONS
     } else if (parameters.granularity && parameters.coarse) {
         opCode = OpImageSampleFootprintNV;
+#endif
     } else if (gather) {
         if (parameters.Dref)
             if (sparse)
@@ -1952,7 +1762,6 @@ Id Builder::createTextureCall(Decoration precision, Id resultType, bool sparse, 
                 opCode = OpImageSparseGather;
             else
                 opCode = OpImageGather;
-#endif
     } else if (explicitLod) {
         if (parameters.Dref) {
             if (proj)
@@ -2101,7 +1910,11 @@ Id Builder::createTextureQueryCall(Op opCode, const TextureParameters& parameter
         break;
     }
     case OpImageQueryLod:
+#ifdef AMD_EXTENSIONS
         resultType = makeVectorType(getScalarTypeId(getTypeId(parameters.coords)), 2);
+#else
+        resultType = makeVectorType(makeFloatType(32), 2);
+#endif
         break;
     case OpImageQueryLevels:
     case OpImageQuerySamples:
@@ -2119,7 +1932,6 @@ Id Builder::createTextureQueryCall(Op opCode, const TextureParameters& parameter
     if (parameters.lod)
         query->addIdOperand(parameters.lod);
     buildPoint->addInstruction(std::unique_ptr<Instruction>(query));
-    addCapability(CapabilityImageQuery);
 
     return query->getResultId();
 }
@@ -2284,8 +2096,7 @@ Id Builder::createConstructor(Decoration precision, const std::vector<Id>& sourc
     // Go through the source arguments, each one could have either
     // a single or multiple components to contribute.
     for (unsigned int i = 0; i < sources.size(); ++i) {
-
-        if (isScalar(sources[i]) || isPointer(sources[i]))
+        if (isScalar(sources[i]))
             latchResult(sources[i]);
         else if (isVector(sources[i]))
             accumulateVectorConstituents(sources[i]);
@@ -2313,12 +2124,7 @@ Id Builder::createMatrixConstructor(Decoration precision, const std::vector<Id>&
     int numRows = getTypeNumRows(resultTypeId);
 
     Instruction* instr = module.getInstruction(componentTypeId);
-#ifdef GLSLANG_WEB
-    const unsigned bitCount = 32;
-    assert(bitCount == instr->getImmediateOperand(0));
-#else
-    const unsigned bitCount = instr->getImmediateOperand(0);
-#endif
+    unsigned bitCount = instr->getImmediateOperand(0);
 
     // Optimize matrix constructed from a bigger matrix
     if (isMatrix(sources[0]) && getNumColumns(sources[0]) >= numCols && getNumRows(sources[0]) >= numRows) {
@@ -2605,15 +2411,11 @@ void Builder::clearAccessChain()
     accessChain.preSwizzleBaseType = NoType;
     accessChain.isRValue = false;
     accessChain.coherentFlags.clear();
-    accessChain.alignment = 0;
 }
 
 // Comments in header
-void Builder::accessChainPushSwizzle(std::vector<unsigned>& swizzle, Id preSwizzleBaseType, AccessChain::CoherentFlags coherentFlags, unsigned int alignment)
+void Builder::accessChainPushSwizzle(std::vector<unsigned>& swizzle, Id preSwizzleBaseType)
 {
-    accessChain.coherentFlags |= coherentFlags;
-    accessChain.alignment |= alignment;
-
     // swizzles can be stacked in GLSL, but simplified to a single
     // one here; the base type doesn't change
     if (accessChain.preSwizzleBaseType == NoType)
@@ -2635,7 +2437,7 @@ void Builder::accessChainPushSwizzle(std::vector<unsigned>& swizzle, Id preSwizz
 }
 
 // Comments in header
-void Builder::accessChainStore(Id rvalue, spv::MemoryAccessMask memoryAccess, spv::Scope scope, unsigned int alignment)
+void Builder::accessChainStore(Id rvalue, spv::MemoryAccessMask memoryAccess, spv::Scope scope)
 {
     assert(accessChain.isRValue == false);
 
@@ -2653,17 +2455,11 @@ void Builder::accessChainStore(Id rvalue, spv::MemoryAccessMask memoryAccess, sp
         source = createLvalueSwizzle(getTypeId(tempBaseId), tempBaseId, source, accessChain.swizzle);
     }
 
-    // take LSB of alignment
-    alignment = alignment & ~(alignment & (alignment-1));
-    if (getStorageClass(base) == StorageClassPhysicalStorageBufferEXT) {
-        memoryAccess = (spv::MemoryAccessMask)(memoryAccess | spv::MemoryAccessAlignedMask);
-    }
-
-    createStore(source, base, memoryAccess, scope, alignment);
+    createStore(source, base, memoryAccess, scope);
 }
 
 // Comments in header
-Id Builder::accessChainLoad(Decoration precision, Decoration nonUniform, Id resultType, spv::MemoryAccessMask memoryAccess, spv::Scope scope, unsigned int alignment)
+Id Builder::accessChainLoad(Decoration precision, Decoration nonUniform, Id resultType, spv::MemoryAccessMask memoryAccess, spv::Scope scope)
 {
     Id id;
 
@@ -2685,22 +2481,15 @@ Id Builder::accessChainLoad(Decoration precision, Decoration nonUniform, Id resu
                 }
             }
 
-            if (constant) {
+            if (constant)
                 id = createCompositeExtract(accessChain.base, swizzleBase, indexes);
-            } else {
-                Id lValue = NoResult;
-                if (spvVersion >= Spv_1_4) {
-                    // make a new function variable for this r-value, using an initializer,
-                    // and mark it as NonWritable so that downstream it can be detected as a lookup
-                    // table
-                    lValue = createVariable(StorageClassFunction, getTypeId(accessChain.base), "indexable",
-                        accessChain.base);
-                    addDecoration(lValue, DecorationNonWritable);
-                } else {
-                    lValue = createVariable(StorageClassFunction, getTypeId(accessChain.base), "indexable");
-                    // store into it
-                    createStore(accessChain.base, lValue);
-                }
+            else {
+                // make a new function variable for this r-value
+                Id lValue = createVariable(StorageClassFunction, getTypeId(accessChain.base), "indexable");
+
+                // store into it
+                createStore(accessChain.base, lValue);
+
                 // move base to the new variable
                 accessChain.base = lValue;
                 accessChain.isRValue = false;
@@ -2713,15 +2502,8 @@ Id Builder::accessChainLoad(Decoration precision, Decoration nonUniform, Id resu
             id = accessChain.base;  // no precision, it was set when this was defined
     } else {
         transferAccessChainSwizzle(true);
-
-        // take LSB of alignment
-        alignment = alignment & ~(alignment & (alignment-1));
-        if (getStorageClass(accessChain.base) == StorageClassPhysicalStorageBufferEXT) {
-            memoryAccess = (spv::MemoryAccessMask)(memoryAccess | spv::MemoryAccessAlignedMask);
-        }
-
         // load through the access chain
-        id = createLoad(collapseAccessChain(), memoryAccess, scope, alignment);
+        id = createLoad(collapseAccessChain(), memoryAccess, scope);
         setPrecision(id, precision);
         addDecoration(id, nonUniform);
     }
@@ -3002,14 +2784,14 @@ void Builder::createSelectionMerge(Block* mergeBlock, unsigned int control)
 }
 
 void Builder::createLoopMerge(Block* mergeBlock, Block* continueBlock, unsigned int control,
-                              const std::vector<unsigned int>& operands)
+                              unsigned int dependencyLength)
 {
     Instruction* merge = new Instruction(OpLoopMerge);
     merge->addIdOperand(mergeBlock->getId());
     merge->addIdOperand(continueBlock->getId());
     merge->addImmediateOperand(control);
-    for (int op = 0; op < (int)operands.size(); ++op)
-        merge->addImmediateOperand(operands[op]);
+    if ((control & LoopControlDependencyLengthMask) != 0)
+        merge->addImmediateOperand(dependencyLength);
     buildPoint->addInstruction(std::unique_ptr<Instruction>(merge));
 }
 
@@ -3027,8 +2809,7 @@ void Builder::createConditionalBranch(Id condition, Block* thenBlock, Block* els
 // OpSource
 // [OpSourceContinued]
 // ...
-void Builder::dumpSourceInstructions(const spv::Id fileId, const std::string& text,
-                                     std::vector<unsigned int>& out) const
+void Builder::dumpSourceInstructions(std::vector<unsigned int>& out) const
 {
     const int maxWordCount = 0xFFFF;
     const int opSourceWordCount = 4;
@@ -3040,14 +2821,14 @@ void Builder::dumpSourceInstructions(const spv::Id fileId, const std::string& te
         sourceInst.addImmediateOperand(source);
         sourceInst.addImmediateOperand(sourceVersion);
         // File operand
-        if (fileId != NoResult) {
-            sourceInst.addIdOperand(fileId);
+        if (sourceFileStringId != NoResult) {
+            sourceInst.addIdOperand(sourceFileStringId);
             // Source operand
-            if (text.size() > 0) {
+            if (sourceText.size() > 0) {
                 int nextByte = 0;
                 std::string subString;
-                while ((int)text.size() - nextByte > 0) {
-                    subString = text.substr(nextByte, nonNullBytesPerInstruction);
+                while ((int)sourceText.size() - nextByte > 0) {
+                    subString = sourceText.substr(nextByte, nonNullBytesPerInstruction);
                     if (nextByte == 0) {
                         // OpSource
                         sourceInst.addStringOperand(subString.c_str());
@@ -3065,14 +2846,6 @@ void Builder::dumpSourceInstructions(const spv::Id fileId, const std::string& te
         } else
             sourceInst.dump(out);
     }
-}
-
-// Dump an OpSource[Continued] sequence for the source and every include file
-void Builder::dumpSourceInstructions(std::vector<unsigned int>& out) const
-{
-    dumpSourceInstructions(sourceFileStringId, sourceText, out);
-    for (auto iItr = includeFiles.begin(); iItr != includeFiles.end(); ++iItr)
-        dumpSourceInstructions(iItr->first, *iItr->second, out);
 }
 
 void Builder::dumpInstructions(std::vector<unsigned int>& out, const std::vector<std::unique_ptr<Instruction> >& instructions) const

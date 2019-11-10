@@ -3,9 +3,6 @@
 #ifndef NLM_BASE_H_
 #define NLM_BASE_H_
 
-/// \file nlm_base.h
-///
-
 /*
  * Provide base environment for netlist
  *

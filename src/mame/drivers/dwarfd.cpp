@@ -369,7 +369,7 @@ READ8_MEMBER(dwarfd_state::dwarfd_ram_r)
 	}
 	else
 	{
-		m_crtc->dack_w(m_dw_ram[offset]);
+		m_crtc->dack_w(space, 0, m_dw_ram[offset], mem_mask);
 		return m_dw_ram[offset];
 	}
 }

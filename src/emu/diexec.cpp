@@ -46,12 +46,9 @@ device_execute_interface::device_execute_interface(const machine_config &mconfig
 	: device_interface(device, "execute")
 	, m_scheduler(nullptr)
 	, m_disabled(false)
-	, m_vblank_interrupt(device)
 	, m_vblank_interrupt_screen(nullptr)
-	, m_timed_interrupt(device)
 	, m_timed_interrupt_period(attotime::zero)
 	, m_nextexec(nullptr)
-	, m_driver_irq(device)
 	, m_timedint_timer(nullptr)
 	, m_profiler(PROFILER_IDLE)
 	, m_icountptr(nullptr)
@@ -92,7 +89,7 @@ device_execute_interface::~device_execute_interface()
 //  run before we run again
 //-------------------------------------------------
 
-void device_execute_interface::abort_timeslice() noexcept
+void device_execute_interface::abort_timeslice()
 {
 	// ignore if not the executing device
 	if (!executing())
@@ -207,7 +204,7 @@ void device_execute_interface::trigger(int trigid)
 //  for a device
 //-------------------------------------------------
 
-attotime device_execute_interface::local_time() const noexcept
+attotime device_execute_interface::local_time() const
 {
 	// if we're active, add in the time from the current slice
 	if (executing())
@@ -225,7 +222,7 @@ attotime device_execute_interface::local_time() const noexcept
 //  cycles executed on this device
 //-------------------------------------------------
 
-u64 device_execute_interface::total_cycles() const noexcept
+u64 device_execute_interface::total_cycles() const
 {
 	if (executing())
 	{
@@ -242,7 +239,7 @@ u64 device_execute_interface::total_cycles() const noexcept
 //  of clocks to cycles, rounding down if necessary
 //-------------------------------------------------
 
-u64 device_execute_interface::execute_clocks_to_cycles(u64 clocks) const noexcept
+u64 device_execute_interface::execute_clocks_to_cycles(u64 clocks) const
 {
 	return clocks;
 }
@@ -253,7 +250,7 @@ u64 device_execute_interface::execute_clocks_to_cycles(u64 clocks) const noexcep
 //  of cycles to clocks, rounding down if necessary
 //-------------------------------------------------
 
-u64 device_execute_interface::execute_cycles_to_clocks(u64 cycles) const noexcept
+u64 device_execute_interface::execute_cycles_to_clocks(u64 cycles) const
 {
 	return cycles;
 }
@@ -265,7 +262,7 @@ u64 device_execute_interface::execute_cycles_to_clocks(u64 cycles) const noexcep
 //  operation can take
 //-------------------------------------------------
 
-u32 device_execute_interface::execute_min_cycles() const noexcept
+u32 device_execute_interface::execute_min_cycles() const
 {
 	return 1;
 }
@@ -277,7 +274,7 @@ u32 device_execute_interface::execute_min_cycles() const noexcept
 //  operation can take
 //-------------------------------------------------
 
-u32 device_execute_interface::execute_max_cycles() const noexcept
+u32 device_execute_interface::execute_max_cycles() const
 {
 	return 1;
 }
@@ -288,7 +285,7 @@ u32 device_execute_interface::execute_max_cycles() const noexcept
 //  of input lines for the device
 //-------------------------------------------------
 
-u32 device_execute_interface::execute_input_lines() const noexcept
+u32 device_execute_interface::execute_input_lines() const
 {
 	return 0;
 }
@@ -299,7 +296,7 @@ u32 device_execute_interface::execute_input_lines() const noexcept
 //  IRQ vector when an acknowledge is processed
 //-------------------------------------------------
 
-u32 device_execute_interface::execute_default_irq_vector(int linenum) const noexcept
+u32 device_execute_interface::execute_default_irq_vector(int linenum) const
 {
 	return 0;
 }
@@ -310,7 +307,7 @@ u32 device_execute_interface::execute_default_irq_vector(int linenum) const noex
 //  the input line has an asynchronous edge trigger
 //-------------------------------------------------
 
-bool device_execute_interface::execute_input_edge_triggered(int linenum) const noexcept
+bool device_execute_interface::execute_input_edge_triggered(int linenum) const
 {
 	return false;
 }
@@ -374,9 +371,9 @@ void device_execute_interface::interface_pre_start()
 	m_scheduler = &device().machine().scheduler();
 
 	// bind delegates
-	m_vblank_interrupt.resolve();
-	m_timed_interrupt.resolve();
-	m_driver_irq.resolve();
+	m_vblank_interrupt.bind_relative_to(*device().owner());
+	m_timed_interrupt.bind_relative_to(*device().owner());
+	m_driver_irq.bind_relative_to(*device().owner());
 
 	// fill in the initial states
 	int const index = device_iterator(device().machine().root_device()).indexof(*this);

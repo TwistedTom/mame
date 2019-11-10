@@ -34,6 +34,7 @@ private:
 	void add_serin(uint8_t data, int with_checksum);
 	void a800_serial_command();
 	void a800_serial_write();
+	legacy_floppy_image_device *atari_floppy_get_device_child(int drive);
 
 	struct atari_drive
 	{
@@ -50,7 +51,6 @@ private:
 		int sectors;        /* total sectors, ie. tracks x heads x spt */
 	};
 
-	required_device_array<legacy_floppy_image_device, 4> m_floppy;
 	required_device<pokey_device> m_pokey;
 	required_device<pia6821_device> m_pia;
 

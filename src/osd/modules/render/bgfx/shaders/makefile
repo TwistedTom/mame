@@ -12,28 +12,25 @@ SUBDIRS := $(patsubst .,,$(patsubst ./,,$(shell find . -type d)))
 rebuild: main $(SUBDIRS)
 endif
 
-.NOTPARALLEL:
 $(SUBDIRS):
 	@echo $@
 ifeq ($(OS),windows)
-	$(SILENT) $(MAKE) --no-print-directory TARGET=0 SHADERS_DIR=$@/ clean all SILENT="$(SILENT)"
-	$(SILENT) $(MAKE) --no-print-directory TARGET=1 SHADERS_DIR=$@/ clean all SILENT="$(SILENT)"
+	@make -s --no-print-directory TARGET=0 SHADERS_DIR=$@/ clean all
+	@make -s --no-print-directory TARGET=1 SHADERS_DIR=$@/ clean all
 endif
-	$(SILENT) $(MAKE) --no-print-directory TARGET=2 SHADERS_DIR=$@/ clean all SILENT="$(SILENT)"
-	$(SILENT) $(MAKE) --no-print-directory TARGET=3 SHADERS_DIR=$@/ clean all SILENT="$(SILENT)"
-	$(SILENT) $(MAKE) --no-print-directory TARGET=4 SHADERS_DIR=$@/ clean all SILENT="$(SILENT)"
-	$(SILENT) $(MAKE) --no-print-directory TARGET=5 SHADERS_DIR=$@/ clean all SILENT="$(SILENT)"
-	$(SILENT) $(MAKE) --no-print-directory TARGET=7 SHADERS_DIR=$@/ clean all SILENT="$(SILENT)"
+	@make -s --no-print-directory TARGET=2 SHADERS_DIR=$@/ clean all
+	@make -s --no-print-directory TARGET=3 SHADERS_DIR=$@/ clean all
+	@make -s --no-print-directory TARGET=4 SHADERS_DIR=$@/ clean all
+	@make -s --no-print-directory TARGET=5 SHADERS_DIR=$@/ clean all
 
 main:
 ifeq ($(OS),windows)
-	$(SILENT) $(MAKE) --no-print-directory TARGET=0 clean all SILENT="$(SILENT)"
-	$(SILENT) $(MAKE) --no-print-directory TARGET=1 clean all SILENT="$(SILENT)"
+	@make -s --no-print-directory TARGET=0 clean all
+	@make -s --no-print-directory TARGET=1 clean all
 endif
-	$(SILENT) $(MAKE) --no-print-directory TARGET=2 clean all SILENT="$(SILENT)"
-	$(SILENT) $(MAKE) --no-print-directory TARGET=3 clean all SILENT="$(SILENT)"
-	$(SILENT) $(MAKE) --no-print-directory TARGET=4 clean all SILENT="$(SILENT)"
-	$(SILENT) $(MAKE) --no-print-directory TARGET=5 clean all SILENT="$(SILENT)"
-	$(SILENT) $(MAKE) --no-print-directory TARGET=7 clean all SILENT="$(SILENT)"
+	@make -s --no-print-directory TARGET=2 clean all
+	@make -s --no-print-directory TARGET=3 clean all
+	@make -s --no-print-directory TARGET=4 clean all
+	@make -s --no-print-directory TARGET=5 clean all
 
 .PHONY: main rebuild $(SUBDIRS)

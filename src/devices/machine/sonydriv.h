@@ -15,11 +15,6 @@
 
 #include "imagedev/flopdrv.h"
 
-#define FLOPPY_0 "floppy0"
-#define FLOPPY_1 "floppy1"
-#define FLOPPY_2 "floppy2"
-#define FLOPPY_3 "floppy3"
-
 #if 0
 enum
 {

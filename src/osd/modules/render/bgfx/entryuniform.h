@@ -11,8 +11,8 @@
 
 #pragma once
 
-#ifndef DRAWBGFX_ENTRY_UNIFORM
-#define DRAWBGFX_ENTRY_UNIFORM
+#ifndef __DRAWBGFX_ENTRY_UNIFORM__
+#define __DRAWBGFX_ENTRY_UNIFORM__
 
 #include <bgfx/bgfx.h>
 

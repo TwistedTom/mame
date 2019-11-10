@@ -419,11 +419,8 @@ WRITE8_MEMBER(einstein_state::evdpint_msk_w)
 
 READ8_MEMBER( einstein_state::rom_r )
 {
-	if (!machine().side_effects_disabled())
-	{
-		m_rom_enabled ^= 1;
-		m_bank1->set_entry(m_rom_enabled);
-	}
+	m_rom_enabled ^= 1;
+	m_bank1->set_entry(m_rom_enabled);
 
 	return 0xff;
 }

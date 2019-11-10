@@ -38,7 +38,7 @@
         VCC         28      57          NC
         NC          29      58          NC
 
-    Slots are organized into a chain (MEI -> MEO), the first module that
+    Slots are organized into a chain (MEI -> MEO) , the first module that
     decode the address on bus, clear the MEO line for disable other modules
     with less priority.
 
@@ -107,8 +107,7 @@
 #include "emu.h"
 #include "kc.h"
 
-//#define VERBOSE 1
-#include "logmacro.h"
+#define  LOG    0
 
 
 /***************************************************************************
@@ -132,7 +131,7 @@ DEFINE_DEVICE_TYPE(KCCART_SLOT, kccart_slot_device, "kccart_slot", "KC85 Cartrid
 //-------------------------------------------------
 
 device_kcexp_interface::device_kcexp_interface(const machine_config &mconfig, device_t &device)
-	: device_interface(device, "kcexp")
+	: device_slot_card_interface(mconfig, device)
 {
 }
 
@@ -160,12 +159,11 @@ kcexp_slot_device::kcexp_slot_device(const machine_config &mconfig, const char *
 
 kcexp_slot_device::kcexp_slot_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock) :
 	device_t(mconfig, type, tag, owner, clock),
-	device_single_card_slot_interface<device_kcexp_interface>(mconfig, *this),
+	device_slot_interface(mconfig, *this),
 	m_out_irq_cb(*this),
 	m_out_nmi_cb(*this),
 	m_out_halt_cb(*this),
-	m_cart(nullptr),
-	m_next_slot(*this, finder_base::DUMMY_TAG)
+	m_cart(nullptr), m_next_slot_tag(nullptr), m_next_slot(nullptr)
 {
 }
 
@@ -177,22 +175,14 @@ kcexp_slot_device::~kcexp_slot_device()
 {
 }
 
-
-void kcexp_slot_device::device_validity_check(validity_checker &valid) const
-{
-	std::pair<device_t &, char const *> const next_target(m_next_slot.finder_target());
-	if ((next_target.second != finder_base::DUMMY_TAG) && !m_next_slot)
-		osd_printf_error("Next slot device %s relative to %s not found", next_target.second, next_target.first.tag());
-}
-
-
 //-------------------------------------------------
 //  device_start - device-specific startup
 //-------------------------------------------------
 
 void kcexp_slot_device::device_start()
 {
-	m_cart = get_card_device();
+	m_cart = dynamic_cast<device_kcexp_interface *>(get_card_device());
+	m_next_slot = m_next_slot_tag ? owner()->subdevice<kcexp_slot_device>(m_next_slot_tag) : nullptr;
 
 	// resolve callbacks
 	m_out_irq_cb.resolve_safe();
@@ -272,7 +262,7 @@ void kcexp_slot_device::io_write(offs_t offset, uint8_t data)
 
 WRITE_LINE_MEMBER( kcexp_slot_device::mei_w )
 {
-	LOG("KCEXP: %s MEI line\n", state != CLEAR_LINE ? "ASSERT": "CLEAR");
+	if (LOG) logerror("KCEXP '%s': %s MEI line\n", tag(), state != CLEAR_LINE ? "ASSERT": "CLEAR");
 
 	if (m_cart)
 		m_cart->mei_w(state);
@@ -284,7 +274,7 @@ WRITE_LINE_MEMBER( kcexp_slot_device::mei_w )
 
 WRITE_LINE_MEMBER( kcexp_slot_device::meo_w )
 {
-	LOG("KCEXP: %s MEO line\n", state != CLEAR_LINE ? "ASSERT": "CLEAR");
+	if (LOG) logerror("KCEXP '%s': %s MEO line\n", tag(), state != CLEAR_LINE ? "ASSERT": "CLEAR");
 
 	if (m_next_slot)
 		m_next_slot->mei_w(state);

@@ -530,7 +530,7 @@ void pgm_arm_type3_state::init_theglad()
 	pgm_create_dummy_internal_arm_region_theglad(0);
 
 
-	m_prot->space(AS_PROGRAM).install_read_handler(0x1000000c, 0x1000000f, read32_delegate(*this, FUNC(pgm_arm_type3_state::theglad_speedup_r)));
+	m_prot->space(AS_PROGRAM).install_read_handler(0x1000000c, 0x1000000f, read32_delegate(FUNC(pgm_arm_type3_state::theglad_speedup_r),this));
 }
 
 
@@ -664,7 +664,9 @@ void pgm_arm_type3_state::init_svg()
 	svg_latch_init();
 	pgm_create_dummy_internal_arm_region_theglad(1);
 	m_armrom = (u32 *)memregion("prot")->base();
-	m_prot->space(AS_PROGRAM).install_read_handler(0xB90, 0xB93, read32_delegate(*this, FUNC(pgm_arm_type3_state::svg_speedup_r)));
+	m_prot->space(AS_PROGRAM).install_read_handler(0xB90, 0xB93, read32_delegate(FUNC(pgm_arm_type3_state::svg_speedup_r),this));
+
+
 }
 
 void pgm_arm_type3_state::init_svgpcb()
@@ -674,7 +676,8 @@ void pgm_arm_type3_state::init_svgpcb()
 	svg_latch_init();
 	pgm_create_dummy_internal_arm_region_theglad(0);
 	m_armrom = (u32 *)memregion("prot")->base();
-	m_prot->space(AS_PROGRAM).install_read_handler(0x9e0, 0x9e3, read32_delegate(*this, FUNC(pgm_arm_type3_state::svgpcb_speedup_r)));
+	m_prot->space(AS_PROGRAM).install_read_handler(0x9e0, 0x9e3, read32_delegate(FUNC(pgm_arm_type3_state::svgpcb_speedup_r),this));
+
 }
 
 
@@ -692,7 +695,7 @@ void pgm_arm_type3_state::init_killbldp()
 	pgm_killbldp_decrypt(machine());
 	svg_latch_init();
 
-	m_prot->space(AS_PROGRAM).install_read_handler(0x1000000c, 0x1000000f, read32_delegate(*this, FUNC(pgm_arm_type3_state::killbldp_speedup_r)));
+	m_prot->space(AS_PROGRAM).install_read_handler(0x1000000c, 0x1000000f, read32_delegate(FUNC(pgm_arm_type3_state::killbldp_speedup_r),this));
 
 //  u16 *temp16 = (u16 *)memregion("prot")->base();
 //  int base = 0xfc; // startup table uploads
@@ -735,8 +738,8 @@ void pgm_arm_type3_state::init_dmnfrnt()
 	/* put some fake code for the ARM here ... */
 	pgm_create_dummy_internal_arm_region(0x4000);
 
-	m_prot->space(AS_PROGRAM).install_read_handler(0x18000444, 0x18000447, read32_delegate(*this, FUNC(pgm_arm_type3_state::dmnfrnt_speedup_r)));
-	m_maincpu->space(AS_PROGRAM).install_read_handler(0x80a03c, 0x80a03d, read16_delegate(*this, FUNC(pgm_arm_type3_state::dmnfrnt_main_speedup_r)));
+	m_prot->space(AS_PROGRAM).install_read_handler(0x18000444, 0x18000447, read32_delegate(FUNC(pgm_arm_type3_state::dmnfrnt_speedup_r),this));
+	m_maincpu->space(AS_PROGRAM).install_read_handler(0x80a03c, 0x80a03d, read16_delegate(FUNC(pgm_arm_type3_state::dmnfrnt_main_speedup_r),this));
 
 	m_svg_ram_sel = 1;
 
@@ -844,5 +847,5 @@ void pgm_arm_type3_state::init_happy6()
 	svg_latch_init();
 	pgm_create_dummy_internal_arm_region_theglad(0);
 
-	m_prot->space(AS_PROGRAM).install_read_handler(0x1000000c, 0x1000000f, read32_delegate(*this, FUNC(pgm_arm_type3_state::happy6_speedup_r)));
+	m_prot->space(AS_PROGRAM).install_read_handler(0x1000000c, 0x1000000f, read32_delegate(FUNC(pgm_arm_type3_state::happy6_speedup_r),this));
 }

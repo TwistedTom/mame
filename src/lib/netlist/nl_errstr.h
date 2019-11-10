@@ -1,9 +1,10 @@
 // license:GPL-2.0+
 // copyright-holders:Couriersud
-
-///
-/// \file nl_errstr.h
-///
+/*!
+ *
+ * \file nl_errstr.h
+ *
+ */
 
 #ifndef NL_ERRSTR_H_
 #define NL_ERRSTR_H_
@@ -13,7 +14,7 @@
 #define PERRMSG(name, str) \
 	struct name \
 	{ \
-		operator pstring() const noexcept { return str; } \
+		operator pstring() const { return str; } \
 	};
 
 #define PERRMSGV(name, narg, str) \
@@ -22,17 +23,15 @@
 		template<typename... Args> name(Args&&... args) \
 		: m_m(plib::pfmt(str)(std::forward<Args>(args)...)) \
 		{ static_assert(narg == sizeof...(args), "Argument count mismatch"); } \
-		operator pstring() const noexcept { return m_m; } \
+		operator pstring() const { return m_m; } \
 		pstring m_m; \
 	};
 
 namespace netlist
 {
 
-	static constexpr const char sHINT_NO_DEACTIVATE[] = ".HINT_NO_DEACTIVATE";
-	static constexpr const char sPowerDevRes[] = "_RVG";
-	static constexpr const char sPowerGND[] = "GND";
-	static constexpr const char sPowerVCC[] = "VCC";
+	static constexpr const char * sHINT_NO_DEACTIVATE = ".HINT_NO_DEACTIVATE";
+	static constexpr const char * sPowerDevRes = "_RVG";
 
 	// nl_base.cpp
 
@@ -68,11 +67,8 @@ namespace netlist
 	PERRMSGV(MF_DEVICE_ALREADY_EXISTS_1,            1, "Device already exists: {1}")
 	PERRMSGV(MF_ADDING_ALI1_TO_ALIAS_LIST,          1, "Error adding alias {1} to alias list")
 	PERRMSGV(MF_DIP_PINS_MUST_BE_AN_EQUAL_NUMBER_OF_PINS_1, 1,"You must pass an equal number of pins to DIPPINS {1}")
-	PERRMSGV(MF_PARAM_COUNT_MISMATCH_2,				2, "Parameter count mismatch for {1} - only found {2}")
-	PERRMSGV(MF_PARAM_COUNT_EXCEEDED_2,				2, "Parameter count exceed for {1} - found {2}")
 	PERRMSGV(MF_UNKNOWN_OBJECT_TYPE_1,              1, "Unknown object type {1}")
 	PERRMSGV(MF_INVALID_NUMBER_CONVERSION_1_2,      2, "Invalid number conversion {1} : {2}")
-	PERRMSGV(MF_INVALID_ENUM_CONVERSION_1_2,        2, "Invalid element found {1} : {2}")
 	PERRMSGV(MF_ADDING_PARAMETER_1_TO_PARAMETER_LIST,1, "Error adding parameter {1} to parameter list")
 	PERRMSGV(MF_ADDING_1_2_TO_TERMINAL_LIST,        2, "Error adding {1} {2} to terminal list")
 	PERRMSGV(MF_NET_C_NEEDS_AT_LEAST_2_TERMINAL,    0, "You must pass at least 2 terminals to NET_C")
@@ -128,6 +124,9 @@ namespace netlist
 
 	// nld_solver.cpp
 
+	PERRMSGV(MF_UNKNOWN_SOLVER_TYPE,                1, "Unknown solver type: {1}")
+	PERRMSGV(MF_NETGROUP_SIZE_EXCEEDED_1,           1, "Encountered netgroup with > {1} nets")
+
 	PERRMSGV(MI_NO_SPECIFIC_SOLVER,                 1, "No specific solver found for netlist of size {1}")
 
 	// nld_mm5837.cpp
@@ -143,13 +142,7 @@ namespace netlist
 
 	PERRMSGV(MW_MOSFET_THRESHOLD_VOLTAGE,           1, "Mosfet: Threshold voltage not specified for {1}")
 
-	// nl_tool.cpp
-
-	PERRMSGV(MF_FILE_OPEN_ERROR,                    1, "Error opening file: {1}")
-
-
-
 } // namespace netlist
 
 
-#endif // NL_ERRSTR_H_
+#endif /* NL_ERRSTR_H_ */

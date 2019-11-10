@@ -71,7 +71,6 @@ gb_rom_mbc3_device::gb_rom_mbc3_device(const machine_config &mconfig, const char
 
 gb_rom_mbc5_device::gb_rom_mbc5_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock)
 	: gb_rom_mbc_device(mconfig, type, tag, owner, clock)
-	, m_rumble(*this, "Rumble")
 {
 }
 
@@ -582,7 +581,7 @@ void gb_rom_mbc5_device::write_bank(offs_t offset, uint8_t data)
 		data &= 0x0f;
 		if (has_rumble)
 		{
-			m_rumble = BIT(data, 3);
+			machine().output().set_value("Rumble", BIT(data, 3));
 			data &= 0x7;
 		}
 		m_ram_bank = data;

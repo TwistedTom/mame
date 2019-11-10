@@ -1298,9 +1298,9 @@ private:
 
 			// log an error
 			if (m_alphafile.empty())
-				osd_printf_warning("Unable to load component bitmap '%s'\n", m_imagefile);
+				osd_printf_warning("Unable to load component bitmap '%s'\n", m_imagefile.c_str());
 			else
-				osd_printf_warning("Unable to load component bitmap '%s'/'%s'\n", m_imagefile, m_alphafile);
+				osd_printf_warning("Unable to load component bitmap '%s'/'%s'\n", m_imagefile.c_str(), m_alphafile.c_str());
 		}
 	}
 

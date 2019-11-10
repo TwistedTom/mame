@@ -33,8 +33,7 @@ class CombineAccessChains : public Pass {
            IRContext::kAnalysisInstrToBlockMapping |
            IRContext::kAnalysisDecorations | IRContext::kAnalysisCombinators |
            IRContext::kAnalysisCFG | IRContext::kAnalysisDominatorAnalysis |
-           IRContext::kAnalysisNameMap | IRContext::kAnalysisConstants |
-           IRContext::kAnalysisTypes;
+           IRContext::kAnalysisNameMap;
   }
 
  private:

@@ -69,7 +69,6 @@ ccpu_cpu_device::ccpu_cpu_device(const machine_config &mconfig, const char *tag,
 	, m_data_config("data", ENDIANNESS_BIG, 16, 32, -1)
 	, m_io_config("io", ENDIANNESS_BIG, 8, 5, 0)
 	, m_external_input(*this)
-	, m_vector_callback(*this)
 	, m_flags(0)
 {
 }
@@ -104,7 +103,7 @@ void ccpu_cpu_device::device_start()
 {
 	/* copy input params */
 	m_external_input.resolve_safe(0);
-	m_vector_callback.resolve();
+	m_vector_callback.bind_relative_to(*owner());
 	assert(!m_vector_callback.isnull());
 
 	m_program = &space(AS_PROGRAM);

@@ -3,9 +3,6 @@
 #ifndef NLD_CD4XXX_H_
 #define NLD_CD4XXX_H_
 
-/// \file nlm_cd4xxx.h
-///
-
 #include "netlist/nl_setup.h"
 
 /*

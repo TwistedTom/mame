@@ -46,6 +46,7 @@ public:
 	void ncrpc4i(machine_config &config);
 	void kaypro16(machine_config &config);
 	void kaypropc(machine_config &config);
+	void epc(machine_config &config);
 	void m15(machine_config &config);
 	void bondwell(machine_config &config);
 	void siemens(machine_config &config);
@@ -69,7 +70,7 @@ public:
 	void juko16(machine_config &config);
 	void hyo88t(machine_config &config);
 	void kyoxt(machine_config &config);
-
+	
 	void init_bondwell();
 
 	DECLARE_INPUT_CHANGED_MEMBER(pc_turbo_callback);
@@ -85,6 +86,7 @@ private:
 	static void cfg_single_360K(device_t *device);
 	static void cfg_single_720K(device_t *device);
 
+	void epc_io(address_map &map);
 	void ibm5550_io(address_map &map);
 	void pc16_io(address_map &map);
 	void pc16_map(address_map &map);
@@ -185,14 +187,14 @@ void pc_state::cfg_single_360K(device_t *device)
 {
 	dynamic_cast<device_slot_interface &>(*device->subdevice("fdc:0")).set_default_option("525dd");
 	dynamic_cast<device_slot_interface &>(*device->subdevice("fdc:0")).set_fixed(true);
-	dynamic_cast<device_slot_interface &>(*device->subdevice("fdc:1")).set_default_option(nullptr);
+	dynamic_cast<device_slot_interface &>(*device->subdevice("fdc:1")).set_default_option("");
 }
 
 void pc_state::cfg_single_720K(device_t *device)
 {
 	dynamic_cast<device_slot_interface &>(*device->subdevice("fdc:0")).set_default_option("35dd");
 	dynamic_cast<device_slot_interface &>(*device->subdevice("fdc:0")).set_fixed(true);
-	dynamic_cast<device_slot_interface &>(*device->subdevice("fdc:1")).set_default_option(nullptr);
+	dynamic_cast<device_slot_interface &>(*device->subdevice("fdc:1")).set_default_option("");
 }
 
 void pc_state::pccga(machine_config &config)
@@ -205,8 +207,6 @@ void pc_state::pccga(machine_config &config)
 
 	ibm5160_mb_device &mb(IBM5160_MOTHERBOARD(config, "mb", 0));
 	mb.set_cputag(m_maincpu);
-	mb.int_callback().set_inputline(m_maincpu, 0);
-	mb.nmi_callback().set_inputline(m_maincpu, INPUT_LINE_NMI);
 	mb.set_input_default(DEVICE_INPUT_DEFAULTS_NAME(pccga));
 
 	// FIXME: determine ISA bus clock
@@ -533,6 +533,55 @@ ROM_START( mc1702 )
 ROM_END
 
 
+/************************************************************** Ericsson PC ***
+
+Links: https://youtu.be/6uilOdMJc24
+Form Factor: Desktop
+CPU: 8088 @ 4.77MHz
+RAM: 256K
+Bus: 6x ISA
+Video: Monchrome or Color 80x25 character mode. 320x200 and 640x400 (CGA?) grahics modes
+Display: Orange Gas Plasma (GP) display
+Mass storage: 2 x 5.25" 360K or 1 20Mb HDD
+On board ports: Beeper,
+Ports: serial, parallel
+Internal Options: Up to 640K RAM through add-on RAM card
+Misc: The hardware was not 100% PC compatible so non BIOS based software would not run. 50.000+ units sold
+
+******************************************************************************/
+
+void pc_state::epc_io(address_map &map)
+{
+	map.unmap_value_high();
+	map(0x0000, 0x00ff).m("mb", FUNC(ibm5160_mb_device::map));
+	map(0x0070, 0x0071).rw("i8251", FUNC(i8251_device::read), FUNC(i8251_device::write));
+}
+
+void pc_state::epc(machine_config &config)
+{
+	pccga(config);
+
+	i8088_cpu_device &maincpu(I8088(config.replace(), "maincpu", 4772720));
+	maincpu.set_addrmap(AS_PROGRAM, &pc_state::pc8_map);
+	maincpu.set_addrmap(AS_IO, &pc_state::epc_io);
+	maincpu.set_irq_acknowledge_callback("mb:pic8259", FUNC(pic8259_device::inta_cb));
+
+	subdevice<isa8_slot_device>("isa1")->set_default_option("ega");
+	I8251(config, "i8251", 0); // clock?
+}
+
+ROM_START( epc )
+	ROM_REGION(0x10000,"bios", 0)
+	ROM_DEFAULT_BIOS("p860110")
+	ROM_SYSTEM_BIOS(0, "p840705", "P840705")
+	ROMX_LOAD("ericsson_8088.bin", 0xe000, 0x2000, CRC(3953c38d) SHA1(2bfc1f1d11d0da5664c3114994fc7aa3d6dd010d), ROM_BIOS(0))
+	ROM_SYSTEM_BIOS(1, "p860110", "P860110")
+	ROMX_LOAD("epcbios1.bin",  0xe000, 0x02000, CRC(79a83706) SHA1(33528c46a24d7f65ef5a860fbed05afcf797fc55), ROM_BIOS(1))
+	ROMX_LOAD("epcbios2.bin",  0xa000, 0x02000, CRC(3ca764ca) SHA1(02232fedef22d31a641f4b65933b9e269afce19e), ROM_BIOS(1))
+	ROMX_LOAD("epcbios3.bin",  0xc000, 0x02000, CRC(70483280) SHA1(b44b09da94d77b0269fc48f07d130b2d74c4bb8f), ROM_BIOS(1))
+ROM_END
+
+
 /************************************************ Ericsson Portable PC - EPPC ***
 
 Links: https://youtu.be/Qmke4L4Jls8 , https://youtu.be/yXK01gBQE6Q
@@ -582,8 +631,6 @@ void pc_state::ibm5550(machine_config &config)
 
 	ibm5160_mb_device &mb(IBM5160_MOTHERBOARD(config, "mb", 0));
 	mb.set_cputag(m_maincpu);
-	mb.int_callback().set_inputline(m_maincpu, 0);
-	mb.nmi_callback().set_inputline(m_maincpu, INPUT_LINE_NMI);
 	mb.set_input_default(DEVICE_INPUT_DEFAULTS_NAME(pccga));
 
 	// FIXME: determine ISA bus clock
@@ -801,7 +848,7 @@ void pc_state::olytext30(machine_config &config)
 	maincpu.set_irq_acknowledge_callback("mb:pic8259", FUNC(pic8259_device::inta_cb));
 
 	subdevice<isa8_slot_device>("isa2")->set_option_machine_config("fdc_xt", cfg_single_720K);
-	subdevice<isa8_slot_device>("isa3")->set_default_option(nullptr);
+	subdevice<isa8_slot_device>("isa3")->set_default_option("");
 	subdevice<isa8_slot_device>("isa5")->set_default_option("hdc");
 	subdevice<ram_device>(RAM_TAG)->set_default_size("768K");
 }
@@ -826,8 +873,6 @@ void pc_state::poisk2(machine_config &config)
 
 	ibm5160_mb_device &mb(IBM5160_MOTHERBOARD(config, "mb", 0));
 	mb.set_cputag(m_maincpu);
-	mb.int_callback().set_inputline(m_maincpu, 0);
-	mb.nmi_callback().set_inputline(m_maincpu, INPUT_LINE_NMI);
 	mb.set_input_default(DEVICE_INPUT_DEFAULTS_NAME(pccga));
 
 	ISA8_SLOT(config, "isa1", 0, "mb:isa", pc_isa8_cards, "cga_poisk2", false); // FIXME: determine ISA bus clock
@@ -924,8 +969,6 @@ void pc_state::iskr3104(machine_config &config)
 
 	ibm5160_mb_device &mb(IBM5160_MOTHERBOARD(config, "mb", 0));
 	mb.set_cputag(m_maincpu);
-	mb.int_callback().set_inputline(m_maincpu, 0);
-	mb.nmi_callback().set_inputline(m_maincpu, INPUT_LINE_NMI);
 	mb.set_input_default(DEVICE_INPUT_DEFAULTS_NAME(iskr3104));
 
 	ISA8_SLOT(config, "isa1", 0, "mb:isa", pc_isa8_cards, "ega", false).set_option_default_bios("ega", "iskr3104"); // FIXME: determine ISA bus clock
@@ -1005,8 +1048,6 @@ void pc_state::siemens(machine_config &config)
 
 	ibm5150_mb_device &mb(IBM5150_MOTHERBOARD(config, "mb", 0));
 	mb.set_cputag(m_maincpu);
-	mb.int_callback().set_inputline(m_maincpu, 0);
-	mb.nmi_callback().set_inputline(m_maincpu, INPUT_LINE_NMI);
 	mb.set_input_default(DEVICE_INPUT_DEFAULTS_NAME(siemens));
 
 	// FIXME: determine ISA bus clock
@@ -1055,8 +1096,6 @@ void pc_state::laser_turbo_xt(machine_config &config)
 
 	ibm5160_mb_device &mb(IBM5160_MOTHERBOARD(config, "mb", 0));
 	mb.set_cputag(m_maincpu);
-	mb.int_callback().set_inputline(m_maincpu, 0);
-	mb.nmi_callback().set_inputline(m_maincpu, INPUT_LINE_NMI);
 	mb.set_input_default(DEVICE_INPUT_DEFAULTS_NAME(pccga));
 
 	// FIXME: determine ISA bus clock
@@ -1141,8 +1180,6 @@ void pc_state::zenith(machine_config &config)
 
 	ibm5150_mb_device &mb(IBM5150_MOTHERBOARD(config, "mb", 0));
 	mb.set_cputag(m_maincpu);
-	mb.int_callback().set_inputline(m_maincpu, 0);
-	mb.nmi_callback().set_inputline(m_maincpu, INPUT_LINE_NMI);
 	mb.set_input_default(DEVICE_INPUT_DEFAULTS_NAME(pccga));
 
 	ISA8_SLOT(config, "isa1", 0, "mb:isa", pc_isa8_cards, "cga", false); // FIXME: determine ISA bus clock
@@ -1210,8 +1247,6 @@ void pc_state::juko16(machine_config &config)
 
 	ibm5160_mb_device &mb(IBM5160_MOTHERBOARD(config, "mb", 0));
 	mb.set_cputag(m_maincpu);
-	mb.int_callback().set_inputline(m_maincpu, 0);
-	mb.nmi_callback().set_inputline(m_maincpu, INPUT_LINE_NMI);
 	mb.set_input_default(DEVICE_INPUT_DEFAULTS_NAME(pccga));
 
 	ISA8_SLOT(config, "isa1", 0, "mb:isa", pc_isa8_cards, "cga", false); // FIXME: determine ISA bus clock
@@ -1315,21 +1350,6 @@ ROM_START( hstrtpls )
 	ROM_LOAD("bios.bin",  0xc000, 0x04000, CRC(19d705f8) SHA1(5e607fec6b533bc59d8d804e399bb9d438d6999d))
 ROM_END
 
-/************************************************* Philips NMS 9100 series ***
-Desktop
-
-*****************************************************************************/
-
-ROM_START( nms9100 )
-	ROM_REGION(0x10000, "bios", 0)
-	ROM_SYSTEM_BIOS(0, "pcrom12", "PC ROM 1.2") // there is also a 1.5 yet undumped
-	ROMX_LOAD("philipsnms9100.bin", 0xc000, 0x4000, CRC(3c1cfa16) SHA1(d060501588b451b0f4a816bede65eafb514b9603), ROM_BIOS(0)) // Philips PC ROM 1.2
-	ROM_SYSTEM_BIOS(1, "v313", "Philips ROM BIOS Version 3.13") // from a P3120, use Hercules
-	ROMX_LOAD("philips_p3120.bin", 0x8000, 0x8000, CRC(0370e9e6) SHA1(61017e36b9f34f163970cdd2bb3ffd9f66e57382), ROM_BIOS(1))
-	ROM_SYSTEM_BIOS(2, "5017", "5017") // no display
-	ROMX_LOAD("philipsxt.bin", 0x8000, 0x8000, CRC(2f3135e7) SHA1(d2fc4c06cf09e2c5a62017f0977b084be8bf9bbd), ROM_BIOS(2))
-ROM_END
-
 /***************************************************************************
 
   Game driver(s)
@@ -1337,41 +1357,41 @@ ROM_END
 ***************************************************************************/
 
 //    YEAR  NAME            PARENT   COMPAT  MACHINE         INPUT     CLASS     INIT           COMPANY                            FULLNAME                 FLAGS
+COMP( 1984, dgone,          ibm5150, 0,      dgone,          pccga,    pc_state, empty_init,    "Data General",                    "Data General/One" ,     MACHINE_NOT_WORKING )
+COMP( 1985, epc,            ibm5150, 0,      epc,            pccga,    pc_state, empty_init,    "Ericsson Information System",     "Ericsson PC" ,          MACHINE_NOT_WORKING )
+COMP( 1985, eppc,           ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Ericsson Information System",     "Ericsson Portable PC",  MACHINE_NOT_WORKING )
+COMP( 1985, bw230,          ibm5150, 0,      bondwell,       bondwell, pc_state, init_bondwell, "Bondwell Holding",                "BW230 (PRO28 Series)",  0 )
+COMP( 1992, iskr3104,       ibm5150, 0,      iskr3104,       pccga,    pc_state, empty_init,    "Schetmash",                       "Iskra 3104",            MACHINE_NOT_WORKING )
 COMP( 1989, mk88,           ibm5150, 0,      mk88,           pccga,    pc_state, empty_init,    "<unknown>",                       "MK-88",                 MACHINE_NOT_WORKING )
 COMP( 1991, poisk2,         ibm5150, 0,      poisk2,         pccga,    pc_state, empty_init,    "<unknown>",                       "Poisk-2",               MACHINE_NOT_WORKING )
 COMP( 1990, mc1702,         ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "<unknown>",                       "Elektronika MC-1702",   MACHINE_NOT_WORKING )
-COMP( 198?, olytext30,      ibm5150, 0,      olytext30,      pccga,    pc_state, empty_init,    "AEG Olympia",                     "Olytext 30",            MACHINE_NOT_WORKING )
-COMP( 1987, ataripc1,       ibm5150, 0,      ataripc1,       pccga,    pc_state, empty_init,    "Atari",                           "PC1",                   0 )
-COMP( 1988, ataripc3,       ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Atari",                           "PC3",                   0 )
-COMP( 1985, bw230,          ibm5150, 0,      bondwell,       bondwell, pc_state, init_bondwell, "Bondwell Holding",                "BW230 (PRO28 Series)",  0 )
-COMP( 1982, mpc1600,        ibm5150, 0,      mpc1600,        pccga,    pc_state, empty_init,    "Columbia Data Products",          "MPC 1600",              0 )
-COMP( 1983, comport,        ibm5150, 0,      comport,        pccga,    pc_state, empty_init,    "Compaq",                          "Compaq Portable",       MACHINE_NOT_WORKING )
-COMP( 198?, cadd810,        ibm5150, 0,      cadd810,        pccga,    pc_state, empty_init,    "CompuAdd",                        "810",                   MACHINE_NOT_WORKING )
-COMP( 1984, dgone,          ibm5150, 0,      dgone,          pccga,    pc_state, empty_init,    "Data General",                    "Data General/One" ,     MACHINE_NOT_WORKING )
-COMP( 1983, eagle1600,      ibm5150, 0,      eagle1600,      pccga,    pc_state, empty_init,    "Eagle",                           "Eagle 1600" ,           MACHINE_NOT_WORKING )
-COMP( 1983, eaglespirit,    ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Eagle",                           "Eagle PC Spirit",       MACHINE_NOT_WORKING )
-COMP( 198?, eaglepc2,       ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Eagle",                           "PC-2",                  MACHINE_NOT_WORKING )
-COMP( 1985, eppc,           ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Ericsson Information System",     "Ericsson Portable PC",  MACHINE_NOT_WORKING )
-COMP( 198?, hyo88t,         ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Hyosung",                         "Topstar 88T",           MACHINE_NOT_WORKING )
-COMP( 1983, ibm5550,        ibm5150, 0,      ibm5550,        pccga,    pc_state, empty_init,    "International Business Machines", "5550",                  MACHINE_NOT_WORKING )
-COMP( 1984, ittxtra,        ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "ITT Information Systems",         "ITT XTRA",              MACHINE_NOT_WORKING )
-COMP( 198?, juko16,         ibm5150, 0,      juko16,         pccga,    pc_state, empty_init,    "JUKO",                            "NEST 8086 and V30",     MACHINE_NOT_WORKING )
-COMP( 1985, kaypro16,       ibm5150, 0,      kaypro16,       pccga,    pc_state, empty_init,    "Kaypro Corporation",              "Kaypro 16",             0 )
-COMP( 198?, kaypropc,       ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Kaypro Corporation",              "PC",                    MACHINE_NOT_WORKING )
-COMP( 198?, kyoxt,          ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Kyocera",                         "XT",                    MACHINE_NOT_WORKING )
-COMP( 198?, ledgmodm,       ibm5150, 0,      siemens,        pccga,    pc_state, empty_init,    "Leading Edge",                    "Model M",               MACHINE_NOT_WORKING )
-COMP( 198?, mpx16,          ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Micromint",                       "MPX-16",                MACHINE_NOT_WORKING )
-COMP( 1985, ncrpc4i,        ibm5150, 0,      ncrpc4i,        pccga,    pc_state, empty_init,    "NCR",                             "PC4i",                  MACHINE_NOT_WORKING )
+COMP( 1987, zdsupers,       ibm5150, 0,      zenith,         pccga,    pc_state, empty_init,    "Zenith Data Systems",             "SuperSport",            0 )
+COMP( 1985, sicpc1605,      ibm5150, 0,      siemens,        pccga,    pc_state, empty_init,    "Siemens",                         "Sicomp PC16-05",        MACHINE_NOT_WORKING )
 COMP( 198?, nixpc01,        ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Nixdorf Computer AG",             "8810/25 CPC - PC01",    MACHINE_NOT_WORKING )
+COMP( 1985, ncrpc4i,        ibm5150, 0,      ncrpc4i,        pccga,    pc_state, empty_init,    "NCR",                             "PC4i",                  MACHINE_NOT_WORKING )
 COMP( 198?, olivm15,        ibm5150, 0,      m15,            pccga,    pc_state, empty_init,    "Olivetti",                        "M15",                   0 )
-COMP( 198?, nms9100,        ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Philips",                         "NMS 9100",              MACHINE_NOT_WORKING )
-COMP( 1989, ssam88s,        ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Samsung",                         "Samtron 88S",           MACHINE_NOT_WORKING )
+COMP( 1983, ibm5550,        ibm5150, 0,      ibm5550,        pccga,    pc_state, empty_init,    "International Business Machines", "5550",                  MACHINE_NOT_WORKING )
+COMP( 1985, pc7000,         ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Sharp",                           "PC-7000",               MACHINE_NOT_WORKING )
 COMP( 1988, sx16,           ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Sanyo",                           "SX-16",                 MACHINE_NOT_WORKING )
 COMP( 198?, mbc16,          ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Sanyo",                           "MBC-16",                MACHINE_NOT_WORKING )
-COMP( 1992, iskr3104,       ibm5150, 0,      iskr3104,       pccga,    pc_state, empty_init,    "Schetmash",                       "Iskra 3104",            MACHINE_NOT_WORKING )
-COMP( 1985, sicpc1605,      ibm5150, 0,      siemens,        pccga,    pc_state, empty_init,    "Siemens",                         "Sicomp PC16-05",        MACHINE_NOT_WORKING )
-COMP( 1985, pc7000,         ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Sharp",                           "PC-7000",               MACHINE_NOT_WORKING )
-COMP( 198?, hstrtpls,       ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Vendex",                          "HeadStart Plus",        MACHINE_NOT_WORKING )
+COMP( 1987, ataripc1,       ibm5150, 0,      ataripc1,       pccga,    pc_state, empty_init,    "Atari",                           "PC1",                   0 )
+COMP( 1988, ataripc3,       ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Atari",                           "PC3",                   0 )
+COMP( 1989, ssam88s,        ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Samsung",                         "Samtron 88S",           MACHINE_NOT_WORKING )
+COMP( 1983, eagle1600,      ibm5150, 0,      eagle1600,      pccga,    pc_state, empty_init,    "Eagle",                           "Eagle 1600" ,           MACHINE_NOT_WORKING )
+COMP( 1983, eaglespirit,    ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Eagle",                           "Eagle PC Spirit",       MACHINE_NOT_WORKING )
 COMP( 1988, laser_turbo_xt, ibm5150, 0,      laser_turbo_xt, 0,        pc_state, empty_init,    "VTech",                           "Laser Turbo XT",        0 )
 COMP( 1989, laser_xt3,      ibm5150, 0,      laser_turbo_xt, 0,        pc_state, empty_init,    "VTech",                           "Laser XT/3",            0 )
-COMP( 1987, zdsupers,       ibm5150, 0,      zenith,         pccga,    pc_state, empty_init,    "Zenith Data Systems",             "SuperSport",            0 )
+COMP( 198?, olytext30,      ibm5150, 0,      olytext30,      pccga,    pc_state, empty_init,    "AEG Olympia",                     "Olytext 30",            MACHINE_NOT_WORKING )
+COMP( 1985, kaypro16,       ibm5150, 0,      kaypro16,       pccga,    pc_state, empty_init,    "Kaypro Corporation",              "Kaypro 16",             0 )
+COMP( 1983, comport,        ibm5150, 0,      comport,        pccga,    pc_state, empty_init,    "Compaq",                          "Compaq Portable",       MACHINE_NOT_WORKING )
+COMP( 1982, mpc1600,        ibm5150, 0,      mpc1600,        pccga,    pc_state, empty_init,    "Columbia Data Products",          "MPC 1600",              0 )
+COMP( 1984, ittxtra,        ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "ITT Information Systems",         "ITT XTRA",              MACHINE_NOT_WORKING )
+COMP( 198?, cadd810,        ibm5150, 0,      cadd810,        pccga,    pc_state, empty_init,    "CompuAdd",                        "810",                   MACHINE_NOT_WORKING )
+COMP( 198?, juko16,         ibm5150, 0,      juko16,         pccga,    pc_state, empty_init,    "JUKO",                            "NEST 8086 and V30",     MACHINE_NOT_WORKING )
+COMP( 198?, hyo88t,         ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Hyosung",                         "Topstar 88T",           MACHINE_NOT_WORKING )
+COMP( 198?, kyoxt,          ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Kyocera",                         "XT",                    MACHINE_NOT_WORKING )
+COMP( 198?, kaypropc,       ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Kaypro Corporation",              "PC",                    MACHINE_NOT_WORKING )
+COMP( 198?, ledgmodm,       ibm5150, 0,      siemens,        pccga,    pc_state, empty_init,    "Leading Edge",                    "Model M",               MACHINE_NOT_WORKING )
+COMP( 198?, eaglepc2,       ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Eagle",                    	   "PC-2",                  MACHINE_NOT_WORKING )
+COMP( 198?, mpx16,          ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Micromint",                   	   "MPX-16",                MACHINE_NOT_WORKING )
+COMP( 198?, hstrtpls,      ibm5150, 0,      pccga,          pccga,    pc_state, empty_init,    "Vendex",                   	   "HeadStart Plus",        MACHINE_NOT_WORKING )

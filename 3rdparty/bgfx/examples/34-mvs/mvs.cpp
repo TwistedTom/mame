@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -18,16 +18,16 @@ struct PosVertex
 
 	static void init()
 	{
-		ms_layout
+		ms_decl
 			.begin()
 			.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
 			.end();
 	};
 
-	static bgfx::VertexLayout ms_layout;
+	static bgfx::VertexDecl ms_decl;
 };
 
-bgfx::VertexLayout PosVertex::ms_layout;
+bgfx::VertexDecl PosVertex::ms_decl;
 
 struct ColorVertex
 {
@@ -35,16 +35,16 @@ struct ColorVertex
 
 	static void init()
 	{
-		ms_layout
+		ms_decl
 			.begin()
 			.add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
 			.end();
 	};
 
-	static bgfx::VertexLayout ms_layout;
+	static bgfx::VertexDecl ms_decl;
 };
 
-bgfx::VertexLayout ColorVertex::ms_layout;
+bgfx::VertexDecl ColorVertex::ms_decl;
 
 static PosVertex s_cubePosVertices[] =
 {
@@ -105,8 +105,8 @@ static const uint16_t s_cubeTriStrip[] =
 class ExampleMvs : public entry::AppI
 {
 public:
-	ExampleMvs(const char* _name, const char* _description, const char* _url)
-		: entry::AppI(_name, _description, _url)
+	ExampleMvs(const char* _name, const char* _description)
+		: entry::AppI(_name, _description)
 	{
 	}
 
@@ -148,13 +148,13 @@ public:
 		m_vbh[0] = bgfx::createVertexBuffer(
 				// Static data can be passed with bgfx::makeRef
 				  bgfx::makeRef(s_cubePosVertices, sizeof(s_cubePosVertices) )
-				, PosVertex::ms_layout
+				, PosVertex::ms_decl
 				);
 
 		m_vbh[1] = bgfx::createVertexBuffer(
 				// Static data can be passed with bgfx::makeRef
 				  bgfx::makeRef(s_cubeColorVertices, sizeof(s_cubeColorVertices) )
-				, ColorVertex::ms_layout
+				, ColorVertex::ms_decl
 				);
 
 		// Create static index buffer.
@@ -281,9 +281,4 @@ public:
 
 } // namespace
 
-ENTRY_IMPLEMENT_MAIN(
-	  ExampleMvs
-	, "34-mvs"
-	, "Multiple vertex streams."
-	, "https://bkaradzic.github.io/bgfx/examples.html#mvs"
-	);
+ENTRY_IMPLEMENT_MAIN(ExampleMvs, "34-mvs", "Multiple vertex streams.");

@@ -1,44 +1,45 @@
 // license:GPL-2.0+
 // copyright-holders:Couriersud
+/*
+ * nld_twoterm.h
+ *
+ * Devices with two terminals ...
+ *
+ *
+ *       (k)
+ *  +-----T-----+
+ *  |     |     |
+ *  |  +--+--+  |
+ *  |  |     |  |
+ *  |  R     |  |
+ *  |  R     |  |
+ *  |  R     I  |
+ *  |  |     I  |  Device n
+ *  |  V+    I  |
+ *  |  V     |  |
+ *  |  V-    |  |
+ *  |  |     |  |
+ *  |  +--+--+  |
+ *  |     |     |
+ *  +-----T-----+
+ *       (l)
+ *
+ *  This is a resistance in series to a voltage source and paralleled by a
+ *  current source. This is suitable to model voltage sources, current sources,
+ *  resistors, capacitors, inductances and diodes.
+ *
+ */
 
 #ifndef NLID_TWOTERM_H_
 #define NLID_TWOTERM_H_
-
-///
-/// \file nlid_twoterm.h
-///
-/// Devices with two terminals ...
-///
-///
-///       (k)
-///  +-----T-----+
-///  |     |     |
-///  |  +--+--+  |
-///  |  |     |  |
-///  |  R     |  |
-///  |  R     |  |
-///  |  R     I  |
-///  |  |     I  |  Device n
-///  |  V+    I  |
-///  |  V     |  |
-///  |  V-    |  |
-///  |  |     |  |
-///  |  +--+--+  |
-///  |     |     |
-///  +-----T-----+
-///       (l)
-///
-///  This is a resistance in series to a voltage source and paralleled by a
-///  current source. This is suitable to model voltage sources, current sources,
-///  resistors, capacitors, inductances and diodes.
-///
-////
 
 #include "netlist/nl_base.h"
 #include "netlist/nl_setup.h"
 #include "netlist/solver/nld_solver.h"
 #include "nld_generic_models.h"
 #include "plib/pfunction.h"
+
+#include <cmath>
 
 // -----------------------------------------------------------------------------
 // Implementation
@@ -64,7 +65,7 @@ namespace analog
 	{
 		plib::unused_var(d1);
 		if (b)
-			plib::pthrow<nl_exception>("bselect with netlist and b==true");
+			throw nl_exception("bselect with netlist and b==true");
 		return d2;
 	}
 
@@ -90,22 +91,22 @@ namespace analog
 
 		void solve_later(netlist_time delay = netlist_time::quantum());
 
-		void set_G_V_I(nl_fptype G, nl_fptype V, nl_fptype I) const noexcept
+		void set_G_V_I(const nl_double G, const nl_double V, const nl_double I)
 		{
-			//               GO, GT,        I
+			/*      GO, GT, I                */
 			m_P.set_go_gt_I( -G,  G, (  V) * G - I);
 			m_N.set_go_gt_I( -G,  G, ( -V) * G + I);
 		}
 
-		nl_fptype deltaV() const noexcept
+		nl_double deltaV() const
 		{
 			return m_P.net().Q_Analog() - m_N.net().Q_Analog();
 		}
 
-		void set_mat(nl_fptype a11, nl_fptype a12, nl_fptype rhs1,
-					 nl_fptype a21, nl_fptype a22, nl_fptype rhs2) const noexcept
+		void set_mat(const nl_double a11, const nl_double a12, const nl_double rhs1,
+					 const nl_double a21, const nl_double a22, const nl_double rhs2)
 		{
-			//               GO,  GT,     I
+			/*      GO, GT, I                */
 			m_P.set_go_gt_I(a12, a11, rhs1);
 			m_N.set_go_gt_I(a21, a22, rhs2);
 		}
@@ -124,11 +125,11 @@ namespace analog
 		{
 		}
 
-		void set_R(nl_fptype R)
+		void set_R(const nl_double R)
 		{
-			const nl_fptype G = plib::reciprocal(R);
-			set_mat( G, -G, nlconst::zero(),
-					-G,  G, nlconst::zero());
+			const nl_double G = plib::constants<nl_double>::one() / R;
+			set_mat( G, -G, 0.0,
+					-G,  G, 0.0);
 		}
 
 		NETLIB_RESETI();
@@ -141,7 +142,7 @@ namespace analog
 	NETLIB_OBJECT_DERIVED(R, R_base)
 	{
 		NETLIB_CONSTRUCTOR_DERIVED(R, R_base)
-		, m_R(*this, "R", nlconst::magic(1e9))
+		, m_R(*this, "R", 1e9)
 		{
 		}
 
@@ -162,8 +163,8 @@ namespace analog
 		}
 
 	private:
-		param_fp_t m_R;
-		// protect set_R ... it's a recipe to desaster when used to bypass the parameter
+		param_double_t m_R;
+		/* protect set_R ... it's a recipe to desaster when used to bypass the parameter */
 		using NETLIB_NAME(R_base)::set_R;
 	};
 
@@ -177,7 +178,7 @@ namespace analog
 		, m_R1(*this, "_R1")
 		, m_R2(*this, "_R2")
 		, m_R(*this, "R", 10000)
-		, m_Dial(*this, "DIAL", nlconst::half())
+		, m_Dial(*this, "DIAL", 0.5)
 		, m_DialIsLog(*this, "DIALLOG", false)
 		, m_Reverse(*this, "REVERSE", false)
 		{
@@ -197,8 +198,8 @@ namespace analog
 		NETLIB_SUB(R_base) m_R1;
 		NETLIB_SUB(R_base) m_R2;
 
-		param_fp_t m_R;
-		param_fp_t m_Dial;
+		param_double_t m_R;
+		param_double_t m_Dial;
 		param_logic_t m_DialIsLog;
 		param_logic_t m_Reverse;
 	};
@@ -207,8 +208,8 @@ namespace analog
 	{
 		NETLIB_CONSTRUCTOR(POT2)
 		, m_R1(*this, "_R1")
-		, m_R(*this, "R", nlconst::magic(10000.0))
-		, m_Dial(*this, "DIAL", nlconst::half())
+		, m_R(*this, "R", 10000)
+		, m_Dial(*this, "DIAL", 0.5)
 		, m_DialIsLog(*this, "DIALLOG", false)
 		, m_Reverse(*this, "REVERSE", false)
 		{
@@ -224,8 +225,8 @@ namespace analog
 	private:
 		NETLIB_SUB(R_base) m_R1;
 
-		param_fp_t m_R;
-		param_fp_t m_Dial;
+		param_double_t m_R;
+		param_double_t m_Dial;
 		param_logic_t m_DialIsLog;
 		param_logic_t m_Reverse;
 	};
@@ -238,7 +239,7 @@ namespace analog
 	{
 	public:
 		NETLIB_CONSTRUCTOR_DERIVED(C, twoterm)
-		, m_C(*this, "C", nlconst::magic(1e-6))
+		, m_C(*this, "C", 1e-6)
 		, m_cap(*this, "m_cap")
 		{
 		}
@@ -249,8 +250,8 @@ namespace analog
 			m_cap.timestep(m_C(), deltaV(), step);
 			if (m_cap.type() == capacitor_e::CONSTANT_CAPACITY)
 			{
-				const nl_fptype I = m_cap.Ieq(m_C(), deltaV());
-				const nl_fptype G = m_cap.G(m_C());
+				const nl_double I = m_cap.Ieq(m_C(), deltaV());
+				const nl_double G = m_cap.G(m_C());
 				set_mat( G, -G, -I,
 						-G,  G,  I);
 			}
@@ -259,13 +260,13 @@ namespace analog
 		NETLIB_IS_DYNAMIC(m_cap.type() == capacitor_e::VARIABLE_CAPACITY)
 		NETLIB_UPDATE_TERMINALSI()
 		{
-			const nl_fptype I = m_cap.Ieq(m_C(), deltaV());
-			const nl_fptype G = m_cap.G(m_C());
+			const nl_double I = m_cap.Ieq(m_C(), deltaV());
+			const nl_double G = m_cap.G(m_C());
 			set_mat( G, -G, -I,
 					-G,  G,  I);
 		}
 
-		param_fp_t m_C;
+		param_double_t m_C;
 		NETLIB_RESETI()
 		{
 			m_cap.setparams(exec().gmin());
@@ -288,10 +289,10 @@ namespace analog
 	{
 	public:
 		NETLIB_CONSTRUCTOR_DERIVED(L, twoterm)
-		, m_L(*this, "L", nlconst::magic(1e-6))
-		, m_gmin(nlconst::zero())
-		, m_G(nlconst::zero())
-		, m_I(nlconst::zero())
+		, m_L(*this, "L", 1e-6)
+		, m_gmin(0.0)
+		, m_G(0.0)
+		, m_I(0.0)
 		{
 			//register_term("1", m_P);
 			//register_term("2", m_N);
@@ -306,37 +307,38 @@ namespace analog
 		NETLIB_UPDATE_PARAMI();
 
 	private:
-		param_fp_t m_L;
+		param_double_t m_L;
 
-		nl_fptype m_gmin;
-		nl_fptype m_G;
-		nl_fptype m_I;
+		nl_double m_gmin;
+		nl_double m_G;
+		nl_double m_I;
 	};
 
-	/// \brief Class representing the diode model paramers.
-	///
-	///  This is the model representation of the diode model. Typically, SPICE uses
-	///  the following parameters. A "Y" in the first column indicates that the
-	///  parameter is actually used in netlist.
-	///
-	///   |NL? |name  |parameter                        |units|default| example|area  |
-	///   |:--:|:-----|:--------------------------------|:----|------:|-------:|:----:|
-	///   | Y  |IS    |saturation current               |A    |1.0e-14| 1.0e-14|   *  |
-	///   |    |RS    |ohmic resistance                 |Ohm  |      0|      10|   *  |
-	///   | Y  |N     |emission coefficient             |-    |      1|       1|      |
-	///   |    |TT    |transit-time                     |sec  |      0|   0.1ns|      |
-	///   |    |CJO   |zero-bias junction capacitance   |F    |      0|     2pF|   *  |
-	///   |    |VJ    |junction potential               |V    |      1|     0.6|      |
-	///   |    |M     |grading coefficient              |-    |    0.5|     0.5|      |
-	///   |    |EG    |band-gap energy                  |eV   |   1.11| 1.11 Si|      |
-	///   |    |XTI   |saturation-current temp.exp      |-    |      3|3.0 pn. 2.0 Schottky| |
-	///   |    |KF    |flicker noise coefficient        |-    |      0|        |      |
-	///   |    |AF    |flicker noise exponent           |-    |      1|        |      |
-	///   |    |FC    |coefficient for forward-bias depletion capacitance formula|-|0.5|| |
-	///   |    |BV    |reverse breakdown voltage        |V    |infinite|     40|      |
-	///   |    |IBV   |current at breakdown voltage     |V    |  0.001|        |      |
-	///   |    |TNOM  |parameter measurement temperature|deg C|     27|      50|      |
-	///
+	/*! Class representing the diode model paramers.
+	 *  This is the model representation of the diode model. Typically, SPICE uses
+	 *  the following parameters. A "Y" in the first column indicates that the
+	 *  parameter is actually used in netlist.
+	 *
+	 *   |NL? |name  |parameter                        |units|default| example|area  |
+	 *   |:--:|:-----|:--------------------------------|:----|------:|-------:|:----:|
+	 *   | Y  |IS    |saturation current               |A    |1.0e-14| 1.0e-14|   *  |
+	 *   |    |RS    |ohmic resistance                 |Ohm  |      0|      10|   *  |
+	 *   | Y  |N     |emission coefficient             |-    |      1|       1|      |
+	 *   |    |TT    |transit-time                     |sec  |      0|   0.1ns|      |
+	 *   |    |CJO   |zero-bias junction capacitance   |F    |      0|     2pF|   *  |
+	 *   |    |VJ    |junction potential               |V    |      1|     0.6|      |
+	 *   |    |M     |grading coefficient              |-    |    0.5|     0.5|      |
+	 *   |    |EG    |band-gap energy                  |eV   |   1.11| 1.11 Si|      |
+	 *   |    |XTI   |saturation-current temp.exp      |-    |      3|3.0 pn. 2.0 Schottky| |
+	 *   |    |KF    |flicker noise coefficient        |-    |      0|        |      |
+	 *   |    |AF    |flicker noise exponent           |-    |      1|        |      |
+	 *   |    |FC    |coefficient for forward-bias depletion capacitance formula|-|0.5|| |
+	 *   |    |BV    |reverse breakdown voltage        |V    |infinite|     40|      |
+	 *   |    |IBV   |current at breakdown voltage     |V    |  0.001|        |      |
+	 *   |    |TNOM  |parameter measurement temperature|deg C|     27|      50|      |
+	 *
+	 */
+
 	class diode_model_t : public param_model_t
 	{
 	public:
@@ -350,6 +352,7 @@ namespace analog
 		value_t m_N;     //!< emission coefficient.
 	};
 
+
 	// -----------------------------------------------------------------------------
 	// nld_D
 	// -----------------------------------------------------------------------------
@@ -357,7 +360,7 @@ namespace analog
 	NETLIB_OBJECT_DERIVED(D, twoterm)
 	{
 	public:
-		NETLIB_CONSTRUCTOR_DERIVED_EX(D, twoterm, const pstring &model = "D")
+		NETLIB_CONSTRUCTOR_DERIVED_EX(D, twoterm, pstring model = "D")
 		, m_model(*this, "MODEL", model)
 		, m_D(*this, "m_D")
 		{
@@ -378,6 +381,7 @@ namespace analog
 		generic_diode<diode_e::BIPOLAR> m_D;
 	};
 
+
 	// -----------------------------------------------------------------------------
 	// nld_VS - Voltage source
 	//
@@ -388,17 +392,17 @@ namespace analog
 	{
 	public:
 		NETLIB_CONSTRUCTOR_DERIVED(VS, twoterm)
-		, m_t(*this, "m_t", nlconst::zero())
-		, m_R(*this, "R", nlconst::magic(0.1))
-		, m_V(*this, "V", nlconst::zero())
+		, m_t(*this, "m_t", 0.0)
+		, m_R(*this, "R", 0.1)
+		, m_V(*this, "V", 0.0)
 		, m_func(*this,"FUNC", "")
 		, m_compiled(this->name() + ".FUNCC", this, this->state().run_state_manager())
-		, m_funcparam({nlconst::zero()})
+		, m_funcparam({0.0})
 		{
 			register_subalias("P", m_P);
 			register_subalias("N", m_N);
 			if (m_func() != "")
-				m_compiled.compile(m_func(), std::vector<pstring>({{pstring("T")}}));
+				m_compiled.compile(std::vector<pstring>({{"T"}}), m_func());
 		}
 
 		NETLIB_IS_TIMESTEP(m_func() != "")
@@ -407,9 +411,9 @@ namespace analog
 		{
 			m_t += step;
 			m_funcparam[0] = m_t;
-			this->set_G_V_I(plib::reciprocal(m_R()),
+			this->set_G_V_I(1.0 / m_R(),
 					m_compiled.evaluate(m_funcparam),
-					nlconst::zero());
+					0.0);
 		}
 
 	protected:
@@ -418,16 +422,16 @@ namespace analog
 		NETLIB_RESETI()
 		{
 			NETLIB_NAME(twoterm)::reset();
-			this->set_G_V_I(plib::reciprocal(m_R()), m_V(), nlconst::zero());
+			this->set_G_V_I(1.0 / m_R(), m_V(), 0.0);
 		}
 
 	private:
-		state_var<nl_fptype> m_t;
-		param_fp_t m_R;
-		param_fp_t m_V;
+		state_var<double> m_t;
+		param_double_t m_R;
+		param_double_t m_V;
 		param_str_t m_func;
-		plib::pfunction<nl_fptype> m_compiled;
-		std::vector<nl_fptype> m_funcparam;
+		plib::pfunction m_compiled;
+		std::vector<double> m_funcparam;
 	};
 
 	// -----------------------------------------------------------------------------
@@ -438,16 +442,16 @@ namespace analog
 	{
 	public:
 		NETLIB_CONSTRUCTOR_DERIVED(CS, twoterm)
-		, m_t(*this, "m_t", nlconst::zero())
-		, m_I(*this, "I", nlconst::one())
+		, m_t(*this, "m_t", 0.0)
+		, m_I(*this, "I", 1.0)
 		, m_func(*this,"FUNC", "")
 		, m_compiled(this->name() + ".FUNCC", this, this->state().run_state_manager())
-		, m_funcparam({nlconst::zero()})
+		, m_funcparam({0.0})
 		{
 			register_subalias("P", m_P);
 			register_subalias("N", m_N);
 			if (m_func() != "")
-				m_compiled.compile(m_func(), std::vector<pstring>({{pstring("T")}}));
+				m_compiled.compile(std::vector<pstring>({{"T"}}), m_func());
 		}
 
 		NETLIB_IS_TIMESTEP(m_func() != "")
@@ -455,10 +459,9 @@ namespace analog
 		{
 			m_t += step;
 			m_funcparam[0] = m_t;
-			const nl_fptype I = m_compiled.evaluate(m_funcparam);
-			const auto zero(nlconst::zero());
-			set_mat(zero, zero, -I,
-					zero, zero,  I);
+			const double I = m_compiled.evaluate(m_funcparam);
+			set_mat(0.0, 0.0, -I,
+					0.0, 0.0,  I);
 		}
 
 	protected:
@@ -467,29 +470,28 @@ namespace analog
 		NETLIB_RESETI()
 		{
 			NETLIB_NAME(twoterm)::reset();
-			const auto zero(nlconst::zero());
-			set_mat(zero, zero, -m_I(),
-					zero, zero,  m_I());
+			set_mat(0.0, 0.0, -m_I(),
+					0.0, 0.0,  m_I());
 		}
 
 		NETLIB_UPDATE_PARAMI()
 		{
 			solve_now();
-			const auto zero(nlconst::zero());
-			set_mat(zero, zero, -m_I(),
-					zero, zero,  m_I());
+			set_mat(0.0, 0.0, -m_I(),
+					0.0, 0.0,  m_I());
 		}
 
 
 	private:
-		state_var<nl_fptype> m_t;
-		param_fp_t m_I;
+		state_var<double> m_t;
+		param_double_t m_I;
 		param_str_t m_func;
-		plib::pfunction<nl_fptype> m_compiled;
-		std::vector<nl_fptype> m_funcparam;
+		plib::pfunction m_compiled;
+		std::vector<double> m_funcparam;
 	};
+
 
 } // namespace analog
 } // namespace netlist
 
-#endif // NLD_TWOTERM_H_
+#endif /* NLD_TWOTERM_H_ */

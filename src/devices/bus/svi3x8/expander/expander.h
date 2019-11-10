@@ -48,7 +48,7 @@ class device_svi_expander_interface;
 
 // ======================> svi_expander_device
 
-class svi_expander_device : public device_t, public device_single_card_slot_interface<device_svi_expander_interface>
+class svi_expander_device : public device_t, public device_slot_interface
 {
 public:
 	// construction/destruction
@@ -98,6 +98,7 @@ public:
 protected:
 	// device-level overrides
 	virtual void device_start() override;
+	virtual void device_reset() override;
 
 private:
 	device_svi_expander_interface *m_module;
@@ -114,7 +115,7 @@ private:
 
 // ======================> device_svi_expander_interface
 
-class device_svi_expander_interface : public device_interface
+class device_svi_expander_interface : public device_slot_card_interface
 {
 public:
 	// construction/destruction

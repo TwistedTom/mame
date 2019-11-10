@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bimg#license-bsd-2-clause
  */
 
@@ -30,29 +30,19 @@ namespace bimg
 {
 	static uint32_t s_squishQuality[] =
 	{
-		// Standard
-		squish::kColourClusterFit,          // Default
-		squish::kColourIterativeClusterFit, // Highest
-		squish::kColourRangeFit,            // Fastest
-		// Normal map
 		squish::kColourClusterFit,          // Default
 		squish::kColourIterativeClusterFit, // Highest
 		squish::kColourRangeFit,            // Fastest
 	};
 	BX_STATIC_ASSERT(Quality::Count == BX_COUNTOF(s_squishQuality) );
 
-	static const ASTC_COMPRESS_MODE s_astcQuality[] =
-	{
-		// Standard
-		ASTC_COMPRESS_MEDIUM,       // Default
-		ASTC_COMPRESS_THOROUGH,     // Highest
-		ASTC_COMPRESS_FAST,         // Fastest
-		// Normal map
-		ASTC_COMPRESS_MEDIUM,       // Default
-		ASTC_COMPRESS_THOROUGH,     // Highest
-		ASTC_COMPRESS_FAST,         // Fastest
-	};
-	BX_STATIC_ASSERT(Quality::Count == BX_COUNTOF(s_astcQuality));
+    static const ASTC_COMPRESS_MODE s_astcQuality[] =
+    {
+        ASTC_COMPRESS_MEDIUM,       // Default
+        ASTC_COMPRESS_THOROUGH,     // Highest
+        ASTC_COMPRESS_FAST,         // Fastest
+    };
+    BX_STATIC_ASSERT(Quality::Count == BX_COUNTOF(s_astcQuality));
 
 	void imageEncodeFromRgba8(bx::AllocatorI* _allocator, void* _dst, const void* _src, uint32_t _width, uint32_t _height, uint32_t _depth, TextureFormat::Enum _format, Quality::Enum _quality, bx::Error* _err)
 	{
@@ -148,19 +138,12 @@ namespace bimg
 			case TextureFormat::ASTC8x6:
 			case TextureFormat::ASTC10x5:
 				{
-					const bimg::ImageBlockInfo& astcBlockInfo = bimg::getBlockInfo(_format);
+                    const bimg::ImageBlockInfo& astcBlockInfo = bimg::getBlockInfo(_format);
 
-					ASTC_COMPRESS_MODE compress_mode = s_astcQuality[_quality];
-					ASTC_DECODE_MODE   decode_mode   = ASTC_DECODE_LDR_LINEAR;
+                    ASTC_COMPRESS_MODE  compress_mode = s_astcQuality[_quality];
+					ASTC_DECODE_MODE    decode_mode   = ASTC_DECODE_LDR_LINEAR;
 
-					if (Quality::NormalMapDefault <= _quality)
-					{
-						astc_compress(_width, _height, src, ASTC_ENC_NORMAL_RA, srcPitch, astcBlockInfo.blockWidth, astcBlockInfo.blockHeight, compress_mode, decode_mode, dst);
-					}
-					else
-					{
-						astc_compress(_width, _height, src, ASTC_RGBA, srcPitch, astcBlockInfo.blockWidth, astcBlockInfo.blockHeight, compress_mode, decode_mode, dst);
-					}
+                    astc_compress(_width, _height, src, ASTC_RGBA, srcPitch, astcBlockInfo.blockWidth, astcBlockInfo.blockHeight, compress_mode, decode_mode, dst);
 				}
 				break;
 
@@ -169,7 +152,7 @@ namespace bimg
 				break;
 
 			case TextureFormat::RGBA8:
-				bx::memCopy(_dst, dstPitch, _src, srcPitch, srcPitch, _height);
+				bx::memCopy(_dst, _src, srcPitch, _height, srcPitch, dstPitch);
 				break;
 
 			default:
@@ -507,7 +490,7 @@ namespace bimg
 		return rgba[3];
 	}
 
-	float imageAlphaTestCoverage(TextureFormat::Enum _format, uint32_t _width, uint32_t _height, uint32_t _srcPitch, const void* _src, float _alphaRef, float _scale, uint32_t _upscale)
+	float imageAlphaTestCoverage(TextureFormat::Enum _format, uint32_t _width, uint32_t _height, uint32_t _srcPitch, const void* _src, float _alphaRef, float _scale)
 	{
 		UnpackFn unpack = getUnpack(_format);
 		if (NULL == unpack)
@@ -518,8 +501,7 @@ namespace bimg
 		float coverage = 0.0f;
 		const uint8_t* src = (const uint8_t*)_src;
 		const uint32_t xstep = getBitsPerPixel(_format) / 8;
-		const uint32_t numSamples = _upscale;
-		const float sampleStep = 1.0f / numSamples;
+		const float numSamples = 8.0f;
 
 		for (uint32_t yy = 0, ystep = _srcPitch; yy < _height-1; ++yy, src += ystep)
 		{
@@ -531,9 +513,9 @@ namespace bimg
 				float alpha01 = _scale * getAlpha(unpack, data+ystep);
 				float alpha11 = _scale * getAlpha(unpack, data+ystep+xstep);
 
-				for (float fy = 0.0f; fy < 1.0f; fy += sampleStep)
+				for (float fy = 0.5f/numSamples; fy < 1.0f; fy += 1.0f)
 				{
-					for (float fx = 0.0f; fx < 1.0f; fx += sampleStep)
+					for (float fx = 0.5f/numSamples; fx < 1.0f; fx += 1.0f)
 					{
 						float alpha = 0.0f
 							+ alpha00 * (1.0f - fx) * (1.0f - fy)
@@ -554,7 +536,7 @@ namespace bimg
 		return coverage / float(_width*_height*numSamples*numSamples);
 	}
 
-	void imageScaleAlphaToCoverage(TextureFormat::Enum _format, uint32_t _width, uint32_t _height, uint32_t _srcPitch, void* _src, float _desiredCoverage, float _alphaRef, uint32_t _upscale)
+	void imageScaleAlphaToCoverage(TextureFormat::Enum _format, uint32_t _width, uint32_t _height, uint32_t _srcPitch, void* _src, float _desiredCoverage, float _alphaRef)
 	{
 		PackFn   pack   = getPack(_format);
 		UnpackFn unpack = getUnpack(_format);
@@ -568,7 +550,7 @@ namespace bimg
 		float max   = 4.0f;
 		float scale = 1.0f;
 
-		for (uint32_t ii = 0; ii < 10; ++ii)
+		for (uint32_t ii = 0; ii < 8; ++ii)
 		{
 			float coverage = imageAlphaTestCoverage(
 				  _format
@@ -578,7 +560,6 @@ namespace bimg
 				, _src
 				, _alphaRef
 				, scale
-				, _upscale
 				);
 
 			if (coverage < _desiredCoverage)

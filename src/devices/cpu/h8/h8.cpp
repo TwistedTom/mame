@@ -42,21 +42,14 @@ void h8_device::device_start()
 	cache   = program->cache<1, 0, ENDIANNESS_BIG>();
 	io      = &space(AS_IO);
 
-	uint32_t pcmask = mode_advanced ? 0xffffff : 0xffff;
-	state_add<uint32_t>(H8_PC, "PC",
-		[this]() { return NPC; },
-		[this](uint32_t pc) { PC = PPC = NPC = pc; prefetch_noirq_notrace(); }
-	).mask(pcmask);
-	state_add<uint32_t>(STATE_GENPC, "GENPC",
-		[this]() { return NPC; },
-		[this](uint32_t pc) { PC = PPC = NPC = pc; prefetch_noirq_notrace(); }
-	).mask(pcmask).noshow();
-	state_add(STATE_GENPCBASE, "CURPC",     PPC).mask(pcmask).noshow();
-	state_add(H8_CCR,          "CCR",       CCR);
+	state_add(STATE_GENPC,     "GENPC",     NPC).noshow();
+	state_add(STATE_GENPCBASE, "CURPC",     PPC).noshow();
 	if(has_exr)
 		state_add(STATE_GENFLAGS,  "GENFLAGS",  CCR).formatstr("%11s").noshow();
 	else
 		state_add(STATE_GENFLAGS,  "GENFLAGS",  CCR).formatstr("%8s").noshow();
+	state_add(H8_PC,           "PC",        NPC);
+	state_add(H8_CCR,          "CCR",       CCR);
 
 	if(has_exr)
 		state_add(H8_EXR,          "EXR",       EXR);
@@ -176,22 +169,22 @@ void h8_device::request_state(int state)
 	requested_state = state;
 }
 
-uint32_t h8_device::execute_min_cycles() const noexcept
+uint32_t h8_device::execute_min_cycles() const
 {
 	return 1;
 }
 
-uint32_t h8_device::execute_max_cycles() const noexcept
+uint32_t h8_device::execute_max_cycles() const
 {
 	return 1;
 }
 
-uint32_t h8_device::execute_input_lines() const noexcept
+uint32_t h8_device::execute_input_lines() const
 {
 	return 0;
 }
 
-bool h8_device::execute_input_edge_triggered(int inputnum) const noexcept
+bool h8_device::execute_input_edge_triggered(int inputnum) const
 {
 	return inputnum == INPUT_LINE_NMI;
 }
@@ -338,7 +331,7 @@ void h8_device::state_string_export(const device_state_entry &entry, std::string
 	case H8_R6:
 	case H8_R7: {
 		int r = entry.index() - H8_R0;
-		str = string_format("%04X %04X", R[r + 8], R[r]);
+		str = string_format("%04x %04x", R[r + 8], R[r]);
 		break;
 	}
 	}

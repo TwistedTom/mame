@@ -91,8 +91,7 @@ void ym2203_device::device_start()
 	/* Initialize FM emurator */
 	int rate = clock()/72; /* ??? */
 	m_chip = ym2203_init(this,clock(),rate,&ym2203_device::static_timer_handler,&ym2203_device::static_irq_handler,&psgintf);
-	if (!m_chip)
-		throw emu_fatalerror("ym2203_device(%s): Error creating YM2203 chip", tag());
+	assert_always(m_chip != nullptr, "Error creating YM2203 chip");
 }
 
 void ym2203_device::device_clock_changed()

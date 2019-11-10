@@ -11,20 +11,17 @@ addons:
     sources:
     - ubuntu-toolchain-r-test
     packages:
-    - gcc-8
-    - g++-8
+    - gcc-5
+    - g++-5
     - clang
-    - libgl1-mesa-dev
-    - x11proto-core-dev
-    - libx11-dev
 
 before_script:
   - git clone --depth 1 https://github.com/bkaradzic/bx ../bx
   - git clone --depth 1 https://github.com/bkaradzic/bimg ../bimg
 
 script:
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then make build CXX="g++-8" CC="gcc-8"; fi
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then make osx-debug64; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then make build CXX="g++-5" CC="gcc-5"; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then make build; fi
 
 branches:
   only:
@@ -33,4 +30,4 @@ branches:
 notifications:
   email: false
 
-osx_image: xcode10.3
+osx_image: xcode9.3

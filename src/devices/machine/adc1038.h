@@ -8,6 +8,7 @@
     Track/hold Function
 
 ***************************************************************************/
+
 #ifndef MAME_MACHINE_ADC1038_H
 #define MAME_MACHINE_ADC1038_H
 
@@ -31,7 +32,15 @@ public:
 
 	adc1038_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
-	template <typename... T> void set_input_callback(T &&... args) { m_input_cb.set(std::forward<T>(args)...); }
+	template <typename Object> void set_input_callback(Object &&cb) { m_input_cb = std::forward<Object>(cb); }
+	template <class FunctionClass> void set_input_callback(const char *devname, int (FunctionClass::*callback)(int), const char *name)
+	{
+		set_input_callback(input_delegate(callback, name, devname, static_cast<FunctionClass *>(nullptr)));
+	}
+	template <class FunctionClass> void set_input_callback(int (FunctionClass::*callback)(int), const char *name)
+	{
+		set_input_callback(input_delegate(callback, name, nullptr, static_cast<FunctionClass *>(nullptr)));
+	}
 
 	void set_gti_club_hack(bool hack) { m_gticlub_hack = hack; }
 

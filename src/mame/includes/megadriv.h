@@ -52,9 +52,7 @@ public:
 		m_scan_timer(*this, "md_scan_timer"),
 		m_vdp(*this,"gen_vdp"),
 		m_megadrive_ram(*this,"megadrive_ram"),
-		m_io_reset(*this, "RESET"),
-		m_megadrive_io_read_data_port_ptr(*this),
-		m_megadrive_io_write_data_port_ptr(*this)
+		m_io_reset(*this, "RESET")
 	{ }
 
 	required_device<m68000_base_device> m_maincpu;

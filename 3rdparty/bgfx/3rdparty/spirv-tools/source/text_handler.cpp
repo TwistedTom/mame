@@ -313,7 +313,7 @@ spv_result_t AssemblyContext::binaryEncodeString(const char* value,
   pInst->words.back() = 0;
 
   char* dest = (char*)&pInst->words[oldWordCount];
-  strncpy(dest, value, length + 1);
+  strncpy(dest, value, length);
 
   return SPV_SUCCESS;
 }

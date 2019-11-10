@@ -244,7 +244,7 @@ void hunter16_state::hunter1680(machine_config &config)
 	m_cga->set_screen("screen");
 	m_cga->set_show_border_area(false);
 	m_cga->set_char_width(8);
-	m_cga->set_update_row_callback(FUNC(hunter16_state::crtc_update_row));
+	m_cga->set_update_row_callback(FUNC(hunter16_state::crtc_update_row), this);
 }
 
 ROM_START( hunter16 )

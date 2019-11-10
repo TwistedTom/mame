@@ -17,7 +17,7 @@
 #include "cpu/nanoprocessor/nanoprocessor.h"
 #include "bus/ieee488/ieee488.h"
 
-class hp98034_io_card_device : public device_t, public device_hp9845_io_interface
+class hp98034_io_card_device : public hp9845_io_card_device
 {
 public:
 	// construction/destruction
@@ -69,7 +69,6 @@ private:
 	uint8_t m_odr;  // Output Data Register
 	bool m_force_flg;
 	uint8_t m_mode_reg;
-	bool m_flg;
 
 	// 488 bus state
 	bool m_clr_hpib;
@@ -77,7 +76,7 @@ private:
 	uint8_t m_data_out;
 
 	void update_dc();
-	bool update_flg();
+	void update_flg();
 	void update_np_irq();
 	void update_data_out();
 	void update_ctrl_out();

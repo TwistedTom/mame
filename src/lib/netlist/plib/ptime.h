@@ -1,16 +1,17 @@
 // license:GPL-2.0+
 // copyright-holders:Couriersud
+/*
+ * ptime.h
+ */
 
 #ifndef PTIME_H_
 #define PTIME_H_
 
-///
-/// \file ptime.h
-///
-
 #include "pconfig.h"
-#include "pmath.h" // std::floor
 #include "ptypes.h"
+
+#include <cmath> // std::floor
+//#include <cstdint>
 
 // ----------------------------------------------------------------------------------------
 // netlist_time
@@ -43,8 +44,8 @@ namespace plib
 		constexpr explicit ptime(const internal_type nom, const internal_type den) noexcept
 		: m_time(nom * (RES / den)) { }
 
-		C14CONSTEXPR ptime &operator+=(const ptime &rhs) noexcept { m_time += rhs.m_time; return *this; }
-		C14CONSTEXPR ptime &operator-=(const ptime &rhs) noexcept { m_time -= rhs.m_time; return *this; }
+		C14CONSTEXPR ptime &operator+=(const ptime rhs) noexcept { m_time += rhs.m_time; return *this; }
+		C14CONSTEXPR ptime &operator-=(const ptime rhs) noexcept { m_time -= rhs.m_time; return *this; }
 		C14CONSTEXPR ptime &operator*=(const mult_type factor) noexcept { m_time *= static_cast<internal_type>(factor); return *this; }
 
 		friend constexpr const ptime operator-(ptime lhs, const ptime rhs) noexcept
@@ -57,7 +58,7 @@ namespace plib
 			return ptime(lhs.m_time + rhs.m_time);
 		}
 
-		friend constexpr const ptime operator*(ptime lhs, const mult_type factor) noexcept
+		friend constexpr const ptime operator*(ptime lhs, const mult_type &factor) noexcept
 		{
 			return ptime(lhs.m_time * factor);
 		}
@@ -98,57 +99,26 @@ namespace plib
 		}
 
 		constexpr internal_type as_raw() const noexcept { return m_time; }
-
-		template <typename FT, typename = std::enable_if<std::is_floating_point<FT>::value, FT>>
-		constexpr FT
-		as_fp() const noexcept
+		constexpr double as_double() const noexcept
 		{
-			return static_cast<FT>(m_time) * inv_res<FT>();
+			return static_cast<double>(m_time) * inv_res;
 		}
-
-#if PUSE_FLOAT128
-		constexpr __float128
-		as_fp() const noexcept
-		{
-			return static_cast<__float128>(m_time) * inv_res<__float128>();
-		}
-#endif
-
-		constexpr double as_double() const noexcept { return as_fp<double>(); }
-		constexpr double as_float() const noexcept { return as_fp<float>(); }
-		constexpr double as_long_double() const noexcept { return as_fp<long double>(); }
 
 		// for save states ....
 		C14CONSTEXPR internal_type *get_internaltype_ptr() noexcept { return &m_time; }
 
-		static constexpr const ptime from_nsec(const internal_type ns) noexcept { return ptime(ns, UINT64_C(1000000000)); }
-		static constexpr const ptime from_usec(const internal_type us) noexcept { return ptime(us, UINT64_C(   1000000)); }
-		static constexpr const ptime from_msec(const internal_type ms) noexcept { return ptime(ms, UINT64_C(      1000)); }
-		static constexpr const ptime from_sec(const internal_type s) noexcept   { return ptime(s,  UINT64_C(         1)); }
-		static constexpr const ptime from_hz(const internal_type hz) noexcept { return ptime(1 , hz); }
-		static constexpr const ptime from_raw(const internal_type raw) noexcept { return ptime(raw); }
+		static constexpr ptime from_nsec(const internal_type ns) noexcept { return ptime(ns, UINT64_C(1000000000)); }
+		static constexpr ptime from_usec(const internal_type us) noexcept { return ptime(us, UINT64_C(   1000000)); }
+		static constexpr ptime from_msec(const internal_type ms) noexcept { return ptime(ms, UINT64_C(      1000)); }
+		static constexpr ptime from_sec(const internal_type s) noexcept   { return ptime(s,  UINT64_C(         1)); }
+		static constexpr ptime from_hz(const internal_type hz) noexcept { return ptime(1 , hz); }
+		static constexpr ptime from_raw(const internal_type raw) noexcept { return ptime(raw); }
+		static constexpr ptime from_double(const double t) noexcept { return ptime(static_cast<internal_type>(std::floor(t * static_cast<double>(RES) + 0.5)), RES); }
 
-		template <typename FT>
-		static constexpr const typename std::enable_if<std::is_floating_point<FT>::value
-#if PUSE_FLOAT128
-			|| std::is_same<FT, __float128>::value
-#endif
-		, ptime>::type
-		from_fp(const FT t) noexcept { return ptime(static_cast<internal_type>(plib::floor(t * static_cast<FT>(RES) + static_cast<FT>(0.5))), RES); }
-
-		static constexpr const ptime from_double(const double t) noexcept
-		{ return from_fp<double>(t); }
-
-		static constexpr const ptime from_float(const float t) noexcept
-		{ return from_fp<float>(t); }
-
-		static constexpr const ptime from_long_double(const long double t) noexcept
-		{ return from_fp<long double>(t); }
-
-		static constexpr const ptime zero() noexcept { return ptime(0, RES); }
-		static constexpr const ptime quantum() noexcept { return ptime(1, RES); }
-		static constexpr const ptime never() noexcept { return ptime(plib::numeric_limits<internal_type>::max(), RES); }
-		static constexpr const internal_type resolution() noexcept { return RES; }
+		static constexpr ptime zero() noexcept { return ptime(0, RES); }
+		static constexpr ptime quantum() noexcept { return ptime(1, RES); }
+		static constexpr ptime never() noexcept { return ptime(plib::numeric_limits<internal_type>::max(), RES); }
+		static constexpr internal_type resolution() noexcept { return RES; }
 
 		constexpr internal_type in_nsec() const noexcept { return m_time / (RES / UINT64_C(1000000000)); }
 		constexpr internal_type in_usec() const noexcept { return m_time / (RES / UINT64_C(   1000000)); }
@@ -156,8 +126,7 @@ namespace plib
 		constexpr internal_type in_sec()  const noexcept { return m_time / (RES / UINT64_C(         1)); }
 
 	private:
-		template <typename FT>
-		static constexpr FT inv_res() noexcept { return static_cast<FT>(1.0) / static_cast<FT>(RES); }
+		static constexpr const double inv_res = 1.0 / static_cast<double>(RES);
 		internal_type m_time;
 	};
 
@@ -165,4 +134,4 @@ namespace plib
 } // namespace plib
 
 
-#endif // PTIME_H_
+#endif /* PTIME_H_ */

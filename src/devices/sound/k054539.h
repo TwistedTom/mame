@@ -26,7 +26,7 @@ public:
 		UPDATE_AT_KEYON = 4
 	};
 
-	using apan_delegate = device_delegate<void (double left, double right)>;
+	typedef device_delegate<void (double left, double right)> cb_delegate;
 
 	// construction/destruction
 	k054539_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
@@ -34,7 +34,15 @@ public:
 	// configuration helpers
 	auto timer_handler() { return m_timer_handler.bind(); }
 
-	template <typename... T> void set_analog_callback(T &&... args) { m_apan_cb.set(std::forward<T>(args)...); }
+	void set_analog_callback(cb_delegate callback) { m_apan_cb = callback; }
+	template <class FunctionClass> void set_analog_callback(const char *devname, void (FunctionClass::*callback)(double, double), const char *name)
+	{
+		set_analog_callback(cb_delegate(callback, name, devname, static_cast<FunctionClass *>(nullptr)));
+	}
+	template <class FunctionClass> void set_analog_callback(void (FunctionClass::*callback)(double, double), const char *name)
+	{
+		set_analog_callback(cb_delegate(callback, name, nullptr, static_cast<FunctionClass *>(nullptr)));
+	}
 
 	void write(offs_t offset, u8 data);
 	u8 read(offs_t offset);
@@ -97,7 +105,7 @@ private:
 	emu_timer          *m_timer;
 	uint32_t             m_timer_state;
 	devcb_write_line   m_timer_handler;
-	apan_delegate m_apan_cb;
+	cb_delegate m_apan_cb;
 
 	bool regupdate();
 	void keyon(int channel);

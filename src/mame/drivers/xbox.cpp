@@ -14,8 +14,8 @@
 #include "includes/xbox.h"
 
 #include "cpu/i386/i386.h"
-#include "bus/ata/atapicdr.h"
-#include "bus/ata/idehd.h"
+#include "machine/atapicdr.h"
+#include "machine/idehd.h"
 
 #include "debug/debugcmd.h"
 #include "debug/debugcon.h"

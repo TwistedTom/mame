@@ -82,8 +82,7 @@ void ym3812_device::device_start()
 
 	/* stream system initialize */
 	m_chip = ym3812_init(this, clock(), rate);
-	if (!m_chip)
-		throw emu_fatalerror("ym3812_device(%s): Error creating YM3812 chip", tag());
+	assert_always(m_chip != nullptr, "Error creating YM3812 chip");
 
 	calculate_rates();
 

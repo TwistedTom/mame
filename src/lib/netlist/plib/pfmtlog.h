@@ -1,9 +1,8 @@
 // license:GPL-2.0+
 // copyright-holders:Couriersud
-
-///
-/// \file pfmtlog.h
-///
+/*
+ * pfmtlog.h
+ */
 
 #ifndef PFMT_H_
 #define PFMT_H_
@@ -29,27 +28,18 @@ P_ENUM(plog_level,
 template <typename T>
 struct ptype_traits_base
 {
-	static constexpr const bool is_signed = std::numeric_limits<T>::is_signed;
+	static const T cast(const T &x) { return x; }
+	static const bool is_signed = std::numeric_limits<T>::is_signed;
 	static char32_t fmt_spec() { return 'u'; }
-	static inline void streamify(std::ostream &s, const T &v)
-	{
-		s << v;
-	}
 };
 
-#if (PUSE_FLOAT128)
 template <>
-struct ptype_traits_base<__float128>
+struct ptype_traits_base<bool>
 {
-	// FIXME: need native support at some time
-	static constexpr const bool is_signed = true;
-	static char32_t fmt_spec() { return 'f'; }
-	static inline void streamify(std::ostream &s, const __float128 &v)
-	{
-		s << static_cast<long double>(v);
-	}
+	static unsigned int cast(const bool &x) { return static_cast<unsigned int>(x); }
+	static const bool is_signed = std::numeric_limits<bool>::is_signed;
+	static char32_t fmt_spec() { return 'u'; }
 };
-#endif
 
 template <typename T>
 struct ptype_traits;
@@ -138,41 +128,17 @@ struct ptype_traits<double> : ptype_traits_base<double>
 };
 
 template<>
-struct ptype_traits<long double> : ptype_traits_base<long double>
-{
-	static char32_t fmt_spec() { return 'f'; }
-};
-
-#if (PUSE_FLOAT128)
-template<>
-struct ptype_traits<__float128> : ptype_traits_base<__float128>
-{
-	static char32_t fmt_spec() { return 'f'; }
-};
-#endif
-
-template<>
 struct ptype_traits<char *> : ptype_traits_base<char *>
 {
+	static const char *cast(const char *x) { return x; }
 	static char32_t fmt_spec() { return 's'; }
 };
 
 template<>
-struct ptype_traits<const char *> : ptype_traits_base<const char *>
+struct ptype_traits<std::string> : ptype_traits_base<char *>
 {
+	static const char *cast(const std::string &x) { return x.c_str(); }
 	static char32_t fmt_spec() { return 's'; }
-};
-
-template<>
-struct ptype_traits<std::string> : ptype_traits_base<std::string>
-{
-	static char32_t fmt_spec() { return 's'; }
-};
-
-template<>
-struct ptype_traits<const void *> : ptype_traits_base<const void *>
-{
-	static char32_t fmt_spec() { return 'p'; }
 };
 
 class pfmt
@@ -182,7 +148,7 @@ public:
 	: m_str(fmt), m_locale(std::locale::classic()), m_arg(0)
 	{
 	}
-	explicit pfmt(const std::locale &loc, const pstring &fmt)
+	explicit pfmt(std::locale loc, const pstring &fmt)
 	: m_str(fmt), m_locale(loc), m_arg(0)
 	{
 	}
@@ -201,11 +167,6 @@ public:
 	typename std::enable_if<std::is_floating_point<T>::value, pfmt &>::type
 	e(const T &x) {return format_element('e', x);  }
 
-#if PUSE_FLOAT128
-	// FIXME: should use quadmath_snprintf
-	pfmt & e(const __float128 &x) {return format_element('e', static_cast<long double>(x));  }
-#endif
-
 	template <typename T>
 	typename std::enable_if<std::is_floating_point<T>::value, pfmt &>::type
 	g(const T &x) {return format_element('g', x);  }
@@ -216,19 +177,20 @@ public:
 	template<typename T>
 	pfmt &operator ()(const T &x)
 	{
-		return format_element(x);
+		return format_element(ptype_traits<T>::fmt_spec(), ptype_traits<T>::cast(x));
 	}
 
 	template<typename T>
 	pfmt &operator ()(const T *x)
 	{
-		return format_element(x);
+		return format_element(ptype_traits<T *>::fmt_spec(), ptype_traits<T *>::cast(x));
 	}
 
 	pfmt &operator ()()
 	{
 		return *this;
 	}
+
 
 	template<typename X, typename Y, typename... Args>
 	pfmt &operator()(X&& x, Y && y, Args&&... args)
@@ -250,31 +212,21 @@ public:
 		return format_element('o', x);
 	}
 
-	friend std::ostream& operator<<(std::ostream &ostrm, const pfmt &fmt)
-	{
-		ostrm << fmt.m_str;
-		return ostrm;
-	}
-
 protected:
 
 	struct rtype
 	{
-		rtype() : ret(0), p(0), sl(0) {}
-		int ret;
+		rtype() : ret(0), p(0), sl(0), pend(0) {}
+		int	ret;
 		pstring::size_type p;
 		pstring::size_type sl;
+		pstring::value_type pend;
+
 	};
-	rtype setfmt(std::stringstream &strm, char32_t cfmt_spec);
+	rtype setfmt(std::stringstream &strm, unsigned cfmt_spec);
 
 	template <typename T>
-	pfmt &format_element(T &&v)
-	{
-		return format_element(ptype_traits<typename std::decay<T>::type>::fmt_spec(), std::forward<T>(v));
-	}
-
-	template <typename T>
-	pfmt &format_element(const char32_t cfmt_spec, T &&v)
+	pfmt &format_element(const unsigned cfmt_spec, T &&val)
 	{
 		rtype ret;
 
@@ -286,9 +238,8 @@ protected:
 			ret = setfmt(strm, cfmt_spec);
 			if (ret.ret>=0)
 			{
-				ptype_traits<typename std::decay<T>::type>::streamify(strm, std::forward<T>(v));
-				const pstring ps(strm.str());
-				m_str = m_str.substr(0, ret.p) + ps + m_str.substr(ret.p + ret.sl);
+				strm << std::forward<T>(val);
+				m_str = m_str.substr(0, ret.p) + pstring(strm.str()) + m_str.substr(ret.p + ret.sl);
 			}
 		} while (ret.ret == 1);
 
@@ -311,9 +262,9 @@ public:
 
 	COPYASSIGNMOVE(pfmt_writer_t, delete)
 
-	// runtime enable
+	/* runtime enable */
 	template<bool enabled, typename... Args>
-	void log(const pstring & fmt, Args&&... args) const noexcept
+	void log(const pstring & fmt, Args&&... args) const
 	{
 		if (build_enabled && enabled && m_enabled)
 		{
@@ -323,7 +274,7 @@ public:
 	}
 
 	template<typename... Args>
-	void operator ()(const pstring &fmt, Args&&... args) const noexcept
+	void operator ()(const pstring &fmt, Args&&... args) const
 	{
 		if (build_enabled && m_enabled)
 		{
@@ -367,7 +318,7 @@ public:
 	~plog_channel() noexcept = default;
 
 protected:
-	void vdowrite(const pstring &ls) const noexcept
+	void vdowrite(const pstring &ls) const
 	{
 		m_base.vlog(L, ls);
 	}
@@ -406,4 +357,4 @@ public:
 template<typename T>
 plib::pfmt& operator<<(plib::pfmt &p, T&& val) { return p(std::forward<T>(val)); }
 
-#endif // PSTRING_H_
+#endif /* PSTRING_H_ */

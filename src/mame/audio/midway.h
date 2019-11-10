@@ -58,16 +58,8 @@ public:
 	DECLARE_WRITE8_MEMBER(ioport_write);
 
 	// configuration
-	template <typename... T> void set_custom_input(int which, uint8_t mask, T &&... args)
-	{
-		m_custom_input_mask[which] = mask;
-		m_custom_input[which].set(std::forward<T>(args)...);
-	}
-	template <typename... T> void set_custom_output(int which, uint8_t mask, T &&... args)
-	{
-		m_custom_output_mask[which / 4] = mask;
-		m_custom_output[which / 4].set(std::forward<T>(args)...);
-	}
+	void set_custom_input(int which, uint8_t mask, read8_delegate handler);
+	void set_custom_output(int which, uint8_t mask, write8_delegate handler);
 
 	// internal communications
 	DECLARE_READ8_MEMBER(irq_clear);
@@ -110,15 +102,16 @@ private:
 
 	// I/O port overrides
 	uint8_t m_custom_input_mask[5];
-	read8_delegate::array<5> m_custom_input;
+	read8_delegate m_custom_input[5];
 	uint8_t m_custom_output_mask[2];
-	write8_delegate::array<2> m_custom_output;
+	write8_delegate m_custom_output[2];
 
 	INTERRUPT_GEN_MEMBER(clock_14024);
 	DECLARE_WRITE8_MEMBER(porta0_w);
 	DECLARE_WRITE8_MEMBER(portb0_w);
 	DECLARE_WRITE8_MEMBER(porta1_w);
 	DECLARE_WRITE8_MEMBER(portb1_w);
+
 };
 
 

@@ -16,12 +16,15 @@
 #include <string>
 #include <vector>
 
-#include "effcee/effcee.h"
 #include "gmock/gmock.h"
 #include "source/opt/ir_builder.h"
 #include "source/opt/loop_descriptor.h"
 #include "source/opt/loop_peeling.h"
 #include "test/opt/pass_fixture.h"
+
+#ifdef SPIRV_EFFCEE
+#include "effcee/effcee.h"
+#endif
 
 namespace spvtools {
 namespace opt {
@@ -48,6 +51,7 @@ void Match(const std::string& checks, IRContext* context) {
   std::vector<uint32_t> bin;
   context->module()->ToBinary(&bin, true);
   EXPECT_TRUE(Validate(bin));
+#ifdef SPIRV_EFFCEE
   std::string assembly;
   SpirvTools tools(SPV_ENV_UNIVERSAL_1_2);
   EXPECT_TRUE(
@@ -58,6 +62,9 @@ void Match(const std::string& checks, IRContext* context) {
   EXPECT_EQ(effcee::Result::Status::Ok, match_result.status())
       << match_result.message() << "\nChecking result:\n"
       << assembly;
+#else  // ! SPIRV_EFFCEE
+  (void)checks;
+#endif
 }
 
 /*
@@ -132,7 +139,7 @@ TEST_F(PeelingTest, CannotPeel) {
     } else {
       InstructionBuilder builder(context.get(), &*f.begin());
       // Exit condition.
-      loop_count = builder.GetSintConstant(10);
+      loop_count = builder.Add32BitSignedIntegerConstant(10);
     }
 
     LoopPeeling peel(&*ld.begin(), loop_count);
@@ -494,7 +501,7 @@ TEST_F(PeelingTest, SimplePeeling) {
 
     InstructionBuilder builder(context.get(), &*f.begin());
     // Exit condition.
-    Instruction* ten_cst = builder.GetSintConstant(10);
+    Instruction* ten_cst = builder.Add32BitSignedIntegerConstant(10);
 
     LoopPeeling peel(&*ld.begin(), ten_cst);
     EXPECT_TRUE(peel.CanPeelLoop());
@@ -548,7 +555,7 @@ CHECK-NEXT: OpLoopMerge
 
     InstructionBuilder builder(context.get(), &*f.begin());
     // Exit condition.
-    Instruction* ten_cst = builder.GetSintConstant(10);
+    Instruction* ten_cst = builder.Add32BitSignedIntegerConstant(10);
 
     LoopPeeling peel(&*ld.begin(), ten_cst);
     EXPECT_TRUE(peel.CanPeelLoop());
@@ -604,7 +611,7 @@ CHECK-NEXT: OpLoopMerge
 
     InstructionBuilder builder(context.get(), &*f.begin());
     // Exit condition.
-    Instruction* ten_cst = builder.GetSintConstant(10);
+    Instruction* ten_cst = builder.Add32BitSignedIntegerConstant(10);
 
     LoopPeeling peel(&*ld.begin(), ten_cst,
                      context->get_def_use_mgr()->GetDef(22));
@@ -657,7 +664,7 @@ CHECK-NEXT: OpLoopMerge
 
     InstructionBuilder builder(context.get(), &*f.begin());
     // Exit condition.
-    Instruction* ten_cst = builder.GetSintConstant(10);
+    Instruction* ten_cst = builder.Add32BitSignedIntegerConstant(10);
 
     LoopPeeling peel(&*ld.begin(), ten_cst,
                      context->get_def_use_mgr()->GetDef(22));
@@ -918,7 +925,7 @@ TEST_F(PeelingTest, DoWhilePeeling) {
     EXPECT_EQ(ld.NumLoops(), 1u);
     InstructionBuilder builder(context.get(), &*f.begin());
     // Exit condition.
-    Instruction* ten_cst = builder.GetUintConstant(10);
+    Instruction* ten_cst = builder.Add32BitUnsignedIntegerConstant(10);
 
     LoopPeeling peel(&*ld.begin(), ten_cst);
     EXPECT_TRUE(peel.CanPeelLoop());
@@ -968,7 +975,7 @@ CHECK-NEXT: OpLoopMerge
 
     InstructionBuilder builder(context.get(), &*f.begin());
     // Exit condition.
-    Instruction* ten_cst = builder.GetUintConstant(10);
+    Instruction* ten_cst = builder.Add32BitUnsignedIntegerConstant(10);
 
     LoopPeeling peel(&*ld.begin(), ten_cst);
     EXPECT_TRUE(peel.CanPeelLoop());

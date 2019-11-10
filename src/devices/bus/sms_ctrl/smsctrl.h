@@ -12,8 +12,6 @@
 #ifndef MAME_BUS_SMS_CTRL_SMSCTRL_H
 #define MAME_BUS_SMS_CTRL_SMSCTRL_H
 
-#include "screen.h"
-
 #pragma once
 
 
@@ -83,7 +81,7 @@ private:
 // ======================> device_sms_control_port_interface
 
 // class representing interface-specific live sms_expansion card
-class device_sms_control_port_interface : public device_interface
+class device_sms_control_port_interface : public device_slot_card_interface
 {
 public:
 	// construction/destruction

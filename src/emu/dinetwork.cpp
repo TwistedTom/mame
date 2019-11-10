@@ -31,8 +31,7 @@ void device_network_interface::interface_post_start()
 int device_network_interface::send(u8 *buf, int len)
 {
 	// TODO: enable this check when other devices implement delayed transmit
-	//if (m_send_timer->enabled())
-		//throw emu_fatalerror("%s(%s): attempted to transmit while transmit already in progress", device().shortname(), device().tag());
+	//assert_always(!m_send_timer->enabled(), "attempted to transmit while transmit already in progress");
 
 	int result = 0;
 
@@ -66,8 +65,7 @@ TIMER_CALLBACK_MEMBER(device_network_interface::send_complete)
 
 void device_network_interface::recv_cb(u8 *buf, int len)
 {
-	if (m_recv_timer->enabled())
-		throw emu_fatalerror("%s(%s): attempted to receive while receive already in progress", device().shortname(), device().tag());
+	assert_always(!m_recv_timer->enabled(), "attempted to receive while receive already in progress");
 
 	int result = 0;
 
