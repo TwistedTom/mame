@@ -45,27 +45,19 @@ class FeatureManager {
     return extinst_importid_GLSLstd450_;
   }
 
-  friend bool operator==(const FeatureManager& a, const FeatureManager& b);
-  friend bool operator!=(const FeatureManager& a, const FeatureManager& b) {
-    return !(a == b);
-  }
+ private:
+  // Analyzes |module| and records enabled extensions.
+  void AddExtensions(Module* module);
 
   // Adds the given |capability| and all implied capabilities into the current
   // FeatureManager.
   void AddCapability(SpvCapability capability);
 
-  // Add the extension |ext| to the feature manager.
-  void AddExtension(Instruction* ext);
+  // Analyzes |module| and records enabled capabilities.
+  void AddCapabilities(Module* module);
 
   // Analyzes |module| and records imported external instruction sets.
   void AddExtInstImportIds(Module* module);
-
- private:
-  // Analyzes |module| and records enabled extensions.
-  void AddExtensions(Module* module);
-
-  // Analyzes |module| and records enabled capabilities.
-  void AddCapabilities(Module* module);
 
   // Auxiliary object for querying SPIR-V grammar facts.
   const AssemblyGrammar& grammar_;

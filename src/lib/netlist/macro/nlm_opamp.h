@@ -1,12 +1,7 @@
 // license:GPL-2.0+
 // copyright-holders:Couriersud
-
 #ifndef NLM_OPAMP_H_
 #define NLM_OPAMP_H_
-
-///
-/// \file nlm_opamp.h
-///
 
 #include "netlist/nl_setup.h"
 
@@ -33,7 +28,7 @@
 #define LM3900(name)                                                           \
 		NET_REGISTER_DEV(LM3900, name)
 
-#endif // NL_AUTO_DEVICES
+#endif
 
 /* ----------------------------------------------------------------------------
  *  External declarations
@@ -41,6 +36,6 @@
 
 NETLIST_EXTERNAL(OPAMP_lib)
 
-#endif // __PLIB_PREPROCESSOR__
+#endif
 
 #endif

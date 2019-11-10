@@ -75,7 +75,7 @@
 		NET_CONNECT(name, K, cK)                                               \
 		NET_CONNECT(name, CLRQ, cCLRQ)
 
-#if (!NL_USE_TRUTHTABLE_74107)
+#if (!USE_TRUTHTABLE_74107)
 #define TTL_74107(name, cCLK, cJ, cK, cCLRQ)                                   \
 		TTL_74107A(name, cCLK, cJ, cK, cCLRQ)
 

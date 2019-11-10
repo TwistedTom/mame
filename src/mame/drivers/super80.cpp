@@ -750,7 +750,7 @@ void super80_state::super80(machine_config &config)
 	INPUT_BUFFER(config, "cent_status_in", 0);
 
 	/* quickload */
-	QUICKLOAD(config, "quickload", "bin", attotime::from_seconds(3)).set_load_callback(FUNC(super80_state::quickload_cb));
+	QUICKLOAD(config, "quickload", "bin", attotime::from_seconds(3)).set_load_callback(FUNC(super80_state::quickload_cb), this);
 
 	/* cassette */
 	CASSETTE(config, m_cassette);
@@ -771,10 +771,6 @@ void super80_state::super80d(machine_config &config)
 	super80(config);
 	m_gfxdecode->set_info(gfx_super80d);
 	m_screen->set_screen_update(FUNC(super80_state::screen_update_super80d));
-
-	// software list
-	config.device_remove("cass_list");
-	SOFTWARE_LIST(config, "cass_list").set_original("super80_cass").set_filter("D");
 }
 
 void super80_state::super80e(machine_config &config)
@@ -783,10 +779,6 @@ void super80_state::super80e(machine_config &config)
 	m_maincpu->set_addrmap(AS_IO, &super80_state::super80e_io);
 	m_gfxdecode->set_info(gfx_super80e);
 	m_screen->set_screen_update(FUNC(super80_state::screen_update_super80e));
-
-	// software list
-	config.device_remove("cass_list");
-	SOFTWARE_LIST(config, "cass_list").set_original("super80_cass").set_filter("E");
 }
 
 void super80_state::super80m(machine_config &config)
@@ -798,10 +790,6 @@ void super80_state::super80m(machine_config &config)
 
 	m_screen->set_screen_update(FUNC(super80_state::screen_update_super80m));
 	m_screen->screen_vblank().set(FUNC(super80_state::screen_vblank_super80m));
-
-	// software list
-	config.device_remove("cass_list");
-	SOFTWARE_LIST(config, "cass_list").set_original("super80_cass").set_filter("M");
 }
 
 void super80_state::super80v(machine_config &config)
@@ -833,7 +821,7 @@ void super80_state::super80v(machine_config &config)
 	m_crtc->set_screen("screen");
 	m_crtc->set_show_border_area(false);
 	m_crtc->set_char_width(SUPER80V_DOTS);
-	m_crtc->set_update_row_callback(FUNC(super80_state::crtc_update_row));
+	m_crtc->set_update_row_callback(FUNC(super80_state::crtc_update_row), this);
 
 	config.set_default_layout(layout_super80);
 
@@ -855,7 +843,7 @@ void super80_state::super80v(machine_config &config)
 	INPUT_BUFFER(config, "cent_status_in", 0);
 
 	/* quickload */
-	QUICKLOAD(config, "quickload", "bin", attotime::from_seconds(3)).set_load_callback(FUNC(super80_state::quickload_cb));
+	QUICKLOAD(config, "quickload", "bin", attotime::from_seconds(3)).set_load_callback(FUNC(super80_state::quickload_cb), this);
 
 	/* cassette */
 	CASSETTE(config, m_cassette);
@@ -888,10 +876,6 @@ void super80_state::super80r(machine_config &config)
 	m_fdc->drq_wr_callback().set(m_dma, FUNC(z80dma_device::rdy_w));
 	FLOPPY_CONNECTOR(config, "fdc:0", super80_floppies, "s80flop", floppy_image_device::default_floppy_formats).enable_sound(true);
 	FLOPPY_CONNECTOR(config, "fdc:1", super80_floppies, "s80flop", floppy_image_device::default_floppy_formats).enable_sound(true);
-
-	// software list
-	config.device_remove("cass_list");
-	SOFTWARE_LIST(config, "cass_list").set_original("super80_cass").set_filter("R");
 }
 
 /**************************** ROMS *****************************************************************/

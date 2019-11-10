@@ -180,7 +180,7 @@ MACHINE_RESET_MEMBER(pacman_state, acitya)
 }
 
 
-MACHINE_START_MEMBER(pacman_state, eeekkp)
+MACHINE_START_MEMBER(pacman_state, eeekk)
 {
 	/*  Note: D2 is inverted and connected to D1, D5 is inverted and
 	connected to D0.  The other six data bits are converted by a
@@ -208,7 +208,7 @@ MACHINE_START_MEMBER(pacman_state, eeekkp)
 	save_item(NAME(m_counter));
 }
 
-MACHINE_RESET_MEMBER(pacman_state, eeekkp)
+MACHINE_RESET_MEMBER(pacman_state, eeekk)
 {
 	m_counter = 0x09;
 	membank("bank1")->set_entry(m_counter & 3);

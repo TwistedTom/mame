@@ -5,14 +5,13 @@
 
 DEFINE_DEVICE_TYPE(ATA_FLASH_PCCARD, ata_flash_pccard_device, "ataflash", "ATA Flash PC Card")
 
-ata_flash_pccard_device::ata_flash_pccard_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: ata_flash_pccard_device(mconfig, ATA_FLASH_PCCARD, tag, owner, clock)
+ata_flash_pccard_device::ata_flash_pccard_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock) :
+	ata_flash_pccard_device(mconfig, ATA_FLASH_PCCARD, tag, owner, clock)
 {
 }
 
 ata_flash_pccard_device::ata_flash_pccard_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock)
 	: ide_hdd_device(mconfig, type, tag, owner, clock)
-	, device_pccard_interface(mconfig, *this)
 {
 }
 
@@ -81,7 +80,7 @@ READ16_MEMBER( ata_flash_pccard_device::read_reg )
 			return m_cis[offset];
 	}
 
-	return device_pccard_interface::read_reg(space, offset, mem_mask);
+	return pccard_interface::read_reg(space, offset, mem_mask);
 }
 
 WRITE16_MEMBER( ata_flash_pccard_device::write_reg )
@@ -107,7 +106,7 @@ WRITE16_MEMBER( ata_flash_pccard_device::write_reg )
 		break;
 
 	default:
-		device_pccard_interface::write_reg(space, offset, data, mem_mask);
+		pccard_interface::write_reg(space, offset, data, mem_mask);
 		break;
 	}
 }

@@ -78,9 +78,11 @@
 #define THOM_SIZE_DATA_HI    (256+80)
 #define THOM_SIZE_SYNCHRO     12
 
+static int motor_on;
+
 
 /* build an identifier, with header & space */
-static int thom_floppy_make_addr( chrn_id id, uint8_t* dst, int sector_size )
+int thomson_state::thom_floppy_make_addr( chrn_id id, uint8_t* dst, int sector_size )
 {
 	if ( sector_size == 128 )
 	{
@@ -115,7 +117,7 @@ static int thom_floppy_make_addr( chrn_id id, uint8_t* dst, int sector_size )
 
 
 /* build a sector, with header & space */
-static int thom_floppy_make_sector( legacy_floppy_image_device* img, chrn_id id, uint8_t* dst, int sector_size )
+int thomson_state::thom_floppy_make_sector( legacy_floppy_image_device* img, chrn_id id, uint8_t* dst, int sector_size )
 {
 	if ( sector_size == 128 )
 	{
@@ -146,7 +148,7 @@ static int thom_floppy_make_sector( legacy_floppy_image_device* img, chrn_id id,
 
 
 /* build a whole track */
-static int thom_floppy_make_track( legacy_floppy_image_device* img, uint8_t* dst, int sector_size, int side )
+int thomson_state::thom_floppy_make_track( legacy_floppy_image_device* img, uint8_t* dst, int sector_size, int side )
 {
 	uint8_t space = ( sector_size == 128 ) ? 0xff : 0;
 	uint8_t* org = dst;
@@ -210,7 +212,7 @@ static int thom_floppy_make_track( legacy_floppy_image_device* img, uint8_t* dst
 
 
 /* build an identifier, with header */
-static int thom_qdd_make_addr( int sector, uint8_t* dst )
+int thomson_state::thom_qdd_make_addr( int sector, uint8_t* dst )
 {
 	dst[  0 ] = 0xa5;
 	dst[  1 ] = sector >> 8;
@@ -222,7 +224,7 @@ static int thom_qdd_make_addr( int sector, uint8_t* dst )
 
 
 /* build a sector, with header */
-static int thom_qdd_make_sector( legacy_floppy_image_device* img, int sector, uint8_t* dst )
+int thomson_state::thom_qdd_make_sector( legacy_floppy_image_device* img, int sector, uint8_t* dst )
 {
 	int i;
 	dst[ 0 ] = 0x5a;
@@ -236,7 +238,7 @@ static int thom_qdd_make_sector( legacy_floppy_image_device* img, int sector, ui
 
 
 /* build a whole disk */
-static int thom_qdd_make_disk ( legacy_floppy_image_device* img, uint8_t* dst )
+int thomson_state::thom_qdd_make_disk ( legacy_floppy_image_device* img, uint8_t* dst )
 {
 	uint8_t* org = dst;
 	int i;
@@ -812,7 +814,8 @@ void thomson_state::to7_qdd_reset()
 		{
 			img->floppy_drive_set_ready_state(  FLOPPY_DRIVE_READY, 0 );
 
-			img->floppy_mon_w(CLEAR_LINE);
+			motor_on = CLEAR_LINE;
+			img->floppy_mon_w( motor_on);
 
 			/* pulse each time the whole-disk spiraling track ends */
 			/* at 90us per byte read, the disk can be read in 6s */
@@ -857,88 +860,99 @@ void thomson_state::to7_qdd_init()
 
 
 
+/* types of high-level operations */
+#define THMFC1_OP_RESET         0
+#define THMFC1_OP_WRITE_SECT    1
+#define THMFC1_OP_READ_ADDR     2
+#define THMFC1_OP_READ_SECT     3
+
+
+/* STAT0 flags */
+#define THMFC1_STAT0_SYNCHRO        0x01 /* bit clock synchronized */
+#define THMFC1_STAT0_BYTE_READY_OP  0x02 /* byte ready (high-level operation) */
+#define THMFC1_STAT0_CRC_ERROR      0x04
+#define THMFC1_STAT0_FINISHED       0x08
+#define THMFC1_STAT0_FINISHING      0x10 /* (unemulated) */
+#define THMFC1_STAT0_BYTE_READY_POL 0x80 /* polling mode */
+
+
 /*#define THOM_MAXBUF (THOM_SIZE_ID+THOM_SIZE_DATA_HI+2*THOM_SIZE_SYNCHRO)*17*/
 #define THOM_MAXBUF ( THOM_QDD_SIZE_ID + THOM_QDD_SIZE_DATA ) * 512
 
 
-DEFINE_DEVICE_TYPE(THMFC1, thmfc1_device, "thmfc1", "Thomson THMFC1 floppy controller")
-
-ALLOW_SAVE_TYPE(thmfc1_device::thmfc1_op);
-
-thmfc1_device::thmfc1_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: device_t(mconfig, THMFC1, tag, owner, clock)
-	, m_floppy_image(*this, "^floppy%u", 0U)
-	, m_floppy_active_cb(*this)
-	, m_op(OP_RESET)
-	, m_sector(0)
-	, m_sector_id(0)
-	, m_track(0)
-	, m_side(0)
-	, m_drive(0)
-	, m_sector_size(0)
-	, m_formatting(0)
-	, m_ipl(0)
-	, m_wsync(0)
-	, m_motor_on(0)
-	, m_data_idx(0)
-	, m_data_size(0)
-	, m_data_finish(0)
-	, m_data_raw_idx(0)
-	, m_data_raw_size(0)
-	, m_data_crc(0)
-	, m_stat0(0)
-	, m_floppy_cmd(nullptr)
+struct thmfc1_t
 {
-}
+	uint8_t   op;
+	uint8_t   sector;            /* target sector, in [1,16] */
+	uint32_t  sector_id;
+	uint8_t   track;             /* current track, in [0,79] */
+	uint8_t   side;              /* current side, 0 or 1 */
+	uint8_t   drive;             /* 0 to 3 */
+	uint16_t  sector_size;       /* 128 or 256 (512, 1024 not supported) */
+	uint8_t   formatting;
+	uint8_t   ipl;               /* index pulse / QDD start */
+	uint8_t   wsync;             /* synchronization word */
+
+	uint8_t   data[THOM_MAXBUF]; /* enough for a whole track */
+	uint32_t  data_idx;          /* reading / writing / formatting pos */
+	uint32_t  data_size;         /* bytes to read / write */
+	uint32_t  data_finish;       /* when to raise the finished flag */
+	uint32_t  data_raw_idx;      /* byte index for raw track reading */
+	uint32_t  data_raw_size;     /* size of track already cached in data */
+	uint8_t   data_crc;          /* check-sum of written data */
+
+	uint8_t   stat0;             /* status register */
+
+};
+
+static thmfc1_t * thmfc1;
 
 
-void thmfc1_device::device_resolve_objects()
+static emu_timer* thmfc_floppy_cmd;
+
+
+
+legacy_floppy_image_device * thomson_state::thmfc_floppy_image()
 {
-	m_floppy_active_cb.resolve_safe();
-}
-
-
-legacy_floppy_image_device *thmfc1_device::get_floppy_image()
-{
-	return m_floppy_image[m_drive].target();
+	return m_floppy_image[thmfc1->drive].target();
 }
 
 
 
-bool thmfc1_device::floppy_is_qdd( legacy_floppy_image_device *image ) const
+int thomson_state::thmfc_floppy_is_qdd ( legacy_floppy_image_device *image )
 {
-	if (!image) return false;
-	if (!image->exists()) return false;
+	if (!image) return 0;
+	if (!image->exists()) return 0;
 	return image->length() == 51200; // idf QDD
 }
 
 
 
-void thmfc1_device::index_pulse_cb( int index, int state )
+void thomson_state::thmfc_floppy_index_pulse_cb( int index, int state )
 {
 	legacy_floppy_image_device *const image = m_floppy_image[index];
 
-	if ( image != get_floppy_image())
+	if ( image != thmfc_floppy_image())
 		return;
 
-	if ( floppy_is_qdd(image) )
+	if ( thmfc_floppy_is_qdd(image) )
 	{
 		/* pulse each time the whole-disk spiraling track ends */
 		image->floppy_drive_set_rpm( 16.92f /* 423/25 */ );
-		m_ipl = state;
+		thmfc1->ipl = state;
 		if ( state )
 		{
-			m_data_raw_size = 0;
-			m_data_raw_idx = 0;
-			m_data_idx = 0;
+			thmfc1->data_raw_size = 0;
+			thmfc1->data_raw_idx = 0;
+			thmfc1->data_idx = 0;
 		}
 	}
 	else
 	{
 		image->floppy_drive_set_rpm( 300. );
-		m_ipl = state;
+		thmfc1->ipl = state;
 		if ( state  )
-			m_data_raw_idx = 0;
+			thmfc1->data_raw_idx = 0;
 	}
 
 	VLOG(( "%f thmfc_floppy_index_pulse_cb: state=%i\n", machine().time().as_double(), state ));
@@ -946,25 +960,25 @@ void thmfc1_device::index_pulse_cb( int index, int state )
 
 
 
-int thmfc1_device::floppy_find_sector( chrn_id* dst )
+int thomson_state::thmfc_floppy_find_sector( chrn_id* dst )
 {
-	legacy_floppy_image_device *const img = get_floppy_image();
+	legacy_floppy_image_device *const img = thmfc_floppy_image();
 	chrn_id id;
 	int r = 0;
 
 	/* scan track, try 4 revolutions */
 	while ( r < 4 )
 	{
-		if ( img->floppy_drive_get_next_id( m_side, &id ) )
+		if ( img->floppy_drive_get_next_id( thmfc1->side, &id ) )
 		{
-			if ( id.C == m_track &&
-					id.R == m_sector &&
-					(128 << id.N) == m_sector_size
-					/* check side ?  id.H == m_side */ )
+			if ( id.C == thmfc1->track &&
+					id.R == thmfc1->sector &&
+					(128 << id.N) == thmfc1->sector_size
+					/* check side ?  id.H == thmfc1->side */ )
 			{
 				if ( dst )
 					memcpy( dst, &id, sizeof( chrn_id ) );
-				m_stat0 = STAT0_BYTE_READY_POL;
+				thmfc1->stat0 = THMFC1_STAT0_BYTE_READY_POL;
 				LOG (( "thmfc_floppy_find_sector: sector found C=%i H=%i R=%i N=%i\n", id.C, id.H, id.R, id.N ));
 				return 1;
 			}
@@ -974,59 +988,59 @@ int thmfc1_device::floppy_find_sector( chrn_id* dst )
 			r++;
 	}
 
-	m_stat0 = STAT0_CRC_ERROR | STAT0_FINISHED;
-	LOG (( "thmfc_floppy_find_sector: sector not found drive=%s track=%i sector=%i\n", img->tag(), m_track, m_sector ));
+	thmfc1->stat0 = THMFC1_STAT0_CRC_ERROR | THMFC1_STAT0_FINISHED;
+	LOG (( "thmfc_floppy_find_sector: sector not found drive=%s track=%i sector=%i\n", img->tag(), thmfc1->track, thmfc1->sector ));
 	return 0;
 }
 
 
 
 /* complete command (by read, write, or timeout) */
-void thmfc1_device::floppy_cmd_complete()
+void thomson_state::thmfc_floppy_cmd_complete()
 {
 	LOG (( "%f thmfc_floppy_cmd_complete_cb: cmd=%i off=%i/%i/%i\n",
-			machine().time().as_double(), m_op, m_data_idx,
-			m_data_finish - 1, m_data_size - 1 ));
+			machine().time().as_double(), thmfc1->op, thmfc1->data_idx,
+			thmfc1->data_finish - 1, thmfc1->data_size - 1 ));
 
-	if ( m_op == OP_WRITE_SECT )
+	if ( thmfc1->op == THMFC1_OP_WRITE_SECT )
 	{
-		legacy_floppy_image_device *const img = get_floppy_image();
-		img->floppy_drive_write_sector_data( m_side, m_sector_id, &m_data[3], m_data_size - 3, 0 );
-		m_floppy_active_cb( 1 );
+		legacy_floppy_image_device *const img = thmfc_floppy_image();
+		img->floppy_drive_write_sector_data( thmfc1->side, thmfc1->sector_id, thmfc1->data + 3, thmfc1->data_size - 3, 0 );
+				thom_floppy_active( 1 );
 	}
-	m_op = OP_RESET;
-	m_stat0 |= STAT0_FINISHED;
-	m_data_idx = 0;
-	m_data_size = 0;
-	m_floppy_cmd->adjust(attotime::never);
+	thmfc1->op = THMFC1_OP_RESET;
+	thmfc1->stat0 |= THMFC1_STAT0_FINISHED;
+	thmfc1->data_idx = 0;
+	thmfc1->data_size = 0;
+	thmfc_floppy_cmd->adjust(attotime::never);
 }
 
 
 
-TIMER_CALLBACK_MEMBER( thmfc1_device::floppy_cmd_complete_cb )
+TIMER_CALLBACK_MEMBER( thomson_state::thmfc_floppy_cmd_complete_cb )
 {
-	floppy_cmd_complete();
+	thmfc_floppy_cmd_complete();
 }
 
 
 
 /* intelligent read: show just one field, skip header */
-uint8_t thmfc1_device::floppy_read_byte()
+uint8_t thomson_state::thmfc_floppy_read_byte()
 {
-	uint8_t data = m_data[ m_data_idx ];
+	uint8_t data = thmfc1->data[ thmfc1->data_idx ];
 
-	VLOG(( "%f %s thmfc_floppy_read_byte: off=%i/%i/%i data=$%02X\n",
-			machine().time().as_double(), machine().describe_context(),
-			m_data_idx, m_data_finish - 1, m_data_size - 1,
+	VLOG(( "%f $%04x thmfc_floppy_read_byte: off=%i/%i/%i data=$%02X\n",
+			machine().time().as_double(), m_maincpu->pc(),
+			thmfc1->data_idx, thmfc1->data_finish - 1, thmfc1->data_size - 1,
 			data ));
 
-	if ( m_data_idx >= m_data_size - 1 )
-		floppy_cmd_complete();
+	if ( thmfc1->data_idx >= thmfc1->data_size - 1 )
+		thmfc_floppy_cmd_complete();
 	else
-		m_data_idx++;
+		thmfc1->data_idx++;
 
-	if ( m_data_idx >= m_data_finish )
-		m_stat0 |= STAT0_FINISHED;
+	if ( thmfc1->data_idx >= thmfc1->data_finish )
+		thmfc1->stat0 |= THMFC1_STAT0_FINISHED;
 
 	return data;
 }
@@ -1034,35 +1048,35 @@ uint8_t thmfc1_device::floppy_read_byte()
 
 
 /* dumb read: show whole track with field headers and gaps  */
-uint8_t thmfc1_device::floppy_raw_read_byte()
+uint8_t thomson_state::thmfc_floppy_raw_read_byte()
 {
 	uint8_t data;
 
 	/* rebuild track if needed */
-	if ( ! m_data_raw_size )
+	if ( ! thmfc1->data_raw_size )
 	{
-		if ( floppy_is_qdd(get_floppy_image()))
+		if ( thmfc_floppy_is_qdd(thmfc_floppy_image()))
 			/* QDD: track = whole disk */
-			m_data_raw_size = thom_qdd_make_disk ( get_floppy_image(), &m_data[0] );
+			thmfc1->data_raw_size = thom_qdd_make_disk ( thmfc_floppy_image(), thmfc1->data );
 		else
 		{
-			m_data_raw_idx = 0;
-			m_data_raw_size = thom_floppy_make_track( get_floppy_image(), &m_data[0],
-									m_sector_size, m_side );
+			thmfc1->data_raw_idx = 0;
+			thmfc1->data_raw_size = thom_floppy_make_track( thmfc_floppy_image(), thmfc1->data,
+									thmfc1->sector_size, thmfc1->side );
 		}
-		assert( m_data_raw_size < THOM_MAXBUF );
+		assert( thmfc1->data_raw_size < sizeof( thmfc1->data ) );
 	}
 
-	if ( m_data_raw_idx >= m_data_raw_size )
+	if ( thmfc1->data_raw_idx >= thmfc1->data_raw_size )
 		data = 0;
 	else
-		data = m_data[ m_data_raw_idx ];
+		data = thmfc1->data[ thmfc1->data_raw_idx ];
 
-	VLOG(( "%f %s thmfc_floppy_raw_read_byte: off=%i/%i data=$%02X\n",
-			machine().time().as_double(), machine().describe_context(),
-			m_data_raw_idx, m_data_raw_size, data ));
+	VLOG(( "%f $%04x thmfc_floppy_raw_read_byte: off=%i/%i data=$%02X\n",
+			machine().time().as_double(), m_maincpu->pc(),
+			thmfc1->data_raw_idx, thmfc1->data_raw_size, data ));
 
-	m_data_raw_idx++;
+	thmfc1->data_raw_idx++;
 
 	return data;
 }
@@ -1070,88 +1084,88 @@ uint8_t thmfc1_device::floppy_raw_read_byte()
 
 
 /* QDD writing / formating */
-void thmfc1_device::floppy_qdd_write_byte( uint8_t data )
+void thomson_state::thmfc_floppy_qdd_write_byte( uint8_t data )
 {
 	int i;
 
-	if ( m_formatting &&
-			( m_data_idx || data==0xA5 || data==0x5A ) &&
-			m_data_raw_idx < THOM_MAXBUF )
+	if ( thmfc1->formatting &&
+			( thmfc1->data_idx || data==0xA5 || data==0x5A ) &&
+			thmfc1->data_raw_idx < THOM_MAXBUF )
 	{
-		if ( ! m_data_raw_size )
+		if ( ! thmfc1->data_raw_size )
 		{
-			m_data_raw_size = thom_qdd_make_disk ( get_floppy_image(), &m_data[0] );
-			assert( m_data_raw_size < THOM_MAXBUF );
+			thmfc1->data_raw_size = thom_qdd_make_disk ( thmfc_floppy_image(), thmfc1->data );
+			assert( thmfc1->data_raw_size < sizeof( thmfc1->data ) );
 		}
 
 		/* accumulate bytes to form a field */
-		m_data[ m_data_raw_idx ] = data;
-		m_data_raw_idx++;
+		thmfc1->data[ thmfc1->data_raw_idx ] = data;
+		thmfc1->data_raw_idx++;
 
-		if ( ! m_data_idx  )
+		if ( ! thmfc1->data_idx  )
 		{
 			/* start */
-			m_data_crc = 0;
-			m_data_idx = m_data_raw_idx;
+			thmfc1->data_crc = 0;
+			thmfc1->data_idx = thmfc1->data_raw_idx;
 		}
 
-		VLOG (( "%f %s thmfc_floppy_qdd_write_byte: $%02X offs=%i-%i\n",
-			machine().time().as_double(), machine().describe_context(), data,
-			m_data_idx, m_data_raw_idx ));
+		VLOG (( "%f $%04x thmfc_floppy_qdd_write_byte: $%02X offs=%i-%i\n",
+			machine().time().as_double(), m_maincpu->pc(), data,
+			thmfc1->data_idx,thmfc1->data_raw_idx ));
 
-		if ( m_data_raw_idx == m_data_idx + 3 &&
-				m_data[ m_data_idx - 1 ] == 0xA5 &&
-				m_data[ m_data_idx + 2 ] == m_data_crc )
+		if ( thmfc1->data_raw_idx == thmfc1->data_idx + 3 &&
+				thmfc1->data[ thmfc1->data_idx - 1 ] == 0xA5 &&
+				thmfc1->data[ thmfc1->data_idx + 2 ] == thmfc1->data_crc )
 		{
 			/* got an id field => format */
-			int sector = (int) m_data[ m_data_idx ] * 256 + (int) m_data[ m_data_idx + 1 ];
+			int sector = (int) thmfc1->data[ thmfc1->data_idx ] * 256 + (int) thmfc1->data[ thmfc1->data_idx + 1 ];
 			uint8_t filler = 0xff;
 
-			LOG(( "%f %s thmfc_floppy_qdd_write_byte: id field, sector=%i\n", machine().time().as_double(), machine().describe_context(), sector ));
+			LOG(( "%f $%04x thmfc_floppy_qdd_write_byte: id field, sector=%i\n", machine().time().as_double(), m_maincpu->pc(), sector ));
 
-			get_floppy_image()->floppy_drive_format_sector( 0, sector, 0, 0, sector, 128, filler );
-			m_floppy_active_cb( 1 );
-			m_data_idx = 0;
+			thmfc_floppy_image()->floppy_drive_format_sector( 0, sector, 0, 0, sector, 128, filler );
+			thom_floppy_active( 1 );
+			thmfc1->data_idx = 0;
 		}
 
-		else if ( m_data_raw_idx == m_data_idx + 129 &&
-				m_data[ m_data_idx -   1 ] == 0x5A &&
-				m_data[ m_data_idx + 128 ] == m_data_crc )
+		else if ( thmfc1->data_raw_idx == thmfc1->data_idx + 129 &&
+				thmfc1->data[ thmfc1->data_idx -   1 ] == 0x5A &&
+				thmfc1->data[ thmfc1->data_idx + 128 ] == thmfc1->data_crc )
 		{
 			/* look backwards for previous id field */
-			for ( i = m_data_idx - 4; i >= 0; i-- )
+			for ( i = thmfc1->data_idx - 4; i >= 0; i-- )
 			{
-				if ( m_data[ i ] == 0xA5 &&
-						( ( m_data[ i ] + m_data[ i + 1 ] +
-						m_data[ i + 2 ] ) & 0xff
-							) == m_data[ i + 3 ] )
+				if ( thmfc1->data[ i ] == 0xA5 &&
+						( ( thmfc1->data[ i ] + thmfc1->data[ i + 1 ] +
+						thmfc1->data[ i + 2 ] ) & 0xff
+							) == thmfc1->data[ i + 3 ] )
 					break;
 			}
 
 			if ( i >= 0 )
 			{
 				/* got an id & a data field => write */
-				legacy_floppy_image_device * img = get_floppy_image();
-				int sector = (int) m_data[ i + 1 ] * 256 +
-					(int) m_data[ i + 2 ];
+				legacy_floppy_image_device * img = thmfc_floppy_image();
+				int sector = (int) thmfc1->data[ i + 1 ] * 256 +
+					(int) thmfc1->data[ i + 2 ];
 
-				LOG(( "%f %s thmfc_floppy_qdd_write_byte: data field, sector=%i\n",
-						machine().time().as_double(), machine().describe_context(), sector ));
+				LOG(( "%f $%04x thmfc_floppy_qdd_write_byte: data field, sector=%i\n",
+						machine().time().as_double(), m_maincpu->pc(), sector ));
 
-				img->floppy_drive_write_sector_data( 0, sector, &m_data[m_data_idx], 128, 0 );
-				m_floppy_active_cb( 1 );
+				img->floppy_drive_write_sector_data( 0, sector, thmfc1->data + thmfc1->data_idx, 128, 0 );
+				thom_floppy_active( 1 );
 			}
 
-			m_data_idx = 0;
+			thmfc1->data_idx = 0;
 
 		}
 		else
-			m_data_crc += data;
+			thmfc1->data_crc += data;
 	}
 	else
 	{
-		m_data_raw_idx++;
-		VLOG (( "%f %s thmfc_floppy_qdd_write_byte: ignored $%02X\n", machine().time().as_double(), machine().describe_context(), data ));
+		thmfc1->data_raw_idx++;
+		VLOG (( "%f $%04x thmfc_floppy_qdd_write_byte: ignored $%02X\n", machine().time().as_double(), m_maincpu->pc(), data ));
 	}
 
 }
@@ -1159,54 +1173,53 @@ void thmfc1_device::floppy_qdd_write_byte( uint8_t data )
 
 
 /* intelligent writing */
-void thmfc1_device::floppy_write_byte( uint8_t data )
+void thomson_state::thmfc_floppy_write_byte( uint8_t data )
 {
-	VLOG (( "%f %s thmfc_floppy_write_byte: off=%i/%i data=$%02X\n",
-		machine().time().as_double(), machine().describe_context(),
-		m_data_idx, m_data_size - 1, data ));
+	VLOG (( "%f $%04x thmfc_floppy_write_byte: off=%i/%i data=$%02X\n",
+		machine().time().as_double(), m_maincpu->pc(),
+		thmfc1->data_idx, thmfc1->data_size - 1, data ));
 
-	m_data_raw_size = 0;
-	m_data[ m_data_idx ] = data;
-	if ( m_data_idx >= m_data_size - 1 )
-		floppy_cmd_complete();
+	thmfc1->data_raw_size = 0;
+	thmfc1->data[ thmfc1->data_idx ] = data;
+	if ( thmfc1->data_idx >= thmfc1->data_size - 1 )
+		thmfc_floppy_cmd_complete();
 	else
-		m_data_idx++;
+		thmfc1->data_idx++;
 }
 
 /* intelligent formatting */
-void thmfc1_device::floppy_format_byte( uint8_t data )
+void thomson_state::thmfc_floppy_format_byte( uint8_t data )
 {
-	VLOG (( "%f %s thmfc_floppy_format_byte: $%02X\n", machine().time().as_double(), machine().describe_context(), data ));
+	VLOG (( "%f $%04x thmfc_floppy_format_byte: $%02X\n", machine().time().as_double(), m_maincpu->pc(), data ));
 
-	m_data_raw_size = 0;
+	thmfc1->data_raw_size = 0;
 
 	/* accumulate bytes to form an id field */
-	if ( m_data_idx || data==0xA1 )
+	if ( thmfc1->data_idx || data==0xA1 )
 	{
 		static const uint8_t header[] = { 0xa1, 0xa1, 0xa1, 0xfe };
-		m_data[ m_data_idx ] = data;
-		m_data_idx++;
-		if ( m_data_idx > 11 )
+		thmfc1->data[ thmfc1->data_idx ] = data;
+		thmfc1->data_idx++;
+		if ( thmfc1->data_idx > 11 )
 		{
-			if ( !memcmp ( &m_data[0], header, sizeof( header ) ) )
+			if ( !memcmp ( thmfc1->data, header, sizeof( header ) ) )
 			{
 				/* got id field => format */
-				legacy_floppy_image_device * img = get_floppy_image();
-				uint8_t track  = m_data[4];
-				uint8_t side   = m_data[5];
-				uint8_t sector = m_data[6];
-				uint8_t length = m_data[7]; /* actually, log length */
+				legacy_floppy_image_device * img = thmfc_floppy_image();
+				uint8_t track  = thmfc1->data[4];
+				uint8_t side   = thmfc1->data[5];
+				uint8_t sector = thmfc1->data[6];
+				uint8_t length = thmfc1->data[7]; /* actually, log length */
 				uint8_t filler = 0xe5;            /* standard Thomson filler */
-
-				chrn_id id;
-				if ( floppy_find_sector( &id ) )
-				{
-					img->floppy_drive_format_sector( side, m_sector_id, track, m_side, sector, length, filler );
-					m_floppy_active_cb( 1 );
-				}
+								chrn_id id;
+								if ( thmfc_floppy_find_sector( &id ) )
+								{
+										img->floppy_drive_format_sector( side, thmfc1->sector_id, track, thmfc1->side, sector, length, filler );
+										thom_floppy_active( 1 );
+								}
 			}
 
-			m_data_idx = 0;
+			thmfc1->data_idx = 0;
 		}
 
 	}
@@ -1214,31 +1227,31 @@ void thmfc1_device::floppy_format_byte( uint8_t data )
 
 
 
-uint8_t thmfc1_device::floppy_r(offs_t offset)
+READ8_MEMBER( thomson_state::thmfc_floppy_r )
 {
 	switch ( offset )
 	{
 	case 0: /* STAT0 */
-		m_stat0 ^= STAT0_SYNCHRO | STAT0_BYTE_READY_POL;
-		VLOG(( "%f %s thmfc_floppy_r: STAT0=$%02X\n", machine().time().as_double(), machine().describe_context(), m_stat0 ));
-		return m_stat0;
+		thmfc1->stat0 ^= THMFC1_STAT0_SYNCHRO | THMFC1_STAT0_BYTE_READY_POL;
+		VLOG(( "%f $%04x thmfc_floppy_r: STAT0=$%02X\n", machine().time().as_double(), m_maincpu->pc(), thmfc1->stat0 ));
+		return thmfc1->stat0;
 
 	case 1: /* STAT1 */
 	{
 		uint8_t data = 0;
-		legacy_floppy_image_device * img = get_floppy_image();
+		legacy_floppy_image_device * img = thmfc_floppy_image();
 		int flags = img->floppy_drive_get_flag_state(-1 );
-		if ( floppy_is_qdd(img) )
+		if ( thmfc_floppy_is_qdd(img) )
 		{
 			if ( ! img->exists() )
 				data |= 0x40; /* disk present */
-			if ( ! m_ipl )
+			if ( ! thmfc1->ipl )
 				data |= 0x02;       /* disk start */
 			data |= 0x08; /* connected */
 		}
 		else
 		{
-			if ( m_ipl )
+			if ( thmfc1->ipl )
 				data |= 0x40;
 			if ( img->exists() )
 				data |= 0x20; /* disk change (?) */
@@ -1248,20 +1261,20 @@ uint8_t thmfc1_device::floppy_r(offs_t offset)
 			if ( flags & FLOPPY_DRIVE_READY )
 				data |= 0x02;
 		}
-		if (!m_motor_on)
+		if (!motor_on)
 			data |= 0x10;
 		if (!img->floppy_wpt_r())
 			data |= 0x04;
-		VLOG(( "%f %s thmfc_floppy_r: STAT1=$%02X\n", machine().time().as_double(), machine().describe_context(), data ));
+		VLOG(( "%f $%04x thmfc_floppy_r: STAT1=$%02X\n", machine().time().as_double(), m_maincpu->pc(), data ));
 		return data;
 	}
 
 	case 3: /* RDATA */
 
-		if ( m_op == OP_READ_SECT || m_op == OP_READ_ADDR )
-			return floppy_read_byte();
+		if ( thmfc1->op == THMFC1_OP_READ_SECT || thmfc1->op == THMFC1_OP_READ_ADDR )
+			return thmfc_floppy_read_byte();
 		else
-			return floppy_raw_read_byte();
+			return thmfc_floppy_raw_read_byte();
 
 	case 6:
 		return 0;
@@ -1269,100 +1282,100 @@ uint8_t thmfc1_device::floppy_r(offs_t offset)
 	case 8:
 	{
 		/* undocumented => emulate TO7 QDD controller ? */
-		uint8_t data = m_ipl << 7;
-		VLOG(( "%f %s thmfc_floppy_r: STAT8=$%02X\n", machine().time().as_double(), machine().describe_context(), data ));
+		uint8_t data = thmfc1->ipl << 7;
+		VLOG(( "%f $%04x thmfc_floppy_r: STAT8=$%02X\n", machine().time().as_double(), m_maincpu->pc(), data ));
 		return data;
 	}
 
 	default:
-		logerror ( "%f %s thmfc_floppy_r: invalid read offset %i\n", machine().time().as_double(), machine().describe_context(), offset );
+		logerror ( "%f $%04x thmfc_floppy_r: invalid read offset %i\n", machine().time().as_double(), m_maincpu->pc(), offset );
 		return 0;
 	}
 }
 
 
 
-void thmfc1_device::floppy_w(offs_t offset, uint8_t data)
+WRITE8_MEMBER( thomson_state::thmfc_floppy_w )
 {
 	switch ( offset ) {
 	case 0: /* CMD0 */
 	{
 		int wsync = (data >> 4) & 1;
-		int qdd = floppy_is_qdd(get_floppy_image());
+		int qdd = thmfc_floppy_is_qdd(thmfc_floppy_image());
 		chrn_id id;
-		m_formatting = (data >> 2) & 1;
-		LOG (( "%f %s thmfc_floppy_w: CMD0=$%02X dens=%s wsync=%i dsync=%i fmt=%i op=%i\n",
-				machine().time().as_double(), machine().describe_context(), data,
+		thmfc1->formatting = (data >> 2) & 1;
+		LOG (( "%f $%04x thmfc_floppy_w: CMD0=$%02X dens=%s wsync=%i dsync=%i fmt=%i op=%i\n",
+				machine().time().as_double(), m_maincpu->pc(), data,
 				(BIT(data, 5) ? "FM" : "MFM"),
 				wsync, (data >> 3) & 1,
-				m_formatting, data & 3 ));
+				thmfc1->formatting, data & 3 ));
 
 		/* abort previous command, if any */
-		m_op = OP_RESET;
-		m_floppy_cmd->adjust(attotime::never);
+		thmfc1->op = THMFC1_OP_RESET;
+		thmfc_floppy_cmd->adjust(attotime::never);
 
 		switch ( data & 3 )
 		{
-		case OP_RESET:
-			m_stat0 = STAT0_FINISHED;
+		case THMFC1_OP_RESET:
+			thmfc1->stat0 = THMFC1_STAT0_FINISHED;
 			break;
 
-		case OP_WRITE_SECT:
+		case THMFC1_OP_WRITE_SECT:
 			if ( qdd )
 				logerror( "thmfc_floppy_w: smart operation 1 not supported for QDD\n" );
-			else if ( floppy_find_sector( &id ) )
+			else if ( thmfc_floppy_find_sector( &id ) )
 			{
-				m_sector_id = id.data_id;
-				m_data_idx = 0;
-				m_data_size = m_sector_size + 3; /* A1 A1 FB <data> */
-				m_data_finish = m_sector_size + 3;
-				m_stat0 |= STAT0_BYTE_READY_OP;
-				m_op = OP_WRITE_SECT;
-				m_floppy_cmd->adjust(attotime::from_msec( 10 ));
+								thmfc1->sector_id = id.data_id;
+				thmfc1->data_idx = 0;
+				thmfc1->data_size = thmfc1->sector_size + 3; /* A1 A1 FB <data> */
+				thmfc1->data_finish = thmfc1->sector_size + 3;
+				thmfc1->stat0 |= THMFC1_STAT0_BYTE_READY_OP;
+				thmfc1->op = THMFC1_OP_WRITE_SECT;
+				thmfc_floppy_cmd->adjust(attotime::from_msec( 10 ));
 			}
 			break;
 
-		case OP_READ_ADDR:
+		case THMFC1_OP_READ_ADDR:
 			if ( qdd )
 				logerror( "thmfc_floppy_w: smart operation 2 not supported for QDD\n" );
-			else if ( floppy_find_sector( &id ) )
+			else if ( thmfc_floppy_find_sector( &id ) )
 			{
-				m_data_size =
-					thom_floppy_make_addr( id, &m_data[0], m_sector_size );
-				assert( m_data_size < THOM_MAXBUF );
-				m_data_finish = 10;
-				m_data_idx = 1;
-				m_stat0 |= STAT0_BYTE_READY_OP;
-				m_op = OP_READ_ADDR;
-				m_floppy_cmd->adjust(attotime::from_msec( 1 ));
+				thmfc1->data_size =
+					thom_floppy_make_addr( id, thmfc1->data, thmfc1->sector_size );
+				assert( thmfc1->data_size < sizeof( thmfc1->data ) );
+				thmfc1->data_finish = 10;
+				thmfc1->data_idx = 1;
+				thmfc1->stat0 |= THMFC1_STAT0_BYTE_READY_OP;
+				thmfc1->op = THMFC1_OP_READ_ADDR;
+				thmfc_floppy_cmd->adjust(attotime::from_msec( 1 ));
 			}
 			break;
 
-		case OP_READ_SECT:
+		case THMFC1_OP_READ_SECT:
 			if ( qdd )
 				logerror( "thmfc_floppy_w: smart operation 3 not supported for QDD\n" );
-			else if ( floppy_find_sector( &id ) )
+			else if ( thmfc_floppy_find_sector( &id ) )
 			{
-				m_data_size = thom_floppy_make_sector
-					( get_floppy_image(), id, &m_data[0], m_sector_size );
-				assert( m_data_size < THOM_MAXBUF );
-				m_data_finish = m_sector_size + 4;
-				m_data_idx = 1;
-				m_stat0 |= STAT0_BYTE_READY_OP;
-				m_op = OP_READ_SECT;
-				m_floppy_cmd->adjust(attotime::from_msec( 10 ));
+				thmfc1->data_size = thom_floppy_make_sector
+					( thmfc_floppy_image(), id, thmfc1->data, thmfc1->sector_size );
+				assert( thmfc1->data_size < sizeof( thmfc1->data ) );
+				thmfc1->data_finish = thmfc1->sector_size + 4;
+				thmfc1->data_idx = 1;
+				thmfc1->stat0 |= THMFC1_STAT0_BYTE_READY_OP;
+				thmfc1->op = THMFC1_OP_READ_SECT;
+				thmfc_floppy_cmd->adjust(attotime::from_msec( 10 ));
 			}
 			break;
 		}
 
 		/* synchronize to word, if needed (QDD only) */
 		if ( wsync && qdd ) {
-			if ( ! m_data_raw_size )
-				m_data_raw_size = thom_qdd_make_disk ( get_floppy_image(), &m_data[0] );
-			while ( m_data_raw_idx < m_data_raw_size &&
-				m_data[ m_data_raw_idx ] != m_wsync )
+			if ( ! thmfc1->data_raw_size )
+				thmfc1->data_raw_size = thom_qdd_make_disk ( thmfc_floppy_image(), thmfc1->data );
+			while ( thmfc1->data_raw_idx < thmfc1->data_raw_size &&
+				thmfc1->data[ thmfc1->data_raw_idx ] != thmfc1->wsync )
 			{
-				m_data_raw_idx++;
+				thmfc1->data_raw_idx++;
 			}
 		}
 	}
@@ -1371,19 +1384,19 @@ void thmfc1_device::floppy_w(offs_t offset, uint8_t data)
 
 
 	case 1: /* CMD1 */
-		m_data_raw_size = 0;
-		m_sector_size = 128 << ( (data >> 5) & 3);
-		m_side = (data >> 4) & 1;
-		if ( m_sector_size > 256 )
+		thmfc1->data_raw_size = 0;
+		thmfc1->sector_size = 128 << ( (data >> 5) & 3);
+		thmfc1->side = (data >> 4) & 1;
+		if ( thmfc1->sector_size > 256 )
 		{
-			logerror( "%s thmfc_floppy_w: sector size %i > 256 not handled\n",
-					machine().describe_context(), m_sector_size );
-			m_sector_size = 256;
+			logerror( "$%04x thmfc_floppy_w: sector size %i > 256 not handled\n",
+					m_maincpu->pc(), thmfc1->sector_size );
+			thmfc1->sector_size = 256;
 		}
 
-		LOG (( "%f %s thmfc_floppy_w: CMD1=$%02X sect-size=%i comp=%i head=%i\n",
-				machine().time().as_double(), machine().describe_context(), data,
-				m_sector_size, (data >> 1) & 7, m_side ));
+		LOG (( "%f $%04x thmfc_floppy_w: CMD1=$%02X sect-size=%i comp=%i head=%i\n",
+				machine().time().as_double(), m_maincpu->pc(), data,
+				thmfc1->sector_size, (data >> 1) & 7, thmfc1->side ));
 		break;
 
 
@@ -1391,10 +1404,10 @@ void thmfc1_device::floppy_w(offs_t offset, uint8_t data)
 	{
 		legacy_floppy_image_device * img;
 		int seek = 0, motor;
-		m_drive = data & 2;
+		thmfc1->drive = data & 2;
 
-		img  = get_floppy_image();
-		if ( floppy_is_qdd(img))
+		img  = thmfc_floppy_image();
+		if ( thmfc_floppy_is_qdd(img))
 		{
 			motor = !(data & 0x40);
 			/* no side select & no seek for QDD */
@@ -1404,19 +1417,19 @@ void thmfc1_device::floppy_w(offs_t offset, uint8_t data)
 			if ( data & 0x10 )
 				seek = (data & 0x20) ? 1 : -1;
 			motor =  (data >> 2) & 1;
-			m_drive |= 1 ^ ((data >> 6) & 1);
-			img = get_floppy_image();
+			thmfc1->drive |= 1 ^ ((data >> 6) & 1);
+						img = thmfc_floppy_image();
 		}
 
-		m_floppy_active_cb( 0 );
+		thom_floppy_active( 0 );
 
-		LOG (( "%f %s thmfc_floppy_w: CMD2=$%02X drv=%i step=%i motor=%i\n",
-				machine().time().as_double(), machine().describe_context(), data,
-				m_drive, seek, motor ));
+		LOG (( "%f $%04x thmfc_floppy_w: CMD2=$%02X drv=%i step=%i motor=%i\n",
+				machine().time().as_double(), m_maincpu->pc(), data,
+				thmfc1->drive, seek, motor ));
 
 		if ( seek )
 		{
-			m_data_raw_size = 0;
+			thmfc1->data_raw_size = 0;
 			img->floppy_drive_seek( seek );
 		}
 
@@ -1424,64 +1437,64 @@ void thmfc1_device::floppy_w(offs_t offset, uint8_t data)
 		   set motor to 1 every few seconds.
 		   instead of counting, we assume the motor is always running...
 		*/
-		m_motor_on = CLEAR_LINE /* motor */;
-		img->floppy_mon_w(m_motor_on);
+		motor_on = CLEAR_LINE /* motor */;
+		img->floppy_mon_w(motor_on);
 	}
 	break;
 
 
 	case 3: /* WDATA */
-		m_wsync = data;
-		if ( floppy_is_qdd(get_floppy_image()))
-			floppy_qdd_write_byte( data );
-		else if ( m_op == OP_WRITE_SECT )
-			floppy_write_byte( data );
-		else if ( m_formatting )
-			floppy_format_byte( data );
+		thmfc1->wsync = data;
+		if ( thmfc_floppy_is_qdd(thmfc_floppy_image()))
+			thmfc_floppy_qdd_write_byte( data );
+		else if ( thmfc1->op==THMFC1_OP_WRITE_SECT )
+			thmfc_floppy_write_byte( data );
+		else if ( thmfc1->formatting )
+			thmfc_floppy_format_byte( data );
 		else
 		{
 			/* TODO: implement other forms of raw track writing */
-			LOG (( "%f %s thmfc_floppy_w: ignored raw WDATA $%02X\n",
-					machine().time().as_double(), machine().describe_context(), data ));
+			LOG (( "%f $%04x thmfc_floppy_w: ignored raw WDATA $%02X\n",
+					machine().time().as_double(), m_maincpu->pc(), data ));
 		}
 		break;
 
 
 	case 4: /* WCLK (unemulated) */
 		/* clock configuration: FF for data, 0A for synchro */
-		LOG (( "%f %s thmfc_floppy_w: WCLK=$%02X (%s)\n",
-				machine().time().as_double(), machine().describe_context(), data,
+		LOG (( "%f $%04x thmfc_floppy_w: WCLK=$%02X (%s)\n",
+				machine().time().as_double(), m_maincpu->pc(), data,
 				(data == 0xff) ? "data" : (data == 0x0A) ? "synchro" : "?" ));
 		break;
 
 	case 5: /* WSECT */
-		m_sector = data;
-		LOG (( "%f %s thmfc_floppy_w: WSECT=%i\n",
-				machine().time().as_double(), machine().describe_context(), data ));
+		thmfc1->sector = data;
+		LOG (( "%f $%04x thmfc_floppy_w: WSECT=%i\n",
+				machine().time().as_double(), m_maincpu->pc(), data ));
 		break;
 
 	case 6: /* WTRCK */
-		m_track = data;
-		LOG (( "%f %s thmfc_floppy_w: WTRCK=%i (real=%i)\n",
-				machine().time().as_double(), machine().describe_context(), data,
-				get_floppy_image()->floppy_drive_get_current_track()));
+		thmfc1->track = data;
+		LOG (( "%f $%04x thmfc_floppy_w: WTRCK=%i (real=%i)\n",
+				machine().time().as_double(), m_maincpu->pc(), data,
+				thmfc_floppy_image()->floppy_drive_get_current_track()));
 		break;
 
 	case 7: /* WCELL */
 		/* precompensation (unemulated) */
-		LOG (( "%f %s thmfc_floppy_w: WCELL=$%02X\n",
-				machine().time().as_double(), machine().describe_context(), data ));
+		LOG (( "%f $%04x thmfc_floppy_w: WCELL=$%02X\n",
+				machine().time().as_double(), m_maincpu->pc(), data ));
 		break;
 
 	default:
-		logerror ( "%f %s thmfc_floppy_w: invalid write offset %i (data=$%02X)\n",
-				machine().time().as_double(), machine().describe_context(), offset, data );
+		logerror ( "%f $%04x thmfc_floppy_w: invalid write offset %i (data=$%02X)\n",
+				machine().time().as_double(), m_maincpu->pc(), offset, data );
 	}
 }
 
 
 
-void thmfc1_device::floppy_reset()
+void thomson_state::thmfc_floppy_reset()
 {
 	LOG(( "thmfc_floppy_reset: THMFC1 controller\n" ));
 
@@ -1494,51 +1507,52 @@ void thmfc1_device::floppy_reset()
 		}
 	}
 
-	m_op = OP_RESET;
-	m_track = 0;
-	m_sector = 0;
-	m_side = 0;
-	m_drive = 0;
-	m_sector_size = 256;
-	m_formatting = 0;
-	m_stat0 = 0;
-	m_data_idx = 0;
-	m_data_size = 0;
-	m_data_raw_idx = 0;
-	m_data_raw_size = 0;
-	m_data_crc = 0;
-	m_wsync = 0;
-	m_motor_on = 0;
-	m_floppy_cmd->adjust(attotime::never);
+	thmfc1->op = THMFC1_OP_RESET;
+	thmfc1->track = 0;
+	thmfc1->sector = 0;
+	thmfc1->side = 0;
+	thmfc1->drive = 0;
+	thmfc1->sector_size = 256;
+	thmfc1->formatting = 0;
+	thmfc1->stat0 = 0;
+	thmfc1->data_idx = 0;
+	thmfc1->data_size = 0;
+	thmfc1->data_raw_idx = 0;
+	thmfc1->data_raw_size = 0;
+	thmfc1->data_crc = 0;
+	thmfc1->wsync = 0;
+	thmfc_floppy_cmd->adjust(attotime::never);
 }
 
 
 
-void thmfc1_device::device_start()
+void thomson_state::thmfc_floppy_init()
 {
-	m_data = make_unique_clear<uint8_t[]>(THOM_MAXBUF);
+	LOG(( "thmfc_floppy_init: THMFC1 controller\n" ));
 
-	m_floppy_cmd = machine().scheduler().timer_alloc(timer_expired_delegate(FUNC(thmfc1_device::floppy_cmd_complete_cb), this));
+	thmfc1 = auto_alloc(machine(), thmfc1_t);
+	memset(thmfc1, 0, sizeof(thmfc1_t));
 
-	save_item(NAME(m_op));
-	save_item(NAME(m_sector));
-	save_item(NAME(m_sector_id));
-	save_item(NAME(m_track));
-	save_item(NAME(m_side));
-	save_item(NAME(m_drive));
-	save_item(NAME(m_sector_size));
-	save_item(NAME(m_formatting));
-	save_item(NAME(m_ipl));
-	save_item(NAME(m_data_idx));
-	save_item(NAME(m_data_size));
-	save_item(NAME(m_data_finish));
-	save_item(NAME(m_stat0));
-	save_item(NAME(m_data_raw_idx));
-	save_item(NAME(m_data_raw_size));
-	save_item(NAME(m_data_crc));
-	save_item(NAME(m_wsync));
-	save_item(NAME(m_motor_on));
-	save_pointer(NAME(m_data), THOM_MAXBUF);
+	thmfc_floppy_cmd = machine().scheduler().timer_alloc(timer_expired_delegate(FUNC(thomson_state::thmfc_floppy_cmd_complete_cb),this));
+
+	save_item(NAME(thmfc1->op));
+	save_item(NAME(thmfc1->sector));
+	save_item(NAME(thmfc1->sector_id));
+	save_item(NAME(thmfc1->track));
+	save_item(NAME(thmfc1->side));
+	save_item(NAME(thmfc1->drive));
+	save_item(NAME(thmfc1->sector_size));
+	save_item(NAME(thmfc1->formatting));
+	save_item(NAME(thmfc1->ipl));
+	save_item(NAME(thmfc1->data_idx));
+	save_item(NAME(thmfc1->data_size));
+	save_item(NAME(thmfc1->data_finish));
+	save_item(NAME(thmfc1->stat0));
+	save_item(NAME(thmfc1->data_raw_idx));
+	save_item(NAME(thmfc1->data_raw_size));
+	save_item(NAME(thmfc1->data_crc));
+	save_item(NAME(thmfc1->wsync));
+	save_item(NAME(thmfc1->data));
 }
 
 
@@ -1708,19 +1722,15 @@ uint8_t to7_controller_type;
 uint8_t to7_floppy_bank;
 
 
-void thomson_state::to7_floppy_init()
+void thomson_state::to7_floppy_init( void* base )
 {
-	m_flopbank->configure_entry( 0, memregion("floppy_none")->base() );
-	m_flopbank->configure_entry( 1, memregion("floppy_cd90_015")->base() );
-	m_flopbank->configure_entry( 2, memregion("floppy_cd90_640")->base() );
-	m_flopbank->configure_entries( 3, 4, memregion("floppy_cd90_351")->base(), 0x800 );
-	m_flopbank->configure_entry( 7, memregion("floppy_cq90_028")->base() );
-	m_flopbank->configure_entry( 8, memregion("floppy_nano")->base() );
+	m_flopbank->configure_entries( 0, TO7_NB_FLOP_BANK, base, 0x800 );
 	save_item(NAME(to7_controller_type));
 	save_item(NAME(to7_floppy_bank));
 	to7_5p14sd_init();
 	to7_5p14_init();
 	to7_qdd_init();
+	thmfc_floppy_init();
 	to7_network_init();
 }
 
@@ -1744,7 +1754,7 @@ void thomson_state::to7_floppy_reset()
 
 	case 3:
 		to7_floppy_bank = 3;
-		m_thmfc->floppy_reset();
+		thmfc_floppy_reset();
 		break;
 
 	case 4:
@@ -1778,7 +1788,7 @@ READ8_MEMBER( thomson_state::to7_floppy_r )
 		return to7_5p14_r( space, offset, mem_mask );
 
 	case 3:
-		return m_thmfc->floppy_r( offset );
+		return thmfc_floppy_r( space, offset );
 
 	case 4:
 		return to7_qdd_r( space, offset, mem_mask );
@@ -1812,7 +1822,7 @@ WRITE8_MEMBER( thomson_state::to7_floppy_w )
 			VLOG (( "to7_floppy_w: set CD 90-351 ROM bank to %i\n", data & 3 ));
 		}
 		else
-			m_thmfc->floppy_w( offset, data );
+			thmfc_floppy_w( space, offset, data );
 		break;
 
 	case 4:
@@ -1835,9 +1845,9 @@ WRITE8_MEMBER( thomson_state::to7_floppy_w )
 
 
 
-void thomson_state::to9_floppy_init( void* int_base )
+void thomson_state::to9_floppy_init( void* int_base, void* ext_base )
 {
-	to7_floppy_init();
+	to7_floppy_init( ext_base );
 	m_flopbank->configure_entry( TO7_NB_FLOP_BANK, int_base);
 }
 
@@ -1865,7 +1875,7 @@ READ8_MEMBER( thomson_state::to9_floppy_r )
 	if ( THOM_FLOPPY_EXT )
 		return to7_floppy_r( space, offset );
 	else
-		return to7_5p14_r( space, offset, mem_mask );
+		return  to7_5p14_r( space, offset, mem_mask );
 }
 
 WRITE8_MEMBER( thomson_state::to9_floppy_w )
@@ -1888,7 +1898,7 @@ void thomson_state::thomson_index_callback(int index, int state)
 		break;
 
 	case 3:
-		m_thmfc->index_pulse_cb(index, state);
+		thmfc_floppy_index_pulse_cb(index, state);
 		break;
 
 	case 4:

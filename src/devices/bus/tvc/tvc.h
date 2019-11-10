@@ -65,7 +65,7 @@
 
 // ======================> device_tvcexp_interface
 
-class device_tvcexp_interface : public device_interface
+class device_tvcexp_interface : public device_slot_card_interface
 {
 public:
 	// construction/destruction
@@ -86,7 +86,8 @@ protected:
 
 // ======================> tvcexp_slot_device
 
-class tvcexp_slot_device : public device_t, public device_single_card_slot_interface<device_tvcexp_interface>
+class tvcexp_slot_device : public device_t,
+							public device_slot_interface
 {
 public:
 	// construction/destruction

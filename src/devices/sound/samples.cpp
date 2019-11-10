@@ -57,7 +57,6 @@ samples_device::samples_device(const machine_config &mconfig, device_type type, 
 	, device_sound_interface(mconfig, *this)
 	, m_channels(0)
 	, m_names(nullptr)
-	, m_samples_start_cb(*this)
 {
 }
 
@@ -263,7 +262,7 @@ void samples_device::device_start()
 	}
 
 	// initialize any custom handlers
-	m_samples_start_cb.resolve();
+	m_samples_start_cb.bind_relative_to(*owner());
 
 	if (!m_samples_start_cb.isnull())
 		m_samples_start_cb();

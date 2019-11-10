@@ -250,9 +250,9 @@ protected:
 	virtual void device_stop() override;
 
 	// device_execute_interface overrides
-	virtual uint32_t execute_min_cycles() const noexcept override { return 1; }
-	virtual uint32_t execute_max_cycles() const noexcept override { return 40; }
-	virtual uint32_t execute_input_lines() const noexcept override { return 1; }
+	virtual uint32_t execute_min_cycles() const override { return 1; }
+	virtual uint32_t execute_max_cycles() const override { return 40; }
+	virtual uint32_t execute_input_lines() const override { return 1; }
 	virtual void execute_run() override;
 	virtual void execute_set_input(int inputnum, int state) override;
 
@@ -469,8 +469,6 @@ protected:
 	/* PowerPC 4XX-specific serial port state */
 	struct ppc4xx_spu_state
 	{
-		ppc4xx_spu_state(device_t &owner) : tx_cb(owner) { }
-
 		uint8_t           regs[9];
 		uint8_t           txbuf;
 		uint8_t           rxbuf;
@@ -504,8 +502,8 @@ protected:
 
 	write32_delegate m_dcstore_cb;
 
-	read32_delegate::array<4> m_ext_dma_read_cb;
-	write32_delegate::array<4> m_ext_dma_write_cb;
+	read32_delegate m_ext_dma_read_cb[4];
+	write32_delegate m_ext_dma_write_cb[4];
 
 	/* PowerPC function pointers for memory accesses/exceptions */
 #ifdef PPC_H_INCLUDED_FROM_PPC_C
@@ -683,7 +681,7 @@ protected:
 //  ppc403_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 //
 //protected:
-//  virtual uint32_t execute_input_lines() const noexcept { return 8; }
+//  virtual uint32_t execute_input_lines() const { return 8; }
 //};
 //
 //
@@ -693,7 +691,7 @@ protected:
 //  ppc405_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 //
 //protected:
-//  virtual uint32_t execute_input_lines() const noexcept { return 8; }
+//  virtual uint32_t execute_input_lines() const { return 8; }
 //};
 
 
@@ -764,7 +762,7 @@ public:
 protected:
 	ppc4xx_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock, powerpc_flavor flavor, uint32_t cap, uint32_t tb_divisor);
 
-	virtual uint32_t execute_input_lines() const noexcept override { return 5; }
+	virtual uint32_t execute_input_lines() const override { return 5; }
 	virtual void execute_set_input(int inputnum, int state) override;
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -24,15 +24,15 @@ extern "C" int _main_(int _argc, char** _argv);
 #endif // ENTRY_CONFIG_IMPLEMENT_MAIN
 
 #if ENTRY_CONFIG_IMPLEMENT_MAIN
-#define ENTRY_IMPLEMENT_MAIN(_app, ...)                 \
+#define ENTRY_IMPLEMENT_MAIN(_app, _name, _description) \
 	int _main_(int _argc, char** _argv)                 \
 	{                                                   \
-			_app app(__VA_ARGS__);                      \
+			_app app(_name, _description);              \
 			return entry::runApp(&app, _argc, _argv);   \
 	}
 #else
-#define ENTRY_IMPLEMENT_MAIN(_app, ...) \
-	_app s_ ## _app ## App(__VA_ARGS__)
+#define ENTRY_IMPLEMENT_MAIN(_app, _name, _description) \
+	_app s_ ## _app ## App(_name, _description)
 #endif // ENTRY_CONFIG_IMPLEMENT_MAIN
 
 namespace entry
@@ -282,7 +282,7 @@ namespace entry
 	{
 	public:
 		///
-		AppI(const char* _name, const char* _description, const char* _url = "https://bkaradzic.github.io/bgfx/index.html");
+		AppI(const char* _name, const char* _description);
 
 		///
 		virtual ~AppI() = 0;
@@ -303,9 +303,6 @@ namespace entry
 		const char* getDescription() const;
 
 		///
-		const char* getUrl() const;
-
-		///
 		AppI* getNext();
 
 		AppI* m_next;
@@ -313,7 +310,6 @@ namespace entry
 	private:
 		const char* m_name;
 		const char* m_description;
-		const char* m_url;
 	};
 
 	///

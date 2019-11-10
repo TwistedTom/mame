@@ -1,30 +1,25 @@
 // license:BSD-3-Clause
 // copyright-holders:David Haywood
-#ifndef MAME_INCLUDES_BFM_SC5_H
-#define MAME_INCLUDES_BFM_SC5_H
-
-#pragma once
-
-#include "includes/bfm_sc4.h"
 #include "cpu/m68000/m68000.h"
+#include "includes/bfm_sc4.h"
 
 class bfm_sc5_state : public bfm_sc45_state
 {
 public:
 	bfm_sc5_state(const machine_config &mconfig, device_type type, const char *tag)
-		: bfm_sc45_state(mconfig, type, tag)
-		, m_maincpu(*this, "maincpu")
+		: bfm_sc45_state(mconfig, type, tag),
+		m_maincpu(*this, "maincpu")
 	{ }
 
-	void init_sc5();
-
 	void bfm_sc5(machine_config &config);
-
-protected:
 	void sc5_map(address_map &map);
+protected:
 
+
+public:
 	required_device<m68000_base_device> m_maincpu;
 
+	void init_sc5();
 	DECLARE_READ8_MEMBER( sc5_10202F0_r );
 	DECLARE_WRITE8_MEMBER( sc5_10202F0_w );
 	DECLARE_WRITE16_MEMBER( sc5_duart_w );
@@ -38,7 +33,3 @@ protected:
 	DECLARE_READ8_MEMBER(bfm_sc5_duart_input_r);
 	DECLARE_WRITE8_MEMBER(bfm_sc5_duart_output_w);
 };
-
-INPUT_PORTS_EXTERN( bfm_sc5 );
-
-#endif // MAME_INCLUDES_BFM_SC5_H

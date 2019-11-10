@@ -624,7 +624,7 @@ private:
 		HR_RETHR(fonts->FindFamilyName(familyName.c_str(), &family_index, &exists));
 		if (!exists)
 		{
-			osd_printf_error("Font with family name %s does not exist.\n", osd::text::from_wstring(familyName));
+			osd_printf_error("Font with family name %S does not exist.\n", familyName.c_str());
 			return E_FAIL;
 		}
 

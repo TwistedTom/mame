@@ -15,7 +15,7 @@
 
 #include "zorro.h"
 #include "machine/autoconfig.h"
-#include "bus/ata/ataintf.h"
+#include "machine/ataintf.h"
 
 
 //**************************************************************************

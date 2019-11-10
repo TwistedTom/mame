@@ -66,9 +66,7 @@ bml3bus_slot_device::bml3bus_slot_device(const machine_config &mconfig, const ch
 
 bml3bus_slot_device::bml3bus_slot_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock) :
 	device_t(mconfig, type, tag, owner, clock),
-	device_single_card_slot_interface<device_bml3bus_card_interface>(mconfig, *this),
-	m_bml3bus(*this, finder_base::DUMMY_TAG),
-	m_bml3bus_slottag(nullptr)
+	device_slot_interface(mconfig, *this), m_bml3bus_tag(nullptr), m_bml3bus_slottag(nullptr)
 {
 }
 
@@ -78,9 +76,9 @@ bml3bus_slot_device::bml3bus_slot_device(const machine_config &mconfig, device_t
 
 void bml3bus_slot_device::device_start()
 {
-	device_bml3bus_card_interface *const dev = get_card_device();
-	if (dev)
-		dev->set_bml3bus(*m_bml3bus, m_bml3bus_slottag);
+	device_bml3bus_card_interface *dev = dynamic_cast<device_bml3bus_card_interface *>(get_card_device());
+
+	if (dev) dev->set_bml3bus_tag(m_bml3bus_tag, m_bml3bus_slottag);
 }
 
 //**************************************************************************
@@ -147,9 +145,9 @@ device_bml3bus_card_interface *bml3bus_device::get_bml3bus_card(int slot)
 	return m_device_list[slot];
 }
 
-void bml3bus_device::add_bml3bus_card(int slot, device_bml3bus_card_interface &card)
+void bml3bus_device::add_bml3bus_card(int slot, device_bml3bus_card_interface *card)
 {
-	m_device_list[slot] = &card;
+	m_device_list[slot] = card;
 }
 
 void bml3bus_device::set_nmi_line(int state)
@@ -185,10 +183,10 @@ WRITE_LINE_MEMBER( bml3bus_device::firq_w ) { m_out_firq_cb(state); }
 //  device_bml3bus_card_interface - constructor
 //-------------------------------------------------
 
-device_bml3bus_card_interface::device_bml3bus_card_interface(const machine_config &mconfig, device_t &device) :
-	device_interface(device, "bml3bus"),
-	m_bml3bus(nullptr),
-	m_slot(0)
+device_bml3bus_card_interface::device_bml3bus_card_interface(const machine_config &mconfig, device_t &device)
+	: device_slot_card_interface(mconfig, device),
+		m_bml3bus(nullptr),
+		m_bml3bus_tag(nullptr), m_bml3bus_slottag(nullptr), m_slot(0), m_next(nullptr)
 {
 }
 
@@ -201,24 +199,18 @@ device_bml3bus_card_interface::~device_bml3bus_card_interface()
 {
 }
 
-void device_bml3bus_card_interface::interface_pre_start()
+void device_bml3bus_card_interface::set_bml3bus_device()
 {
-	if (!m_bml3bus)
-		throw device_missing_dependencies();
-}
-
-void device_bml3bus_card_interface::set_bml3bus(bml3bus_device &bus, const char *slottag)
-{
-	assert(!m_bml3bus);
-	assert(!device().started());
-
 	// extract the slot number from the last digit of the slot tag
-	int tlen = strlen(slottag);
-	m_slot = (slottag[tlen - 1] - '1');
+	int tlen = strlen(m_bml3bus_slottag);
+
+	m_slot = (m_bml3bus_slottag[tlen-1] - '1');
 
 	if (m_slot < 0 || m_slot >= BML3BUS_MAX_SLOTS)
-		fatalerror("Slot %d out of range for Hitachi MB-6890 Bus\n", m_slot);
+	{
+		fatalerror("Slot %x out of range for Hitachi MB-6890 Bus\n", m_slot);
+	}
 
-	m_bml3bus = &bus;
-	m_bml3bus->add_bml3bus_card(m_slot, *this);
+	m_bml3bus = dynamic_cast<bml3bus_device *>(device().machine().device(m_bml3bus_tag));
+	m_bml3bus->add_bml3bus_card(m_slot, this);
 }

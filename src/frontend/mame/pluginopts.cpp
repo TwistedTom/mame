@@ -73,14 +73,15 @@ bool plugin_options::load_plugin(const std::string &path)
 
 	if (document.HasParseError())
 	{
-		const std::string error(GetParseError_En(document.GetParseError()));
-		osd_printf_error("Unable to parse plugin definition file %s. Errors returned:\n%s", path, error);
+		std::string error(GetParseError_En(document.GetParseError()));
+		osd_printf_error("Unable to parse plugin definition file %s. Errors returned:\n", path.c_str());
+		osd_printf_error("%s\n", error.c_str());
 		return false;
 	}
 
 	if (!document["plugin"].IsObject())
 	{
-		osd_printf_error("Bad plugin definition file %s:\n", path);
+		osd_printf_error("Bad plugin definition file %s:\n", path.c_str());
 		return false;
 	}
 

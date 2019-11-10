@@ -43,19 +43,16 @@
 
 	local cxxflags =
 	{
-		Cpp11        = "-std=c++11",
-		Cpp14        = "-std=c++14",
-		Cpp17        = "-std=c++17",
-		CppLatest    = "-std=c++2a",
-		NoExceptions = "-fno-exceptions",
-		NoRTTI       = "-fno-rtti",
-		UnsignedChar = "-funsigned-char",
+		NoExceptions   = "-fno-exceptions",
+		NoRTTI         = "-fno-rtti",
+		UnsignedChar   = "-funsigned-char",
 	}
 
 	local objcflags =
 	{
-		ObjcARC = "-fobjc-arc",
+		ObjcARC     = "-fobjc-arc",
 	}
+
 
 --
 -- Map platforms to flags
@@ -108,12 +105,6 @@
 			cc         = "orbis-clang",
 			cxx        = "orbis-clang++",
 			ar         = "orbis-ar",
-			cppflags   = "-MMD -MP",
-		},
-		Emscripten = {
-			cc         = "$(EMSCRIPTEN)/emcc",
-			cxx        = "$(EMSCRIPTEN)/em++",
-			ar         = "$(EMSCRIPTEN)/emar",
 			cppflags   = "-MMD -MP",
 		}
 	}
@@ -178,10 +169,6 @@
 			end
 		end
 
-		if cfg.kind == "Bundle" then
-			table.insert(result, "-bundle")
-		end
-
 		if cfg.kind == "SharedLib" then
 			if cfg.system == "macosx" then
 				table.insert(result, "-dynamiclib")
@@ -215,7 +202,7 @@
 	function premake.gcc.getlibdirflags(cfg)
 		local result = { }
 		for _, value in ipairs(premake.getlinks(cfg, "all", "directory")) do
-			table.insert(result, '-L\"' .. value .. '\"')
+			table.insert(result, '-L' .. _MAKE.esc(value))
 		end
 		return result
 	end
@@ -269,18 +256,6 @@
 			end
 		end
 		return result
-	end
-
---
--- Get the arguments for whole-archive linking.
---
-
-	function premake.gcc.wholearchive(lib)
-		if premake.gcc.llvm then
-			return {"-force_load", lib}
-		else
-			return {"-Wl,--whole-archive", lib, "-Wl,--no-whole-archive"}
-		end
 	end
 
 --
@@ -356,18 +331,6 @@
 		local result = { }
 		for _,dir in ipairs(includedirs) do
 			table.insert(result, "-iquote \"" .. dir .. "\"")
-		end
-		return result
-	end
-
---
--- Decorate system include file search paths for the GCC command line.
---
-
-	function premake.gcc.getsystemincludedirs(includedirs)
-		local result = { }
-		for _,dir in ipairs(includedirs) do
-			table.insert(result, "-isystem \"" .. dir .. "\"")
 		end
 		return result
 	end

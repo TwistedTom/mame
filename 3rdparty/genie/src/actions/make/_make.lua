@@ -33,27 +33,6 @@
 		end
 	end
 
---
--- Escape quoted string so it can be passed as define via command line.
---
-
-	function _MAKE.escquote(value)
-		local result
-		if (type(value) == "table") then
-			result = { }
-			for _,v in ipairs(value) do
-				table.insert(result, _MAKE.escquote(v))
-			end
-			return result
-		else
-			-- handle simple replacements
-			--result = value:gsub(" ", "\\ ")
-			--result = result:gsub("\"", "\\\"")
-			--return result
-			return value
-		end
-	end
-
 
 --
 -- Rules for file ops based on the shell type. Can't use defines and $@ because
@@ -187,7 +166,5 @@
 
 		oncleanproject = function(prj)
 			premake.clean.file(prj, _MAKE.getmakefilename(prj, true))
-		end,
-
-		gmake = {}
+		end
 	}

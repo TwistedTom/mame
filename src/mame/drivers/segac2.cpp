@@ -105,7 +105,6 @@ public:
 		: md_base_state(mconfig, type, tag)
 		, m_paletteram(*this, "paletteram")
 		, m_upd_region(*this, "upd")
-		, m_prot_func(*this)
 		, m_upd7759(*this, "upd")
 		, m_screen(*this, "screen")
 		, m_palette(*this, "palette")
@@ -1543,10 +1542,10 @@ WRITE_LINE_MEMBER(segac2_state::vdp_lv4irqline_callback_c2)
 }
 
 /*
-    sound output balance (tfrceac)
-    reference : https://youtu.be/AOmeWp9qe5E
-    reference 2 : https://youtu.be/Tq8VkJYmij8
-    reference 3: https://youtu.be/VId_HWdNuyA
+	sound output balance (tfrceac)
+	reference : https://youtu.be/AOmeWp9qe5E
+	reference 2 : https://youtu.be/Tq8VkJYmij8
+	reference 3: https://youtu.be/VId_HWdNuyA
 */
 void segac2_state::segac(machine_config &config)
 {
@@ -2141,7 +2140,7 @@ void segac2_state::segac2_common_init(segac2_prot_delegate prot_func)
 	m_prot_func = prot_func;
 
 	if (m_upd7759 != nullptr)
-		m_maincpu->space(AS_PROGRAM).install_write_handler(0x880000, 0x880001, 0, 0x13fefe, 0, write16_delegate(*this, FUNC(segac2_state::segac2_upd7759_w)));
+		m_maincpu->space(AS_PROGRAM).install_write_handler(0x880000, 0x880001, 0, 0x13fefe, 0, write16_delegate(FUNC(segac2_state::segac2_upd7759_w),this));
 }
 
 int segac2_state::prot_func_dummy(int in)
@@ -2374,94 +2373,94 @@ int segac2_state::prot_func_pclubjv5(int in)
 
 void segac2_state::init_c2boot()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_dummy)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_dummy),this));
 }
 
 void segac2_state::init_bloxeedc()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_dummy)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_dummy),this));
 }
 
 void segac2_state::init_columns()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_columns)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_columns),this));
 }
 
 void segac2_state::init_columns2()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_columns2)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_columns2),this));
 }
 
 void segac2_state::init_tfrceac()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_tfrceac)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_tfrceac),this));
 }
 
 void segac2_state::init_tfrceacb()
 {
 	/* disable the palette bank switching from the protection chip */
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_dummy)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_dummy),this));
 	m_maincpu->space(AS_PROGRAM).nop_write(0x800000, 0x800001);
 }
 
 void segac2_state::init_borench()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_borench)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_borench),this));
 }
 
 void segac2_state::init_twinsqua()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_twinsqua)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_twinsqua),this));
 }
 
 void segac2_state::init_ribbit()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_ribbit)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_ribbit),this));
 }
 
 void segac2_state::init_puyo()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_puyo)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_puyo),this));
 }
 
 void segac2_state::init_tantr()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_tantr)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_tantr),this));
 }
 
 void segac2_state::init_tantrkor()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_tantrkor)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_tantrkor),this));
 }
 
 void segac2_state::init_potopoto()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_potopoto)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_potopoto),this));
 }
 
 void segac2_state::init_stkclmns()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_stkclmns)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_stkclmns),this));
 }
 
 void segac2_state::init_stkclmnj()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_stkclmnj)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_stkclmnj),this));
 }
 
 void segac2_state::init_ichir()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_ichir)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_ichir),this));
 }
 
 void segac2_state::init_ichirk()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_ichirk)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_ichirk),this));
 }
 
 void segac2_state::init_ichirj()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_ichirj)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_ichirj),this));
 }
 
 READ16_MEMBER(segac2_state::ichirjbl_prot_r )
@@ -2471,49 +2470,49 @@ READ16_MEMBER(segac2_state::ichirjbl_prot_r )
 
 void segac2_state::init_ichirjbl()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_dummy)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_dummy),this));
 
-	m_maincpu->space(AS_PROGRAM).install_read_handler(0x840108, 0x840109, read16_delegate(*this, FUNC(segac2_state::ichirjbl_prot_r)));
+	m_maincpu->space(AS_PROGRAM).install_read_handler(0x840108, 0x840109, read16_delegate(FUNC(segac2_state::ichirjbl_prot_r),this) );
 }
 
 void segac2_state::init_puyopuy2()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_puyopuy2)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_puyopuy2),this));
 }
 
 void segac2_state::init_zunkyou()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_zunkyou)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_zunkyou),this));
 }
 
 void segac2_state::init_pclub()
 {
-	m_maincpu->space(AS_PROGRAM).install_read_handler(0x880120, 0x880121, read16_delegate(*this, FUNC(segac2_state::printer_r)));
-	m_maincpu->space(AS_PROGRAM).install_read_handler(0x880124, 0x880125, read16_delegate(*this, FUNC(segac2_state::printer_r)));
-	m_maincpu->space(AS_PROGRAM).install_write_handler(0x880124, 0x880125, write16_delegate(*this, FUNC(segac2_state::print_club_camera_w)));
+	m_maincpu->space(AS_PROGRAM).install_read_handler(0x880120, 0x880121, read16_delegate(FUNC(segac2_state::printer_r),this) );
+	m_maincpu->space(AS_PROGRAM).install_read_handler(0x880124, 0x880125, read16_delegate(FUNC(segac2_state::printer_r),this) );
+	m_maincpu->space(AS_PROGRAM).install_write_handler(0x880124, 0x880125, write16_delegate(FUNC(segac2_state::print_club_camera_w),this));
 }
 
 void segac2_state::init_pclubj()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_pclub)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_pclub),this));
 	init_pclub();
 }
 
 void segac2_state::init_pclubjv2()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_pclubjv2)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_pclubjv2),this));
 	init_pclub();
 }
 
 void segac2_state::init_pclubjv4()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_pclubjv4)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_pclubjv4),this));
 	init_pclub();
 }
 
 void segac2_state::init_pclubjv5()
 {
-	segac2_common_init(segac2_prot_delegate(*this, FUNC(segac2_state::prot_func_pclubjv5)));
+	segac2_common_init(segac2_prot_delegate(FUNC(segac2_state::prot_func_pclubjv5),this));
 	init_pclub();
 }
 

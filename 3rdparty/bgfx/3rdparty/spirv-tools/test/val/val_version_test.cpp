@@ -31,22 +31,6 @@ const std::string vulkan_spirv = R"(
 OpCapability Shader
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %func "func"
-OpExecutionMode %func OriginUpperLeft
-%void = OpTypeVoid
-%functy = OpTypeFunction %void
-%func = OpFunction %void None %functy
-%1 = OpLabel
-OpReturn
-OpFunctionEnd
-)";
-
-const std::string webgpu_spirv = R"(
-OpCapability Shader
-OpCapability VulkanMemoryModelKHR
-OpExtension "SPV_KHR_vulkan_memory_model"
-OpMemoryModel Logical VulkanKHR
-OpEntryPoint Fragment %func "func"
-OpExecutionMode %func OriginUpperLeft
 %void = OpTypeVoid
 %functy = OpTypeFunction %void
 %func = OpFunction %void None %functy
@@ -56,10 +40,9 @@ OpFunctionEnd
 )";
 
 const std::string opencl_spirv = R"(
-OpCapability Addresses
 OpCapability Kernel
 OpCapability Linkage
-OpMemoryModel Physical32 OpenCL
+OpMemoryModel Logical OpenCL
 )";
 
 std::string version(spv_target_env env) {
@@ -87,9 +70,6 @@ std::string version(spv_target_env env) {
     case SPV_ENV_VULKAN_1_1:
     case SPV_ENV_WEBGPU_0:
       return "1.3";
-    case SPV_ENV_UNIVERSAL_1_4:
-    case SPV_ENV_VULKAN_1_1_SPIRV_1_4:
-      return "1.4";
     default:
       return "0";
   }
@@ -112,7 +92,7 @@ TEST_P(ValidateVersion, version) {
 }
 
 // clang-format off
-INSTANTIATE_TEST_SUITE_P(Universal, ValidateVersion,
+INSTANTIATE_TEST_CASE_P(Universal, ValidateVersion,
   ::testing::Values(
     //         Binary version,        Target environment
     std::make_tuple(SPV_ENV_UNIVERSAL_1_0, SPV_ENV_UNIVERSAL_1_0, vulkan_spirv, true),
@@ -126,7 +106,7 @@ INSTANTIATE_TEST_SUITE_P(Universal, ValidateVersion,
     std::make_tuple(SPV_ENV_UNIVERSAL_1_0, SPV_ENV_OPENGL_4_2,    vulkan_spirv, true),
     std::make_tuple(SPV_ENV_UNIVERSAL_1_0, SPV_ENV_OPENGL_4_3,    vulkan_spirv, true),
     std::make_tuple(SPV_ENV_UNIVERSAL_1_0, SPV_ENV_OPENGL_4_5,    vulkan_spirv, true),
-    std::make_tuple(SPV_ENV_UNIVERSAL_1_0, SPV_ENV_WEBGPU_0,      webgpu_spirv, true),
+    std::make_tuple(SPV_ENV_UNIVERSAL_1_0, SPV_ENV_WEBGPU_0,      vulkan_spirv, true),
 
     std::make_tuple(SPV_ENV_UNIVERSAL_1_1, SPV_ENV_UNIVERSAL_1_0, vulkan_spirv, false),
     std::make_tuple(SPV_ENV_UNIVERSAL_1_1, SPV_ENV_UNIVERSAL_1_1, vulkan_spirv, true),
@@ -139,7 +119,7 @@ INSTANTIATE_TEST_SUITE_P(Universal, ValidateVersion,
     std::make_tuple(SPV_ENV_UNIVERSAL_1_1, SPV_ENV_OPENGL_4_2,    vulkan_spirv, false),
     std::make_tuple(SPV_ENV_UNIVERSAL_1_1, SPV_ENV_OPENGL_4_3,    vulkan_spirv, false),
     std::make_tuple(SPV_ENV_UNIVERSAL_1_1, SPV_ENV_OPENGL_4_5,    vulkan_spirv, false),
-    std::make_tuple(SPV_ENV_UNIVERSAL_1_1, SPV_ENV_WEBGPU_0,      webgpu_spirv, true),
+    std::make_tuple(SPV_ENV_UNIVERSAL_1_1, SPV_ENV_WEBGPU_0,      vulkan_spirv, true),
 
     std::make_tuple(SPV_ENV_UNIVERSAL_1_2, SPV_ENV_UNIVERSAL_1_0, vulkan_spirv, false),
     std::make_tuple(SPV_ENV_UNIVERSAL_1_2, SPV_ENV_UNIVERSAL_1_1, vulkan_spirv, false),
@@ -152,7 +132,7 @@ INSTANTIATE_TEST_SUITE_P(Universal, ValidateVersion,
     std::make_tuple(SPV_ENV_UNIVERSAL_1_2, SPV_ENV_OPENGL_4_2,    vulkan_spirv, false),
     std::make_tuple(SPV_ENV_UNIVERSAL_1_2, SPV_ENV_OPENGL_4_3,    vulkan_spirv, false),
     std::make_tuple(SPV_ENV_UNIVERSAL_1_2, SPV_ENV_OPENGL_4_5,    vulkan_spirv, false),
-    std::make_tuple(SPV_ENV_UNIVERSAL_1_2, SPV_ENV_WEBGPU_0,      webgpu_spirv, true),
+    std::make_tuple(SPV_ENV_UNIVERSAL_1_2, SPV_ENV_WEBGPU_0,      vulkan_spirv, true),
 
     std::make_tuple(SPV_ENV_UNIVERSAL_1_3, SPV_ENV_UNIVERSAL_1_0, vulkan_spirv, false),
     std::make_tuple(SPV_ENV_UNIVERSAL_1_3, SPV_ENV_UNIVERSAL_1_1, vulkan_spirv, false),
@@ -165,11 +145,11 @@ INSTANTIATE_TEST_SUITE_P(Universal, ValidateVersion,
     std::make_tuple(SPV_ENV_UNIVERSAL_1_3, SPV_ENV_OPENGL_4_2,    vulkan_spirv, false),
     std::make_tuple(SPV_ENV_UNIVERSAL_1_3, SPV_ENV_OPENGL_4_3,    vulkan_spirv, false),
     std::make_tuple(SPV_ENV_UNIVERSAL_1_3, SPV_ENV_OPENGL_4_5,    vulkan_spirv, false),
-    std::make_tuple(SPV_ENV_UNIVERSAL_1_3, SPV_ENV_WEBGPU_0,      webgpu_spirv, true)
+    std::make_tuple(SPV_ENV_UNIVERSAL_1_3, SPV_ENV_WEBGPU_0,      vulkan_spirv, true)
   )
 );
 
-INSTANTIATE_TEST_SUITE_P(Vulkan, ValidateVersion,
+INSTANTIATE_TEST_CASE_P(Vulkan, ValidateVersion,
   ::testing::Values(
     //         Binary version,        Target environment
     std::make_tuple(SPV_ENV_VULKAN_1_0, SPV_ENV_UNIVERSAL_1_0, vulkan_spirv, true),
@@ -183,7 +163,6 @@ INSTANTIATE_TEST_SUITE_P(Vulkan, ValidateVersion,
     std::make_tuple(SPV_ENV_VULKAN_1_0, SPV_ENV_OPENGL_4_2,    vulkan_spirv, true),
     std::make_tuple(SPV_ENV_VULKAN_1_0, SPV_ENV_OPENGL_4_3,    vulkan_spirv, true),
     std::make_tuple(SPV_ENV_VULKAN_1_0, SPV_ENV_OPENGL_4_5,    vulkan_spirv, true),
-    std::make_tuple(SPV_ENV_VULKAN_1_0, SPV_ENV_VULKAN_1_1_SPIRV_1_4, vulkan_spirv, true),
 
     std::make_tuple(SPV_ENV_VULKAN_1_1, SPV_ENV_UNIVERSAL_1_0, vulkan_spirv, false),
     std::make_tuple(SPV_ENV_VULKAN_1_1, SPV_ENV_UNIVERSAL_1_1, vulkan_spirv, false),
@@ -195,12 +174,11 @@ INSTANTIATE_TEST_SUITE_P(Vulkan, ValidateVersion,
     std::make_tuple(SPV_ENV_VULKAN_1_1, SPV_ENV_OPENGL_4_1,    vulkan_spirv, false),
     std::make_tuple(SPV_ENV_VULKAN_1_1, SPV_ENV_OPENGL_4_2,    vulkan_spirv, false),
     std::make_tuple(SPV_ENV_VULKAN_1_1, SPV_ENV_OPENGL_4_3,    vulkan_spirv, false),
-    std::make_tuple(SPV_ENV_VULKAN_1_1, SPV_ENV_OPENGL_4_5,    vulkan_spirv, false),
-    std::make_tuple(SPV_ENV_VULKAN_1_1, SPV_ENV_VULKAN_1_1_SPIRV_1_4, vulkan_spirv, true)
+    std::make_tuple(SPV_ENV_VULKAN_1_1, SPV_ENV_OPENGL_4_5,    vulkan_spirv, false)
   )
 );
 
-INSTANTIATE_TEST_SUITE_P(OpenCL, ValidateVersion,
+INSTANTIATE_TEST_CASE_P(OpenCL, ValidateVersion,
   ::testing::Values(
     //         Binary version,     Target environment
     std::make_tuple(SPV_ENV_OPENCL_2_0, SPV_ENV_UNIVERSAL_1_0,       opencl_spirv, true),
@@ -253,7 +231,7 @@ INSTANTIATE_TEST_SUITE_P(OpenCL, ValidateVersion,
   )
 );
 
-INSTANTIATE_TEST_SUITE_P(OpenCLEmbedded, ValidateVersion,
+INSTANTIATE_TEST_CASE_P(OpenCLEmbedded, ValidateVersion,
   ::testing::Values(
     //         Binary version,              Target environment
     std::make_tuple(SPV_ENV_OPENCL_EMBEDDED_2_0, SPV_ENV_UNIVERSAL_1_0,       opencl_spirv, true),

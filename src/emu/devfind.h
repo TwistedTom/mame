@@ -1,9 +1,13 @@
 // license:BSD-3-Clause
 // copyright-holders:Aaron Giles, Vas Crabb
-/// \file
-/// \brief Object auto-discovery helpers
-/// \defgroup devfind Object auto-discovery helpers
-/// \{
+/**
+ * \file devfind.h
+ * Object auto-discovery helpers
+ * \defgroup devfind
+ * \{
+ * Object auto-discovery helpers
+ */
+
 #ifndef __EMU_H__
 #error Dont include this file directly; include emu.h instead.
 #endif
@@ -96,8 +100,8 @@ public:
 	///   int argument.
 	/// \param [in] start Number to add to element index when
 	///   calculating values for string format argument.
-	/// \param [in] arg Optional additional constructor argument(s) passed
-	///   to all elements.
+	/// \arg [in] Optional additional constructor argument(s) passed to
+	///   all elements.
 	/// \sa util::string_format
 	template <typename F, typename... Param>
 	object_array_finder(device_t &base, F const &fmt, unsigned start, Param const &... arg)
@@ -113,8 +117,8 @@ public:
 	/// \param [in] tags Tags to search for, e.g. { "player", "dips" }.
 	///   The tags are not copied, it is the caller's responsibility to
 	///   ensure the pointers remain valid until resolution time.
-	/// \param [in] arg Optional additional constructor argument(s) passed
-	///   to all elements.
+	/// \arg [in] Optional additional constructor argument(s) passed to
+	///   all elements.
 	template <typename... Param>
 	object_array_finder(device_t &base, std::array<char const *, Count> const &tags, Param const &... arg)
 		: object_array_finder(base, tags, std::make_integer_sequence<unsigned, Count>(), arg...)
@@ -233,8 +237,8 @@ public:
 	/// \brief Attempt discovery
 	///
 	/// Concrete derived classes must implement this member function.
-	/// Should return false if the object is required but not found, or
-	/// true otherwise (the report_missing member function can assist
+	/// Should return false if the the object is required but not found,
+	/// or true otherwise (the report_missing member function can assist
 	/// in implementing this behaviour).
 	/// \param [in] isvalidation Pass true if this is a dry run (i.e. no
 	///   intention to actually start the device), or false otherwise.
@@ -364,9 +368,9 @@ protected:
 	/// with the requested tag is found, but it doesn't match the
 	/// desired width.
 	/// \param [in] width Desired memory share width in bits.
-	/// \param [out] bytes Set to memory share length in bytes if a
+	/// \param [out] bytes Set to memoyr share length in bytes if a
 	///   matching memory share is found, otherwise left unchanged.
-	/// \param [in] required Whether warning message should be printed
+	/// \param [in] required. Whether warning message should be printed
 	///   if a memory share with matching tag of incorrect width is
 	///   found.
 	/// \return Pointer to base of memory share if a matching memory
@@ -383,7 +387,7 @@ protected:
 	/// or a space with the designated number.
 	/// \param [in] spacenum Address space number.
 	/// \param [in] width Specific data width, or 0.
-	/// \param [in] required Whether warning message should be printed
+	/// \param [in] required. Whether warning message should be printed
 	///   if a device with no memory interface or space of that number
 	///   is found.
 	/// \return Pointer to address space if a matching address space
@@ -396,7 +400,7 @@ protected:
 	/// found, or false otherwise.
 	/// \param [in] spacenum Address space number.
 	/// \param [in] width Specific data width, or 0.
-	/// \param [in] required Whether warning message should be printed
+	/// \param [in] required. Whether warning message should be printed
 	///   if a device with no memory interface or space of that number
 	///   is found.
 	/// \return True if the space is optional, or if the space is
@@ -1208,4 +1212,4 @@ extern template class shared_ptr_finder<s64, false>;
 extern template class shared_ptr_finder<s64, true>;
 
 #endif // MAME_EMU_DEVFIND_H
-/// \}
+/** \} */

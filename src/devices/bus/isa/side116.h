@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include "bus/ata/ataintf.h"
+#include "machine/ataintf.h"
 #include "isa.h"
 
 

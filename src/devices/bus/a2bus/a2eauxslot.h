@@ -21,11 +21,9 @@
 //**************************************************************************
 
 class a2eauxslot_device;
-class device_a2eauxslot_card_interface;
-
 
 class a2eauxslot_slot_device : public device_t,
-							public device_single_card_slot_interface<device_a2eauxslot_card_interface>
+							public device_slot_interface
 {
 public:
 	// construction/destruction
@@ -56,6 +54,8 @@ protected:
 // device type definition
 DECLARE_DEVICE_TYPE(A2EAUXSLOT_SLOT, a2eauxslot_slot_device)
 
+
+class device_a2eauxslot_card_interface;
 
 // ======================> a2eauxslot_device
 class a2eauxslot_device : public device_t
@@ -101,7 +101,7 @@ DECLARE_DEVICE_TYPE(A2EAUXSLOT, a2eauxslot_device)
 // ======================> device_a2eauxslot_card_interface
 
 // class representing interface-specific live a2eauxslot card
-class device_a2eauxslot_card_interface : public device_interface
+class device_a2eauxslot_card_interface : public device_slot_card_interface
 {
 	friend class a2eauxslot_device;
 public:

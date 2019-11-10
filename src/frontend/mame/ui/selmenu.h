@@ -156,8 +156,7 @@ protected:
 		return (uintptr_t(selected_ref) > skip_main_items) ? selected_ref : m_prev_selected;
 	}
 
-	int         m_available_items;
-	int         skip_main_items;
+	int         visible_items;
 	void        *m_prev_selected;
 	int         m_total_lines;
 	int         m_topline_datsview;

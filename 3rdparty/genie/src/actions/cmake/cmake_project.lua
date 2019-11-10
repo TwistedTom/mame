@@ -50,11 +50,8 @@ function cmake.files(prj)
         onbranchexit = function(node, depth)
         end,
         onleaf = function(node, depth)
-            assert(node, "unexpected empty node")
-            if node.cfg then
-                table.insert(ret, node.cfg.name)
-                _p(1, '../%s', node.cfg.name)
-            end
+            table.insert(ret, node.cfg.name)
+            _p(1, '../%s', node.cfg.name)
         end,
     }, true, 1)
 

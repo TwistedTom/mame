@@ -9,8 +9,9 @@
 #include "machine/pccard.h"
 
 class linear_flash_pccard_device : public device_t,
-	public device_pccard_interface,
-	public device_memory_interface
+	public pccard_interface,
+	public device_memory_interface,
+	public device_slot_card_interface
 {
 public:
 	virtual DECLARE_READ16_MEMBER(read_memory) override;

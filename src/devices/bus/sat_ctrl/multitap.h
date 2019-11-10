@@ -15,11 +15,15 @@
 #include "ctrl.h"
 
 
+
 //**************************************************************************
 //  TYPE DEFINITIONS
 //**************************************************************************
 
-class saturn_multitap_device : public device_t, public device_saturn_control_port_interface
+// ======================> saturn_multitap_device
+
+class saturn_multitap_device : public device_t,
+							public device_saturn_control_port_interface
 {
 public:
 	// construction/destruction
@@ -28,6 +32,9 @@ public:
 protected:
 	// device-level overrides
 	virtual void device_start() override;
+	virtual void device_reset() override;
+
+	// optional information overrides
 	virtual void device_add_mconfig(machine_config &config) override;
 
 	// device_saturn_control_port_interface overrides

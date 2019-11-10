@@ -82,7 +82,7 @@ enum
 
 inline void i8257_device::dma_request(int channel, int state)
 {
-	LOG("I8257 Channel %u DMA Request: %u (%sabled)\n", channel, state, MODE_CHAN_ENABLE(channel) ? "en" : "dis");
+	LOG("I8257 Channel %u DMA Request: %u\n", channel, state);
 
 	if (state)
 		m_request |= 1 << channel;
@@ -114,7 +114,6 @@ inline void i8257_device::set_hreq(int state)
 	{
 		m_out_hrq_cb(state);
 		m_hreq = state;
-		abort_timeslice();
 	}
 }
 
@@ -213,13 +212,13 @@ inline void i8257_device::dma_write()
 inline void i8257_device::advance()
 {
 	LOG("%s\n", FUNCNAME);
-	bool tc = m_tc;
+	bool tc = (m_channel[m_current_channel].m_count == 0);
 	bool al = (MODE_AUTOLOAD && (m_current_channel == 2));
 
-	set_tc(0);
 	if(tc)
 	{
 		m_status |= 1 << m_current_channel;
+		set_tc(1);
 
 		if(al)
 		{
@@ -338,6 +337,7 @@ void i8257_device::device_reset()
 	m_state = STATE_SI;
 	m_transfer_mode = 0;
 	m_status = 0;
+	m_request = 0;
 	m_msb = 0;
 	m_current_channel = -1;
 	m_last_channel = 3;
@@ -400,8 +400,8 @@ void i8257_device::execute_run()
 				m_state = STATE_S0;
 			else
 			{
-				m_icount = 0;
 				suspend_until_trigger(1, true);
+				m_icount = 0;
 			}
 			break;
 
@@ -414,8 +414,8 @@ void i8257_device::execute_run()
 			}
 			else
 			{
-				m_icount = 0;
 				suspend_until_trigger(1, true);
+				m_icount = 0;
 			}
 			break;
 
@@ -437,23 +437,11 @@ void i8257_device::execute_run()
 				dma_write();
 			}
 
-			if (m_ready)
-			{
-				m_state = STATE_S4;
-				if (m_channel[m_current_channel].m_count == 0)
-					set_tc(1);
-			}
-			else
-				m_state = STATE_SW;
+			m_state = m_ready ? STATE_S4 : STATE_SW;
 			break;
 
 		case STATE_SW:
-			if (m_ready)
-			{
-				m_state = STATE_S4;
-				if (m_channel[m_current_channel].m_count == 0)
-					set_tc(1);
-			}
+			m_state = m_ready ? STATE_S4 : STATE_SW;
 			break;
 
 		case STATE_S4:
@@ -463,7 +451,7 @@ void i8257_device::execute_run()
 			}
 			advance();
 
-			if(m_hack && next_channel())
+			if(next_channel())
 				m_state = STATE_S1;
 			else
 			{
@@ -521,16 +509,14 @@ READ8_MEMBER( i8257_device::read )
 			break;
 		}
 
-		if (!machine().side_effects_disabled())
-			m_msb = !m_msb;
+		m_msb = !m_msb;
 	}
 	else if(offset == REGISTER_STATUS)
 	{
 		data = m_status;
 
 		// clear TC bits
-		if (!machine().side_effects_disabled())
-			m_status &= 0xf0;
+		m_status &= 0xf0;
 	}
 
 	return data;
@@ -599,12 +585,7 @@ WRITE8_MEMBER( i8257_device::write )
 
 		LOGSETUP("I8257 Command Register: %02x\n", m_transfer_mode);
 	}
-
-	if ((m_transfer_mode & m_request & 0x0f) != 0)
-	{
-		machine().scheduler().eat_all_cycles();
-		trigger(1);
-	}
+	trigger(1);
 }
 
 

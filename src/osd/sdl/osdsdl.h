@@ -1,9 +1,7 @@
 // license:BSD-3-Clause
 // copyright-holders:Olivier Galibert, R. Belmont
-#ifndef MAME_OSD_SDL_OSDSDL_H
-#define MAME_OSD_SDL_OSDSDL_H
-
-#pragma once
+#ifndef _osdsdl_h_
+#define _osdsdl_h_
 
 #include "modules/lib/osdobj_common.h"
 #include "modules/osdmodule.h"
@@ -163,4 +161,4 @@ private:
 
 extern int osd_num_processors;
 
-#endif // MAME_OSD_SDL_OSDSDL_H
+#endif

@@ -860,7 +860,7 @@ MACHINE_RESET_MEMBER(apache3_state,apache3)
 	m_subcpu2->set_input_line(INPUT_LINE_RESET, ASSERT_LINE); // TODO
 
 	/* Hook the RESET line, which resets the Z80 */
-	m_subcpu->set_reset_callback(*this, FUNC(apache3_state::apache3_68000_reset));
+	m_subcpu->set_reset_callback(write_line_delegate(FUNC(apache3_state::apache3_68000_reset),this));
 }
 
 
@@ -882,7 +882,7 @@ void apache3_state::apache3(machine_config &config)
 	m_subcpu2->set_addrmap(AS_PROGRAM, &apache3_state::apache3_z80_map);
 	m_subcpu2->set_vblank_int("screen", FUNC(apache3_state::irq0_line_hold));
 
-	config.set_maximum_quantum(attotime::from_hz(6000));
+	config.m_minimum_quantum = attotime::from_hz(6000);
 	NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_0);
 	MCFG_MACHINE_RESET_OVERRIDE(apache3_state, apache3)
 
@@ -942,7 +942,7 @@ void roundup5_state::roundup5(machine_config &config)
 	Z80(config, m_audiocpu, CLOCK_1 / 4);
 	m_audiocpu->set_addrmap(AS_PROGRAM, &roundup5_state::roundup5_z80_map);
 
-	config.set_maximum_quantum(attotime::from_hz(6000));
+	config.m_minimum_quantum = attotime::from_hz(6000);
 
 	i8255_device &ppi(I8255(config, "ppi"));
 	ppi.in_pa_callback().set_ioport("IN0");
@@ -1015,15 +1015,15 @@ void cyclwarr_state::cyclwarr(machine_config &config)
 	m_audiocpu->set_addrmap(AS_PROGRAM, &cyclwarr_state::sound_map);
 
 	// saner sync value (avoids crashing after crediting)
-	config.set_maximum_quantum(attotime::from_hz(CLOCK_2 / 1024));
+	config.m_minimum_quantum = attotime::from_hz(CLOCK_2 / 1024);
 
-	cxd1095_device &io1(CXD1095(config, "io1"));
+	cxd1095_device &io1(CXD1095(config, "io1", 0));
 	io1.in_portb_cb().set_ioport("SERVICE");
 	io1.in_portc_cb().set_ioport("P1");
 	io1.in_portd_cb().set_ioport("P2");
 	io1.in_porte_cb().set_ioport("DSW3");
 
-	cxd1095_device &io2(CXD1095(config, "io2"));
+	cxd1095_device &io2(CXD1095(config, "io2", 0));
 	io2.in_porta_cb().set_ioport("DSW1");
 	io2.in_portb_cb().set_ioport("DSW2");
 	io2.in_portc_cb().set_ioport("P3");

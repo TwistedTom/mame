@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -12,7 +12,7 @@
 namespace bgfx { namespace d3d9
 {
 	static wchar_t s_viewNameW[BGFX_CONFIG_MAX_VIEWS][BGFX_CONFIG_MAX_VIEW_NAME];
-	static char    s_viewName [BGFX_CONFIG_MAX_VIEWS][BGFX_CONFIG_MAX_VIEW_NAME];
+	static char s_viewName[BGFX_CONFIG_MAX_VIEWS][BGFX_CONFIG_MAX_VIEW_NAME];
 
 	struct PrimInfo
 	{
@@ -335,25 +335,25 @@ namespace bgfx { namespace d3d9
 	};
 	BX_STATIC_ASSERT(AttribType::Count == BX_COUNTOF(s_attribType) );
 
-	static D3DVERTEXELEMENT9* fillVertexLayout(uint8_t _stream, D3DVERTEXELEMENT9* _out, const VertexLayout& _layout)
+	static D3DVERTEXELEMENT9* fillVertexDecl(uint8_t _stream, D3DVERTEXELEMENT9* _out, const VertexDecl& _decl)
 	{
 		D3DVERTEXELEMENT9* elem = _out;
 
 		for (uint32_t attr = 0; attr < Attrib::Count; ++attr)
 		{
-			if (UINT16_MAX != _layout.m_attributes[attr])
+			if (UINT16_MAX != _decl.m_attributes[attr])
 			{
 				uint8_t num;
 				AttribType::Enum type;
 				bool normalized;
 				bool asInt;
-				_layout.decode(Attrib::Enum(attr), num, type, normalized, asInt);
+				_decl.decode(Attrib::Enum(attr), num, type, normalized, asInt);
 
 				bx::memCopy(elem, &s_attrib[attr], sizeof(D3DVERTEXELEMENT9) );
 
 				elem->Stream = _stream;
 				elem->Type   = s_attribType[type][num-1][normalized];
-				elem->Offset = _layout.m_offset[attr];
+				elem->Offset = _decl.m_offset[attr];
 				++elem;
 			}
 		}
@@ -371,35 +371,6 @@ namespace bgfx { namespace d3d9
 			|| _hr == D3DERR_DEVICEREMOVED
 #endif // !defined(D3D_DISABLE_9EX)
 			;
-	}
-
-	inline bool useD3D9Pitch(bimg::TextureFormat::Enum _format)
-	{
-		// Reference(s):
-		//  - For BC4 and B5 in DX9 LockRect returns wrong number of
-		//    bytes. If actual mip size is used it causes memory corruption.
-		//    https://web.archive.org/web/20190207230133/http://www.aras-p.info/texts/D3D9GPUHacks.html
-		return true
-			&& _format != bimg::TextureFormat::BC4
-			&& _format != bimg::TextureFormat::BC5
-			;
-	}
-
-	static inline uint32_t calcRowPitch(const bimg::ImageBlockInfo& _blockInfo, uint8_t _lod, uint32_t _width)
-	{
-		const uint8_t blockWidth   = _blockInfo.blockWidth;
-		const uint8_t blockHeight  = _blockInfo.blockHeight;
-		const uint8_t minBlockX    = _blockInfo.minBlockX;
-		const uint8_t bitsPerPixel = _blockInfo.bitsPerPixel;
-
-		// Calculate the row pitch
-		const uint32_t minBlkWidth = minBlockX;
-		const uint32_t lodBlkWidth = (((_width >> _lod) + blockWidth - 1) / blockWidth);
-		const uint32_t rowBlkWidth = bx::max<uint32_t>(minBlkWidth, lodBlkWidth);
-		const uint32_t pixBlkWidth = rowBlkWidth * blockWidth * blockHeight;
-		const uint32_t rowPitch    = pixBlkWidth * bitsPerPixel / 8u;
-
-		return rowPitch;
 	}
 
 	struct RendererContextD3D9 : public RendererContextI
@@ -449,8 +420,7 @@ namespace bgfx { namespace d3d9
 
 			D3DFORMAT adapterFormat = D3DFMT_X8R8G8B8;
 
-			// Reference(s):
-			// - https://web.archive.org/web/20190207230309/https://docs.microsoft.com/en-us/windows/desktop/direct3d9/d3dpresent-parameters
+			// http://msdn.microsoft.com/en-us/library/windows/desktop/bb172588%28v=vs.85%29.aspx
 			bx::memSet(&m_params, 0, sizeof(m_params) );
 			m_params.BackBufferWidth  = _init.resolution.width;
 			m_params.BackBufferHeight = _init.resolution.height;
@@ -485,22 +455,17 @@ namespace bgfx { namespace d3d9
 
 			m_nvapi.init();
 
-			if (BX_ENABLED(BGFX_CONFIG_DEBUG_ANNOTATION) )
+			if (BX_ENABLED(BGFX_CONFIG_DEBUG_PIX) )
 			{
 				D3DPERF_SetMarker  = (PFN_D3DPERF_SET_MARKER )bx::dlsym(m_d3d9Dll, "D3DPERF_SetMarker");
 				D3DPERF_BeginEvent = (PFN_D3DPERF_BEGIN_EVENT)bx::dlsym(m_d3d9Dll, "D3DPERF_BeginEvent");
 				D3DPERF_EndEvent   = (PFN_D3DPERF_END_EVENT  )bx::dlsym(m_d3d9Dll, "D3DPERF_EndEvent");
 
-				if (NULL == D3DPERF_SetMarker
-				||  NULL == D3DPERF_BeginEvent
-				||  NULL == D3DPERF_EndEvent)
-				{
-					BX_TRACE("Failed to initialize PIX events.");
-
-					D3DPERF_SetMarker  = NULL;
-					D3DPERF_BeginEvent = NULL;
-					D3DPERF_EndEvent   = NULL;
-				}
+				BX_CHECK(NULL != D3DPERF_SetMarker
+					  && NULL != D3DPERF_BeginEvent
+					  && NULL != D3DPERF_EndEvent
+					  , "Failed to initialize PIX events."
+					  );
 			}
 
 			m_d3d9ex   = NULL;
@@ -998,20 +963,20 @@ namespace bgfx { namespace d3d9
 			m_indexBuffers[_handle.idx].destroy();
 		}
 
-		void createVertexLayout(VertexLayoutHandle _handle, const VertexLayout& _layout) override
+		void createVertexDecl(VertexDeclHandle _handle, const VertexDecl& _decl) override
 		{
-			VertexLayout& layout = m_vertexLayouts[_handle.idx];
-			bx::memCopy(&layout, &_layout, sizeof(VertexLayout) );
-			dump(layout);
+			VertexDecl& decl = m_vertexDecls[_handle.idx];
+			bx::memCopy(&decl, &_decl, sizeof(VertexDecl) );
+			dump(decl);
 		}
 
-		void destroyVertexLayout(VertexLayoutHandle /*_handle*/) override
+		void destroyVertexDecl(VertexDeclHandle /*_handle*/) override
 		{
 		}
 
-		void createVertexBuffer(VertexBufferHandle _handle, const Memory* _mem, VertexLayoutHandle _layoutHandle, uint16_t /*_flags*/) override
+		void createVertexBuffer(VertexBufferHandle _handle, const Memory* _mem, VertexDeclHandle _declHandle, uint16_t /*_flags*/) override
 		{
-			m_vertexBuffers[_handle.idx].create(_mem->size, _mem->data, _layoutHandle);
+			m_vertexBuffers[_handle.idx].create(_mem->size, _mem->data, _declHandle);
 		}
 
 		void destroyVertexBuffer(VertexBufferHandle _handle) override
@@ -1036,8 +1001,8 @@ namespace bgfx { namespace d3d9
 
 		void createDynamicVertexBuffer(VertexBufferHandle _handle, uint32_t _size, uint16_t /*_flags*/) override
 		{
-			VertexLayoutHandle layoutHandle = BGFX_INVALID_HANDLE;
-			m_vertexBuffers[_handle.idx].create(_size, NULL, layoutHandle);
+			VertexDeclHandle decl = BGFX_INVALID_HANDLE;
+			m_vertexBuffers[_handle.idx].create(_size, NULL, decl);
 		}
 
 		void updateDynamicVertexBuffer(VertexBufferHandle _handle, uint32_t _offset, uint32_t _size, const Memory* _mem) override
@@ -1296,7 +1261,7 @@ namespace bgfx { namespace d3d9
 
 		void updateViewName(ViewId _id, const char* _name) override
 		{
-			if (BX_ENABLED(BGFX_CONFIG_DEBUG_ANNOTATION) )
+			if (BX_ENABLED(BGFX_CONFIG_DEBUG_PIX) )
 			{
 				mbstowcs(&s_viewNameW[_id][BGFX_CONFIG_MAX_VIEW_NAME_RESERVED]
 					, _name
@@ -1315,26 +1280,25 @@ namespace bgfx { namespace d3d9
 			bx::memCopy(m_uniforms[_loc], _data, _size);
 		}
 
+		void setMarker(const char* _marker, uint32_t _size) override
+		{
+#if BGFX_CONFIG_DEBUG_PIX
+			uint32_t size = _size*sizeof(wchar_t);
+			wchar_t* name = (wchar_t*)alloca(size);
+			mbstowcs(name, _marker, size-2);
+			PIX_SETMARKER(D3DCOLOR_MARKER, name);
+#endif // BGFX_CONFIG_DEBUG_PIX
+			BX_UNUSED(_marker, _size);
+		}
+
 		void invalidateOcclusionQuery(OcclusionQueryHandle _handle) override
 		{
 			m_occlusionQuery.invalidate(_handle);
 		}
 
-		void setMarker(const char* _marker, uint16_t _len) override
+		virtual void setName(Handle _handle, const char* _name) override
 		{
-			if (BX_ENABLED(BGFX_CONFIG_DEBUG_ANNOTATION) )
-			{
-				uint32_t size = _len*sizeof(wchar_t);
-				wchar_t* name = (wchar_t*)alloca(size+2);
-				mbstowcs(name, _marker, size);
-				name[_len] = L'\0';
-				PIX_SETMARKER(kColorMarker, name);
-			}
-		}
-
-		virtual void setName(Handle _handle, const char* _name, uint16_t _len) override
-		{
-			BX_UNUSED(_handle, _name, _len)
+			BX_UNUSED(_handle, _name)
 		}
 
 		void submitBlit(BlitState& _bs, uint16_t _view);
@@ -1373,9 +1337,9 @@ namespace bgfx { namespace d3d9
 			DX_CHECK(device->SetPixelShader(program.m_fsh->m_pixelShader) );
 
 			VertexBufferD3D9& vb = m_vertexBuffers[_blitter.m_vb->handle.idx];
-			VertexLayout& layout = m_vertexLayouts[_blitter.m_vb->layoutHandle.idx];
-			DX_CHECK(device->SetStreamSource(0, vb.m_ptr, 0, layout.m_stride) );
-			setInputLayout(layout, 0);
+			VertexDecl& vertexDecl = m_vertexDecls[_blitter.m_vb->decl.idx];
+			DX_CHECK(device->SetStreamSource(0, vb.m_ptr, 0, vertexDecl.m_stride) );
+			setInputLayout(vertexDecl, 0);
 
 			IndexBufferD3D9& ib = m_indexBuffers[_blitter.m_ib->handle.idx];
 			DX_CHECK(device->SetIndices(ib.m_ptr) );
@@ -1396,7 +1360,7 @@ namespace bgfx { namespace d3d9
 			if (0 < numVertices)
 			{
 				m_indexBuffers[_blitter.m_ib->handle.idx].update(0, _numIndices * 2, _blitter.m_ib->data, true);
-				m_vertexBuffers[_blitter.m_vb->handle.idx].update(0, numVertices*_blitter.m_layout.m_stride, _blitter.m_vb->data, true);
+				m_vertexBuffers[_blitter.m_vb->handle.idx].update(0, numVertices*_blitter.m_decl.m_stride, _blitter.m_vb->data, true);
 
 				DX_CHECK(m_device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST
 					, 0
@@ -1734,9 +1698,9 @@ namespace bgfx { namespace d3d9
 			}
 		}
 
-		void setSamplerState(uint8_t _stage, uint64_t _flags, const float _rgba[4])
+		void setSamplerState(uint8_t _stage, uint32_t _flags, const float _rgba[4])
 		{
-			const uint64_t flags = _flags&( (~BGFX_SAMPLER_RESERVED_MASK) | BGFX_SAMPLER_BITS_MASK | BGFX_TEXTURE_SRGB);
+			const uint32_t flags = _flags&( (~BGFX_SAMPLER_RESERVED_MASK) | BGFX_SAMPLER_BITS_MASK | BGFX_TEXTURE_SRGB);
 			BX_CHECK(_stage < BX_COUNTOF(m_samplerFlags), "");
 			if (m_samplerFlags[_stage] != flags)
 			{
@@ -1957,9 +1921,9 @@ namespace bgfx { namespace d3d9
 					}
 					break;
 
-				CASE_IMPLEMENT_UNIFORM(Sampler, I, int);
-				CASE_IMPLEMENT_UNIFORM(Vec4,    F, float);
-				CASE_IMPLEMENT_UNIFORM(Mat4,    F, float);
+				CASE_IMPLEMENT_UNIFORM(Int1, I, int);
+				CASE_IMPLEMENT_UNIFORM(Vec4, F, float);
+				CASE_IMPLEMENT_UNIFORM(Mat4, F, float);
 
 				case UniformType::End:
 					break;
@@ -2087,25 +2051,54 @@ namespace bgfx { namespace d3d9
 					DX_CHECK(device->SetRenderState(D3DRS_STENCILENABLE, FALSE) );
 				}
 
-				VertexBufferD3D9& vb = m_vertexBuffers[_clearQuad.m_vb.idx];
-				VertexLayout& layout = _clearQuad.m_layout;
-				uint32_t stride = _clearQuad.m_layout.m_stride;
+				VertexBufferD3D9& vb = m_vertexBuffers[_clearQuad.m_vb->handle.idx];
+				VertexDecl& vertexDecl = m_vertexDecls[_clearQuad.m_vb->decl.idx];
+				uint32_t stride = _clearQuad.m_decl.m_stride;
+
+				{
+					struct Vertex
+					{
+						float m_x;
+						float m_y;
+						float m_z;
+					};
+
+					Vertex* vertex = (Vertex*)_clearQuad.m_vb->data;
+					BX_CHECK(stride == sizeof(Vertex), "Stride/Vertex mismatch (stride %d, sizeof(Vertex) %d)", stride, sizeof(Vertex) );
+
+					const float depth = _clear.m_depth;
+
+					vertex->m_x = -1.0f;
+					vertex->m_y = -1.0f;
+					vertex->m_z = depth;
+					vertex++;
+					vertex->m_x =  1.0f;
+					vertex->m_y = -1.0f;
+					vertex->m_z = depth;
+					vertex++;
+					vertex->m_x = -1.0f;
+					vertex->m_y =  1.0f;
+					vertex->m_z = depth;
+					vertex++;
+					vertex->m_x =  1.0f;
+					vertex->m_y =  1.0f;
+					vertex->m_z = depth;
+				}
+
+				vb.update(0, 4*stride, _clearQuad.m_vb->data);
 
 				ProgramD3D9& program = m_program[_clearQuad.m_program[numMrt-1].idx];
 				device->SetVertexShader(program.m_vsh->m_vertexShader);
 				device->SetPixelShader(program.m_fsh->m_pixelShader);
 
-				float mrtClearDepth[4] = { _clear.m_depth };
-				DX_CHECK(device->SetVertexShaderConstantF(0, mrtClearDepth, 1));
-
-				float mrtClearColor[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS][4];
+				float mrtClear[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS][4];
 
 				if (BGFX_CLEAR_COLOR_USE_PALETTE & _clear.m_flags)
 				{
 					for (uint32_t ii = 0; ii < numMrt; ++ii)
 					{
 						uint8_t index = (uint8_t)bx::uint32_min(BGFX_CONFIG_MAX_COLOR_PALETTE - 1, _clear.m_index[ii]);
-						bx::memCopy(mrtClearColor[ii], _palette[index], 16);
+						bx::memCopy(mrtClear[ii], _palette[index], 16);
 					}
 				}
 				else
@@ -2120,16 +2113,16 @@ namespace bgfx { namespace d3d9
 
 					for (uint32_t ii = 0; ii < numMrt; ++ii)
 					{
-						bx::memCopy(mrtClearColor[ii], rgba, 16);
+						bx::memCopy(mrtClear[ii], rgba, 16);
 					}
 				}
 
-				DX_CHECK(device->SetPixelShaderConstantF(0, mrtClearColor[0], numMrt));
+				DX_CHECK(device->SetPixelShaderConstantF(0, mrtClear[0], numMrt));
 
 				DX_CHECK(device->SetStreamSource(0, vb.m_ptr, 0, stride) );
 				DX_CHECK(device->SetStreamSourceFreq(0, 1) );
 				DX_CHECK(device->SetStreamSource(1, NULL, 0, 0) );
-				setInputLayout(layout, 0);
+				setInputLayout(vertexDecl, 0);
 				DX_CHECK(device->SetIndices(NULL) );
 				DX_CHECK(device->DrawPrimitive(D3DPT_TRIANGLESTRIP
 					, 0
@@ -2138,14 +2131,14 @@ namespace bgfx { namespace d3d9
 			}
 		}
 
-		void setInputLayout(uint8_t _numStreams, const VertexLayout** _layouts, uint16_t _numInstanceData)
+		void setInputLayout(uint8_t _numStreams, const VertexDecl** _vertexDecls, uint16_t _numInstanceData)
 		{
 			bx::HashMurmur2A murmur;
 			murmur.begin();
 			murmur.add(_numInstanceData);
 			for (uint8_t stream = 0; stream < _numStreams; ++stream)
 			{
-				murmur.add(_layouts[stream]->m_hash);
+				murmur.add(_vertexDecls[stream]->m_hash);
 			}
 			uint64_t layoutHash = murmur.end();
 
@@ -2157,7 +2150,7 @@ namespace bgfx { namespace d3d9
 
 				for (uint8_t stream = 0; stream < _numStreams; ++stream)
 				{
-					elem = fillVertexLayout(stream, elem, *_layouts[stream]);
+					elem = fillVertexDecl(stream, elem, *_vertexDecls[stream]);
 				}
 
 				const D3DVERTEXELEMENT9 inst = { _numStreams, 0, D3DDECLTYPE_FLOAT4, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0 };
@@ -2180,10 +2173,10 @@ namespace bgfx { namespace d3d9
 			DX_CHECK(m_device->SetVertexDeclaration(layout) );
 		}
 
-		void setInputLayout(const VertexLayout& _layout, uint16_t _numInstanceData)
+		void setInputLayout(const VertexDecl& _vertexDecl, uint16_t _numInstanceData)
 		{
-			const VertexLayout* layouts[1] = { &_layout };
-			setInputLayout(BX_COUNTOF(layouts), layouts, _numInstanceData);
+			const VertexDecl* decls[1] = { &_vertexDecl };
+			setInputLayout(BX_COUNTOF(decls), decls, _numInstanceData);
 		}
 
 		D3DCAPS9 m_caps;
@@ -2237,12 +2230,12 @@ namespace bgfx { namespace d3d9
 		ShaderD3D9 m_shaders[BGFX_CONFIG_MAX_SHADERS];
 		ProgramD3D9 m_program[BGFX_CONFIG_MAX_PROGRAMS];
 		TextureD3D9 m_textures[BGFX_CONFIG_MAX_TEXTURES];
-		VertexLayout m_vertexLayouts[BGFX_CONFIG_MAX_VERTEX_LAYOUTS];
+		VertexDecl m_vertexDecls[BGFX_CONFIG_MAX_VERTEX_DECLS];
 		FrameBufferD3D9 m_frameBuffers[BGFX_CONFIG_MAX_FRAME_BUFFERS];
 		UniformRegistry m_uniformReg;
 		void* m_uniforms[BGFX_CONFIG_MAX_UNIFORMS];
 
-		uint64_t m_samplerFlags[BGFX_CONFIG_MAX_TEXTURE_SAMPLERS];
+		uint32_t m_samplerFlags[BGFX_CONFIG_MAX_TEXTURE_SAMPLERS];
 
 		TextureD3D9* m_updateTexture;
 		uint8_t* m_updateTextureBits;
@@ -2341,10 +2334,10 @@ namespace bgfx { namespace d3d9
 		}
 	}
 
-	void VertexBufferD3D9::create(uint32_t _size, void* _data, VertexLayoutHandle _layoutHandle)
+	void VertexBufferD3D9::create(uint32_t _size, void* _data, VertexDeclHandle _declHandle)
 	{
 		m_size = _size;
-		m_layoutHandle = _layoutHandle;
+		m_decl = _declHandle;
 
 		uint32_t usage = D3DUSAGE_WRITEONLY;
 		D3DPOOL pool = s_renderD3D9->m_pool;
@@ -2911,28 +2904,18 @@ namespace bgfx { namespace d3d9
 
 		if (bimg::imageParse(imageContainer, _mem->data, _mem->size) )
 		{
+			uint8_t numMips = imageContainer.m_numMips;
+			const uint8_t startLod = uint8_t(bx::uint32_min(_skip, numMips-1) );
+			numMips -= startLod;
 			const bimg::ImageBlockInfo& blockInfo = bimg::getBlockInfo(bimg::TextureFormat::Enum(imageContainer.m_format) );
-
-			const uint8_t startLod = bx::min<uint8_t>(_skip, imageContainer.m_numMips-1);
-
-			bimg::TextureInfo ti;
-			bimg::imageGetSize(
-				  &ti
-				, uint16_t(imageContainer.m_width >>startLod)
-				, uint16_t(imageContainer.m_height>>startLod)
-				, uint16_t(imageContainer.m_depth >>startLod)
-				, imageContainer.m_cubeMap
-				, 1 < imageContainer.m_numMips
-				, imageContainer.m_numLayers
-				, imageContainer.m_format
-				);
-			ti.numMips = bx::min<uint8_t>(imageContainer.m_numMips-startLod, ti.numMips);
+			const uint32_t textureWidth  = bx::uint32_max(blockInfo.blockWidth,  imageContainer.m_width >>startLod);
+			const uint32_t textureHeight = bx::uint32_max(blockInfo.blockHeight, imageContainer.m_height>>startLod);
 
 			m_flags   = _flags;
-			m_width   = ti.width;
-			m_height  = ti.height;
-			m_depth   = ti.depth;
-			m_numMips = ti.numMips;
+			m_width   = textureWidth;
+			m_height  = textureHeight;
+			m_depth   = imageContainer.m_depth;
+			m_numMips = numMips;
 			m_requestedFormat = uint8_t(imageContainer.m_format);
 			m_textureFormat   = uint8_t(getViableTextureFormat(imageContainer) );
 			const bool convert = m_textureFormat != m_requestedFormat;
@@ -2941,23 +2924,23 @@ namespace bgfx { namespace d3d9
 
 			if (imageContainer.m_cubeMap)
 			{
-				createCubeTexture(ti.width, ti.numMips);
+				createCubeTexture(textureWidth, numMips);
 			}
 			else if (imageContainer.m_depth > 1)
 			{
-				createVolumeTexture(ti.width, ti.height, ti.depth, ti.numMips);
+				createVolumeTexture(textureWidth, textureHeight, imageContainer.m_depth, numMips);
 			}
 			else
 			{
-				createTexture(ti.width, ti.height, ti.numMips);
+				createTexture(textureWidth, textureHeight, numMips);
 			}
 
 			BX_TRACE("Texture %3d: %s (requested: %s), %dx%d%s%s."
 				, this - s_renderD3D9->m_textures
 				, getName( (TextureFormat::Enum)m_textureFormat)
 				, getName( (TextureFormat::Enum)m_requestedFormat)
-				, ti.width
-				, ti.height
+				, textureWidth
+				, textureHeight
 				, imageContainer.m_cubeMap ? "x6" : ""
 				, 0 != (m_flags&BGFX_TEXTURE_RT_MASK) ? " (render target)" : ""
 				);
@@ -2967,22 +2950,29 @@ namespace bgfx { namespace d3d9
 				return;
 			}
 
-			const bool useMipSize = useD3D9Pitch(imageContainer.m_format);
+			// For BC4 and B5 in DX9 LockRect returns wrong number of
+			// bytes. If actual mip size is used it causes memory corruption.
+			// http://www.aras-p.info/texts/D3D9GPUHacks.html#3dc
+			const bool useMipSize = true
+							&& imageContainer.m_format != bimg::TextureFormat::BC4
+							&& imageContainer.m_format != bimg::TextureFormat::BC5
+							;
+
 			for (uint8_t side = 0, numSides = imageContainer.m_cubeMap ? 6 : 1; side < numSides; ++side)
 			{
-				uint32_t width     = ti.width;
-				uint32_t height    = ti.height;
-				uint32_t depth     = ti.depth;
-				uint32_t mipWidth  = ti.width;
-				uint32_t mipHeight = ti.height;
+				uint32_t width     = textureWidth;
+				uint32_t height    = textureHeight;
+				uint32_t depth     = imageContainer.m_depth;
+				uint32_t mipWidth  = imageContainer.m_width;
+				uint32_t mipHeight = imageContainer.m_height;
 
-				for (uint8_t lod = 0, num = ti.numMips; lod < num; ++lod)
+				for (uint8_t lod = 0, num = numMips; lod < num; ++lod)
 				{
-					width     = bx::max<uint32_t>(1, width);
-					height    = bx::max<uint32_t>(1, height);
-					depth     = bx::max<uint32_t>(1, depth);
-					mipWidth  = bx::max<uint32_t>(blockInfo.blockWidth,  mipWidth);
-					mipHeight = bx::max<uint32_t>(blockInfo.blockHeight, mipHeight);
+					width     = bx::uint32_max(1, width);
+					height    = bx::uint32_max(1, height);
+					depth     = bx::uint32_max(1, depth);
+					mipWidth  = bx::uint32_max(blockInfo.blockWidth,  mipWidth);
+					mipHeight = bx::uint32_max(blockInfo.blockHeight, mipHeight);
 					uint32_t mipSize = width*height*depth*bpp/8;
 
 					bimg::ImageMip mip;
@@ -3010,7 +3000,7 @@ namespace bgfx { namespace d3d9
 									, mip.m_format
 									);
 
-								bx::memCopy(bits, pitch, temp, srcpitch, pitch, height);
+								bx::memCopy(bits, temp, pitch, height, srcpitch, pitch);
 
 								BX_FREE(g_allocator, temp);
 							}
@@ -3061,14 +3051,11 @@ namespace bgfx { namespace d3d9
 
 	void TextureD3D9::update(uint8_t _side, uint8_t _mip, const Rect& _rect, uint16_t _z, uint16_t _depth, uint16_t _pitch, const Memory* _mem)
 	{
-		const bimg::ImageBlockInfo & blockInfo = bimg::getBlockInfo(bimg::TextureFormat::Enum(m_textureFormat) );
-		const uint16_t blockHeight = blockInfo.blockHeight;
-		const uint16_t bpp         = blockInfo.bitsPerPixel;
-		const bool useLockedPitch  = useD3D9Pitch(bimg::TextureFormat::Enum(m_textureFormat) );
-		const uint32_t rectpitch   = calcRowPitch(blockInfo, 0, _rect.m_width);
-		const uint32_t srcpitch    = UINT16_MAX == _pitch ? rectpitch : _pitch;
-		const uint32_t dstpitch    = (useLockedPitch) ? s_renderD3D9->m_updateTexturePitch : calcRowPitch(blockInfo, _mip, m_width);
-		uint8_t* bits = s_renderD3D9->m_updateTextureBits + _rect.m_y*dstpitch/blockHeight + _rect.m_x*blockHeight*bpp/8;
+		const uint32_t bpp = bimg::getBitsPerPixel(bimg::TextureFormat::Enum(m_textureFormat) );
+		const uint32_t rectpitch = _rect.m_width*bpp/8;
+		const uint32_t srcpitch  = UINT16_MAX == _pitch ? rectpitch : _pitch;
+		const uint32_t dstpitch  = s_renderD3D9->m_updateTexturePitch;
+		uint8_t* bits = s_renderD3D9->m_updateTextureBits + _rect.m_y*dstpitch + _rect.m_x*bpp/8;
 
 		const bool convert = m_textureFormat != m_requestedFormat;
 
@@ -3085,7 +3072,7 @@ namespace bgfx { namespace d3d9
 		{
 			uint8_t* src = data;
 			uint8_t* dst = bits;
-			for (uint32_t yy = 0, height = _rect.m_height; yy < height; yy += blockHeight)
+			for (uint32_t yy = 0, height = _rect.m_height; yy < height; ++yy)
 			{
 				switch (m_textureFormat)
 				{
@@ -3124,8 +3111,9 @@ namespace bgfx { namespace d3d9
 
 	void TextureD3D9::commit(uint8_t _stage, uint32_t _flags, const float _palette[][4])
 	{
-		const uint64_t flags = (m_flags & BGFX_TEXTURE_SRGB)
-			| (0 == (BGFX_SAMPLER_INTERNAL_DEFAULT & _flags) ? _flags : uint32_t(m_flags) )
+		const uint32_t flags = 0 == (BGFX_SAMPLER_INTERNAL_DEFAULT & _flags)
+			? _flags
+			: uint32_t(m_flags)
 			;
 		uint32_t index = (flags & BGFX_SAMPLER_BORDER_COLOR_MASK) >> BGFX_SAMPLER_BORDER_COLOR_SHIFT;
 		s_renderD3D9->setSamplerState(_stage, flags, _palette[index]);
@@ -3264,11 +3252,9 @@ namespace bgfx { namespace d3d9
 
 		D3DPRESENT_PARAMETERS params;
 		bx::memCopy(&params, &s_renderD3D9->m_params, sizeof(D3DPRESENT_PARAMETERS) );
-		params.BackBufferFormat   = TextureFormat::Count == _format ? params.BackBufferFormat : s_textureFormat[_format].m_fmt;
-		params.BackBufferWidth    = m_width;
-		params.BackBufferHeight   = m_height;
-		params.MultiSampleType    = s_msaa[0].m_type;
-		params.MultiSampleQuality = s_msaa[0].m_quality;
+		params.BackBufferFormat = TextureFormat::Count == _format ? params.BackBufferFormat : s_textureFormat[_format].m_fmt;
+		params.BackBufferWidth  = m_width;
+		params.BackBufferHeight = m_height;
 
 		DX_CHECK(s_renderD3D9->m_device->CreateAdditionalSwapChain(&params, &m_swapChain) );
 		DX_CHECK(m_swapChain->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &m_surface[0]) );
@@ -3722,9 +3708,9 @@ namespace bgfx { namespace d3d9
 	{
 		IDirect3DDevice9* device = m_device;
 
-		updateResolution(_render->m_resolution);
+		PIX_BEGINEVENT(D3DCOLOR_FRAME, L"rendererSubmit");
 
-		BGFX_D3D9_PROFILER_BEGIN_LITERAL("rendererSubmit", kColorView);
+		updateResolution(_render->m_resolution);
 
 		int64_t timeBegin = bx::getHPCounter();
 		int64_t captureElapsed = 0;
@@ -3739,14 +3725,12 @@ namespace bgfx { namespace d3d9
 
 		if (0 < _render->m_iboffset)
 		{
-			BGFX_PROFILER_SCOPE("bgfx/Update transient index buffer", kColorResource);
 			TransientIndexBuffer* ib = _render->m_transientIb;
 			m_indexBuffers[ib->handle.idx].update(0, _render->m_iboffset, ib->data, true);
 		}
 
 		if (0 < _render->m_vboffset)
 		{
-			BGFX_PROFILER_SCOPE("bgfx/Update transient vertex buffer", kColorResource);
 			TransientVertexBuffer* vb = _render->m_transientVb;
 			m_vertexBuffers[vb->handle.idx].update(0, _render->m_vboffset, vb->data, true);
 		}
@@ -3761,11 +3745,10 @@ namespace bgfx { namespace d3d9
 		RenderBind currentBind;
 		currentBind.clear();
 
-		static ViewState viewState;
-		viewState.reset(_render);
+		ViewState viewState(_render, false);
 
 		DX_CHECK(device->SetRenderState(D3DRS_FILLMODE, _render->m_debug&BGFX_DEBUG_WIREFRAME ? D3DFILL_WIREFRAME : D3DFILL_SOLID) );
-		ProgramHandle currentProgram = BGFX_INVALID_HANDLE;
+		uint16_t programIdx = kInvalidHandle;
 		SortKey key;
 		uint16_t view = UINT16_MAX;
 		FrameBufferHandle fbh = { BGFX_CONFIG_MAX_FRAME_BUFFERS };
@@ -3855,23 +3838,22 @@ namespace bgfx { namespace d3d9
 					currentState.m_stencil    = newStencil;
 
 					view = key.m_view;
-					currentProgram = BGFX_INVALID_HANDLE;
-
-					if (item > 0)
-					{
-						profiler.end();
-					}
-
-					BGFX_D3D9_PROFILER_END();
-					BGFX_D3D9_PROFILER_BEGIN(view, kColorView);
-
-					profiler.begin(view);
+					programIdx = kInvalidHandle;
 
 					if (_render->m_view[view].m_fbh.idx != fbh.idx)
 					{
 						fbh = _render->m_view[view].m_fbh;
 						setFrameBuffer(fbh);
 					}
+
+					PIX_ENDEVENT();
+					if (item > 0)
+					{
+						profiler.end();
+					}
+
+					profiler.begin(view);
+					PIX_BEGINEVENT(D3DCOLOR_VIEW, s_viewNameW[view]);
 
 					viewState.m_rect        = _render->m_view[view].m_rect;
 					const Rect& scissorRect = _render->m_view[view].m_scissor;
@@ -4132,18 +4114,18 @@ namespace bgfx { namespace d3d9
 				bool constantsChanged = draw.m_uniformBegin < draw.m_uniformEnd;
 				rendererUpdateUniforms(this, _render->m_uniformBuffer[draw.m_uniformIdx], draw.m_uniformBegin, draw.m_uniformEnd);
 
-				if (key.m_program.idx != currentProgram.idx)
+				if (key.m_program != programIdx)
 				{
-					currentProgram = key.m_program;
+					programIdx = key.m_program;
 
-					if (!isValid(currentProgram) )
+					if (kInvalidHandle == programIdx)
 					{
 						device->SetVertexShader(NULL);
 						device->SetPixelShader(NULL);
 					}
 					else
 					{
-						ProgramD3D9& program = m_program[currentProgram.idx];
+						ProgramD3D9& program = m_program[programIdx];
 						device->SetVertexShader(program.m_vsh->m_vertexShader);
 						device->SetPixelShader(NULL == program.m_fsh
 							? NULL
@@ -4155,9 +4137,9 @@ namespace bgfx { namespace d3d9
 						constantsChanged = true;
 				}
 
-				if (isValid(currentProgram) )
+				if (kInvalidHandle != programIdx)
 				{
-					ProgramD3D9& program = m_program[currentProgram.idx];
+					ProgramD3D9& program = m_program[programIdx];
 
 					if (constantsChanged)
 					{
@@ -4177,7 +4159,7 @@ namespace bgfx { namespace d3d9
 						}
 					}
 
-					viewState.setPredefined<4>(this, view, program, _render, draw);
+					viewState.setPredefined<4>(this, view, 0, program, _render, draw);
 				}
 
 				{
@@ -4214,7 +4196,7 @@ namespace bgfx { namespace d3d9
 					currentState.m_instanceDataOffset     = draw.m_instanceDataOffset;
 					currentState.m_instanceDataStride     = draw.m_instanceDataStride;
 
-					const VertexLayout* layouts[BGFX_CONFIG_MAX_VERTEX_STREAMS];
+					const VertexDecl* decls[BGFX_CONFIG_MAX_VERTEX_STREAMS];
 
 					const bool instanced = true
 						&& isValid(draw.m_instanceDataBuffer)
@@ -4228,28 +4210,25 @@ namespace bgfx { namespace d3d9
 
 					uint32_t numVertices = draw.m_numVertices;
 					uint8_t  numStreams  = 0;
-					for (uint32_t idx = 0, streamMask = draw.m_streamMask
+					for (uint32_t idx = 0, streamMask = draw.m_streamMask, ntz = bx::uint32_cnttz(streamMask)
 						; 0 != streamMask
-						; streamMask >>= 1, idx += 1, ++numStreams
+						; streamMask >>= 1, idx += 1, ntz = bx::uint32_cnttz(streamMask), ++numStreams
 						)
 					{
-						const uint32_t ntz = bx::uint32_cnttz(streamMask);
 						streamMask >>= ntz;
 						idx         += ntz;
 
-						currentState.m_stream[idx].m_layoutHandle = draw.m_stream[idx].m_layoutHandle;
-						currentState.m_stream[idx].m_handle       = draw.m_stream[idx].m_handle;
-						currentState.m_stream[idx].m_startVertex  = draw.m_stream[idx].m_startVertex;
+						currentState.m_stream[idx].m_decl        = draw.m_stream[idx].m_decl;
+						currentState.m_stream[idx].m_handle      = draw.m_stream[idx].m_handle;
+						currentState.m_stream[idx].m_startVertex = draw.m_stream[idx].m_startVertex;
 
 						const uint16_t handle = draw.m_stream[idx].m_handle.idx;
 						const VertexBufferD3D9& vb = m_vertexBuffers[handle];
-						const uint16_t layoutIdx = isValid(draw.m_stream[idx].m_layoutHandle)
-							? draw.m_stream[idx].m_layoutHandle.idx
-							: vb.m_layoutHandle.idx;
-						const VertexLayout& layout = m_vertexLayouts[layoutIdx];
-						const uint32_t stride = layout.m_stride;
+						const uint16_t decl = !isValid(vb.m_decl) ? draw.m_stream[idx].m_decl.idx : vb.m_decl.idx;
+						const VertexDecl& vertexDecl = m_vertexDecls[decl];
+						const uint32_t stride = vertexDecl.m_stride;
 
-						layouts[numStreams] = &layout;
+						decls[numStreams] = &vertexDecl;
 
 						numVertices = bx::uint32_min(UINT32_MAX == draw.m_numVertices
 							? vb.m_size/stride
@@ -4270,12 +4249,12 @@ namespace bgfx { namespace d3d9
 							const VertexBufferD3D9& inst = m_vertexBuffers[draw.m_instanceDataBuffer.idx];
 							DX_CHECK(device->SetStreamSourceFreq(numStreams, UINT(D3DSTREAMSOURCE_INSTANCEDATA|1) ) );
 							DX_CHECK(device->SetStreamSource(numStreams, inst.m_ptr, draw.m_instanceDataOffset, draw.m_instanceDataStride) );
-							setInputLayout(numStreams, layouts, draw.m_instanceDataStride/16);
+							setInputLayout(numStreams, decls, draw.m_instanceDataStride/16);
 						}
 						else
 						{
 							DX_CHECK(device->SetStreamSource(numStreams, NULL, 0, 0) );
-							setInputLayout(numStreams, layouts, 0);
+							setInputLayout(numStreams, decls, 0);
 						}
 					}
 					else
@@ -4390,7 +4369,7 @@ namespace bgfx { namespace d3d9
 			}
 		}
 
-		BGFX_D3D9_PROFILER_END();
+		PIX_ENDEVENT();
 
 		int64_t timeEnd = bx::getHPCounter();
 		int64_t frameTime = timeEnd - timeBegin;
@@ -4435,7 +4414,7 @@ namespace bgfx { namespace d3d9
 
 		if (_render->m_debug & (BGFX_DEBUG_IFH|BGFX_DEBUG_STATS) )
 		{
-			BGFX_D3D9_PROFILER_BEGIN_LITERAL("debugstats", kColorFrame);
+			PIX_BEGINEVENT(D3DCOLOR_FRAME, L"debugstats");
 
 			m_needPresent = true;
 			TextVideoMem& tvm = m_textVideoMem;
@@ -4533,15 +4512,15 @@ namespace bgfx { namespace d3d9
 
 			blit(this, _textVideoMemBlitter, tvm);
 
-			BGFX_D3D9_PROFILER_END();
+			PIX_ENDEVENT();
 		}
 		else if (_render->m_debug & BGFX_DEBUG_TEXT)
 		{
-			BGFX_D3D9_PROFILER_BEGIN_LITERAL("debugtext", kColorFrame);
+			PIX_BEGINEVENT(D3DCOLOR_FRAME, L"debugtext");
 
 			blit(this, _textVideoMemBlitter, _render->m_textVideoMem);
 
-			BGFX_D3D9_PROFILER_END();
+			PIX_ENDEVENT();
 		}
 
 		device->EndScene();

@@ -297,6 +297,6 @@ void sms_light_phaser_device::device_timer(emu_timer &timer, device_timer_id id,
 		sensor_check();
 		break;
 	default:
-		throw emu_fatalerror("sms_light_phaser_device(%s): Unknown timer ID", tag());
+		assert_always(false, "Unknown id in sms_light_phaser_device::device_timer");
 	}
 }

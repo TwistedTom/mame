@@ -19,8 +19,7 @@ public:
 	phi_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
 	// See ieee488.h
-	enum phi_488_signal_t
-	{
+	enum phi_488_signal_t {
 		PHI_488_EOI,
 		PHI_488_DAV,
 		PHI_488_NRFD,
@@ -36,14 +35,7 @@ public:
 	auto dio_read_cb() { return m_dio_read_func.bind(); }
 	auto dio_write_cb() { return m_dio_write_func.bind(); }
 	// Set write callbacks to access uniline signals on IEEE-488
-	auto eoi_write_cb() { return m_signal_wr_fns[ PHI_488_EOI ].bind(); }
-	auto dav_write_cb() { return m_signal_wr_fns[ PHI_488_DAV ].bind(); }
-	auto nrfd_write_cb() { return m_signal_wr_fns[ PHI_488_NRFD ].bind(); }
-	auto ndac_write_cb() { return m_signal_wr_fns[ PHI_488_NDAC ].bind(); }
-	auto ifc_write_cb() { return m_signal_wr_fns[ PHI_488_IFC ].bind(); }
-	auto srq_write_cb() { return m_signal_wr_fns[ PHI_488_SRQ ].bind(); }
-	auto atn_write_cb() { return m_signal_wr_fns[ PHI_488_ATN ].bind(); }
-	auto ren_write_cb() { return m_signal_wr_fns[ PHI_488_REN ].bind(); }
+	template <phi_488_signal_t Signal> auto signal_write_cb() { return m_signal_wr_fns[ Signal ].bind(); }
 	// Set write callback for INT signal
 	auto int_write_cb() { return m_int_write_func.bind(); }
 	// Set write callback for DMARQ signal

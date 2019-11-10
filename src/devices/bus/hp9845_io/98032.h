@@ -14,11 +14,9 @@
 #pragma once
 
 #include "hp9845_io.h"
-
-class device_hp98032_gpio_interface;
 class hp98032_gpio_slot_device;
 
-class hp98032_io_card_device : public device_t, public device_hp9845_io_interface
+class hp98032_io_card_device : public hp9845_io_card_device
 {
 public:
 	// construction/destruction
@@ -63,7 +61,7 @@ private:
 
 // The GPIO interface of HP98032 cards
 class hp98032_gpio_slot_device : public device_t,
-								 public device_single_card_slot_interface<device_hp98032_gpio_interface>
+								 public device_slot_interface
 {
 public:
 	// construction/destruction
@@ -136,11 +134,10 @@ private:
 };
 
 // A device connected to GPIO port of HP98032
-class device_hp98032_gpio_interface : public device_interface
+class hp98032_gpio_card_device : public device_t,
+								 public device_slot_card_interface
 {
 public:
-	virtual ~device_hp98032_gpio_interface();
-
 	virtual uint16_t get_jumpers() const = 0;
 	virtual uint16_t input_r() const = 0;
 	virtual uint8_t ext_status_r() const = 0;
@@ -151,7 +148,9 @@ public:
 	virtual DECLARE_WRITE_LINE_MEMBER(preset_w) = 0;
 
 protected:
-	device_hp98032_gpio_interface(const machine_config &mconfig, device_t &device);
+	// construction/destruction
+	hp98032_gpio_card_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock);
+	virtual ~hp98032_gpio_card_device();
 
 	DECLARE_WRITE_LINE_MEMBER(pflg_w);
 	DECLARE_WRITE_LINE_MEMBER(psts_w);
@@ -159,7 +158,7 @@ protected:
 };
 
 // GPIO loopback connector for HP98032
-class hp98032_gpio_loopback_device : public device_t, public device_hp98032_gpio_interface
+class hp98032_gpio_loopback_device : public hp98032_gpio_card_device
 {
 public:
 	// construction/destruction
@@ -179,7 +178,6 @@ protected:
 	// device-level overrides
 	virtual void device_start() override;
 	virtual void device_reset() override;
-
 private:
 	uint16_t m_output;
 	uint8_t m_ext_control;

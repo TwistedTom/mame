@@ -278,10 +278,6 @@ int renderer_bgfx::create()
 		{
 			init.type = bgfx::RendererType::Direct3D11;
 		}
-		else if (backend == "dx12" || backend == "d3d12")
-		{
-			init.type = bgfx::RendererType::Direct3D12;
-		}
 		else if (backend == "gles")
 		{
 			init.type = bgfx::RendererType::OpenGLES;
@@ -289,10 +285,6 @@ int renderer_bgfx::create()
 		else if (backend == "glsl" || backend == "opengl")
 		{
 			init.type = bgfx::RendererType::OpenGL;
-		}
-		else if (backend == "vulkan")
-		{
-			init.type = bgfx::RendererType::Vulkan;
 		}
 		else if (backend == "metal")
 		{
@@ -449,7 +441,7 @@ int renderer_bgfx::xy_to_render_target(int x, int y, int *xt, int *yt)
 //  drawbgfx_window_draw
 //============================================================
 
-bgfx::VertexLayout ScreenVertex::ms_decl;
+bgfx::VertexDecl ScreenVertex::ms_decl;
 
 void renderer_bgfx::put_packed_quad(render_primitive *prim, uint32_t hash, ScreenVertex* vertices)
 {
@@ -465,15 +457,6 @@ void renderer_bgfx::put_packed_quad(render_primitive *prim, uint32_t hash, Scree
 	float y[4] = { prim->bounds.y0, prim->bounds.y0, prim->bounds.y1, prim->bounds.y1 };
 	float u[4] = { u0, u1, u0, u1 };
 	float v[4] = { v0, v0, v1, v1 };
-
-	if (bgfx::getRendererType() == bgfx::RendererType::Direct3D9)
-	{
-		for (int i = 0; i < 4; i++)
-		{
-			u[i] += 0.5f / size;
-			v[i] += 0.5f / size;
-		}
-	}
 
 	if (PRIMFLAG_GET_TEXORIENT(prim->flags) & ORIENTATION_SWAP_XY)
 	{
@@ -842,13 +825,8 @@ int renderer_bgfx::draw(int update)
 	}
 
 	win->m_primlist->acquire_lock();
-	uint32_t num_screens = m_chains->update_screen_textures(s_current_view, win->m_primlist->first(), *win.get());
+	s_current_view += m_chains->handle_screen_chains(s_current_view, win->m_primlist->first(), *win.get());
 	win->m_primlist->release_lock();
-
-	if (num_screens)
-	{
-		s_current_view += m_chains->process_screen_chains(s_current_view, *win.get());
-	}
 
 	bool skip_frame = update_dimensions();
 	if (skip_frame)
@@ -1153,10 +1131,8 @@ void renderer_bgfx::process_atlas_packs(std::vector<std::vector<rectangle_packer
 				continue;
 			}
 			m_hash_to_entry[rect.hash()] = rect;
-			bgfx::TextureFormat::Enum dst_format = bgfx::TextureFormat::RGBA8;
-			uint16_t pitch = rect.width();
-			const bgfx::Memory* mem = bgfx_util::mame_texture_data_to_bgfx_texture_data(dst_format, rect.format(), rect.width(), rect.height(), rect.rowpixels(), rect.palette(), rect.base(), &pitch);
-			bgfx::updateTexture2D(m_texture_cache->texture(), 0, 0, rect.x(), rect.y(), rect.width(), rect.height(), mem, pitch);
+			const bgfx::Memory* mem = bgfx_util::mame_texture_data_to_bgfx_texture_data(rect.format(), rect.width(), rect.height(), rect.rowpixels(), rect.palette(), rect.base());
+			bgfx::updateTexture2D(m_texture_cache->texture(), 0, 0, rect.x(), rect.y(), rect.width(), rect.height(), mem);
 		}
 	}
 }

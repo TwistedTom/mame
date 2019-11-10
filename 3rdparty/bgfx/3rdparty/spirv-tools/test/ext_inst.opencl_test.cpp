@@ -17,7 +17,6 @@
 
 #include "gmock/gmock.h"
 #include "source/latest_version_opencl_std_header.h"
-#include "source/util/string_utils.h"
 #include "test/test_fixture.h"
 #include "test/unit_spirv.h"
 
@@ -26,7 +25,7 @@ namespace {
 
 using spvtest::Concatenate;
 using spvtest::MakeInstruction;
-using utils::MakeVector;
+using spvtest::MakeVector;
 using spvtest::TextToBinaryTest;
 using testing::Eq;
 
@@ -91,7 +90,7 @@ TEST_P(ExtInstOpenCLStdRoundTripTest, ParameterizedExtInst) {
 
 // clang-format off
 // OpenCL.std: 2.1 Math extended instructions
-INSTANTIATE_TEST_SUITE_P(
+INSTANTIATE_TEST_CASE_P(
     OpenCLMath, ExtInstOpenCLStdRoundTripTest,
     ::testing::ValuesIn(std::vector<InstructionCase>({
         // We are only testing the correctness of encoding and decoding here.
@@ -191,10 +190,10 @@ INSTANTIATE_TEST_SUITE_P(
         CASE1(Native_sin, native_sin),
         CASE1(Native_sqrt, native_sqrt),
         CASE1(Native_tan, native_tan), // enum value 94
-    })));
+    })),);
 
 // OpenCL.std: 2.1 Integer instructions
-INSTANTIATE_TEST_SUITE_P(
+INSTANTIATE_TEST_CASE_P(
     OpenCLInteger, ExtInstOpenCLStdRoundTripTest,
     ::testing::ValuesIn(std::vector<InstructionCase>({
         CASE1(SAbs, s_abs), // enum value 141
@@ -231,10 +230,10 @@ INSTANTIATE_TEST_SUITE_P(
         CASE2(UAbs_diff, u_abs_diff),
         CASE2(UMul_hi, u_mul_hi),
         CASE3(UMad_hi, u_mad_hi), // enum value 204
-    })));
+    })),);
 
 // OpenCL.std: 2.3 Common instrucitons
-INSTANTIATE_TEST_SUITE_P(
+INSTANTIATE_TEST_CASE_P(
     OpenCLCommon, ExtInstOpenCLStdRoundTripTest,
     ::testing::ValuesIn(std::vector<InstructionCase>({
         CASE3(FClamp, fclamp), // enum value 95
@@ -246,10 +245,10 @@ INSTANTIATE_TEST_SUITE_P(
         CASE2(Step, step),
         CASE3(Smoothstep, smoothstep),
         CASE1(Sign, sign), // enum value 103
-    })));
+    })),);
 
 // OpenCL.std: 2.4 Geometric instructions
-INSTANTIATE_TEST_SUITE_P(
+INSTANTIATE_TEST_CASE_P(
     OpenCLGeometric, ExtInstOpenCLStdRoundTripTest,
     ::testing::ValuesIn(std::vector<InstructionCase>({
         CASE2(Cross, cross), // enum value 104
@@ -259,18 +258,18 @@ INSTANTIATE_TEST_SUITE_P(
         CASE2(Fast_distance, fast_distance),
         CASE1(Fast_length, fast_length),
         CASE1(Fast_normalize, fast_normalize), // enum value 110
-    })));
+    })),);
 
 // OpenCL.std: 2.5 Relational instructions
-INSTANTIATE_TEST_SUITE_P(
+INSTANTIATE_TEST_CASE_P(
     OpenCLRelational, ExtInstOpenCLStdRoundTripTest,
     ::testing::ValuesIn(std::vector<InstructionCase>({
         CASE3(Bitselect, bitselect), // enum value 186
         CASE3(Select, select), // enum value 187
-    })));
+    })),);
 
 // OpenCL.std: 2.6 Vector data load and store instructions
-INSTANTIATE_TEST_SUITE_P(
+INSTANTIATE_TEST_CASE_P(
     OpenCLVectorLoadStore, ExtInstOpenCLStdRoundTripTest,
     ::testing::ValuesIn(std::vector<InstructionCase>({
         // The last argument to Vloadn must be one of 2, 3, 4, 8, 16.
@@ -307,20 +306,20 @@ INSTANTIATE_TEST_SUITE_P(
         CASE3Round(Vstorea_halfn_r, vstorea_halfn_r, RTZ),
         CASE3Round(Vstorea_halfn_r, vstorea_halfn_r, RTP),
         CASE3Round(Vstorea_halfn_r, vstorea_halfn_r, RTN),
-    })));
+    })),);
 
 // OpenCL.std: 2.7 Miscellaneous vector instructions
-INSTANTIATE_TEST_SUITE_P(
+INSTANTIATE_TEST_CASE_P(
     OpenCLMiscellaneousVector, ExtInstOpenCLStdRoundTripTest,
     ::testing::ValuesIn(std::vector<InstructionCase>({
         CASE2(Shuffle, shuffle),
         CASE3(Shuffle2, shuffle2),
-    })));
+    })),);
 
 // OpenCL.std: 2.8 Miscellaneous instructions
 
 #define PREFIX uint32_t(OpenCLLIB::Entrypoints::Printf), "printf"
-INSTANTIATE_TEST_SUITE_P(
+INSTANTIATE_TEST_CASE_P(
     OpenCLMiscPrintf, ExtInstOpenCLStdRoundTripTest,
     ::testing::ValuesIn(std::vector<InstructionCase>({
       // Printf is interesting because it takes a variable number of arguments.
@@ -339,14 +338,14 @@ INSTANTIATE_TEST_SUITE_P(
         {4, 5, 6, 7, 8, 9, 10, 11, 12, 13}},
       {PREFIX, "%4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14",
         {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}},
-    })));
+    })),);
 #undef PREFIX
 
-INSTANTIATE_TEST_SUITE_P(
+INSTANTIATE_TEST_CASE_P(
     OpenCLMiscPrefetch, ExtInstOpenCLStdRoundTripTest,
     ::testing::ValuesIn(std::vector<InstructionCase>({
         CASE2(Prefetch, prefetch),
-    })));
+    })),);
 
 // OpenCL.std: 2.9.1 Image encoding
 // No new instructions defined in this section.

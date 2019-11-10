@@ -16,7 +16,6 @@
 #include <string>
 #include <vector>
 
-#include "effcee/effcee.h"
 #include "gmock/gmock.h"
 #include "source/opt/build_module.h"
 #include "source/opt/loop_descriptor.h"
@@ -25,9 +24,15 @@
 #include "test/opt//assembly_builder.h"
 #include "test/opt/function_utils.h"
 
+#ifdef SPIRV_EFFCEE
+#include "effcee/effcee.h"
+#endif
+
 namespace spvtools {
 namespace opt {
 namespace {
+
+#ifdef SPIRV_EFFCEE
 
 bool Validate(const std::vector<uint32_t>& bin) {
   spv_target_env target_env = SPV_ENV_UNIVERSAL_1_2;
@@ -601,6 +606,8 @@ TEST_F(LCSSATest, LCSSAUseInNonEligiblePhi) {
   EXPECT_TRUE(loop->IsLCSSA());
   Match(text, context.get());
 }
+
+#endif  // SPIRV_EFFCEE
 
 }  // namespace
 }  // namespace opt

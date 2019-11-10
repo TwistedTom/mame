@@ -49,18 +49,14 @@ bool SimplificationPass::SimplifyFunction(Function* function) {
   cfg()->ForEachBlockInReversePostOrder(
       function->entry().get(),
       [&modified, &process_phis, &work_list, &in_work_list, &inst_to_kill,
-       &folder, this](BasicBlock* bb) {
+       folder, this](BasicBlock* bb) {
         for (Instruction* inst = &*bb->begin(); inst; inst = inst->NextNode()) {
           if (inst->opcode() == SpvOpPhi) {
             process_phis.insert(inst);
           }
 
-          bool is_foldable_copy =
-              inst->opcode() == SpvOpCopyObject &&
-              context()->get_decoration_mgr()->HaveSubsetOfDecorations(
-                  inst->result_id(), inst->GetSingleWordInOperand(0));
-
-          if (is_foldable_copy || folder.FoldInstruction(inst)) {
+          if (inst->opcode() == SpvOpCopyObject ||
+              folder.FoldInstruction(inst)) {
             modified = true;
             context()->AnalyzeUses(inst);
             get_def_use_mgr()->ForEachUser(inst, [&work_list, &process_phis,
@@ -71,16 +67,8 @@ bool SimplificationPass::SimplifyFunction(Function* function) {
               }
             });
             if (inst->opcode() == SpvOpCopyObject) {
-              context()->ReplaceAllUsesWithPredicate(
-                  inst->result_id(), inst->GetSingleWordInOperand(0),
-                  [](Instruction* user, uint32_t) {
-                    const auto opcode = user->opcode();
-                    if (!spvOpcodeIsDebug(opcode) &&
-                        !spvOpcodeIsDecoration(opcode)) {
-                      return true;
-                    }
-                    return false;
-                  });
+              context()->ReplaceAllUsesWith(inst->result_id(),
+                                            inst->GetSingleWordInOperand(0));
               inst_to_kill.insert(inst);
               in_work_list.insert(inst);
             } else if (inst->opcode() == SpvOpNop) {
@@ -97,13 +85,7 @@ bool SimplificationPass::SimplifyFunction(Function* function) {
   for (size_t i = 0; i < work_list.size(); ++i) {
     Instruction* inst = work_list[i];
     in_work_list.erase(inst);
-
-    bool is_foldable_copy =
-        inst->opcode() == SpvOpCopyObject &&
-        context()->get_decoration_mgr()->HaveSubsetOfDecorations(
-            inst->result_id(), inst->GetSingleWordInOperand(0));
-
-    if (is_foldable_copy || folder.FoldInstruction(inst)) {
+    if (inst->opcode() == SpvOpCopyObject || folder.FoldInstruction(inst)) {
       modified = true;
       context()->AnalyzeUses(inst);
       get_def_use_mgr()->ForEachUser(
@@ -115,15 +97,8 @@ bool SimplificationPass::SimplifyFunction(Function* function) {
           });
 
       if (inst->opcode() == SpvOpCopyObject) {
-        context()->ReplaceAllUsesWithPredicate(
-            inst->result_id(), inst->GetSingleWordInOperand(0),
-            [](Instruction* user, uint32_t) {
-              const auto opcode = user->opcode();
-              if (!spvOpcodeIsDebug(opcode) && !spvOpcodeIsDecoration(opcode)) {
-                return true;
-              }
-              return false;
-            });
+        context()->ReplaceAllUsesWith(inst->result_id(),
+                                      inst->GetSingleWordInOperand(0));
         inst_to_kill.insert(inst);
         in_work_list.insert(inst);
       } else if (inst->opcode() == SpvOpNop) {

@@ -66,13 +66,10 @@ protected:
 	static const device_timer_id TIMER_4KHZ = 6;
 	static const device_timer_id TIMER_SRC_AB = 7;
 	static const device_timer_id TIMER_SRC_C = 8;
-	static const device_timer_id TIMER_RNG = 9;
 
 	virtual void device_start() override;
 	virtual void device_reset() override;
 	virtual void device_timer(emu_timer &timer, device_timer_id id, int param, void *ptr) override;
-
-	uint16_t clock_rng(int which);
 
 	void update_porta_special_modes();
 	void update_portb_special_modes();
@@ -137,8 +134,6 @@ protected:
 	uint32_t m_uart_baud_rate;
 	emu_timer *m_uart_tx_timer;
 	emu_timer *m_uart_rx_timer;
-
-	emu_timer *m_rng_timer;
 
 	required_device<unsp_device> m_cpu;
 	required_device<screen_device> m_screen;

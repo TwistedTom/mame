@@ -13,46 +13,47 @@
 #include "machine/pic8259.h"
 #include "machine/pit8253.h"
 
-class device_v5x_interface : public device_interface
+class v5x_base_device : public v33_base_device
 {
 public:
 	// TCU
-	template <unsigned Timer> void set_clk(double clk) { device().subdevice<pit8253_device>("tcu")->set_clk<Timer>(clk); }
-	template <unsigned Timer> void set_clk(const XTAL &xtal) { device().subdevice<pit8253_device>("tcu")->set_clk<Timer>(xtal.dvalue()); }
-	template <unsigned Timer> auto out_handler() { return device().subdevice<pit8253_device>("tcu")->out_handler<Timer>(); }
+	template <unsigned Timer> void set_clk(double clk) { subdevice<pit8253_device>("tcu")->set_clk<Timer>(clk); }
+	template <unsigned Timer> void set_clk(const XTAL &xtal) { subdevice<pit8253_device>("tcu")->set_clk<Timer>(xtal.dvalue()); }
+	template <unsigned Timer> auto out_handler() { return subdevice<pit8253_device>("tcu")->out_handler<Timer>(); }
 
 	// DMAU
-	auto out_hreq_cb() { return device().subdevice<v5x_dmau_device>("dmau")->out_hreq_callback(); }
-	auto out_eop_cb() { return device().subdevice<v5x_dmau_device>("dmau")->out_eop_callback(); }
-	auto in_memr_cb() { return device().subdevice<v5x_dmau_device>("dmau")->in_memr_callback(); }
-	auto in_mem16r_cb() { return device().subdevice<v5x_dmau_device>("dmau")->in_mem16r_callback(); }
-	auto out_memw_cb() { return device().subdevice<v5x_dmau_device>("dmau")->out_memw_callback(); }
-	auto out_mem16w_cb() { return device().subdevice<v5x_dmau_device>("dmau")->out_mem16w_callback(); }
-	template <unsigned Channel> auto in_ior_cb() { return device().subdevice<v5x_dmau_device>("dmau")->in_ior_callback<Channel>(); }
-	template <unsigned Channel> auto in_io16r_cb() { return device().subdevice<v5x_dmau_device>("dmau")->in_io16r_callback<Channel>(); }
-	template <unsigned Channel> auto out_iow_cb() { return device().subdevice<v5x_dmau_device>("dmau")->out_iow_callback<Channel>(); }
-	template <unsigned Channel> auto out_io16w_cb() { return device().subdevice<v5x_dmau_device>("dmau")->out_io16w_callback<Channel>(); }
-	template <unsigned Channel> auto out_dack_cb() { return device().subdevice<v5x_dmau_device>("dmau")->out_dack_callback<Channel>(); }
+	auto out_hreq_cb() { return subdevice<v5x_dmau_device>("dmau")->out_hreq_callback(); }
+	auto out_eop_cb() { return subdevice<v5x_dmau_device>("dmau")->out_eop_callback(); }
+	auto in_memr_cb() { return subdevice<v5x_dmau_device>("dmau")->in_memr_callback(); }
+	auto in_mem16r_cb() { return subdevice<v5x_dmau_device>("dmau")->in_mem16r_callback(); }
+	auto out_memw_cb() { return subdevice<v5x_dmau_device>("dmau")->out_memw_callback(); }
+	auto out_mem16w_cb() { return subdevice<v5x_dmau_device>("dmau")->out_mem16w_callback(); }
+	template <unsigned Channel> auto in_ior_cb() { return subdevice<v5x_dmau_device>("dmau")->in_ior_callback<Channel>(); }
+	template <unsigned Channel> auto in_io16r_cb() { return subdevice<v5x_dmau_device>("dmau")->in_io16r_callback<Channel>(); }
+	template <unsigned Channel> auto out_iow_cb() { return subdevice<v5x_dmau_device>("dmau")->out_iow_callback<Channel>(); }
+	template <unsigned Channel> auto out_io16w_cb() { return subdevice<v5x_dmau_device>("dmau")->out_io16w_callback<Channel>(); }
+	template <unsigned Channel> auto out_dack_cb() { return subdevice<v5x_dmau_device>("dmau")->out_dack_callback<Channel>(); }
 
 	// SCU
-	auto txd_handler_cb() { return device().subdevice<v5x_scu_device>("scu")->txd_handler(); }
-	auto dtr_handler_cb() { return device().subdevice<v5x_scu_device>("scu")->dtr_handler(); }
-	auto rts_handler_cb() { return device().subdevice<v5x_scu_device>("scu")->rts_handler(); }
-	auto rxrdy_handler_cb() { return device().subdevice<v5x_scu_device>("scu")->rxrdy_handler(); }
-	auto txrdy_handler_cb() { return device().subdevice<v5x_scu_device>("scu")->txrdy_handler(); }
-	auto txempty_handler_cb() { return device().subdevice<v5x_scu_device>("scu")->txempty_handler(); }
-	auto syndet_handler_cb() { return device().subdevice<v5x_scu_device>("scu")->syndet_handler(); }
+	auto txd_handler_cb() { return subdevice<v5x_scu_device>("scu")->txd_handler(); }
+	auto dtr_handler_cb() { return subdevice<v5x_scu_device>("scu")->dtr_handler(); }
+	auto rts_handler_cb() { return subdevice<v5x_scu_device>("scu")->rts_handler(); }
+	auto rxrdy_handler_cb() { return subdevice<v5x_scu_device>("scu")->rxrdy_handler(); }
+	auto txrdy_handler_cb() { return subdevice<v5x_scu_device>("scu")->txrdy_handler(); }
+	auto txempty_handler_cb() { return subdevice<v5x_scu_device>("scu")->txempty_handler(); }
+	auto syndet_handler_cb() { return subdevice<v5x_scu_device>("scu")->syndet_handler(); }
 
 protected:
-	device_v5x_interface(const machine_config &mconfig, nec_common_device &device);
+	v5x_base_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, u32 clock, address_map_constructor port_map);
 
 	// device_interface overrides
-	virtual void interface_post_start() override;
-	virtual void interface_pre_reset() override;
-	virtual void interface_post_load() override;
+	virtual void device_add_mconfig(machine_config &config) override;
+	virtual void device_start() override;
+	virtual void device_reset() override;
+	virtual void device_post_load() override;
 
-	void v5x_set_input(int inputnum, int state);
-	void v5x_add_mconfig(machine_config &config);
+	// device_execute_interface overrides
+	virtual void execute_set_input(int inputnum, int state) override;
 
 	virtual void install_peripheral_io() = 0;
 
@@ -100,24 +101,22 @@ protected:
 	u8 m_OPHA;
 };
 
-class v50_base_device : public nec_common_device, public device_v5x_interface
+class v50_device : public v5x_base_device
 {
 public:
+	v50_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock);
+
 	template <unsigned Channel> DECLARE_WRITE_LINE_MEMBER(dreq_w) { m_dmau->dreq_w<Channel>(state); }
 	DECLARE_WRITE_LINE_MEMBER(hack_w) { m_dmau->hack_w(state); }
 
 protected:
-	v50_base_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, u32 clock, bool is_16bit, uint8_t prefetch_size, uint8_t prefetch_cycles, uint32_t chip_type);
-
-	// device-specific overrides
+	// device_interface overrides
 	virtual void device_add_mconfig(machine_config &config) override;
 	virtual void device_start() override;
 	virtual void device_reset() override;
 
-	// device_execute_interface overrides
-	virtual void execute_set_input(int inputnum, int state) override;
-
 	void internal_port_map(address_map &map);
+	virtual void install_peripheral_io() override;
 
 	DECLARE_WRITE8_MEMBER(OPCN_w);
 
@@ -125,25 +124,7 @@ private:
 	u8 m_OPCN;
 };
 
-class v40_device : public v50_base_device
-{
-public:
-	v40_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock);
-
-protected:
-	virtual void install_peripheral_io() override;
-};
-
-class v50_device : public v50_base_device
-{
-public:
-	v50_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock);
-
-protected:
-	virtual void install_peripheral_io() override;
-};
-
-class v53_device : public v33_base_device, public device_v5x_interface
+class v53_device : public v5x_base_device
 {
 public:
 	v53_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock);
@@ -165,13 +146,9 @@ public:
 protected:
 	v53_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, u32 clock);
 
-	// device-specific overrides
-	virtual void device_add_mconfig(machine_config &config) override;
+	// device_interface overrides
 	virtual void device_start() override;
 	virtual void device_reset() override;
-
-	// device_execute_interface overrides
-	virtual void execute_set_input(int inputnum, int state) override;
 
 	void internal_port_map(address_map &map);
 	virtual void install_peripheral_io() override;
@@ -188,7 +165,6 @@ public:
 	v53a_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock);
 };
 
-DECLARE_DEVICE_TYPE(V40,  v40_device)
 DECLARE_DEVICE_TYPE(V50,  v50_device)
 DECLARE_DEVICE_TYPE(V53,  v53_device)
 DECLARE_DEVICE_TYPE(V53A, v53a_device)

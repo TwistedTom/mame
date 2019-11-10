@@ -14,6 +14,8 @@
 # limitations under the License.
 """Generates the vendor tool table from the SPIR-V XML registry."""
 
+from __future__ import print_function
+
 import distutils.dir_util
 import os.path
 import xml.etree.ElementTree
@@ -63,8 +65,7 @@ def main():
        registry = xml.etree.ElementTree.fromstring(xml_in.read())
 
     distutils.dir_util.mkpath(os.path.dirname(args.generator_output))
-    with open(args.generator_output, 'w') as f:
-      f.write(generate_vendor_table(registry))
+    print(generate_vendor_table(registry), file=open(args.generator_output, 'w'))
 
 
 if __name__ == '__main__':

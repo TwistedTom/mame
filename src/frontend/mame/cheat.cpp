@@ -153,7 +153,7 @@ cheat_parameter::cheat_parameter(cheat_manager &manager, symbol_table &symbols, 
 		if (!itemnode->get_value() || !itemnode->get_value()[0])
 			throw emu_fatalerror("%s.xml(%d): item is missing text\n", filename, itemnode->line);
 
-		// check for non-existent value
+		// check for non-existant value
 		if (!itemnode->has_attribute("value"))
 			throw emu_fatalerror("%s.xml(%d): item is value\n", filename, itemnode->line);
 
@@ -309,9 +309,6 @@ bool cheat_parameter::set_next_state()
 //**************************************************************************
 //  CHEAT SCRIPT
 //**************************************************************************
-
-constexpr int cheat_script::script_entry::MAX_ARGUMENTS;
-
 
 //-------------------------------------------------
 //  cheat_script - constructor
@@ -813,14 +810,14 @@ bool cheat_entry::activate()
 		// if we're a oneshot cheat, execute the "on" script and indicate change
 		execute_on_script();
 		changed = true;
-		m_manager.machine().popmessage("Activated %s", m_description);
+		m_manager.machine().popmessage("Activated %s", m_description.c_str());
 	}
 	else if (is_oneshot_parameter() && (m_state != SCRIPT_STATE_OFF))
 	{
 		// if we're a oneshot parameter cheat and we're active, execute the "state change" script and indicate change
 		execute_change_script();
 		changed = true;
-		m_manager.machine().popmessage("Activated\n %s = %s", m_description, m_parameter->text());
+		m_manager.machine().popmessage("Activated\n %s = %s", m_description.c_str(), m_parameter->text());
 	}
 
 	return changed;
@@ -1230,7 +1227,7 @@ bool cheat_manager::save_all(const char *filename)
 	catch (emu_fatalerror const &err)
 	{
 		// catch errors and cleanup
-		osd_printf_error("%s\n", err.what());
+		osd_printf_error("%s\n", err.string());
 		cheatfile.remove_on_close();
 	}
 	return false;
@@ -1450,7 +1447,7 @@ void cheat_manager::load_cheats(const char *filename)
 				catch (emu_fatalerror const &err)
 				{
 					// just move on to the next cheat
-					osd_printf_error("%s\n", err.what());
+					osd_printf_error("%s\n", err.string());
 				}
 			}
 		}
@@ -1458,7 +1455,7 @@ void cheat_manager::load_cheats(const char *filename)
 	catch (emu_fatalerror const &err)
 	{
 		// handle errors cleanly
-		osd_printf_error("%s\n", err.what());
+		osd_printf_error("%s\n", err.string());
 		m_cheatlist.clear();
 	}
 }

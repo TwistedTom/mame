@@ -140,19 +140,20 @@ void gamepock_state::machine_reset()
 	hd44102ch_init( 2 );
 
 	if (m_cart->exists())
-		m_maincpu->space(AS_PROGRAM).install_read_handler(0x4000,0xbfff, read8sm_delegate(*m_cart, FUNC(generic_slot_device::read_rom)));
+		m_maincpu->space(AS_PROGRAM).install_read_handler(0x4000,0xbfff, read8sm_delegate(FUNC(generic_slot_device::read_rom),(generic_slot_device*)m_cart));
 
 }
 
 uint32_t gamepock_state::screen_update_gamepock(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect)
 {
 	uint8_t   ad;
+	int     i,j;
 
 	/* Handle HD44102CH #0 */
 	ad = m_hd44102ch[0].start_page;
-	for ( int i = 0; i < 4; i++ )
+	for ( i = 0; i < 4; i++ )
 	{
-		for ( int j = 0; j < 50; j++ )
+		for ( j = 0; j < 50; j++ )
 		{
 			bitmap.pix16(i * 8 + 0, 49 - j ) = ( m_hd44102ch[0].ram[ad+j] & 0x01 ) ? 0 : 1;
 			bitmap.pix16(i * 8 + 1, 49 - j ) = ( m_hd44102ch[0].ram[ad+j] & 0x02 ) ? 0 : 1;
@@ -168,9 +169,9 @@ uint32_t gamepock_state::screen_update_gamepock(screen_device &screen, bitmap_in
 
 	/* Handle HD44102CH #1 */
 	ad = m_hd44102ch[1].start_page;
-	for ( int i = 4; i < 8; i++ )
+	for ( i = 4; i < 8; i++ )
 	{
-		for ( int j = 0; j < 50; j++ )
+		for ( j = 0; j < 50; j++ )
 		{
 			bitmap.pix16(i * 8 + 0, j ) = ( m_hd44102ch[1].ram[ad+j] & 0x01 ) ? 0 : 1;
 			bitmap.pix16(i * 8 + 1, j ) = ( m_hd44102ch[1].ram[ad+j] & 0x02 ) ? 0 : 1;
@@ -186,9 +187,9 @@ uint32_t gamepock_state::screen_update_gamepock(screen_device &screen, bitmap_in
 
 	/* Handle HD44102CH #2 */
 	ad = m_hd44102ch[2].start_page;
-	for ( int i = 0; i < 4; i++ )
+	for ( i = 0; i < 4; i++ )
 	{
-		for ( int j = 0; j < 25; j++ )
+		for ( j = 0; j < 25; j++ )
 		{
 			bitmap.pix16(i * 8 + 0, 50 + j ) = ( m_hd44102ch[2].ram[ad+j] & 0x01 ) ? 0 : 1;
 			bitmap.pix16(i * 8 + 1, 50 + j ) = ( m_hd44102ch[2].ram[ad+j] & 0x02 ) ? 0 : 1;
@@ -199,7 +200,7 @@ uint32_t gamepock_state::screen_update_gamepock(screen_device &screen, bitmap_in
 			bitmap.pix16(i * 8 + 6, 50 + j ) = ( m_hd44102ch[2].ram[ad+j] & 0x40 ) ? 0 : 1;
 			bitmap.pix16(i * 8 + 7, 50 + j ) = ( m_hd44102ch[2].ram[ad+j] & 0x80 ) ? 0 : 1;
 		}
-		for ( int j = 25; j < 50; j++ )
+		for ( j = 25; j < 50; j++ )
 		{
 			bitmap.pix16(32 + i * 8 + 0, 25 + j ) = ( m_hd44102ch[2].ram[ad+j] & 0x01 ) ? 0 : 1;
 			bitmap.pix16(32 + i * 8 + 1, 25 + j ) = ( m_hd44102ch[2].ram[ad+j] & 0x02 ) ? 0 : 1;

@@ -46,7 +46,6 @@ DEFINE_DEVICE_TYPE(RX01, rx01_device, "rx01", "RX01")
 
 rx01_device::rx01_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
 	: device_t(mconfig, RX01, tag, owner, clock)
-	, m_image(*this, "floppy%u", 0U)
 {
 }
 
@@ -56,8 +55,7 @@ rx01_device::rx01_device(const machine_config &mconfig, const char *tag, device_
 
 void rx01_device::device_add_mconfig(machine_config &config)
 {
-	for (auto &floppy : m_image)
-		LEGACY_FLOPPY(config, floppy, 0, &rx01_floppy_interface);
+	legacy_floppy_image_device::add_2drives(config, &rx01_floppy_interface);
 }
 
 //-------------------------------------------------
@@ -66,6 +64,8 @@ void rx01_device::device_add_mconfig(machine_config &config)
 
 void rx01_device::device_start()
 {
+	m_image[0] = subdevice<legacy_floppy_image_device>(FLOPPY_0);
+	m_image[1] = subdevice<legacy_floppy_image_device>(FLOPPY_1);
 }
 
 

@@ -1,6 +1,5 @@
 // license:BSD-3-Clause
 // copyright-holders:Sandro Ronco
-// thanks-to:rfka01
 /***************************************************************************
 
     K806 Mouse module
@@ -71,6 +70,7 @@ dmv_k806_device::dmv_k806_device(const machine_config &mconfig, const char *tag,
 	, m_mouse_buttons(*this, "MOUSE")
 	, m_mouse_x(*this, "MOUSEX")
 	, m_mouse_y(*this, "MOUSEY")
+	, m_bus(nullptr)
 {
 }
 
@@ -80,16 +80,7 @@ dmv_k806_device::dmv_k806_device(const machine_config &mconfig, const char *tag,
 
 void dmv_k806_device::device_start()
 {
-	// register for state saving
-	save_item(NAME(m_mouse.phase));
-	save_item(NAME(m_mouse.x));
-	save_item(NAME(m_mouse.y));
-	save_item(NAME(m_mouse.prev_x));
-	save_item(NAME(m_mouse.prev_y));
-	save_item(NAME(m_mouse.xa));
-	save_item(NAME(m_mouse.xb));
-	save_item(NAME(m_mouse.ya));
-	save_item(NAME(m_mouse.yb));
+	m_bus = static_cast<dmvcart_slot_device*>(owner());
 }
 
 //-------------------------------------------------
@@ -116,7 +107,7 @@ void dmv_k806_device::device_add_mconfig(machine_config &config)
 	m_mcu->p2_out_cb().set(FUNC(dmv_k806_device::port2_w));
 	m_mcu->t1_in_cb().set(FUNC(dmv_k806_device::portt1_r));
 
-	TIMER(config, "mouse_timer", 0).configure_periodic(FUNC(dmv_k806_device::mouse_timer), attotime::from_hz(1000));
+	TIMER(config, "mouse_timer", 0).configure_periodic(timer_device::expired_delegate(FUNC(dmv_k806_device::mouse_timer), this), attotime::from_hz(1000));
 }
 
 //-------------------------------------------------
@@ -150,7 +141,7 @@ void dmv_k806_device::io_write(int ifsel, offs_t offset, uint8_t data)
 	if (BIT(jumpers, ifsel) && ((!BIT(offset, 3) && BIT(jumpers, 5)) || (BIT(offset, 3) && BIT(jumpers, 6))))
 	{
 		m_mcu->upi41_master_w(machine().dummy_space(), offset & 1, data);
-		out_int(CLEAR_LINE);
+		m_bus->m_out_int_cb(CLEAR_LINE);
 	}
 }
 
@@ -182,7 +173,7 @@ READ_LINE_MEMBER( dmv_k806_device::portt1_r )
 
 WRITE8_MEMBER( dmv_k806_device::port2_w )
 {
-	out_int((data & 1) ? CLEAR_LINE : ASSERT_LINE);
+	m_bus->m_out_int_cb((data & 1) ? CLEAR_LINE : ASSERT_LINE);
 }
 
 /*-------------------------------------------------------------------

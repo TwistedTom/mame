@@ -166,7 +166,7 @@ std::unique_ptr<util::disasm_interface> pdp8_cpu_device::create_disassembler()
 //  cycles it takes for one instruction to execute
 //-------------------------------------------------
 
-uint32_t pdp8_device::execute_min_cycles() const noexcept
+uint32_t pdp8_device::execute_min_cycles() const
 {
 	return 1; // TODO
 }
@@ -177,7 +177,7 @@ uint32_t pdp8_device::execute_min_cycles() const noexcept
 //  cycles it takes for one instruction to execute
 //-------------------------------------------------
 
-uint32_t pdp8_device::execute_max_cycles() const noexcept
+uint32_t pdp8_device::execute_max_cycles() const
 {
 	return 3; // TODO
 }
@@ -188,7 +188,7 @@ uint32_t pdp8_device::execute_max_cycles() const noexcept
 //  input/interrupt lines
 //-------------------------------------------------
 
-uint32_t pdp8_device::execute_input_lines() const noexcept
+uint32_t pdp8_device::execute_input_lines() const
 {
 	return 0; // TODO
 }

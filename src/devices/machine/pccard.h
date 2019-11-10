@@ -6,7 +6,7 @@
 #pragma once
 
 
-class device_pccard_interface : public device_interface
+class pccard_interface
 {
 public:
 	virtual DECLARE_READ16_MEMBER(read_memory);
@@ -14,15 +14,12 @@ public:
 	virtual DECLARE_WRITE16_MEMBER(write_memory);
 	virtual DECLARE_WRITE16_MEMBER(write_reg);
 
-	virtual ~device_pccard_interface() {}
-
-protected:
-	device_pccard_interface(const machine_config &mconfig, device_t &device);
+	virtual ~pccard_interface() {}
 };
 
 DECLARE_DEVICE_TYPE(PCCARD_SLOT, pccard_slot_device)
 
-class pccard_slot_device : public device_t, public device_single_card_slot_interface<device_pccard_interface>
+class pccard_slot_device : public device_t, public device_slot_interface
 {
 public:
 	template <typename T>
@@ -47,7 +44,7 @@ protected:
 
 private:
 	// internal state
-	device_pccard_interface *m_pccard;
+	pccard_interface *m_pccard;
 };
 
 #endif // MAME_MACHINE_PCCARD_H

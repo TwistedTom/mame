@@ -43,10 +43,10 @@ protected:
 	virtual void device_reset() override;
 
 	// device_execute_interface overrides
-	virtual uint32_t execute_min_cycles() const noexcept override { return 2; }
-	virtual uint32_t execute_max_cycles() const noexcept override { return 26; }
-	virtual uint32_t execute_input_lines() const noexcept override { return 1; }
-	virtual bool execute_input_edge_triggered(int inputnum) const noexcept override { return inputnum == INPUT_LINE_NMI; }
+	virtual uint32_t execute_min_cycles() const override { return 2; }
+	virtual uint32_t execute_max_cycles() const override { return 26; }
+	virtual uint32_t execute_input_lines() const override { return 1; }
+	virtual bool execute_input_edge_triggered(int inputnum) const override { return inputnum == INPUT_LINE_NMI; }
 	virtual void execute_run() override;
 	virtual void execute_set_input(int inputnum, int state) override;
 	virtual void execute_burn(int32_t cycles) override;
@@ -56,6 +56,9 @@ protected:
 
 	// device_state_interface overrides
 	virtual void state_string_export(const device_state_entry &entry, std::string &str) const override;
+
+	// device_disasm_interface overrides
+	virtual std::unique_ptr<util::disasm_interface> create_disassembler() override;
 
 private:
 	enum class e_mode : u8 {
@@ -159,10 +162,6 @@ class tmp90840_device : public tlcs90_device
 public:
 	// construction/destruction
 	tmp90840_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
-
-protected:
-	// device_disasm_interface overrides
-	virtual std::unique_ptr<util::disasm_interface> create_disassembler() override;
 };
 
 
@@ -171,10 +170,6 @@ class tmp90841_device : public tlcs90_device
 public:
 	// construction/destruction
 	tmp90841_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
-
-protected:
-	// device_disasm_interface overrides
-	virtual std::unique_ptr<util::disasm_interface> create_disassembler() override;
 };
 
 
@@ -183,10 +178,6 @@ class tmp90845_device : public tlcs90_device
 public:
 	// construction/destruction
 	tmp90845_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
-
-protected:
-	// device_disasm_interface overrides
-	virtual std::unique_ptr<util::disasm_interface> create_disassembler() override;
 };
 
 
@@ -195,10 +186,6 @@ class tmp91640_device : public tlcs90_device
 public:
 	// construction/destruction
 	tmp91640_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
-
-protected:
-	// device_disasm_interface overrides
-	virtual std::unique_ptr<util::disasm_interface> create_disassembler() override;
 };
 
 
@@ -207,10 +194,6 @@ class tmp91641_device : public tlcs90_device
 public:
 	// construction/destruction
 	tmp91641_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
-
-protected:
-	// device_disasm_interface overrides
-	virtual std::unique_ptr<util::disasm_interface> create_disassembler() override;
 };
 
 
@@ -219,10 +202,6 @@ class tmp90ph44_device : public tlcs90_device
 public:
 	// construction/destruction
 	tmp90ph44_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
-
-protected:
-	// device_disasm_interface overrides
-	virtual std::unique_ptr<util::disasm_interface> create_disassembler() override;
 };
 
 

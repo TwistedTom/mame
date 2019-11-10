@@ -107,7 +107,8 @@ class DuplicateInstPass : public Pass {
  public:
   const char* name() const override { return "DuplicateInst"; }
   Status Process() override {
-    auto inst = MakeUnique<Instruction>(*(--context()->debug1_end()));
+    auto inst =
+        MakeUnique<Instruction>(*(--context()->debug1_end())->Clone(context()));
     context()->AddDebug1Inst(std::move(inst));
     return Status::SuccessWithChange;
   }
@@ -120,21 +121,21 @@ TEST_F(PassManagerTest, Run) {
 
   AddPass<AppendOpNopPass>();
   AddPass<AppendOpNopPass>();
-  RunAndCheck(text, text + "OpNop\nOpNop\n");
+  RunAndCheck(text.c_str(), (text + "OpNop\nOpNop\n").c_str());
 
   RenewPassManger();
   AddPass<AppendOpNopPass>();
   AddPass<DuplicateInstPass>();
-  RunAndCheck(text, text + "OpNop\nOpNop\n");
+  RunAndCheck(text.c_str(), (text + "OpNop\nOpNop\n").c_str());
 
   RenewPassManger();
   AddPass<DuplicateInstPass>();
   AddPass<AppendOpNopPass>();
-  RunAndCheck(text, text + "OpSource ESSL 310\nOpNop\n");
+  RunAndCheck(text.c_str(), (text + "OpSource ESSL 310\nOpNop\n").c_str());
 
   RenewPassManger();
   AddPass<AppendMultipleOpNopPass>(3);
-  RunAndCheck(text, text + "OpNop\nOpNop\nOpNop\n");
+  RunAndCheck(text.c_str(), (text + "OpNop\nOpNop\nOpNop\n").c_str());
 }
 
 // A pass that appends an OpTypeVoid instruction that uses a given id.

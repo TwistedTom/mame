@@ -304,10 +304,8 @@ GND  8A 8B GND
 #include "includes/segaipt.h"
 
 #include "cpu/z80/z80.h"
-#include "machine/adc0804.h"
 #include "machine/i8255.h"
 #include "machine/mc8123.h"
-#include "machine/rescap.h"
 #include "machine/segacrp2_device.h"
 #include "machine/upd4701.h"
 #include "video/315_5124.h"
@@ -328,7 +326,6 @@ public:
 		m_bank1(*this, "bank1"),
 		m_bank0d(*this, "bank0d"),
 		m_bank1d(*this, "bank1d"),
-		m_analog_ports(*this, "IN%u", 2U),
 		m_lamp(*this, "lamp0")
 	{ }
 
@@ -343,11 +340,11 @@ public:
 	void init_fantzn2();
 
 private:
-	void bank_write(uint8_t data);
-	void coin_counters_write(uint8_t data);
+	DECLARE_WRITE8_MEMBER(bank_write);
+	DECLARE_WRITE8_MEMBER(coin_counters_write);
 
-	uint8_t hangonjr_analog_read();
-	void hangonjr_analog_select(uint8_t data);
+	DECLARE_READ8_MEMBER( hangonjr_port_f8_read );
+	DECLARE_WRITE8_MEMBER( hangonjr_port_fa_write );
 
 
 	uint32_t screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
@@ -372,7 +369,6 @@ private:
 	required_memory_bank m_bank1;
 	optional_memory_bank m_bank0d;
 	optional_memory_bank m_bank1d;
-	optional_ioport_array<2> m_analog_ports;
 	output_finder<> m_lamp;
 
 	// Analog input related
@@ -444,7 +440,7 @@ void systeme_state::vdp2_map(address_map &map)
 }
 
 
-void systeme_state::bank_write(uint8_t data)
+WRITE8_MEMBER(systeme_state::bank_write)
 {
 	membank("vdp1_bank")->set_entry((data >> 7) & 1);
 	membank("vdp2_bank")->set_entry((data >> 6) & 1);
@@ -454,7 +450,7 @@ void systeme_state::bank_write(uint8_t data)
 		m_bank1d->set_entry(data & 0x0f);
 }
 
-void systeme_state::coin_counters_write(uint8_t data)
+WRITE8_MEMBER(systeme_state::coin_counters_write)
 {
 	machine().bookkeeping().coin_counter_w(0, BIT(data, 0));
 	machine().bookkeeping().coin_counter_w(1, BIT(data, 1)); // only one counter used in most games?
@@ -491,14 +487,25 @@ void systeme_state::machine_start()
 
 
 /*- Hang On Jr. Specific -*/
-uint8_t systeme_state::hangonjr_analog_read()
+READ8_MEMBER( systeme_state::hangonjr_port_f8_read )
 {
-	return m_analog_ports[m_port_select & 0x01]->read();
+	uint8_t temp;
+
+	temp = 0;
+
+	if (m_port_select == 0x08)  /* 0000 1000 */ /* Angle */
+		temp = ioport("IN2")->read();
+
+	if (m_port_select == 0x09)  /* 0000 1001 */ /* Accel */
+		temp = ioport("IN3")->read();
+
+	return temp;
 }
 
-void systeme_state::hangonjr_analog_select(uint8_t data)
+WRITE8_MEMBER( systeme_state::hangonjr_port_fa_write)
 {
-	m_port_select = data;
+	/* Seems to write the same pattern again and again bits ---- xx-x used */
+	m_port_select = data & 0x0f;
 }
 
 
@@ -647,10 +654,10 @@ static INPUT_PORTS_START( segae_hangonjr_generic )
 	//PORT_BIT( 0x40, IP_ACTIVE_LOW,  IPT_UNUSED )
 	//PORT_BIT( 0x80, IP_ACTIVE_LOW,  IPT_UNUSED )
 
-	PORT_START("IN2")   /* Angle - Read from Port 0xf8 */
+	PORT_START("IN2")   /* Read from Port 0xf8 */
 	PORT_BIT( 0xff, 0x80, IPT_PADDLE ) PORT_MINMAX(0x20,0xe0) PORT_SENSITIVITY(100) PORT_KEYDELTA(4)
 
-	PORT_START("IN3")  /* Accel - Read from Port 0xf8 */
+	PORT_START("IN3")  /* Read from Port 0xf8 */
 	PORT_BIT( 0xff, 0x00, IPT_PEDAL ) PORT_MINMAX(0x00,0xff) PORT_SENSITIVITY(100) PORT_KEYDELTA(20)
 INPUT_PORTS_END
 
@@ -913,15 +920,9 @@ void systeme_state::systeme(machine_config &config)
 void systeme_state::hangonjr(machine_config &config)
 {
 	systeme(config);
-	m_ppi->in_pa_callback().set("adc", FUNC(adc0804_device::read));
-	m_ppi->in_pc_callback().set("adc", FUNC(adc0804_device::intr_r)).lshift(4);
-	m_ppi->out_pc_callback().set(FUNC(systeme_state::hangonjr_analog_select)); // CD4051 selector input
-	m_ppi->out_pc_callback().append("adc", FUNC(adc0804_device::rd_w)).bit(2);
-	m_ppi->out_pc_callback().append("adc", FUNC(adc0804_device::wr_w)).bit(3);
-
-	adc0804_device &adc(ADC0804(config, "adc", RES_K(10), CAP_P(82))); // R1=10K/C11=82pF circuit on 834-5805 card
-	adc.vin_callback().set(FUNC(systeme_state::hangonjr_analog_read));
-	adc.set_rd_mode(adc0804_device::RD_BITBANGED);
+	m_ppi->in_pa_callback().set(FUNC(systeme_state::hangonjr_port_f8_read));
+	m_ppi->in_pc_callback().set_constant(0); // bit 4 must be the ADC0804 /INTR signal
+	m_ppi->out_pc_callback().set(FUNC(systeme_state::hangonjr_port_fa_write)); // CD4051 selector input
 }
 
 void systeme_state::ridleofp(machine_config &config)
@@ -1055,8 +1056,6 @@ ROM_END
 
 //*************************************************************************************************************************
 //  Riddle of Pythagoras (Japan), Sega System E
-//   Game ID# 833-6200 ピタゴラス ノ ナゾ
-//   I/O board 834-6193 © SEGA 1986
 //
 ROM_START( ridleofp )
 	ROM_REGION( 0x30000, "maincpu", 0 )

@@ -31,7 +31,7 @@ struct ScreenVertex
 			.end();
 	}
 
-	static bgfx::VertexLayout ms_decl;
+	static bgfx::VertexDecl ms_decl;
 };
 
 #endif // __DRAWBGFX_VERTEX__

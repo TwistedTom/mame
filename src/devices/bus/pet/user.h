@@ -31,7 +31,8 @@ DECLARE_DEVICE_TYPE(PET_USER_PORT, pet_user_port_device)
 
 class device_pet_user_port_interface;
 
-class pet_user_port_device : public device_t, public device_slot_interface
+class pet_user_port_device : public device_t,
+	public device_slot_interface
 {
 	friend class device_pet_user_port_interface;
 
@@ -117,7 +118,7 @@ private:
 };
 
 
-class device_pet_user_port_interface : public device_interface
+class device_pet_user_port_interface : public device_slot_card_interface
 {
 	friend class pet_user_port_device;
 

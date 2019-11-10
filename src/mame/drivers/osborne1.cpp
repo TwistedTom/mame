@@ -349,15 +349,15 @@ void osborne1nv_state::osborne1nv(machine_config &config)
 	osborne1(config);
 	m_maincpu->set_addrmap(AS_IO, &osborne1nv_state::osborne1nv_io);
 
-	m_screen->set_no_palette();
+	m_screen->set_palette(finder_base::DUMMY_TAG);
 	m_screen->set_screen_update("crtc", FUNC(mc6845_device::screen_update));
 
 	sy6545_1_device &crtc(SY6545_1(config, "crtc", XTAL(12'288'000)/8));
 	crtc.set_screen(m_screen);
 	crtc.set_show_border_area(false);
 	crtc.set_char_width(8);
-	crtc.set_update_row_callback(FUNC(osborne1nv_state::crtc_update_row));
-	crtc.set_on_update_addr_change_callback(FUNC(osborne1nv_state::crtc_update_addr_changed));
+	crtc.set_update_row_callback(FUNC(osborne1nv_state::crtc_update_row), this);
+	crtc.set_on_update_addr_change_callback(FUNC(osborne1nv_state::crtc_update_addr_changed), this);
 }
 
 

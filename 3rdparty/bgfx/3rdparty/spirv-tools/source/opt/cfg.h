@@ -60,35 +60,26 @@ class CFG {
 
   // Compute structured block order into |order| for |func| starting at |root|.
   // This order has the property that dominators come before all blocks they
-  // dominate, merge blocks come after all blocks that are in the control
-  // constructs of their header, and continue blocks come after all of the
-  // blocks in the body of their loop.
+  // dominate and merge blocks come after all blocks that are in the control
+  // constructs of their header.
   void ComputeStructuredOrder(Function* func, BasicBlock* root,
                               std::list<BasicBlock*>* order);
 
-  // Applies |f| to all blocks that can be reach from |bb| in post order.
+  // Applies |f| to the basic block in post order starting with |bb|.
+  // Note that basic blocks that cannot be reached from |bb| node will not be
+  // processed.
   void ForEachBlockInPostOrder(BasicBlock* bb,
                                const std::function<void(BasicBlock*)>& f);
 
-  // Applies |f| to all blocks that can be reach from |bb| in reverse post
-  // order.
+  // Applies |f| to the basic block in reverse post order starting with |bb|.
+  // Note that basic blocks that cannot be reached from |bb| node will not be
+  // processed.
   void ForEachBlockInReversePostOrder(
       BasicBlock* bb, const std::function<void(BasicBlock*)>& f);
 
-  // Applies |f| to all blocks that can be reach from |bb| in reverse post
-  // order.  Return false if |f| return false on any basic block, and stops
-  // processing.
-  bool WhileEachBlockInReversePostOrder(
-      BasicBlock* bb, const std::function<bool(BasicBlock*)>& f);
-
   // Registers |blk| as a basic block in the cfg, this also updates the
-  // predecessor lists of each successor of |blk|. |blk| must have a terminator
-  // instruction at the end of the block.
+  // predecessor lists of each successor of |blk|.
   void RegisterBlock(BasicBlock* blk) {
-    assert(blk->begin() != blk->end() &&
-           "Basic blocks must have a terminator before registering.");
-    assert(blk->tail()->IsBlockTerminator() &&
-           "Basic blocks must have a terminator before registering.");
     uint32_t blk_id = blk->id();
     id2block_[blk_id] = blk;
     AddEdges(blk);
@@ -132,8 +123,7 @@ class CFG {
   // id as |block| and will become a preheader for the loop.  The other block
   // is a new block that will be the new loop header.
   //
-  // Returns a pointer to the new loop header.  Returns |nullptr| if the new
-  // loop pointer could not be created.
+  // Returns a pointer to the new loop header.
   BasicBlock* SplitLoopHeader(BasicBlock* bb);
 
  private:

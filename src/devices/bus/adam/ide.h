@@ -12,7 +12,7 @@
 #pragma once
 
 #include "exp.h"
-#include "bus/ata/ataintf.h"
+#include "machine/ataintf.h"
 #include "machine/output_latch.h"
 
 

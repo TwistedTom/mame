@@ -34,7 +34,7 @@ public:
 	virtual ~menu_video_options() override;
 
 private:
-	enum : uint32_t {
+	enum {
 		VIDEO_ITEM_ROTATE = 0x80000000,
 		VIDEO_ITEM_ZOOM,
 		VIDEO_ITEM_VIEW

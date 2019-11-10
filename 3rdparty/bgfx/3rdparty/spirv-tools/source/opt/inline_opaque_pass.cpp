@@ -63,7 +63,7 @@ bool InlineOpaquePass::HasOpaqueArgsOrReturn(const Instruction* callInst) {
   });
 }
 
-Pass::Status InlineOpaquePass::InlineOpaque(Function* func) {
+bool InlineOpaquePass::InlineOpaque(Function* func) {
   bool modified = false;
   // Using block iterators here because of block erasures and insertions.
   for (auto bi = func->begin(); bi != func->end(); ++bi) {
@@ -72,10 +72,7 @@ Pass::Status InlineOpaquePass::InlineOpaque(Function* func) {
         // Inline call.
         std::vector<std::unique_ptr<BasicBlock>> newBlocks;
         std::vector<std::unique_ptr<Instruction>> newVars;
-        if (!GenInlineCode(&newBlocks, &newVars, ii, bi)) {
-          return Status::Failure;
-        }
-
+        GenInlineCode(&newBlocks, &newVars, ii, bi);
         // If call block is replaced with more than one block, point
         // succeeding phis at new last block.
         if (newBlocks.size() > 1) UpdateSucceedingPhis(newBlocks);
@@ -93,20 +90,16 @@ Pass::Status InlineOpaquePass::InlineOpaque(Function* func) {
       }
     }
   }
-  return (modified ? Status::SuccessWithChange : Status::SuccessWithoutChange);
+  return modified;
 }
 
 void InlineOpaquePass::Initialize() { InitializeInline(); }
 
 Pass::Status InlineOpaquePass::ProcessImpl() {
-  Status status = Status::SuccessWithoutChange;
   // Do opaque inlining on each function in entry point call tree
-  ProcessFunction pfn = [&status, this](Function* fp) {
-    status = CombineStatus(status, InlineOpaque(fp));
-    return false;
-  };
-  context()->ProcessEntryPointCallTree(pfn);
-  return status;
+  ProcessFunction pfn = [this](Function* fp) { return InlineOpaque(fp); };
+  bool modified = ProcessEntryPointCallTree(pfn, get_module());
+  return modified ? Status::SuccessWithChange : Status::SuccessWithoutChange;
 }
 
 InlineOpaquePass::InlineOpaquePass() = default;

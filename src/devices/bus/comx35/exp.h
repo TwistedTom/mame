@@ -42,7 +42,8 @@
 
 class device_comx_expansion_card_interface;
 
-class comx_expansion_slot_device : public device_t, public device_single_card_slot_interface<device_comx_expansion_card_interface>
+class comx_expansion_slot_device : public device_t,
+									public device_slot_interface
 {
 public:
 	// construction/destruction
@@ -89,7 +90,7 @@ protected:
 // ======================> device_comx_expansion_card_interface
 
 // class representing interface-specific live comx_expansion card
-class device_comx_expansion_card_interface : public device_interface
+class device_comx_expansion_card_interface : public device_slot_card_interface
 {
 	friend class comx_expansion_slot_device;
 

@@ -107,18 +107,18 @@ void ti990_10_device::execute_set_input(int irqline, int state)
 
 // ==========================================================================
 
-uint32_t ti990_10_device::execute_min_cycles() const noexcept
+uint32_t ti990_10_device::execute_min_cycles() const
 {
 	return 2;
 }
 
 // TODO: Compute this value, just a wild guess for the average
-uint32_t ti990_10_device::execute_max_cycles() const noexcept
+uint32_t ti990_10_device::execute_max_cycles() const
 {
 	return 10;
 }
 
-uint32_t ti990_10_device::execute_input_lines() const noexcept
+uint32_t ti990_10_device::execute_input_lines() const
 {
 	return 2;
 }

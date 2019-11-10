@@ -600,7 +600,7 @@ void ghosteo_state::machine_start()
 
 void ghosteo_state::machine_reset()
 {
-	m_maincpu->space(AS_PROGRAM).install_read_handler(0x4d000010, 0x4d000013,read32_delegate(*this, FUNC(ghosteo_state::bballoon_speedup_r)));
+	m_maincpu->space(AS_PROGRAM).install_read_handler(0x4d000010, 0x4d000013,read32_delegate(FUNC(ghosteo_state::bballoon_speedup_r), this));
 }
 
 void ghosteo_state::ghosteo(machine_config &config)

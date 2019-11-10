@@ -50,13 +50,21 @@ void svi_slot_bus_device::device_start()
 }
 
 //-------------------------------------------------
+//  device_reset - device-specific reset
+//-------------------------------------------------
+
+void svi_slot_bus_device::device_reset()
+{
+}
+
+//-------------------------------------------------
 //  add_card - add new card to our bus
 //-------------------------------------------------
 
-void svi_slot_bus_device::add_card(device_svi_slot_interface &card)
+void svi_slot_bus_device::add_card(device_svi_slot_interface *card)
 {
-	card.set_bus_device(*this);
-	m_dev.append(card);
+	card->set_bus_device(this);
+	m_dev.append(*card);
 }
 
 //-------------------------------------------------
@@ -198,8 +206,7 @@ DEFINE_DEVICE_TYPE(SVI_SLOT, svi_slot_device, "svislot", "SVI Slot")
 
 svi_slot_device::svi_slot_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
 	: device_t(mconfig, SVI_SLOT, tag, owner, clock)
-	, device_single_card_slot_interface<device_svi_slot_interface>(mconfig, *this)
-	, m_bus(*this, finder_base::DUMMY_TAG)
+	, device_slot_interface(mconfig, *this)
 {
 }
 
@@ -209,9 +216,21 @@ svi_slot_device::svi_slot_device(const machine_config &mconfig, const char *tag,
 
 void svi_slot_device::device_start()
 {
-	device_svi_slot_interface *dev = get_card_device();
+	device_svi_slot_interface *dev = dynamic_cast<device_svi_slot_interface *>(get_card_device());
+
 	if (dev)
-		m_bus->add_card(*dev);
+	{
+		svi_slot_bus_device *bus = downcast<svi_slot_bus_device *>(owner()->subdevice(SVIBUS_TAG));
+		bus->add_card(dev);
+	}
+}
+
+//-------------------------------------------------
+//  device_reset - device-specific reset
+//-------------------------------------------------
+
+void svi_slot_device::device_reset()
+{
 }
 
 
@@ -224,7 +243,7 @@ void svi_slot_device::device_start()
 //-------------------------------------------------
 
 device_svi_slot_interface::device_svi_slot_interface(const machine_config &mconfig, device_t &device) :
-	device_interface(device, "svi3x8slot"),
+	device_slot_card_interface(mconfig, device),
 	m_bus(nullptr),
 	m_next(nullptr)
 {
@@ -242,8 +261,7 @@ device_svi_slot_interface::~device_svi_slot_interface()
 //  set_bus_device - set bus we are attached to
 //-------------------------------------------------
 
-void device_svi_slot_interface::set_bus_device(svi_slot_bus_device &bus)
+void device_svi_slot_interface::set_bus_device(svi_slot_bus_device *bus)
 {
-	assert(!device().started());
-	m_bus = &bus;
+	m_bus = bus;
 }

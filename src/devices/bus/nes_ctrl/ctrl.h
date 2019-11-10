@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "screen.h"
-
 
 //**************************************************************************
 //  TYPE DEFINITIONS
@@ -28,7 +26,7 @@ class nes_control_port_device;
 
 // ======================> device_nes_control_port_interface
 
-class device_nes_control_port_interface : public device_interface
+class device_nes_control_port_interface : public device_slot_card_interface
 {
 public:
 	// construction/destruction
@@ -49,7 +47,7 @@ protected:
 // ======================> nes_control_port_device
 
 class nes_control_port_device : public device_t,
-								public device_single_card_slot_interface<device_nes_control_port_interface>
+								public device_slot_interface
 {
 public:
 	// construction/destruction

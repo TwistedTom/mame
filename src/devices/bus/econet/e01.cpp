@@ -400,7 +400,6 @@ econet_e01_device::econet_e01_device(const machine_config &mconfig, device_type 
 	, m_floppy(*this, WD2793_TAG":%u", 0U)
 	, m_rom(*this, R65C102_TAG)
 	, m_centronics(*this, CENTRONICS_TAG)
-	, m_led(*this, "led_0")
 	, m_adlc_ie(0)
 	, m_hdc_ie(0)
 	, m_rtc_irq(CLEAR_LINE)
@@ -422,8 +421,6 @@ econet_e01_device::econet_e01_device(const machine_config &mconfig, device_type 
 
 void econet_e01_device::device_start()
 {
-	m_led.resolve();
-
 	// allocate timers
 	m_clk_timer = timer_alloc();
 
@@ -550,7 +547,7 @@ WRITE8_MEMBER( econet_e01_device::floppy_w )
 	// TODO floppy test
 
 	// mode LED
-	m_led = BIT(data, 7);
+	machine().output().set_value("led_0", BIT(data, 7));
 }
 
 

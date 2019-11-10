@@ -609,7 +609,7 @@ std::unique_ptr<util::disasm_interface> mb86901_device::create_disassembler()
 //  cycles it takes for one instruction to execute
 //-------------------------------------------------
 
-uint32_t mb86901_device::execute_min_cycles() const noexcept
+uint32_t mb86901_device::execute_min_cycles() const
 {
 	return 1;
 }
@@ -620,7 +620,7 @@ uint32_t mb86901_device::execute_min_cycles() const noexcept
 //  cycles it takes for one instruction to execute
 //-------------------------------------------------
 
-uint32_t mb86901_device::execute_max_cycles() const noexcept
+uint32_t mb86901_device::execute_max_cycles() const
 {
 	return 4;
 }
@@ -631,7 +631,7 @@ uint32_t mb86901_device::execute_max_cycles() const noexcept
 //  input/interrupt lines
 //-------------------------------------------------
 
-uint32_t mb86901_device::execute_input_lines() const noexcept
+uint32_t mb86901_device::execute_input_lines() const
 {
 	return 16;
 }

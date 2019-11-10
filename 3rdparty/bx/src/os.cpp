@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 Branimir Karadzic. All rights reserved.
+ * Copyright 2010-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bx#license-bsd-2-clause
  */
 
@@ -18,23 +18,21 @@
 #	include <windows.h>
 #	include <psapi.h>
 #elif  BX_PLATFORM_ANDROID    \
-	|| BX_PLATFORM_BSD        \
 	|| BX_PLATFORM_EMSCRIPTEN \
-	|| BX_PLATFORM_HAIKU      \
+	|| BX_PLATFORM_BSD        \
 	|| BX_PLATFORM_HURD       \
 	|| BX_PLATFORM_IOS        \
 	|| BX_PLATFORM_LINUX      \
-	|| BX_PLATFORM_NX         \
 	|| BX_PLATFORM_OSX        \
 	|| BX_PLATFORM_PS4        \
 	|| BX_PLATFORM_RPI        \
-	|| BX_PLATFORM_STEAMLINK
+	|| BX_PLATFORM_STEAMLINK  \
+	|| BX_PLATFORM_NX
 #	include <sched.h> // sched_yield
-#	if BX_PLATFORM_BSD       \
-	|| BX_PLATFORM_HAIKU     \
-	|| BX_PLATFORM_IOS       \
-	|| BX_PLATFORM_OSX       \
-	|| BX_PLATFORM_PS4       \
+#	if BX_PLATFORM_BSD  \
+	|| BX_PLATFORM_IOS  \
+	|| BX_PLATFORM_OSX  \
+	|| BX_PLATFORM_PS4  \
 	|| BX_PLATFORM_STEAMLINK
 #		include <pthread.h> // mach_port_t
 #	endif // BX_PLATFORM_*
@@ -52,9 +50,6 @@
 #		include <stdio.h>  // fopen
 #		include <unistd.h> // syscall
 #		include <sys/syscall.h>
-#	elif   BX_PLATFORM_HAIKU
-#		include <stdio.h>  // fopen
-#		include <unistd.h> // syscall
 #	elif BX_PLATFORM_OSX
 #		include <mach/mach.h> // mach_task_basic_info
 #	elif BX_PLATFORM_HURD
@@ -67,6 +62,7 @@
 
 namespace bx
 {
+
 	void sleep(uint32_t _ms)
 	{
 #if BX_PLATFORM_WINDOWS
@@ -178,7 +174,7 @@ namespace bx
 	void* dlopen(const FilePath& _filePath)
 	{
 #if BX_PLATFORM_WINDOWS
-		return (void*)::LoadLibraryA(_filePath.getCPtr() );
+		return (void*)::LoadLibraryA(_filePath.get() );
 #elif  BX_PLATFORM_EMSCRIPTEN \
 	|| BX_PLATFORM_PS4        \
 	|| BX_PLATFORM_XBOXONE    \
@@ -187,7 +183,7 @@ namespace bx
 		BX_UNUSED(_filePath);
 		return NULL;
 #else
-		return ::dlopen(_filePath.getCPtr(), RTLD_LOCAL|RTLD_LAZY);
+		return ::dlopen(_filePath.get(), RTLD_LOCAL|RTLD_LAZY);
 #endif // BX_PLATFORM_
 	}
 
@@ -237,10 +233,9 @@ namespace bx
 		bool result = len != 0 && len < *_inOutSize;
 		*_inOutSize = len;
 		return result;
-#elif  BX_PLATFORM_EMSCRIPTEN \
-	|| BX_PLATFORM_PS4        \
-	|| BX_PLATFORM_XBOXONE    \
-	|| BX_PLATFORM_WINRT      \
+#elif  BX_PLATFORM_PS4     \
+	|| BX_PLATFORM_XBOXONE \
+	|| BX_PLATFORM_WINRT   \
 	|| BX_CRT_NONE
 		BX_UNUSED(name, _out, _inOutSize);
 		return false;
@@ -280,10 +275,9 @@ namespace bx
 
 #if BX_PLATFORM_WINDOWS
 		::SetEnvironmentVariableA(name, value);
-#elif  BX_PLATFORM_EMSCRIPTEN \
-	|| BX_PLATFORM_PS4        \
-	|| BX_PLATFORM_XBOXONE    \
-	|| BX_PLATFORM_WINRT      \
+#elif  BX_PLATFORM_PS4     \
+	|| BX_PLATFORM_XBOXONE \
+	|| BX_PLATFORM_WINRT   \
 	|| BX_CRT_NONE
 		BX_UNUSED(name, value);
 #else

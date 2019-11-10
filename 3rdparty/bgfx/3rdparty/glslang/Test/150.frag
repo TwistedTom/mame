@@ -47,5 +47,4 @@ void barWxyz()
 int primitiveID()
 {
    return gl_PrimitiveID;
-   gl_PerFragment; // ERROR, block name can't get reused
 }

@@ -172,10 +172,10 @@ Notes:
 */
 
 #include "emu.h"
-#include "bus/ata/ataintf.h"
-#include "bus/ata/idehd.h"
 #include "cpu/powerpc/ppc.h"
 #include "cpu/tlcs900/tlcs900.h"
+#include "machine/ataintf.h"
+#include "machine/idehd.h"
 #include "machine/nvram.h"
 #include "video/poly.h"
 
@@ -2596,7 +2596,7 @@ void taitotz_state::taitotz(machine_config &config)
 
 	/* MN1020819DA sound CPU */
 
-	config.set_maximum_quantum(attotime::from_hz(120));
+	config.m_minimum_quantum = attotime::from_hz(120);
 
 	ata_interface_device &ata(ATA_INTERFACE(config, "ata").options(ata_devices, "hdd", nullptr, true));
 	ata.irq_handler().set(FUNC(taitotz_state::ide_interrupt));

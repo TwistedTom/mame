@@ -111,11 +111,10 @@ private:
 class decocpu_type2_device : public decocpu_type1_device
 {
 public:
-	template <typename T>
-	decocpu_type2_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock, T &&cpuregion_tag)
+	decocpu_type2_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock, const char *cpuregion_tag)
 		: decocpu_type2_device(mconfig, tag, owner, clock)
 	{
-		set_cpuregion(std::forward<T>(cpuregion_tag));
+		set_cpuregion(cpuregion_tag);
 	}
 
 	decocpu_type2_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
@@ -132,11 +131,10 @@ protected:
 class decocpu_type3_device : public decocpu_type2_device
 {
 public:
-	template <typename T>
-	decocpu_type3_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock, T &&cpuregion_tag)
+	decocpu_type3_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock, const char *cpuregion_tag)
 		: decocpu_type3_device(mconfig, tag, owner, clock)
 	{
-		set_cpuregion(std::forward<T>(cpuregion_tag));
+		set_cpuregion(cpuregion_tag);
 	}
 
 	decocpu_type3_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
@@ -151,11 +149,10 @@ protected:
 class decocpu_type3b_device : public decocpu_type3_device
 {
 public:
-	template <typename T>
-	decocpu_type3b_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock, T &&cpuregion_tag)
+	decocpu_type3b_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock, const char *cpuregion_tag)
 		: decocpu_type3b_device(mconfig, tag, owner, clock)
 	{
-		set_cpuregion(std::forward<T>(cpuregion_tag));
+		set_cpuregion(cpuregion_tag);
 	}
 
 	decocpu_type3b_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);

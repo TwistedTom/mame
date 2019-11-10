@@ -1,21 +1,19 @@
 // license:GPL-2.0+
 // copyright-holders:Couriersud
+/*
+ * pomp.h
+ *
+ * Wrap all OPENMP stuff here in a hopefully c++ compliant way.
+ */
 
 #ifndef POMP_H_
 #define POMP_H_
 
-///
-/// \file pomp.h
-///
-/// Wrap all OPENMP stuff here in a hopefully c++ compliant way.
-///
-
 #include "pconfig.h"
-#include "ptypes.h"
 
-#include <cstdint>
+//#include <cstddef>
 
-#if PHAS_OPENMP
+#if HAS_OPENMP
 #include "omp.h"
 #endif
 
@@ -23,51 +21,40 @@ namespace plib {
 namespace omp {
 
 template <typename I, class T>
-void for_static(std::size_t numops, const I start, const I end, const T &what)  noexcept(noexcept(what))
+void for_static(const I start, const I end, const T &what)
 {
-	if (numops>1000)
+#if HAS_OPENMP && USE_OPENMP
+	#pragma omp parallel
+#endif
 	{
-	#if PHAS_OPENMP && PUSE_OPENMP
-		#pragma omp parallel for schedule(static)
-	#endif
+#if HAS_OPENMP && USE_OPENMP
+		#pragma omp for //schedule(static)
+#endif
 		for (I i = start; i <  end; i++)
 			what(i);
 	}
-	else
-		for (I i = start; i <  end; i++)
-			what(i);
 }
 
 template <typename I, class T>
-void for_static(const I start, const I end, const T &what) noexcept(noexcept(what))
-{
-#if PHAS_OPENMP && PUSE_OPENMP
-	#pragma omp parallel for schedule(static)
-#endif
-	for (I i = start; i <  end; i++)
-		what(i);
-}
-
-template <typename I, class T>
-void for_static_np(const I start, const I end, const T &what) noexcept(noexcept(what))
+void for_static_np(const I start, const I end, const T &what)
 {
 	for (I i = start; i <  end; i++)
 		what(i);
 }
 
 
-inline void set_num_threads(const std::size_t threads) noexcept
+inline void set_num_threads(const std::size_t threads)
 {
-#if PHAS_OPENMP && PUSE_OPENMP
+#if HAS_OPENMP && USE_OPENMP
 	omp_set_num_threads(threads);
 #else
 	plib::unused_var(threads);
 #endif
 }
 
-inline std::size_t get_max_threads() noexcept
+inline std::size_t get_max_threads()
 {
-#if PHAS_OPENMP && PUSE_OPENMP
+#if HAS_OPENMP && USE_OPENMP
 	return omp_get_max_threads();
 #else
 	return 1;
@@ -82,4 +69,4 @@ inline std::size_t get_max_threads() noexcept
 } // namespace omp
 } // namespace plib
 
-#endif // PSTRING_H_
+#endif /* PSTRING_H_ */

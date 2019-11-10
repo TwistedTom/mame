@@ -99,7 +99,7 @@ void icatel_state::i80c31_io(address_map &map)
 
 void icatel_state::i80c31_data(address_map &map)
 {
-//  map(0x0056,0x005A).r(FUNC(icatel_state::magic_string)); /* This is a hack! */
+//  AM_RANGE(0x0056,0x005A) AM_READ(magic_string) /* This is a hack! */
 }
 
 void icatel_state::init_icatel()
@@ -279,7 +279,7 @@ void icatel_state::icatel(machine_config &config)
 
 	HD44780(config, m_lcdc, 0);
 	m_lcdc->set_lcd_size(2, 16);
-	m_lcdc->set_pixel_update_cb(FUNC(icatel_state::icatel_pixel_update));
+	m_lcdc->set_pixel_update_cb(FUNC(icatel_state::icatel_pixel_update), this);
 }
 
 ROM_START( icatel )

@@ -546,11 +546,6 @@ spv_result_t spvTextEncodeOpcode(const spvtools::AssemblyGrammar& grammar,
            << "Expected <result-id> at the beginning of an instruction, found '"
            << firstWord << "'.";
   }
-  if (!opcodeEntry->hasResult && !result_id.empty()) {
-    return context->diagnostic()
-           << "Cannot set ID " << result_id << " because " << opcodeName
-           << " does not produce a result ID.";
-  }
   pInst->opcode = opcodeEntry->opcode;
   context->setPosition(nextPosition);
   // Reserve the first word for the instruction.
@@ -783,7 +778,7 @@ spv_result_t spvTextToBinary(const spv_const_context context,
                              const size_t input_text_size, spv_binary* pBinary,
                              spv_diagnostic* pDiagnostic) {
   return spvTextToBinaryWithOptions(context, input_text, input_text_size,
-                                    SPV_TEXT_TO_BINARY_OPTION_NONE, pBinary,
+                                    SPV_BINARY_TO_TEXT_OPTION_NONE, pBinary,
                                     pDiagnostic);
 }
 

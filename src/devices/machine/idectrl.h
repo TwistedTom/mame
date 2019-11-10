@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include "bus/ata/ataintf.h"
+#include "ataintf.h"
 
 class ide_controller_device : public abstract_ata_interface_device
 {

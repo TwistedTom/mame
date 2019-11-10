@@ -3,8 +3,8 @@
 #include "emu.h"
 #include "null_modem.h"
 
-null_modem_device::null_modem_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock) :
-	device_t(mconfig, NULL_MODEM, tag, owner, clock),
+null_modem_device::null_modem_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
+	: device_t(mconfig, NULL_MODEM, tag, owner, clock),
 	device_serial_interface(mconfig, *this),
 	device_rs232_port_interface(mconfig, *this),
 	m_stream(*this, "stream"),
@@ -18,8 +18,7 @@ null_modem_device::null_modem_device(const machine_config &mconfig, const char *
 	m_input_count(0),
 	m_input_index(0),
 	m_timer_poll(nullptr),
-	m_rts(0),
-	m_dtr(0)
+	m_rts(0)
 {
 }
 
@@ -37,10 +36,9 @@ static INPUT_PORTS_START(null_modem)
 	PORT_RS232_STOPBITS("RS232_STOPBITS", RS232_STOPBITS_1, "Stop Bits", null_modem_device, update_serial)
 
 	PORT_START("FLOW_CONTROL")
-	PORT_CONFNAME(0x03, 0x00, "Flow Control")
+	PORT_CONFNAME(0x01, 0x00, "Flow Control")
 	PORT_CONFSETTING(0x00, "Off")
-	PORT_CONFSETTING(0x01, "RTS")
-	PORT_CONFSETTING(0x02, "DTR")
+	PORT_CONFSETTING(0x01, "On")
 INPUT_PORTS_END
 
 ioport_constructor null_modem_device::device_input_ports() const
@@ -76,7 +74,6 @@ WRITE_LINE_MEMBER(null_modem_device::update_serial)
 	output_cts(0);
 
 	m_rts = 0;
-	m_dtr = 0;
 }
 
 void null_modem_device::device_reset()
@@ -108,20 +105,17 @@ void null_modem_device::queue()
 			m_input_count = m_stream->input(m_input_buffer, sizeof(m_input_buffer));
 		}
 
-		if (m_input_count != 0)
+		if (m_input_count != 0 && (m_rts == 0 || !m_flow->read()))
 		{
-			uint8_t fc = m_flow->read();
+			transmit_register_setup(m_input_buffer[m_input_index++]);
 
-			if (fc == 0 || (fc == 1 && m_rts == 0) || (fc == 2 && m_dtr == 0))
-			{
-				transmit_register_setup(m_input_buffer[m_input_index++]);
-				m_timer_poll->adjust(attotime::never);
-				return;
-			}
+			m_timer_poll->adjust(attotime::never);
 		}
-
-		int txbaud = convert_baud(m_rs232_txbaud->read());
-		m_timer_poll->adjust(attotime::from_hz(txbaud));
+		else
+		{
+			int txbaud = convert_baud(m_rs232_txbaud->read());
+			m_timer_poll->adjust(attotime::from_hz(txbaud));
+		}
 	}
 }
 

@@ -647,23 +647,23 @@ device_memory_interface::space_config_vector es5510_device::memory_space_config(
 	};
 }
 
-uint64_t es5510_device::execute_clocks_to_cycles(uint64_t clocks) const noexcept {
+uint64_t es5510_device::execute_clocks_to_cycles(uint64_t clocks) const {
 	return clocks / 3;
 }
 
-uint64_t es5510_device::execute_cycles_to_clocks(uint64_t cycles) const noexcept {
+uint64_t es5510_device::execute_cycles_to_clocks(uint64_t cycles) const {
 	return cycles * 3;
 }
 
-uint32_t es5510_device::execute_min_cycles() const noexcept {
+uint32_t es5510_device::execute_min_cycles() const {
 	return 1;
 }
 
-uint32_t es5510_device::execute_max_cycles() const noexcept {
+uint32_t es5510_device::execute_max_cycles() const {
 	return 1;
 }
 
-uint32_t es5510_device::execute_input_lines() const noexcept {
+uint32_t es5510_device::execute_input_lines() const {
 	return 1;
 }
 

@@ -33,8 +33,7 @@ class StripReflectInfoPass : public Pass {
     return IRContext::kAnalysisInstrToBlockMapping |
            IRContext::kAnalysisCombinators | IRContext::kAnalysisCFG |
            IRContext::kAnalysisDominatorAnalysis |
-           IRContext::kAnalysisLoopAnalysis | IRContext::kAnalysisNameMap |
-           IRContext::kAnalysisConstants | IRContext::kAnalysisTypes;
+           IRContext::kAnalysisLoopAnalysis | IRContext::kAnalysisNameMap;
   }
 };
 

@@ -255,7 +255,7 @@ Pass::Status DeadInsertElimPass::Process() {
   ProcessFunction pfn = [this](Function* fp) {
     return EliminateDeadInserts(fp);
   };
-  bool modified = context()->ProcessEntryPointCallTree(pfn);
+  bool modified = ProcessEntryPointCallTree(pfn, get_module());
   return modified ? Status::SuccessWithChange : Status::SuccessWithoutChange;
 }
 

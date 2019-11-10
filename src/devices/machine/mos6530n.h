@@ -224,7 +224,7 @@ public:
 	virtual void ram_map(address_map &map);
 	virtual void io_map(address_map &map);
 
-	// is there a better way to access the memory map when not using m()?
+	// is there a better way to access the memory map when not using AM_DEVICE?
 	DECLARE_READ8_MEMBER(io_r);
 	DECLARE_WRITE8_MEMBER(io_w);
 

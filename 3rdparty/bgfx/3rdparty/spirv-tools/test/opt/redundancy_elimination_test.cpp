@@ -29,6 +29,7 @@ using ::testing::HasSubstr;
 using ::testing::MatchesRegex;
 using RedundancyEliminationTest = PassTest<::testing::Test>;
 
+#ifdef SPIRV_EFFCEE
 // Test that it can get a simple case of local redundancy elimination.
 // The rest of the test check for extra functionality.
 TEST_F(RedundancyEliminationTest, RemoveRedundantLocalAdd) {
@@ -271,6 +272,8 @@ TEST_F(RedundancyEliminationTest, KeepRedundantAddWithoutPhi) {
       text, /* skip_nop = */ true, /* do_validation = */ false);
   EXPECT_EQ(Pass::Status::SuccessWithoutChange, std::get<1>(result));
 }
+
+#endif
 
 }  // namespace
 }  // namespace opt

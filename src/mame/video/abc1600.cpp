@@ -11,13 +11,16 @@
 #include "abc1600.lh"
 #include "render.h"
 
-//#define VERBOSE 1
-#include "logmacro.h"
-
 
 //**************************************************************************
 //  CONSTANTS / MACROS
 //**************************************************************************
+
+#define LOG 0
+
+
+#define SY6845E_TAG         "sy6845e"
+
 
 // video RAM
 #define VIDEORAM_SIZE       0x40000
@@ -210,8 +213,8 @@ void abc1600_mover_device::device_add_mconfig(machine_config &config)
 	m_crtc->set_screen(SCREEN_TAG);
 	m_crtc->set_show_border_area(true);
 	m_crtc->set_char_width(32);
-	m_crtc->set_update_row_callback(FUNC(abc1600_mover_device::crtc_update_row));
-	m_crtc->set_on_update_addr_change_callback(FUNC(abc1600_mover_device::crtc_update));
+	m_crtc->set_update_row_callback(FUNC(abc1600_mover_device::crtc_update_row), this);
+	m_crtc->set_on_update_addr_change_callback(FUNC(abc1600_mover_device::crtc_update), this);
 }
 
 
@@ -227,7 +230,7 @@ abc1600_mover_device::abc1600_mover_device(const machine_config &mconfig, const 
 	device_t(mconfig, ABC1600_MOVER, tag, owner, clock),
 	device_memory_interface(mconfig, *this),
 	m_space_config("vram", ENDIANNESS_BIG, 16, 18, -1, address_map_constructor(FUNC(abc1600_mover_device::mover_map), this)),
-	m_crtc(*this, "sy6845e"),
+	m_crtc(*this, SY6845E_TAG),
 	m_palette(*this, "palette"),
 	m_wrmsk_rom(*this, "wrmsk"),
 	m_shinf_rom(*this, "shinf"),
@@ -353,18 +356,18 @@ WRITE8_MEMBER( abc1600_mover_device::video_ram_w )
 		{
 			// WRPORT_LB
 			m_wrm = (m_wrm & 0xff00) | data;
-			LOG("WRM LB %02x -> %04x\n", data, m_wrm);
+			if (LOG) logerror("WRM LB %02x -> %04x\n", data, m_wrm);
 		}
 		else
 		{
 			// DATAPORT_LB
 			m_gmdi = (m_gmdi & 0xff00) | data;
-			LOG("GMDI LB %02x -> %04x\n", data, m_gmdi);
+			if (LOG) logerror("GMDI LB %02x -> %04x\n", data, m_gmdi);
 		}
 
 		write_videoram(addr, m_gmdi, m_wrm & 0x00ff);
 
-		LOG("Video RAM write LB to %05x : %04x\n", addr, read_videoram(addr));
+		if (LOG) logerror("Video RAM write LB to %05x : %04x\n", addr, read_videoram(addr));
 	}
 	else
 	{
@@ -372,18 +375,18 @@ WRITE8_MEMBER( abc1600_mover_device::video_ram_w )
 		{
 			// WRPORT_HB
 			m_wrm = (data << 8) | (m_wrm & 0xff);
-			LOG("WRM HB %02x -> %04x\n", data, m_wrm);
+			if (LOG) logerror("WRM HB %02x -> %04x\n", data, m_wrm);
 		}
 		else
 		{
 			// DATAPORT_HB
 			m_gmdi = (data << 8) | (m_gmdi & 0xff);
-			LOG("GMDI HB %02x -> %04x\n", data, m_gmdi);
+			if (LOG) logerror("GMDI HB %02x -> %04x\n", data, m_gmdi);
 		}
 
 		write_videoram(addr, m_gmdi, m_wrm & 0xff00);
 
-		LOG("Video RAM write HB to %05x : %04x\n", addr, read_videoram(addr));
+		if (LOG) logerror("Video RAM write HB to %05x : %04x\n", addr, read_videoram(addr));
 	}
 }
 
@@ -442,7 +445,7 @@ WRITE8_MEMBER( abc1600_mover_device::ldsx_hb_w )
 
 	*/
 
-	LOG("%s LDSX HB: %02x\n", machine().describe_context(), data);
+	if (LOG) logerror("%s LDSX HB: %02x\n", machine().describe_context(), data);
 
 	m_xsize = ((data & 0x03) << 8) | (m_xsize & 0xff);
 	m_udy = BIT(data, 2);
@@ -471,7 +474,7 @@ WRITE8_MEMBER( abc1600_mover_device::ldsx_lb_w )
 
 	*/
 
-	LOG("%s LDSX LB: %02x\n", machine().describe_context(), data);
+	if (LOG) logerror("%s LDSX LB: %02x\n", machine().describe_context(), data);
 
 	m_xsize = (m_xsize & 0x300) | data;
 }
@@ -498,7 +501,7 @@ WRITE8_MEMBER( abc1600_mover_device::ldsy_hb_w )
 
 	*/
 
-	LOG("%s LDSY HB: %02x\n", machine().describe_context(), data);
+	if (LOG) logerror("%s LDSY HB: %02x\n", machine().describe_context(), data);
 
 	m_ysize = ((data & 0x0f) << 8) | (m_ysize & 0xff);
 }
@@ -525,7 +528,7 @@ WRITE8_MEMBER( abc1600_mover_device::ldsy_lb_w )
 
 	*/
 
-	LOG("%s LDSY LB: %02x\n", machine().describe_context(), data);
+	if (LOG) logerror("%s LDSY LB: %02x\n", machine().describe_context(), data);
 
 	m_ysize = (m_ysize & 0xf00) | data;
 }
@@ -552,7 +555,7 @@ WRITE8_MEMBER( abc1600_mover_device::ldtx_hb_w )
 
 	*/
 
-	LOG("%s LDTX HB: %02x\n", machine().describe_context(), data);
+	if (LOG) logerror("%s LDTX HB: %02x\n", machine().describe_context(), data);
 
 	m_xto = ((data & 0x03) << 8) | (m_xto & 0xff);
 	m_mta = (m_mta & 0x3ffcf) | ((data & 0x03) << 4);
@@ -580,7 +583,7 @@ WRITE8_MEMBER( abc1600_mover_device::ldtx_lb_w )
 
 	*/
 
-	LOG("%s LDTX LB: %02x\n", machine().describe_context(), data);
+	if (LOG) logerror("%s LDTX LB: %02x\n", machine().describe_context(), data);
 
 	m_xto = (m_xto & 0x300) | data;
 	m_mta = (m_mta & 0x3fff0) | (data >> 4);
@@ -608,7 +611,7 @@ WRITE8_MEMBER( abc1600_mover_device::ldty_hb_w )
 
 	*/
 
-	LOG("%s LDTY HB: %02x\n", machine().describe_context(), data);
+	if (LOG) logerror("%s LDTY HB: %02x\n", machine().describe_context(), data);
 
 	if (L_P) return;
 
@@ -639,7 +642,7 @@ WRITE8_MEMBER( abc1600_mover_device::ldty_lb_w )
 
 	*/
 
-	LOG("%s LDTY LB: %02x\n", machine().describe_context(), data);
+	if (LOG) logerror("%s LDTY LB: %02x\n", machine().describe_context(), data);
 
 	if (L_P) return;
 
@@ -670,7 +673,7 @@ WRITE8_MEMBER( abc1600_mover_device::ldfx_hb_w )
 
 	*/
 
-	LOG("%s LDFX HB: %02x\n", machine().describe_context(), data);
+	if (LOG) logerror("%s LDFX HB: %02x\n", machine().describe_context(), data);
 
 	m_xfrom = ((data & 0x03) << 8) | (m_xfrom & 0xff);
 	m_mfa = (m_mfa & 0x3ffcf) | ((data & 0x03) << 4);
@@ -698,7 +701,7 @@ WRITE8_MEMBER( abc1600_mover_device::ldfx_lb_w )
 
 	*/
 
-	LOG("%s LDFX LB: %02x\n", machine().describe_context(), data);
+	if (LOG) logerror("%s LDFX LB: %02x\n", machine().describe_context(), data);
 
 	m_xfrom = (m_xfrom & 0x300) | data;
 	m_mfa = (m_mfa & 0x3fff0) | (data >> 4);
@@ -726,7 +729,7 @@ WRITE8_MEMBER( abc1600_mover_device::ldfy_hb_w )
 
 	*/
 
-	LOG("%s LDFY HB: %02x\n", machine().describe_context(), data);
+	if (LOG) logerror("%s LDFY HB: %02x\n", machine().describe_context(), data);
 
 	m_mfa = ((data & 0x0f) << 14) | (m_mfa & 0x3fff);
 }
@@ -753,7 +756,7 @@ WRITE8_MEMBER( abc1600_mover_device::ldfy_lb_w )
 
 	*/
 
-	LOG("%s LDFY LB: %02x\n", machine().describe_context(), data);
+	if (LOG) logerror("%s LDFY LB: %02x\n", machine().describe_context(), data);
 
 	m_mfa = (m_mfa & 0x3c03f) | (data << 6);
 
@@ -782,7 +785,7 @@ WRITE8_MEMBER( abc1600_mover_device::wrml_w )
 
 	*/
 
-	LOG("MS %u : %02x\n", (offset >> 4) & 0x0f, data);
+	if (LOG) logerror("MS %u : %02x\n", (offset >> 4) & 0x0f, data);
 
 	if (m_clocks_disabled)
 	{
@@ -812,7 +815,7 @@ WRITE8_MEMBER( abc1600_mover_device::wrdl_w )
 
 	*/
 
-	LOG("WS %u : %02x\n", (offset >> 4) & 0x0f, data);
+	if (LOG) logerror("WS %u : %02x\n", (offset >> 4) & 0x0f, data);
 
 	if (m_clocks_disabled)
 	{
@@ -831,13 +834,13 @@ WRITE8_MEMBER( abc1600_mover_device::wrmask_strobe_hb_w )
 	{
 		// DATAPORT_HB
 		m_gmdi = (data << 8) | (m_gmdi & 0xff);
-		LOG("GMDI HB %04x\n", m_gmdi);
+		if (LOG) logerror("GMDI HB %04x\n", m_gmdi);
 	}
 	else
 	{
 		// WRPORT_HB
 		m_wrm = (data << 8) | (m_wrm & 0xff);
-		LOG("WRM HB %04x\n", m_gmdi);
+		if (LOG) logerror("WRM HB %04x\n", m_gmdi);
 	}
 }
 
@@ -852,13 +855,13 @@ WRITE8_MEMBER( abc1600_mover_device::wrmask_strobe_lb_w )
 	{
 		// DATAPORT_LB
 		m_gmdi = (m_gmdi & 0xff00) | data;
-		LOG("GMDI LB %04x\n", m_gmdi);
+		if (LOG) logerror("GMDI LB %04x\n", m_gmdi);
 	}
 	else
 	{
 		// WRPORT_LB
 		m_wrm = (m_wrm & 0xff00) | data;
-		LOG("WRM LB %04x\n", m_gmdi);
+		if (LOG) logerror("WRM LB %04x\n", m_gmdi);
 	}
 }
 
@@ -869,7 +872,7 @@ WRITE8_MEMBER( abc1600_mover_device::wrmask_strobe_lb_w )
 
 WRITE8_MEMBER( abc1600_mover_device::enable_clocks_w )
 {
-	LOG("ENABLE CLOCKS\n");
+	if (LOG) logerror("ENABLE CLOCKS\n");
 	m_clocks_disabled = 0;
 }
 
@@ -896,7 +899,7 @@ WRITE8_MEMBER( abc1600_mover_device::flag_strobe_w )
 	*/
 
 	m_flag = data;
-	LOG("FLAG %02x\n", m_flag);
+	if (LOG) logerror("FLAG %02x\n", m_flag);
 }
 
 
@@ -907,7 +910,7 @@ WRITE8_MEMBER( abc1600_mover_device::flag_strobe_w )
 WRITE8_MEMBER( abc1600_mover_device::endisp_w )
 {
 	m_endisp = 1;
-	LOG("ENDISP\n");
+	if (LOG) logerror("ENDISP\n");
 }
 
 
@@ -1190,7 +1193,7 @@ inline uint16_t abc1600_mover_device::word_mixer(uint16_t rot)
 
 void abc1600_mover_device::mover()
 {
-	LOG("XFROM %u XSIZE %u YSIZE %u XTO %u YTO %u MFA %05x MTA %05x U/D*X %u U/D*Y %u\n", m_xfrom, m_xsize, m_ysize, m_xto, m_yto, m_mfa, m_mta, m_udx, m_udy);
+	if (LOG) logerror("XFROM %u XSIZE %u YSIZE %u XTO %u YTO %u MFA %05x MTA %05x U/D*X %u U/D*Y %u\n", m_xfrom, m_xsize, m_ysize, m_xto, m_yto, m_mfa, m_mta, m_udx, m_udy);
 
 	m_amm = 1;
 

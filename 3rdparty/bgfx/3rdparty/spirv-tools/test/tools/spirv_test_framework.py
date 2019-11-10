@@ -44,6 +44,8 @@ If --leave-output was not specified, all temporary files and directories will
 be deleted.
 """
 
+from __future__ import print_function
+
 import argparse
 import fnmatch
 import inspect

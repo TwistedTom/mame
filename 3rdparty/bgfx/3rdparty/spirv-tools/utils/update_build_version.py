@@ -29,6 +29,8 @@
 #    "unknown hash".
 # The string contents are escaped as necessary.
 
+from __future__ import print_function
+
 import datetime
 import errno
 import os

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -10,8 +10,6 @@
 #	include <AvailabilityMacros.h>
 #	include <Cocoa/Cocoa.h>
 #	include <bx/os.h>
-
-BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG("-Wdeprecated-declarations")
 
 namespace bgfx { namespace gl
 {
@@ -67,20 +65,8 @@ namespace bgfx { namespace gl
 		BX_CHECK(NULL != s_opengl, "OpenGL dynamic library is not found!");
 
 		const AutoreleasePoolHolder pool;
-		NSObject* nwh = (NSObject*)g_platformData.nwh;
+		NSWindow* nsWindow = (NSWindow*)g_platformData.nwh;
 		m_context = g_platformData.context;
-
-		NSWindow* nsWindow = nil;
-		NSView* contentView = nil;
-		if ([nwh isKindOfClass:[NSView class]])
-		{
-			contentView = (NSView*)nwh;
-		}
-		else if ([nwh isKindOfClass:[NSWindow class]])
-		{
-			nsWindow = (NSWindow*)nwh;
-			contentView = [nsWindow contentView];
-		}
 
 		if (NULL == g_platformData.context)
 		{
@@ -111,13 +97,14 @@ namespace bgfx { namespace gl
 			NSOpenGLPixelFormat* pixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes:pixelFormatAttributes];
 			BGFX_FATAL(NULL != pixelFormat, Fatal::UnableToInitialize, "Failed to initialize pixel format.");
 
-			NSRect glViewRect = [contentView bounds];
+			NSRect glViewRect = [[nsWindow contentView] bounds];
 			NSOpenGLView* glView = [[NSOpenGLView alloc] initWithFrame:glViewRect pixelFormat:pixelFormat];
 
 			[pixelFormat release];
 			// GLFW creates a helper contentView that handles things like keyboard and drag and
 			// drop events. We don't want to clobber that view if it exists. Instead we just
 			// add ourselves as a subview and make the view resize automatically.
+			NSView *contentView = [nsWindow contentView];
 			if (nil != contentView)
 			{
 				[glView setAutoresizingMask:( NSViewHeightSizable |
@@ -130,8 +117,7 @@ namespace bgfx { namespace gl
 			}
 			else
 			{
-				if (nil != nsWindow)
-					[nsWindow setContentView:glView];
+				[nsWindow setContentView:glView];
 			}
 
 			NSOpenGLContext* glContext = [glView openGLContext];
@@ -191,8 +177,8 @@ namespace bgfx { namespace gl
 	{
 		uint64_t caps = 0;
 #if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && (MAC_OS_X_VERSION_MAX_ALLOWED >= 1070)
-		NSObject* nwh = (NSObject*)g_platformData.nwh;
-		if ([nwh respondsToSelector:@selector(backingScaleFactor)] && (1.0f < [(id)nwh backingScaleFactor]))
+		NSWindow* nsWindow = (NSWindow*)g_platformData.nwh;
+		if ([nsWindow respondsToSelector:@selector(backingScaleFactor)] && (1.0f < [nsWindow backingScaleFactor]))
 			caps |= BGFX_CAPS_HIDPI;
 #endif // defined(MAC_OS_X_VERSION_MAX_ALLOWED) && (MAC_OS_X_VERSION_MAX_ALLOWED >= 1070)
 		return caps;

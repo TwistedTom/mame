@@ -68,13 +68,20 @@
 
 
 //**************************************************************************
+//  CONSTANTS
+//**************************************************************************
+
+#define X68K_EXP_SLOT_TAG       "x68kexp"
+
+
+//**************************************************************************
 //  TYPE DEFINITIONS
 //**************************************************************************
 
 // ======================> device_x68k_expansion_card_interface
 
 // class representing interface-specific live x68k_expansion card
-class device_x68k_expansion_card_interface : public device_interface
+class device_x68k_expansion_card_interface : public device_slot_card_interface
 {
 public:
 	// construction/destruction
@@ -93,7 +100,7 @@ protected:
 
 // ======================> x68k_expansion_slot_device
 
-class x68k_expansion_slot_device : public device_t, public device_single_card_slot_interface<device_x68k_expansion_card_interface>
+class x68k_expansion_slot_device : public device_t, public device_slot_interface
 {
 public:
 	// construction/destruction
@@ -129,6 +136,7 @@ public:
 protected:
 	// device-level overrides
 	virtual void device_start() override;
+	virtual void device_reset() override;
 
 	required_address_space m_space;
 

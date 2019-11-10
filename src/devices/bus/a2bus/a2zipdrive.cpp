@@ -68,6 +68,7 @@
 
 #include "emu.h"
 #include "a2zipdrive.h"
+#include "machine/ataintf.h"
 #include "imagedev/harddriv.h"
 
 //**************************************************************************

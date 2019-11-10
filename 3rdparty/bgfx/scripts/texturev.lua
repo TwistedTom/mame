@@ -80,7 +80,6 @@ project ("texturev")
 
 	configuration { "vs20* or mingw*" }
 		links {
-			"comdlg32",
 			"gdi32",
 			"psapi",
 		}
@@ -115,6 +114,24 @@ project ("texturev")
 		links {
 			"EGL",
 			"GLESv2",
+		}
+
+	configuration { "nacl*" }
+		kind "ConsoleApp"
+		targetextension ".nexe"
+		links {
+			"ppapi",
+			"ppapi_gles2",
+			"pthread",
+		}
+
+	configuration { "pnacl" }
+		kind "ConsoleApp"
+		targetextension ".pexe"
+		links {
+			"ppapi",
+			"ppapi_gles2",
+			"pthread",
 		}
 
 	configuration { "asmjs" }
@@ -157,7 +174,7 @@ project ("texturev")
 			"-framework QuartzCore",
 		}
 
-	configuration { "xcode*", "ios" }
+	configuration { "xcode4", "ios" }
 		kind "WindowedApp"
 
 	configuration { "qnx*" }

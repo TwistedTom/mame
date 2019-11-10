@@ -33,7 +33,7 @@
 
 class device_cg_parallel_interface;
 
-class cg_parallel_slot_device : public device_t, public device_single_card_slot_interface<device_cg_parallel_interface>
+class cg_parallel_slot_device : public device_t, public device_slot_interface
 {
 public:
 	// construction/destruction
@@ -59,12 +59,13 @@ public:
 protected:
 	// device-level overrides
 	virtual void device_start() override;
+	virtual void device_reset() override;
 
 	device_cg_parallel_interface *m_cart;
 };
 
 // class representing interface-specific live parallel device
-class device_cg_parallel_interface : public device_interface
+class device_cg_parallel_interface : public device_slot_card_interface
 {
 public:
 	// construction/destruction

@@ -21,7 +21,8 @@ DECLARE_DEVICE_TYPE(KONAMI573_CASSETTE_SLOT, konami573_cassette_slot_device)
 
 class konami573_cassette_interface;
 
-class konami573_cassette_slot_device : public device_t, public device_single_card_slot_interface<konami573_cassette_interface>
+class konami573_cassette_slot_device : public device_t,
+	public device_slot_interface
 {
 	friend class konami573_cassette_interface;
 
@@ -53,7 +54,7 @@ private:
 	konami573_cassette_interface *m_dev;
 };
 
-class konami573_cassette_interface : public device_interface
+class konami573_cassette_interface : public device_slot_card_interface
 {
 	friend class konami573_cassette_slot_device;
 
@@ -85,7 +86,8 @@ protected:
 
 DECLARE_DEVICE_TYPE(KONAMI573_CASSETTE_X, konami573_cassette_x_device)
 
-class konami573_cassette_x_device: public device_t, public konami573_cassette_interface
+class konami573_cassette_x_device: public device_t,
+	public konami573_cassette_interface
 {
 public:
 	konami573_cassette_x_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
@@ -135,7 +137,8 @@ private:
 
 DECLARE_DEVICE_TYPE(KONAMI573_CASSETTE_Y, konami573_cassette_y_device)
 
-class konami573_cassette_y_device: public device_t, public konami573_cassette_interface
+class konami573_cassette_y_device: public device_t,
+	public konami573_cassette_interface
 {
 public:
 	konami573_cassette_y_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
@@ -200,7 +203,8 @@ private:
 
 DECLARE_DEVICE_TYPE(KONAMI573_CASSETTE_ZI, konami573_cassette_zi_device)
 
-class konami573_cassette_zi_device: public device_t, public konami573_cassette_interface
+class konami573_cassette_zi_device: public device_t,
+	public konami573_cassette_interface
 {
 public:
 	konami573_cassette_zi_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);

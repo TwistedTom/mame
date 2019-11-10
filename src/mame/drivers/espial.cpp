@@ -90,7 +90,7 @@ TIMER_DEVICE_CALLBACK_MEMBER(espial_state::espial_scanline)
 INTERRUPT_GEN_MEMBER(espial_state::espial_sound_nmi_gen)
 {
 	if (m_sound_nmi_enabled)
-		m_audiocpu->pulse_input_line(INPUT_LINE_NMI, attotime::zero);
+		nmi_line_pulse(device);
 }
 
 

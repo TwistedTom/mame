@@ -15,8 +15,6 @@
 /* private area */
 struct SID6581_t
 {
-	static constexpr uint8_t max_voices = 3;
-
 	device_t *device;
 	sound_stream *mixer_channel; // mame stream/ mixer channel
 
@@ -51,14 +49,12 @@ struct SID6581_t
 		uint16_t Value;
 	} filter;
 
-	sidOperator optr[max_voices];
+	sidOperator optr1, optr2, optr3;
 	int optr3_outputmask;
 
 	void init();
 
 	bool reset();
-
-	void postload();
 
 	int port_r(running_machine &machine, int offset);
 	void port_w(int offset, int data);

@@ -32,7 +32,7 @@ protected:
 	virtual const tiny_rom_entry *device_rom_region() const override;
 
 private:
-	required_device<cirrus_gd5430_device> m_vga;
+	cirrus_gd5430_device *m_vga;
 };
 
 class isa16_svga_cirrus_gd542x_device :
@@ -55,7 +55,7 @@ protected:
 	virtual const tiny_rom_entry *device_rom_region() const override;
 
 private:
-	required_device<cirrus_gd5428_device> m_vga;
+	cirrus_gd5428_device *m_vga;
 };
 
 

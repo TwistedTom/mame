@@ -1,9 +1,12 @@
 // license:GPL-2.0+
 // copyright-holders:Couriersud
+/***************************************************************************
 
-//
-// nl_factory.cpp
-//
+    nl_factory.c
+
+    Discrete netlist implementation.
+
+****************************************************************************/
 
 #include "nl_factory.h"
 #include "nl_base.h"
@@ -53,10 +56,7 @@ namespace netlist { namespace factory
 	{
 		for (auto & e : *this)
 			if (e->name() == factory->name())
-			{
 				m_log.fatal(MF_FACTORY_ALREADY_CONTAINS_1(factory->name()));
-				plib::pthrow<nl_exception>(MF_FACTORY_ALREADY_CONTAINS_1(factory->name()));
-			}
 		push_back(std::move(factory));
 	}
 
@@ -69,16 +69,16 @@ namespace netlist { namespace factory
 		}
 
 		m_log.fatal(MF_CLASS_1_NOT_FOUND(devname));
-		plib::pthrow<nl_exception>(MF_CLASS_1_NOT_FOUND(devname));
+		return nullptr; // appease code analysis
 	}
 
 	// -----------------------------------------------------------------------------
 	// factory_lib_entry_t: factory class to wrap macro based chips/elements
 	// -----------------------------------------------------------------------------
 
-	unique_pool_ptr<device_t> library_element_t::Create(netlist_state_t &anetlist, const pstring &name)
+	pool_owned_ptr<device_t> library_element_t::Create(netlist_state_t &anetlist, const pstring &name)
 	{
-		return pool().make_unique<NETLIB_NAME(wrapper)>(anetlist, name);
+		return pool().make_poolptr<NETLIB_NAME(wrapper)>(anetlist, name);
 	}
 
 	void library_element_t::macro_actions(nlparse_t &nparser, const pstring &name)

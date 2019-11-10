@@ -98,7 +98,7 @@
 #include "bus/lpci/cirrus.h"
 #include "cpu/powerpc/ppc.h"
 #include "machine/mc146818.h"
-#include "bus/ata/ataintf.h"
+#include "machine/ataintf.h"
 #include "bus/lpci/pci.h"
 
 #define LOG_CPUIMASK    1
@@ -306,12 +306,11 @@ void bebox_state::bebox_set_irq_bit(unsigned int interrupt_bit, int val)
 	if (LOG_INTERRUPTS)
 	{
 		/* make sure that we don't shoot ourself in the foot */
-		if ((interrupt_bit >= ARRAY_LENGTH(interrupt_names)) || !interrupt_names[interrupt_bit])
-			throw emu_fatalerror("bebox_state::bebox_set_irq_bit: Raising invalid interrupt");
+		assert_always((interrupt_bit < ARRAY_LENGTH(interrupt_names)) && (interrupt_names[interrupt_bit] != nullptr), "Raising invalid interrupt");
 
 		logerror("bebox_set_irq_bit(): pc[0]=0x%08x pc[1]=0x%08x %s interrupt #%u (%s)\n",
-			unsigned(m_ppc[0]->pc()),
-			unsigned(m_ppc[1]->pc()),
+			(unsigned) m_ppc[0]->pc(),
+			(unsigned) m_ppc[1]->pc(),
 			val ? "Asserting" : "Clearing",
 			interrupt_bit, interrupt_names[interrupt_bit]);
 	}
@@ -751,7 +750,7 @@ void bebox_state::device_timer(emu_timer &timer, device_timer_id id, int param, 
 	case TIMER_GET_DEVICES:
 		break;
 	default:
-		throw emu_fatalerror("Unknown id in bebox_state::device_timer");
+		assert_always(false, "Unknown id in bebox_state::device_timer");
 	}
 }
 

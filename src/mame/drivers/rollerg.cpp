@@ -62,7 +62,7 @@ void rollerg_state::device_timer(emu_timer &timer, device_timer_id id, int param
 		m_audiocpu->set_input_line(INPUT_LINE_NMI, ASSERT_LINE);
 		break;
 	default:
-		throw emu_fatalerror("Unknown id in rollerg_state::device_timer");
+		assert_always(false, "Unknown id in rollerg_state::device_timer");
 	}
 }
 
@@ -270,12 +270,12 @@ void rollerg_state::rollerg(machine_config &config)
 	K053244(config, m_k053244, 0);
 	m_k053244->set_palette("palette");
 	m_k053244->set_offsets(-3, -1);
-	m_k053244->set_sprite_callback(FUNC(rollerg_state::sprite_callback));
+	m_k053244->set_sprite_callback(FUNC(rollerg_state::sprite_callback), this);
 
 	K051316(config, m_k051316, 0);
 	m_k051316->set_palette("palette");
 	m_k051316->set_offsets(22, 1);
-	m_k051316->set_zoom_callback(FUNC(rollerg_state::zoom_callback));
+	m_k051316->set_zoom_callback(FUNC(rollerg_state::zoom_callback), this);
 
 	K053252(config, m_k053252, 3000000*2);
 	m_k053252->int1_ack().set(FUNC(rollerg_state::rollerg_irq_ack_w));

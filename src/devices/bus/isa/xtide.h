@@ -6,7 +6,7 @@
 #pragma once
 
 #include "isa.h"
-#include "bus/ata/ataintf.h"
+#include "machine/ataintf.h"
 #include "machine/eeprompar.h"
 
 //**************************************************************************

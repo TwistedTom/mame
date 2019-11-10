@@ -168,7 +168,8 @@ DECLARE_DEVICE_TYPE(SCSI_PORT, scsi_port_device)
 
 class scsi_port_interface;
 
-class scsi_port_slot_device : public device_t, public device_single_card_slot_interface<scsi_port_interface>
+class scsi_port_slot_device : public device_t,
+	public device_slot_interface
 {
 	friend class scsi_port_device;
 	friend class scsi_port_interface;
@@ -209,7 +210,7 @@ protected:
 
 DECLARE_DEVICE_TYPE(SCSI_PORT_SLOT, scsi_port_slot_device)
 
-class scsi_port_interface : public device_interface
+class scsi_port_interface : public device_slot_card_interface
 {
 public:
 	virtual ~scsi_port_interface();

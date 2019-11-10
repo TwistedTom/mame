@@ -29,7 +29,7 @@ bgfx_uniform::~bgfx_uniform()
 
 void bgfx_uniform::upload()
 {
-	if (m_type != bgfx::UniformType::Sampler)
+	if (m_type != bgfx::UniformType::Int1)
 	{
 		bgfx::setUniform(m_handle, m_data);
 	}
@@ -42,7 +42,7 @@ bgfx_uniform* bgfx_uniform::set(float* value)
 
 bgfx_uniform* bgfx_uniform::set_int(int value)
 {
-	return set(&value, get_size_for_type(bgfx::UniformType::Sampler));
+	return set(&value, get_size_for_type(bgfx::UniformType::Int1));
 }
 
 bgfx_uniform* bgfx_uniform::set_mat3(float* value)
@@ -69,7 +69,7 @@ size_t bgfx_uniform::get_size_for_type(bgfx::UniformType::Enum type)
 		case bgfx::UniformType::Vec4:
 			return sizeof(float) * 4;
 
-		case bgfx::UniformType::Sampler:
+		case bgfx::UniformType::Int1:
 			return sizeof(int);
 
 		case bgfx::UniformType::Mat3:

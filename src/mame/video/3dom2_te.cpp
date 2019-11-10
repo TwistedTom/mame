@@ -555,16 +555,22 @@ static void write_te_reg(uint32_t &reg, uint32_t data, m2_te_device::te_reg_wmod
 	switch (mode)
 	{
 		case m2_te_device::REG_WRITE:
+		{
 			reg = data;
 			break;
+		}
 		case m2_te_device::REG_SET:
+		{
 			reg |= data;
 			break;
+		}
 		case m2_te_device::REG_CLEAR:
+		{
 			reg &= ~data;
 			break;
+		}
 		default:
-			throw emu_fatalerror("write_te_reg: Bad register write mode");
+			assert_always(false, "Bad register write mode");
 	}
 }
 
@@ -1563,7 +1569,7 @@ void m2_te_device::walk_edges(uint32_t wrange)
 		if (scan_lr ^ (m_es.x1 < m_es.x2))
 		{
 			 // TODO: Is this possible?
-			throw emu_fatalerror("m2_te_device::walk_edges: SPECIAL CASE: WHAT DO?");
+			assert_always(false, "SPECIAL CASE: WHAT DO?");
 			r = m_es.r1; // Where do the colors come from?
 			g = m_es.g1;
 			b = m_es.b1;

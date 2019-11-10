@@ -25,20 +25,19 @@ class v9938_colorbus_device;
 /********************************************************************
     Common parent class of all devices attached to the color bus
 ********************************************************************/
-class device_v9938_colorbus_interface : public device_interface
+class device_v9938_colorbus_interface : public device_slot_card_interface
 {
 protected:
-	device_v9938_colorbus_interface(const machine_config &mconfig, device_t &device);
+	using device_slot_card_interface::device_slot_card_interface;
 
 	virtual void interface_config_complete() override;
-
-	v9938_colorbus_device* m_colorbus;
+	v9938_colorbus_device* m_colorbus = nullptr;
 };
 
 /********************************************************************
     Color bus port
 ********************************************************************/
-class v9938_colorbus_device : public device_t, public device_single_card_slot_interface<device_v9938_colorbus_interface>
+class v9938_colorbus_device : public device_t, public device_slot_interface
 {
 public:
 	template <typename U>

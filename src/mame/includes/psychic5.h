@@ -87,7 +87,7 @@ private:
 	virtual void video_start() override;
 	DECLARE_VIDEO_START(psychic5);
 	DECLARE_VIDEO_START(bombsa);
-	virtual void video_reset() override;
+	DECLARE_VIDEO_RESET(psychic5);
 
 	TIMER_DEVICE_CALLBACK_MEMBER(scanline);
 

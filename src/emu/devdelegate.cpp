@@ -1,5 +1,5 @@
 // license:BSD-3-Clause
-// copyright-holders:Aaron Giles, Vas Crabb
+// copyright-holders:Aaron Giles
 /***************************************************************************
 
     devdelegate.c
@@ -9,26 +9,29 @@
 ***************************************************************************/
 
 #include "emu.h"
-#include "devdelegate.h"
 
 
-namespace emu { namespace detail {
+//-------------------------------------------------
+//  bound_object - use the device name to locate
+//  a device relative to the given search root;
+//  fatal error if not found
+//-------------------------------------------------
 
-delegate_late_bind &device_delegate_helper::bound_object() const
+delegate_late_bind &device_delegate_helper::bound_object(device_t &search_root) const
 {
-	if (!m_tag)
-		return m_base.get();
-	device_t *const device(m_base.get().subdevice(m_tag));
-	if (!device)
-		throw emu_fatalerror("Unable to locate device '%s' relative to '%s'\n", m_tag, m_base.get().tag());
+	device_t *device = search_root.subdevice(m_device_name);
+	if (device == nullptr)
+		throw emu_fatalerror("Unable to locate device '%s' relative to '%s'\n", m_device_name, search_root.tag());
 	return *device;
 }
 
 
-void device_delegate_helper::set_tag(char const *tag)
-{
-	m_base = m_base.get().mconfig().current_device();
-	m_tag = tag;
-}
+//-------------------------------------------------
+//  safe_tag - return a tag string or (unknown) if
+//  the object is not valid
+//-------------------------------------------------
 
-} } // namespace emu::detail
+const char *device_delegate_helper::safe_tag(device_t *object)
+{
+	return (object != nullptr) ? object->tag() : "(unknown)";
+}

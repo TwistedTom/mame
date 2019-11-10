@@ -187,7 +187,7 @@ void esrip_device::device_start()
 	m_fdt_w.resolve_safe();
 	m_lbrm = (uint8_t*)machine().root_device().memregion(m_lbrm_prom)->base();
 	m_status_in.resolve_safe(0);
-	m_draw.resolve();
+	m_draw.bind_relative_to(*owner());
 
 	/* Allocate image pointer table RAM */
 	m_ipt_ram.resize(IPT_RAM_SIZE/2);
@@ -1674,7 +1674,6 @@ esrip_device::esrip_device(const machine_config &mconfig, const char *tag, devic
 	, m_fdt_r(*this)
 	, m_fdt_w(*this)
 	, m_status_in(*this)
-	, m_draw(*this)
 	, m_screen(*this, finder_base::DUMMY_TAG)
 	, m_lbrm_prom(nullptr)
 {
@@ -1725,7 +1724,7 @@ void esrip_device::am29116_execute(uint16_t inst, int _sre)
 //  cycles it takes for one instruction to execute
 //-------------------------------------------------
 
-uint32_t esrip_device::execute_min_cycles() const noexcept
+uint32_t esrip_device::execute_min_cycles() const
 {
 	return 1;
 }
@@ -1736,7 +1735,7 @@ uint32_t esrip_device::execute_min_cycles() const noexcept
 //  cycles it takes for one instruction to execute
 //-------------------------------------------------
 
-uint32_t esrip_device::execute_max_cycles() const noexcept
+uint32_t esrip_device::execute_max_cycles() const
 {
 	return 1;
 }
@@ -1747,7 +1746,7 @@ uint32_t esrip_device::execute_max_cycles() const noexcept
 //  input/interrupt lines
 //-------------------------------------------------
 
-uint32_t esrip_device::execute_input_lines() const noexcept
+uint32_t esrip_device::execute_input_lines() const
 {
 	return 0;
 }

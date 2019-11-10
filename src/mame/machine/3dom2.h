@@ -8,18 +8,16 @@
 
 ***************************************************************************/
 
+#pragma once
+
 #ifndef MAME_MACHINE_3DOM2_H
 #define MAME_MACHINE_3DOM2_H
 
-#pragma once
-
-#include "video/3dom2_te.h"
-
+#include "emu.h"
 #include "cpu/dspp/dspp.h"
 #include "cpu/powerpc/ppc.h"
-
+#include "video/3dom2_te.h"
 #include "screen.h"
-
 
 #define M2_BAD_TIMING       0       // HACK
 
@@ -693,10 +691,9 @@ private:
 	void start_dma(uint32_t ch);
 	void next_dma(uint32_t ch);
 
-	static uint32_t address_to_biobus_slot(uint32_t addr)
+	uint32_t address_to_biobus_slot(uint32_t addr) const
 	{
-		if ((addr < 0x20000000) || (addr > 0x3fffffff))
-			throw emu_fatalerror("m2_cde_device::address_to_biobus_slot: Address not within BioBus address range");
+		assert_always(addr >= 0x20000000 && addr <= 0x3fffffff, "Address not within BioBus address range");
 		return ((addr >> 24) >> 2) & 7;
 	}
 

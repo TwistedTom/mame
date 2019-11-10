@@ -59,7 +59,7 @@ private:
 		RX01_INIT
 	};
 
-	required_device_array<legacy_floppy_image_device, 2> m_image;
+	legacy_floppy_image_device *m_image[2];
 	uint8_t m_buffer[128];
 	int m_buf_pos;
 
