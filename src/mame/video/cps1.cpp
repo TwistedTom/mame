@@ -1659,6 +1659,18 @@ static const struct CPS1config cps1_config_table[]=
 
 	{"kenseim",     CPS_B_21_DEF, mapper_KNM10B },  // wrong, need to convert equations from PAL
 
+	// my stuff
+	{"ghouls21",    CPS_B_21_DEF, mapper_DAM63B },  // 01 -> 21
+	{"mswordr121",  CPS_B_21_DEF, mapper_MS24B },   // 13 -> 21
+	{"mswordr104",  CPS_B_04,     mapper_MS24B },   // 13 -> 04
+	{"ghoulsp",     CPS_B_21_DEF, mapper_DM620 },   // 01 -> any
+	{"mswordr1p",   CPS_B_21_DEF, mapper_MS24B },   // 13 -> any
+	{"ghoulsp2",    CPS_B_21_DEF, mapper_DAM63B },  // 01 -> any
+	{"3wonders12",  CPS_B_12,     mapper_RT24B },   // 21 -> 12 (also works on 02)
+	{"ffightuch",   CPS_B_21_DEF, mapper_S224B },
+	{"cawingh",     CPS_B_21_DEF, mapper_CA24B },
+	{"cps1demo",    CPS_B_04,     mapper_S224B },   // ffight
+	
 	{nullptr}     /* End of table */
 };
 
