@@ -35,6 +35,7 @@ akaiax80.cpp
 alcat7100.cpp
 alesis.cpp
 alesis_qs.cpp
+alfaskop41xx.cpp
 alphasma.cpp
 alphatpx.cpp
 alphatro.cpp
@@ -909,6 +910,7 @@ vax11.cpp
 vboy.cpp
 vc4000.cpp
 vcs80.cpp
+vd56sp.cpp
 vdm7932x.cpp
 vector06.cpp
 vector4.cpp
