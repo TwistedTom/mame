@@ -39273,6 +39273,9 @@ ut88mini                        //
 @source:uzebox.cpp
 uzebox                          //
 
+@source:v0bowl.cpp
+v0bowl                          //
+
 @source:v100.cpp
 v100                            //
 
