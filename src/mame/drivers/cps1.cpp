@@ -14142,6 +14142,55 @@ ROM_START( cps1demo )
 	ROM_FILL( 0, 0x40000, 0xff )
 ROM_END
 
+// ghouls b17 hack  seems ok on pang3 bootleg
+ROM_START( ghouls17 )
+	ROM_REGION( CODE_SIZE, "maincpu", 0 )
+	ROM_LOAD16_BYTE( "30.bin", 0x00000, 0x20000, CRC(95cd809b) SHA1(d0af2ff0fb5e254d09c4e141be6e8afbb8ab6b74) )
+	ROM_LOAD16_BYTE( "35.bin", 0x00001, 0x20000, CRC(0b884c2b) SHA1(22fda7c50a2500ed35943b1d55d33cf342e4fc01) )
+	ROM_LOAD16_BYTE( "31.bin", 0x40000, 0x20000, CRC(5d5e5c42) SHA1(d7a445a463b263b0789804be3433a9c8a39c5725) )
+	ROM_LOAD16_BYTE( "36.bin", 0x40001, 0x20000, CRC(b95b706b) SHA1(c77b4015f1a6c554e9c718f5c4708bcfaaf240af) )
+	ROM_LOAD16_WORD( "32.bin", 0x80000, 0x80000, CRC(3ea1b0f2) SHA1(c51f1c38cdaed77ad715cedd845617a291ab2441) )  // = dm-17.7j
+
+	ROM_REGION( 0x300000, "gfx", 0 )
+	ROM_LOAD64_WORD( "dm-05.3a", 0x000000, 0x80000, CRC(0ba9c0b0) SHA1(c4945b603115f32b7346d72426571dc2d361159f) )
+	ROM_LOAD64_WORD( "dm-07.3f", 0x000002, 0x80000, CRC(5d760ab9) SHA1(212176947933fcfef991bc80ad5bd91718689ffe) )
+	ROM_LOAD64_WORD( "dm-06.3c", 0x000004, 0x80000, CRC(4ba90b59) SHA1(35bc9dec5ddbf064c30c951627581c16764456ac) )
+	ROM_LOAD64_WORD( "dm-08.3g", 0x000006, 0x80000, CRC(4bdee9de) SHA1(7d0c4736f16577afe9966447a18f039728f6fbdf) )
+	ROM_LOAD64_BYTE( "09.4a",    0x200000, 0x10000, CRC(ae24bb19) SHA1(aa91c6ffe657b878e10e4e930457b530f7bb529b) )
+	ROM_LOAD64_BYTE( "18.7a",    0x200001, 0x10000, CRC(d34e271a) SHA1(55211fc2861dce32951f41624c9c99c09bf3b184) )
+	ROM_LOAD64_BYTE( "13.4e",    0x200002, 0x10000, CRC(3f70dd37) SHA1(9ecb4dec9d131e9fca15ded7d71986a9fcb62c19) )
+	ROM_LOAD64_BYTE( "22.7e",    0x200003, 0x10000, CRC(7e69e2e6) SHA1(4e0b4d2474beaa5c869c8f1a91893c79ac6e7f39) )
+	ROM_LOAD64_BYTE( "11.4c",    0x200004, 0x10000, CRC(37c9b6c6) SHA1(b2bb82537e335339846dbf9588cfacfdbdd75ee6) )
+	ROM_LOAD64_BYTE( "20.7c",    0x200005, 0x10000, CRC(2f1345b4) SHA1(14c450abcf9defa29c6f48e5ffd0b9d1e4a66a1d) )
+	ROM_LOAD64_BYTE( "15.4g",    0x200006, 0x10000, CRC(3c2a212a) SHA1(f8fa0e0e2d09ea37c54d1c2493752b4e97e3f534) )
+	ROM_LOAD64_BYTE( "24.7g",    0x200007, 0x10000, CRC(889aac05) SHA1(9301dcecee699e7f7672bb498122e1f4831ce536) )
+	ROM_LOAD64_BYTE( "10.4b",    0x280000, 0x10000, CRC(bcc0f28c) SHA1(02f587aa4ae71631f27b0e3aaf1829cdded1bdc2) )
+	ROM_LOAD64_BYTE( "19.7b",    0x280001, 0x10000, CRC(2a40166a) SHA1(dc4e75d7ed87ae5386d721a09113bba364740465) )
+	ROM_LOAD64_BYTE( "14.4f",    0x280002, 0x10000, CRC(20f85c03) SHA1(86385139a9b42270aade758bfe338525936f5671) )
+	ROM_LOAD64_BYTE( "23.7f",    0x280003, 0x10000, CRC(8426144b) SHA1(2dbf9625413b302fcdad5bef8733a9dfbfaead52) )
+	ROM_LOAD64_BYTE( "12.4d",    0x280004, 0x10000, CRC(da088d61) SHA1(67229eff2827a42af97a60ceb252e132e7f307bc) )
+	ROM_LOAD64_BYTE( "21.7d",    0x280005, 0x10000, CRC(17e11df0) SHA1(42fb15e9300b07fc5f4bc21744484869859b130c) )
+	ROM_LOAD64_BYTE( "16.4h",    0x280006, 0x10000, CRC(f187ba1c) SHA1(6d9441d04ecef2a9d9c7a2cc7781acd7904c2061) )
+	ROM_LOAD64_BYTE( "25.7h",    0x280007, 0x10000, CRC(29f79c78) SHA1(26000a58454a06c3016f99ebc3a79c52911a7070) )
+
+	ROM_REGION( 0x18000, "audiocpu", 0 )
+	ROM_LOAD( "26.10a",    0x00000, 0x08000, CRC(3692f6e5) SHA1(61b8438d60a39b4cf5062dff0a53228e8a4e4b5f) )
+	ROM_CONTINUE(          0x10000, 0x08000 )
+
+	ROM_REGION( 0x40000, "oki", ROMREGION_ERASEFF ) /* Samples (not present) */
+
+	ROM_REGION( 0x0200, "aboardplds", 0 )
+	ROM_LOAD( "buf1",         0x0000, 0x0117, CRC(eb122de7) SHA1(b26b5bfe258e3e184f069719f9fd008d6b8f6b9b) )
+	ROM_LOAD( "ioa1",         0x0000, 0x0117, CRC(59c7ee3b) SHA1(fbb887c5b4f5cb8df77cec710eaac2985bc482a6) )
+	ROM_LOAD( "prg1",         0x0000, 0x0117, CRC(f1129744) SHA1(a5300f301c1a08a7da768f0773fa0fe3f683b237) )
+	ROM_LOAD( "rom1",         0x0000, 0x0117, CRC(41dc73b9) SHA1(7d4c9f1693c821fbf84e32dd6ef62ddf14967845) )
+	ROM_LOAD( "sou1",         0x0000, 0x0117, CRC(84f4b2fe) SHA1(dcc9e86cc36316fe42eace02d6df75d08bc8bb6d) )
+
+	ROM_REGION( 0x0200, "bboardplds", 0 )
+	ROM_LOAD( "dm620.2a",     0x0000, 0x0117, CRC(f6e5f727) SHA1(8d38c458721347272ccc14b2c0e9885c4f891477) )
+	ROM_LOAD( "lwio.8i",      0x0000, 0x0117, CRC(ad52b90c) SHA1(f0fd6aeea515ee449320fe15684e6b3ab7f97bf4) )
+ROM_END
+
 
 //                        PARENT     MACHINE      INPUT       CLASS       INIT
 GAME( 1988,  ghouls21,    ghouls,    cps1_12MHz,  ghouls,    cps_state,  init_cps1,  ROT0, "Capcom", "Ghouls'n Ghosts (World, 91635B-2)", MACHINE_SUPPORTS_SAVE )
@@ -14154,3 +14203,4 @@ GAME( 1991,  3wonders12,  3wonders,  cps1_10MHz,  3wonders,  cps_state,  init_cp
 GAME( 1989,  ffightuch,   ffight,    cps1_10MHz,  ffight,    cps_state,  init_cps1,  ROT0, "Capcom", "Final Fight (USA 900613), CPS-B-21", MACHINE_SUPPORTS_SAVE )
 GAME( 1990,  cawingh,     cawing,    cps1_10MHz,  cawing,    cps_state,  init_cps1,  ROT0, "Capcom", "Carrier Air Wing (World 901012), CPS-B-21", MACHINE_SUPPORTS_SAVE )
 GAME( 2000,  cps1demo,    0,         cps1_10MHz,  cps1_3b,   cps_state,  init_cps1,  ROT0, "Charles Doty", "Simple Capcom System 1 demo", MACHINE_SUPPORTS_SAVE )
+GAME( 1988,  ghouls17,    ghouls,    cps1_10MHz,  ghouls,    cps_state,  init_cps1,  ROT0, "Capcom", "Ghouls'n Ghosts (World, CPS-B-17 patch)", MACHINE_SUPPORTS_SAVE )
