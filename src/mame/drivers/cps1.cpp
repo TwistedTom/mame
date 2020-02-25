@@ -12818,8 +12818,8 @@ ROM_START( pang3b2 )
 	ROM_CONTINUE(                  0x000006, 0x100000 )
 
 	ROM_REGION( 0x18000, "audiocpu", 0 ) /* 64k for the audio CPU (+banks) */
-	ROM_LOAD( "pa3_11.11f",  0x00000, 0x08000, CRC(cb1423a2) SHA1(3191bf5d340168647881738cb2aed09b1d86146e) )
-	ROM_IGNORE( 0x18000 )
+	ROM_LOAD( "u11f1.bin",  0x00000, 0x08000, CRC(278d786c) SHA1(bf226adf766b7d24a60e20d19d586c9fafe0973d) )  // == pa3_11.11f cut to fit 27c512 (just empty space cut)
+	ROM_IGNORE( 0x08000 )
 
 	ROM_REGION( 0x40000, "oki", 0 ) /* Samples */
 	ROM_LOAD( "pa3_05.10d",  0x00000, 0x20000, CRC(73a10d5d) SHA1(999465e4fbc35a34746d2db61ad49f61403d5af7) )
