@@ -14191,6 +14191,85 @@ ROM_START( ghouls17 )
 	ROM_LOAD( "lwio.8i",      0x0000, 0x0117, CRC(ad52b90c) SHA1(f0fd6aeea515ee449320fe15684e6b3ab7f97bf4) )
 ROM_END
 
+// ghouls on pang 3 bootleg board, arcaderompatcher gfx
+ROM_START( ghoulspg3 )
+	ROM_REGION( CODE_SIZE, "maincpu", 0 )
+	ROM_LOAD16_WORD_SWAP( "rom17.bin", 0x00000, 0x80000, CRC(e182d2cb) SHA1(89d793042c447828f7de86c2f35c3c5b5535d18d) )  // b17 hack
+	ROM_LOAD16_WORD_SWAP( "rom16.bin", 0x80000, 0x80000, CRC(595ff2f3) SHA1(ac14b81e15f2c340526a03acbb4c28181d94d5b9) )  // = dm-17.7j byteswapped
+
+	ROM_REGION( 0x800000, "gfx", 0 )
+	ROM_LOAD64_WORD( "rom01.bin", 0x000000, 0x100000, CRC(56d25cab) SHA1(9da676f5e4148ed1693bf3e49d49ce650e8c1b9d) )
+	ROM_CONTINUE(                 0x000004, 0x100000 )
+	ROM_CONTINUE(                 0x400000, 0x100000 )
+	ROM_CONTINUE(                 0x400004, 0x100000 )
+	ROM_LOAD64_WORD( "rom07.bin", 0x000002, 0x100000, CRC(173c9f85) SHA1(8f1d7be3fe196070afe179bba36099b0965df82b) )
+	ROM_CONTINUE(                 0x000006, 0x100000 )
+	ROM_CONTINUE(                 0x400002, 0x100000 )
+	ROM_CONTINUE(                 0x400006, 0x100000 )
+
+	ROM_REGION( 0x18000, "audiocpu", 0 )
+	ROM_LOAD( "26.10a", 0x00000, 0x08000, CRC(3692f6e5) SHA1(61b8438d60a39b4cf5062dff0a53228e8a4e4b5f) )
+	ROM_CONTINUE(       0x10000, 0x08000 )
+
+	ROM_REGION( 0x40000, "oki", ROMREGION_ERASEFF )  // no samples
+
+	/*
+	rom_a19 = i9
+
+	rom_a20 = /a22 & /a21 & /a20 & /a19 & /a18 & /a17     sprites 00000-03fff
+
+	/rom_oe = /a22 & /a21 & /a20 & /a19 & /a18 & /a17 +   sprites 00000-03fff
+			  /a22 & /a21 &  a20 & /a19 & /a18 & /a17 +   scroll1 00000-03fff
+			  /a22 &  a21 & /a20 & /a19 & /a18 &  a17 +   scroll2 04000-07fff
+			  /a22 &  a21 &  a20 & /a19                   scroll3 00000-0ffff
+	*/
+ROM_END
+
+ROM_START( ghoulst )
+	ROM_REGION( CODE_SIZE, "maincpu", 0 )
+	ROM_LOAD16_WORD_SWAP( "rom17.bin", 0x00000, 0x80000, CRC(e182d2cb) SHA1(89d793042c447828f7de86c2f35c3c5b5535d18d) )  // b17 hack
+	ROM_LOAD16_WORD_SWAP( "rom16.bin", 0x80000, 0x80000, CRC(595ff2f3) SHA1(ac14b81e15f2c340526a03acbb4c28181d94d5b9) )  // = dm-17.7j byteswapped
+
+	ROM_REGION( 0x400000, "gfx", 0 ) // use same layout as pang 3
+	ROM_LOAD64_WORD( "rom1.bin", 0x000000, 0x100000, CRC(88a9c7a8) SHA1(429d8f72d6fa8d35db8b1e4c6f4fc0eccf064e5e) )
+	ROM_CONTINUE(                0x000004, 0x100000 )
+	ROM_LOAD64_WORD( "rom7.bin", 0x000002, 0x100000, CRC(c3c85196) SHA1(927ca4aad1ffaa05c5d1a51717aaa2c5b3632b6a) )
+	ROM_CONTINUE(                0x000006, 0x100000 )
+
+	ROM_REGION( 0x18000, "audiocpu", 0 )
+	ROM_LOAD( "26.10a", 0x00000, 0x08000, CRC(3692f6e5) SHA1(61b8438d60a39b4cf5062dff0a53228e8a4e4b5f) )
+	ROM_CONTINUE(       0x10000, 0x08000 )
+
+	ROM_REGION( 0x40000, "oki", ROMREGION_ERASEFF )  // no samples
+	
+	/* gfx in viewer:
+
+	            scroll 1        sprites/scroll 2     scroll 3
+	sprites   0000-1fff  2000    0000-0fff  1000
+	scroll1   2000-3fff  2000
+	scroll2   4000-7fff  4000    2000-3fff  2000
+              
+	scroll3   8000-9fff  2000                       1000-13ff  400
+	sprites   a000-bfff  2000    5000-5fff  1000
+	          c000-ffff  4000    empty
+
+	rom_a20 = b'1'   /byte on 27c160, must be high
+	
+	rom_a19 = i9     top half of roms are equiv to the usual 2nd pair of roms
+	
+	rom_ce = b'0'
+	
+	/rom_oe = /a22 & /a21 & /a20 & /a19 & /a18 & /a17 +           sprites 00000-03fff
+			  /a22 & /a21 &  a20 & /a19 & /a18 & /a17 &  a16 +    scroll1 02000-03fff
+			  /a22 &  a21 & /a20 & /a19 & /a18 &  a17 +           scroll2 04000-07fff
+			  /a22 &  a21 &  a20 & /a19 &  a18 & /a17 & /a16      scroll3 08000-09fff
+			  
+	rom_a18 = /a22 &  a21 &  a20 & /a19 &  a18 & /a17 & /a16 +    scroll3 08000-09fff
+			  /a22 & /a21 & /a20 & /a19 & /a18 & /a17 &  a16      sprites 02000-03fff   code uses 1000-1fff
+			  
+	*/
+ROM_END
+
 
 //                        PARENT     MACHINE      INPUT       CLASS       INIT
 GAME( 1988,  ghouls21,    ghouls,    cps1_12MHz,  ghouls,    cps_state,  init_cps1,  ROT0, "Capcom", "Ghouls'n Ghosts (World, 91635B-2)", MACHINE_SUPPORTS_SAVE )
@@ -14204,3 +14283,5 @@ GAME( 1989,  ffightuch,   ffight,    cps1_10MHz,  ffight,    cps_state,  init_cp
 GAME( 1990,  cawingh,     cawing,    cps1_10MHz,  cawing,    cps_state,  init_cps1,  ROT0, "Capcom", "Carrier Air Wing (World 901012), CPS-B-21", MACHINE_SUPPORTS_SAVE )
 GAME( 2000,  cps1demo,    0,         cps1_10MHz,  cps1_3b,   cps_state,  init_cps1,  ROT0, "Charles Doty", "Simple Capcom System 1 demo", MACHINE_SUPPORTS_SAVE )
 GAME( 1988,  ghouls17,    ghouls,    cps1_10MHz,  ghouls,    cps_state,  init_cps1,  ROT0, "Capcom", "Ghouls'n Ghosts (World, CPS-B-17 patch)", MACHINE_SUPPORTS_SAVE )
+GAME( 1988,  ghoulspg3,   ghouls,    cps1_10MHz,  ghouls,    cps_state,  init_cps1,  ROT0, "Capcom", "Ghouls'n Ghosts (World, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
+GAME( 1988,  ghoulst,     ghouls,    cps1_10MHz,  ghouls,    cps_state,  init_cps1,  ROT0, "Capcom", "Ghouls'n Ghosts (World) test", MACHINE_SUPPORTS_SAVE )

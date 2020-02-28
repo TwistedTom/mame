@@ -1407,6 +1407,33 @@ static const struct gfx_range mapper_pokonyan_table[] =
 	{ 0 }
 };
 
+
+#define mapper_ghoulspg3   { 0x10000, 0x4000, 0, 0 }, mapper_ghoulspg3_table
+static const struct gfx_range mapper_ghoulspg3_table[] =
+{
+	/* type            start   end     bank */
+	{ GFXTYPE_SCROLL1, 0x0000, 0x3fff, 0 },
+	{ GFXTYPE_SCROLL2, 0x4000, 0x7fff, 0 },
+	{ GFXTYPE_SCROLL3, 0x0000, 0xffff, 0 },
+	{ GFXTYPE_SPRITES, 0x0000, 0x3fff, 1 },
+	{ 0 }
+};
+
+
+#define mapper_ghoulst   { 0x8000, 0x8000, 0, 0 }, mapper_ghoulst_table
+static const struct gfx_range mapper_ghoulst_table[] =
+{
+	/* type            start   end     bank */
+	{ GFXTYPE_SPRITES, 0x00000, 0x01fff, 0 },
+	{ GFXTYPE_SCROLL1, 0x02000, 0x03fff, 0 },
+	{ GFXTYPE_SCROLL2, 0x04000, 0x07fff, 0 },
+
+	{ GFXTYPE_SCROLL3, 0x08000, 0x09fff, 1 },
+	{ GFXTYPE_SPRITES, 0x02000, 0x03fff, 1 },
+	{ 0 }
+};
+
+
 // a game without an entry here defaults to cps2 mapper (eg. some games in fcrash.cpp)
 static const struct CPS1config cps1_config_table[]=
 {
@@ -1674,6 +1701,8 @@ static const struct CPS1config cps1_config_table[]=
 	{"cawingh",     CPS_B_21_DEF, mapper_CA24B },
 	{"cps1demo",    CPS_B_04,     mapper_S224B },   // ffight
 	{"ghouls17",    CPS_B_17,     mapper_DM620 },
+	{"ghoulspg3",   CPS_B_17,     mapper_ghoulspg3 },
+	{"ghoulst",     CPS_B_17,     mapper_ghoulst },   // DAM63B works
 	
 	{nullptr}     /* End of table */
 };
@@ -1965,6 +1994,28 @@ void cps_state::init_cps1()
 	m_scanline2 = 0;
 	m_scancalls = 0;
 	m_last_sprite_offset = 0;
+	
+	FILE *fp;
+	const char *gamename = machine().system().name;
+	char filename[32];
+	sprintf(filename, "gfx_dump\\%s_gfx.bin", gamename);
+	
+	if ((fp = fopen(filename, "r")))
+    {
+        fclose(fp);
+        printf("skipping %s gfx dump, file already exists\n", gamename);
+    }
+	else
+	{
+		uint8_t *grom = memregion("gfx")->base();
+		uint32_t rom_size = memregion("gfx")->bytes();
+		
+		if ((fp = fopen(filename, "w+b")))
+		{
+			fwrite(grom, rom_size, 1, fp);
+			fclose(fp);
+		}
+	}
 }
 
 
