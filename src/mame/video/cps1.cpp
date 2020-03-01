@@ -1408,28 +1408,14 @@ static const struct gfx_range mapper_pokonyan_table[] =
 };
 
 
-#define mapper_ghoulspg3   { 0x10000, 0x4000, 0, 0 }, mapper_ghoulspg3_table
-static const struct gfx_range mapper_ghoulspg3_table[] =
+#define mapper_ghouls17pa   { 0x10000, 0x4000, 0, 0 }, mapper_ghouls17pa_table
+static const struct gfx_range mapper_ghouls17pa_table[] =
 {
 	/* type            start   end     bank */
 	{ GFXTYPE_SCROLL1, 0x0000, 0x3fff, 0 },
 	{ GFXTYPE_SCROLL2, 0x4000, 0x7fff, 0 },
 	{ GFXTYPE_SCROLL3, 0x0000, 0xffff, 0 },
 	{ GFXTYPE_SPRITES, 0x0000, 0x3fff, 1 },
-	{ 0 }
-};
-
-
-#define mapper_ghoulst   { 0x8000, 0x8000, 0, 0 }, mapper_ghoulst_table
-static const struct gfx_range mapper_ghoulst_table[] =
-{
-	/* type            start   end     bank */
-	{ GFXTYPE_SPRITES, 0x00000, 0x01fff, 0 },
-	{ GFXTYPE_SCROLL1, 0x02000, 0x03fff, 0 },
-	{ GFXTYPE_SCROLL2, 0x04000, 0x07fff, 0 },
-
-	{ GFXTYPE_SCROLL3, 0x08000, 0x09fff, 1 },
-	{ GFXTYPE_SPRITES, 0x02000, 0x03fff, 1 },
 	{ 0 }
 };
 
@@ -1700,9 +1686,9 @@ static const struct CPS1config cps1_config_table[]=
 	{"ffightuch",   CPS_B_21_DEF, mapper_S224B },
 	{"cawingh",     CPS_B_21_DEF, mapper_CA24B },
 	{"cps1demo",    CPS_B_04,     mapper_S224B },   // ffight
-	{"ghouls17",    CPS_B_17,     mapper_DM620 },
-	{"ghoulspg3",   CPS_B_17,     mapper_ghoulspg3 },
-	{"ghoulst",     CPS_B_17,     mapper_ghoulst },   // DAM63B works
+	{"ghouls17p",   CPS_B_17,     mapper_DAM63B },
+	{"ghouls17pa",  CPS_B_17,     mapper_ghouls17pa },
+	{"3wonders17p", CPS_B_17,     mapper_RT24B },
 	
 	{nullptr}     /* End of table */
 };
