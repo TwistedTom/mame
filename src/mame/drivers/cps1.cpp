@@ -14227,14 +14227,9 @@ ROM_START( ghouls17p )
 	rom_ce = b'0'
 	
 	/rom_oe = /a22 & /a21 & /a20 & /a19 & /a18 & /a17 & /a16 +         sprites 00000-01fff
-			  /a22 & /a21 &  a20 & /a19 & /a18 & /a17 & a16 & /a15 +   scroll1 02000-02fff
+			  /a22 & /a21 &  a20 & /a19 & /a18 & /a17 & a16 & /a15 +   scroll1 02000-02fff   don't really need a15 (dm22a doesn't use it)
 			  /a22 &  a21 & /a20 & /a19 & /a18 &  a17 +                scroll2 04000-07fff
 			  /a22 & /a21 & /a20 & /a19 & /a18 & /a17 & a16 +          sprites 02000-03fff
-			  /a22 &  a21 &  a20                                       scroll3 00000-1ffff
-			  
-			= /a22 & /a21 & /a20 & /a19 & /a18 & /a17 & +              sprites 00000-03fff
-			  /a22 & /a21 &  a20 & /a19 & /a18 & /a17 & a16 & /a15 +   scroll1 02000-02fff  don't really need a15 (dm22a doesn't use it)
-			  /a22 &  a21 & /a20 & /a19 & /a18 &  a17 +                scroll2 04000-07fff
 			  /a22 &  a21 &  a20                                       scroll3 00000-1ffff
 			
 	rom_a18 = /a22 & /a21 & /a20 & /a19 & /a18 & /a17 & a16 +          sprites 02000-03fff
@@ -14305,18 +14300,6 @@ ROM_START( 3wonders17p )
 			  /a22 &  a21 & /a20 & /a19 & /a18 &  a17 +                            scroll2 04000-07fff
 			  /a22 &  a21 &  a20 & /a19 & /a18 & /a17                              scroll3 00000-03fff
 			  
-			= /a22 & /a20 & /a19 & /a18 &  a17 & /a16 & /a14 & /a13 +
-			  /a22 & /a20 & /a19 & /a18 & /a17 &  a16 &  a14 +
-			  /a22 & /a20 & /a19 & /a18 & /a17 &  a16 &  a15 +
-			  /a22 & /a20 & /a19 & /a18 &  a17 & /a16 & /a15 +
-			  /a22 & /a21 &  a20 & /a19 & /a18 &  a17 & /a16 &  a15 &  a13 +
-			  /a22 & /a21 &  a20 & /a19 & /a18 &  a17 &  a16 & /a15 +
-			  /a22 & /a21 &  a20 & /a19 & /a18 &  a17 & /a16 &  a15 &  a14 +
-			  /a22 &  a21 &  a20 & /a19 & /a18 & /a17 +
-			  /a22 & /a21 & /a20 & /a19 & /a18 & /a17 +
-			  /a22 & /a20 & /a19 & /a18 &  a16 &  a15 &  a14 +
-			  /a22 &  a21 & /a20 & /a19 & /a18 &  a17
-			  
 	rom_a18 = /a22 & /a20 & /a19 & /a18 &  a17 &  a15 &  a13 +                     sprites 05400-057ff, 05c00-05fff, 07400-077ff, 07c00-07fff
 			  /a22 & /a20 & /a19 & /a18 &  a17 &  a15 &  a14 +                     sprites 05800-05fff, 07800-07fff
 			  /a22 & /a20 & /a19 & /a18 &  a17 &  a16 +                            sprites 06000-07fff
@@ -14324,9 +14307,62 @@ ROM_START( 3wonders17p )
 			  /a22 &  a21 & /a20 & /a19 & /a18 &  a16 &  a15 +                     scroll2 03000-03fff, 07000-07fff
 			  /a22 &  a21 & /a20 & /a19 & /a18 &  a17 +                            scroll2 04000-07fff
 			  /a22 &  a21 &  a20 & /a19 & /a18 & /a17                              scroll3 00000-03fff
+
+
+	rom_oe has too many product terms for WinCUPL, double expresso reduction:
+
+	/rom_oe = /a22 & /a21 &  a20 & /a19 & /a18 &  a17 & /a16 &  a15 &  a13 +
+			  /a22 & /a21 &  a20 & /a19 & /a18 &  a17 & /a16 &  a15 &  a14 +
+			  /a22 & /a21 &  a20 & /a19 & /a18 &  a17 &  a16 & /a15 +
+			  /a22 &  a21 & /a20 & /a19 & /a18 &  a16 &  a14 +
+			  /a22 &  a21 &  a20 & /a19 & /a18 & /a17 +
+			  /a22 &  a21 & /a19 & /a18 &  a16 &  a15 +
+			  /a22 & /a21 & /a20 & /a19 & /a18 +
+			  /a22 & /a20 & /a19 & /a18 &  a17
 	*/
 ROM_END
 
+// sf2um/sf2jl on pang3 bootleg, etc region hack
+ROM_START( sf2ww17p )
+	ROM_REGION( CODE_SIZE, "maincpu", 0 )
+	ROM_LOAD16_WORD_SWAP( "rom17.bin", 0x00000, 0x80000, CRC(a3d9c425) SHA1(e5f31ff820ad82658a13236e940e09317601d399) )
+	ROM_LOAD16_WORD_SWAP( "rom16.bin", 0x80000, 0x80000, CRC(8e41ce36) SHA1(27310941fcae185c811600975108c47b3fa795bd) )
+
+	ROM_REGION( 0x600000, "gfx", 0 ) // use same layout as pang 3
+	ROM_LOAD64_WORD( "rom1.bin", 0x000000, 0x180000, CRC(ff9935a0) SHA1(a0dae7cbd368099dc7ef6966463290f9ceeaec63) )
+	ROM_CONTINUE(                0x000004, 0x180000 )
+	ROM_LOAD64_WORD( "rom7.bin", 0x000002, 0x180000, CRC(52677cfa) SHA1(22a0ed4cb375ee7bf06218a62b9366e80d9afbaa) )
+	ROM_CONTINUE(                0x000006, 0x180000 )
+
+	ROM_REGION( 0x18000, "audiocpu", 0 )
+	ROM_LOAD( "sf2_09.12a", 0x00000, 0x08000, CRC(a4823a1b) SHA1(7b6bf59dfd578bfbbdb64c27988796783442d659) )
+	ROM_CONTINUE(           0x10000, 0x08000 )
+
+	ROM_REGION( 0x40000, "oki", 0 )
+	ROM_LOAD( "sf2_18.11c", 0x00000, 0x20000, CRC(7f162009) SHA1(346bf42992b4c36c593e21901e22c87ae4a7d86d) )
+	ROM_LOAD( "sf2_19.12c", 0x20000, 0x20000, CRC(beade53f) SHA1(277c397dc12752719ec6b47d2224750bd1c07f79) )
+	
+	/*
+	bnk0 =  /a22 & /a21 & /a20 & /a19 & /a18
+	
+	bnk1 =  /a22 & /a21 & /a20 & /a19 & a18
+	
+	bnk2 =  /a22 & /a21 & /a20 &  a19 & /a18 & /a17 & /a16 +
+			/a22 &  a21 &  a20 & /a19 & /a18 & /a17 &  a16 +
+			/a22 & /a21 &  a20 & /a19 & /a18 &  a17 & /a16 & /a15 +
+			/a22 &  a21 & /a20 & /a19 & /a18 &  a17 & /a16 &  a15 +
+			/a22 &  a21 & /a20 & /a19 & /a18 &  a17 &  a16
+			
+	rom_ce = b'0'
+	/rom_oe = bnk0 + bnk1 + bnk2
+	
+	rom_a18 = bnk1
+	rom_a19 = i9
+	rom_a20 = bnk2
+	
+
+    */	
+ROM_END
 
 //                        PARENT     MACHINE      INPUT       CLASS       INIT
 GAME( 1988,  ghouls21,    ghouls,    cps1_12MHz,  ghouls,    cps_state,  init_cps1,  ROT0, "Capcom", "Ghouls'n Ghosts (World, 91635B-2)", MACHINE_SUPPORTS_SAVE )
@@ -14342,3 +14378,4 @@ GAME( 2000,  cps1demo,    0,         cps1_10MHz,  cps1_3b,   cps_state,  init_cp
 GAME( 1988,  ghouls17p,   ghouls,    cps1_10MHz,  ghouls,    cps_state,  init_cps1,  ROT0, "Capcom", "Ghouls'n Ghosts (World, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
 GAME( 1988,  ghouls17pa,  ghouls,    cps1_10MHz,  ghouls,    cps_state,  init_cps1,  ROT0, "Capcom", "Ghouls'n Ghosts (World, Pang 3 bootleg board, set 2)", MACHINE_SUPPORTS_SAVE )
 GAME( 1991,  3wonders17p, 3wonders,  cps1_10MHz,  3wonders,  cps_state,  init_cps1,  ROT0, "Capcom", "Three Wonders (World 910520, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
+GAME( 1991,  sf2ww17p,    sf2,       cps1_10MHz,  sf2,       cps_state,  init_cps1,  ROT0, "Capcom", "Street Fighter II: The World Warrior (World 920312, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
