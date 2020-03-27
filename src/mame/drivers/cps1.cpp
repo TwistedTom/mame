@@ -14369,18 +14369,42 @@ ROM_START( ffight17p )
 	ROM_LOAD16_WORD_SWAP( "rom16.bin", 0x80000, 0x80000, CRC(c747696e) SHA1(d3362dadded31ccb7eaf71ef282d698d18edd722) )
 
 	ROM_REGION( 0x200000, "gfx", 0 ) // use same layout as pang 3
-	ROM_LOAD64_WORD( "rom1.bin", 0x000000, 0x80000, CRC(caebb96a) SHA1(49e2ef9bc28586db510be58cfced523f69803aa6) )
-	ROM_CONTINUE(                0x000004, 0x80000 )
-	ROM_LOAD64_WORD( "rom7.bin", 0x000002, 0x80000, CRC(f8963194) SHA1(957f8fc101a54793ee3159c7600c15b33bb6cde6) )
-	ROM_CONTINUE(                0x000006, 0x80000 )
+	ROM_LOAD64_WORD( "rom1.bin", 0x00000, 0x80000, CRC(caebb96a) SHA1(49e2ef9bc28586db510be58cfced523f69803aa6) )
+	ROM_CONTINUE(                0x00004, 0x80000 )
+	ROM_LOAD64_WORD( "rom7.bin", 0x00002, 0x80000, CRC(f8963194) SHA1(957f8fc101a54793ee3159c7600c15b33bb6cde6) )
+	ROM_CONTINUE(                0x00006, 0x80000 )
 
-	ROM_REGION( 0x18000, "audiocpu", 0 ) /* 64k for the audio CPU (+banks) */
+	ROM_REGION( 0x18000, "audiocpu", 0 )
 	ROM_LOAD( "ff_09.12b", 0x00000, 0x08000, CRC(b8367eb5) SHA1(ec3db29fdd6200e9a8f4f8073a7e34aef731354f) )
 	ROM_CONTINUE(          0x10000, 0x08000 )
 
-	ROM_REGION( 0x40000, "oki", 0 ) /* Samples */
+	ROM_REGION( 0x40000, "oki", 0 )
 	ROM_LOAD( "ff_18.11c", 0x00000, 0x20000, CRC(375c66e7) SHA1(36189e23209ce4ae5d9cbabd1574540d0591e7b3) )
 	ROM_LOAD( "ff_19.12c", 0x20000, 0x20000, CRC(1ef137f9) SHA1(974b5e72aa28b87ebfa7438efbdfeda769dedf5e) )
+ROM_END
+
+// striderua (newer?) on pang3 bootleg, b17 hack, no boob leaf, can't enable char test?
+ROM_START( strider17p )
+	ROM_REGION( CODE_SIZE, "maincpu", 0 )
+	ROM_LOAD16_WORD_SWAP( "rom17.bin", 0x00000, 0x80000, CRC(45c8e711) SHA1(d4155a7bcfd9b50be859feddc38dbeec55b1c689) )
+	ROM_LOAD16_WORD_SWAP( "rom16.bin", 0x80000, 0x80000, CRC(9b3cfc08) SHA1(a7d7f270a097437affa845d80bed82a1fa874878) )
+
+	ROM_REGION( 0x400000, "gfx", 0 ) // use same layout as pang 3
+	ROM_LOAD64_WORD( "rom1.bin", 0x000000, 0x100000, CRC(99172017) SHA1(0fd81a742bdf4d97a02c5fb7bb4cee6860455cd7) )
+	ROM_CONTINUE(                0x000004, 0x100000 )
+	ROM_LOAD64_WORD( "rom7.bin", 0x000002, 0x100000, CRC(c29d189b) SHA1(540c5e1e28b041d447d491ee0d4589ce8ad5aba9) )
+	ROM_CONTINUE(                0x000006, 0x100000 )
+
+	ROM_REGION( 0x8000, "stars", 0 )
+	ROM_COPY( "gfx", 0x000000, 0x000000, 0x8000 )
+
+	ROM_REGION( 0x18000, "audiocpu", 0 )
+	ROM_LOAD( "09.12b", 0x00000, 0x08000, CRC(08d63519) SHA1(c120ecfe25c3c50bc51bc7d5a9ef1c8ca6591240) )
+	ROM_CONTINUE(       0x10000, 0x08000 )
+
+	ROM_REGION( 0x40000, "oki", 0 )
+	ROM_LOAD( "18.11c", 0x00000, 0x20000, CRC(4386bc80) SHA1(fb2b261995aeacfa13e7ee40b1a973dfb178f015) )
+	ROM_LOAD( "19.12c", 0x20000, 0x20000, CRC(444536d7) SHA1(a14f5de2f6b5b29ae5161dca1f8c08c566301a91) )
 ROM_END
 
 //                        PARENT     MACHINE      INPUT       CLASS       INIT
@@ -14399,3 +14423,4 @@ GAME( 1988,  ghouls17pa,  ghouls,    cps1_10MHz,  ghouls,    cps_state,  init_cp
 GAME( 1991,  3wonders17p, 3wonders,  cps1_10MHz,  3wonders,  cps_state,  init_cps1,  ROT0, "Capcom", "Three Wonders (World 910520, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
 GAME( 1991,  sf2ww17p,    sf2,       cps1_10MHz,  sf2,       cps_state,  init_cps1,  ROT0, "Capcom", "Street Fighter II: The World Warrior (World 920312, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
 GAME( 1989,  ffight17p,   ffight,    cps1_10MHz,  ffight,    cps_state,  init_cps1,  ROT0, "Capcom", "Final Fight (World, set 1, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
+GAME( 1989,  strider17p,  strider,   cps1_10MHz,  strider,   cps_state,  init_cps1,  ROT0, "Capcom", "Strider (USA, B-Board 89624B-2, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
