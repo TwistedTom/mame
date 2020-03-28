@@ -14407,6 +14407,29 @@ ROM_START( strider17p )
 	ROM_LOAD( "19.12c", 0x20000, 0x20000, CRC(444536d7) SHA1(a14f5de2f6b5b29ae5161dca1f8c08c566301a91) )
 ROM_END
 
+// willow on pang3 bootleg, b17 hack
+ROM_START( willow17p )
+	//ROM_REGION( CODE_SIZE, "maincpu", 0 )
+	//ROM_LOAD16_WORD_SWAP( "rom17.bin", 0x00000, 0x80000, CRC(00000) SHA1(000000000) )
+	//ROM_LOAD16_WORD_SWAP( "rom16.bin", 0x80000, 0x80000, CRC(00000) SHA1(000000000) )
+	ROM_REGION( CODE_SIZE, "maincpu", 0 )
+	ROM_LOAD( "mainrom.bin", 0x000000, 0x100000, CRC(c73b97ac) SHA1(4983ebbd9e5a059144f1039d73d70f1986c292a7) )
+
+	ROM_REGION( 0x400000, "gfx", 0 ) // use same layout as pang 3
+	ROM_LOAD64_WORD( "rom1.bin", 0x000000, 0x100000, CRC(96b4ca09) SHA1(021c233048149d5756cae64751058a662fdd1c57) )
+	ROM_CONTINUE(                0x000004, 0x100000 )
+	ROM_LOAD64_WORD( "rom7.bin", 0x000002, 0x100000, CRC(5cf76312) SHA1(c49c7871463127ce1acb88ba3d5571c10294c02d) )
+	ROM_CONTINUE(                0x000006, 0x100000 )
+
+	ROM_REGION( 0x18000, "audiocpu", 0 )
+	ROM_LOAD( "wl_09.12b", 0x00000, 0x08000, CRC(f6b3d060) SHA1(0ed2e2f64ba53ba2c371b66ab1e52e40b16d8baf) )
+	ROM_CONTINUE(          0x10000, 0x08000 )
+
+	ROM_REGION( 0x40000, "oki", 0 )
+	ROM_LOAD( "wl_18.11c", 0x00000, 0x20000, CRC(bde23d4d) SHA1(d1fee2f99c858dfb07edcd600da491c7b656afe0) )
+	ROM_LOAD( "wl_19.12c", 0x20000, 0x20000, CRC(683898f5) SHA1(316a77b663d78c8b9ff6d85756cb05aaaeef4003) )
+ROM_END
+
 //                        PARENT     MACHINE      INPUT       CLASS       INIT
 GAME( 1988,  ghouls21,    ghouls,    cps1_12MHz,  ghouls,    cps_state,  init_cps1,  ROT0, "Capcom", "Ghouls'n Ghosts (World, 91635B-2)", MACHINE_SUPPORTS_SAVE )
 GAME( 1990,  mswordr121,  msword,    cps1_10MHz,  msword,    cps_state,  init_cps1,  ROT0, "Capcom", "Magic Sword: Heroic Fantasy (World 900623, CPS-B-21 patch)", MACHINE_SUPPORTS_SAVE )
@@ -14424,3 +14447,4 @@ GAME( 1991,  3wonders17p, 3wonders,  cps1_10MHz,  3wonders,  cps_state,  init_cp
 GAME( 1991,  sf2ww17p,    sf2,       cps1_10MHz,  sf2,       cps_state,  init_cps1,  ROT0, "Capcom", "Street Fighter II: The World Warrior (World 920312, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
 GAME( 1989,  ffight17p,   ffight,    cps1_10MHz,  ffight,    cps_state,  init_cps1,  ROT0, "Capcom", "Final Fight (World, set 1, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
 GAME( 1989,  strider17p,  strider,   cps1_10MHz,  strider,   cps_state,  init_cps1,  ROT0, "Capcom", "Strider (USA, B-Board 89624B-2, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
+GAME( 1989,  willow17p,   willow,    cps1_10MHz,  willow,    cps_state,  init_cps1,  ROT0, "Capcom", "Willow (World, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
