@@ -14449,6 +14449,27 @@ ROM_START( kod17p )
 	ROM_LOAD( "kd_19.12c", 0x20000, 0x20000, CRC(92941b80) SHA1(5fa7c2793e6febee54a83042d118ddd4f2b7d127) )
 ROM_END
 
+// mtwins on pang3 bootleg, b17 hack
+ROM_START( mtwins17p )
+	ROM_REGION( CODE_SIZE, "maincpu", 0 )
+	ROM_LOAD16_WORD_SWAP( "rom17.bin", 0x00000, 0x80000, CRC(09107115) SHA1(9116fa63f2855ec49d889b003b05e77ea5c9f3c7) )
+	ROM_LOAD16_WORD_SWAP( "rom16.bin", 0x80000, 0x80000, CRC(9b70bd41) SHA1(28ec37d9d0ace5b9fd212fdc02e0f13dc280c068) )
+
+	ROM_REGION( 0x200000, "gfx", 0 ) // use same layout as pang 3
+	ROM_LOAD64_WORD( "rom1.bin", 0x00000, 0x80000, CRC(f7307f71) SHA1(92c20592eb6a433108d313a08b291f25b5429d7f) )
+	ROM_CONTINUE(                0x00004, 0x80000 )
+	ROM_LOAD64_WORD( "rom7.bin", 0x00002, 0x80000, CRC(4ec4b2da) SHA1(9adbb9519f0e04e4afdd2bbde887674ab9773f16) )
+	ROM_CONTINUE(                0x00006, 0x80000 )
+
+	ROM_REGION( 0x18000, "audiocpu", 0 )
+	ROM_LOAD( "ch_09.12b", 0x00000, 0x08000, CRC(4d4255b7) SHA1(81a76b58043af7252a854b7efc4109957ef0e679) )
+	ROM_CONTINUE(          0x10000, 0x08000 )
+
+	ROM_REGION( 0x40000, "oki", 0 )
+	ROM_LOAD( "ch_18.11c", 0x00000, 0x20000, CRC(f909e8de) SHA1(2dd5bd4076e7d5ded98b72919f868ea700df2e4f) )
+	ROM_LOAD( "ch_19.12c", 0x20000, 0x20000, CRC(fc158cf7) SHA1(294b93d0aea60663ffe96364671552e944a1264b) )
+ROM_END
+
 	//ROM_REGION( CODE_SIZE, "maincpu", 0 )
 	//ROM_LOAD( "mainrom.bin", 0x000000, 0x100000, CRC(0000) SHA1(000000) )
 
@@ -14471,3 +14492,4 @@ GAME( 1989,  ffight17p,   ffight,    cps1_10MHz,  ffight,    cps_state,  init_cp
 GAME( 1989,  strider17p,  strider,   cps1_10MHz,  strider,   cps_state,  init_cps1,  ROT0, "Capcom", "Strider (USA, B-Board 89624B-2, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
 GAME( 1989,  willow17p,   willow,    cps1_10MHz,  willow,    cps_state,  init_cps1,  ROT0, "Capcom", "Willow (World, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
 GAME( 1991,  kod17p,      kod,       cps1_10MHz,  kod,       cps_state,  init_cps1,  ROT0, "Capcom", "The King of Dragons (World 910731, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
+GAME( 1990,  mtwins17p,   mtwins,    cps1_10MHz,  mtwins,    cps_state,  init_cps1,  ROT0, "Capcom", "Mega Twins (World 900619, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )

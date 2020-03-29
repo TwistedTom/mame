@@ -1694,6 +1694,7 @@ static const struct CPS1config cps1_config_table[]=
 	{"strider17p",  CPS_B_17,     mapper_ST24M1 },
 	{"willow17p",   CPS_B_17,     mapper_WL24B },
 	{"kod17p",      CPS_B_17,     mapper_KD29B,  0x36, 0, 0x34 },
+	{"mtwins17p",   CPS_B_17,     mapper_CK24B },
 	
 	{nullptr}     /* End of table */
 };
