@@ -14409,11 +14409,9 @@ ROM_END
 
 // willow on pang3 bootleg, b17 hack
 ROM_START( willow17p )
-	//ROM_REGION( CODE_SIZE, "maincpu", 0 )
-	//ROM_LOAD16_WORD_SWAP( "rom17.bin", 0x00000, 0x80000, CRC(00000) SHA1(000000000) )
-	//ROM_LOAD16_WORD_SWAP( "rom16.bin", 0x80000, 0x80000, CRC(00000) SHA1(000000000) )
 	ROM_REGION( CODE_SIZE, "maincpu", 0 )
-	ROM_LOAD( "mainrom.bin", 0x000000, 0x100000, CRC(c73b97ac) SHA1(4983ebbd9e5a059144f1039d73d70f1986c292a7) )
+	ROM_LOAD16_WORD_SWAP( "rom17.bin", 0x00000, 0x80000, CRC(c6836254) SHA1(504af30a05f5b6b68f68df93478cc55bd380aa9f) )
+	ROM_LOAD16_WORD_SWAP( "rom16.bin", 0x80000, 0x80000, CRC(dfd9f643) SHA1(9c760c30af593a87e7fd39fb213a4c73c68ca440) )
 
 	ROM_REGION( 0x400000, "gfx", 0 ) // use same layout as pang 3
 	ROM_LOAD64_WORD( "rom1.bin", 0x000000, 0x100000, CRC(96b4ca09) SHA1(021c233048149d5756cae64751058a662fdd1c57) )
@@ -14429,6 +14427,30 @@ ROM_START( willow17p )
 	ROM_LOAD( "wl_18.11c", 0x00000, 0x20000, CRC(bde23d4d) SHA1(d1fee2f99c858dfb07edcd600da491c7b656afe0) )
 	ROM_LOAD( "wl_19.12c", 0x20000, 0x20000, CRC(683898f5) SHA1(316a77b663d78c8b9ff6d85756cb05aaaeef4003) )
 ROM_END
+
+// kodr2 910731 fba phoenix set (multiply protection removed), b17 hack
+ROM_START( kod17p )
+	ROM_REGION( CODE_SIZE, "maincpu", 0 )
+	ROM_LOAD16_WORD_SWAP( "rom17.bin", 0x00000, 0x80000, CRC(3deaab53) SHA1(13e09ba50e443034a7d5b5d1b669c1a53c102f90) )
+	ROM_LOAD16_WORD_SWAP( "rom16.bin", 0x80000, 0x80000, CRC(9bd7ad4b) SHA1(7bece5d408fd13116bd5518014b632ecc9a2feaa) )
+	
+	ROM_REGION( 0x400000, "gfx", 0 ) // use same layout as pang 3
+	ROM_LOAD64_WORD( "rom1.bin", 0x000000, 0x100000, CRC(42f12887) SHA1(25cca1cea5af5577647acd0bd4398a0f0bac1aca) )
+	ROM_CONTINUE(                0x000004, 0x100000 )
+	ROM_LOAD64_WORD( "rom7.bin", 0x000002, 0x100000, CRC(d1e25877) SHA1(5dcf0c6eeba384ee55128c654008c3d8f05a1b89) )
+	ROM_CONTINUE(                0x000006, 0x100000 )
+
+	ROM_REGION( 0x18000, "audiocpu", 0 )
+	ROM_LOAD( "kd_9.12a",  0x00000, 0x08000, CRC(bac6ec26) SHA1(6cbb6d55660150ae3f5270e023328275ee1bbf50) )
+	ROM_CONTINUE(          0x10000, 0x08000 )
+
+	ROM_REGION( 0x40000, "oki", 0 )
+	ROM_LOAD( "kd_18.11c", 0x00000, 0x20000, CRC(4c63181d) SHA1(270f27534a95cb0be3ff3f9ca71c502320d8090b) )
+	ROM_LOAD( "kd_19.12c", 0x20000, 0x20000, CRC(92941b80) SHA1(5fa7c2793e6febee54a83042d118ddd4f2b7d127) )
+ROM_END
+
+	//ROM_REGION( CODE_SIZE, "maincpu", 0 )
+	//ROM_LOAD( "mainrom.bin", 0x000000, 0x100000, CRC(0000) SHA1(000000) )
 
 //                        PARENT     MACHINE      INPUT       CLASS       INIT
 GAME( 1988,  ghouls21,    ghouls,    cps1_12MHz,  ghouls,    cps_state,  init_cps1,  ROT0, "Capcom", "Ghouls'n Ghosts (World, 91635B-2)", MACHINE_SUPPORTS_SAVE )
@@ -14448,3 +14470,4 @@ GAME( 1991,  sf2ww17p,    sf2,       cps1_10MHz,  sf2,       cps_state,  init_cp
 GAME( 1989,  ffight17p,   ffight,    cps1_10MHz,  ffight,    cps_state,  init_cps1,  ROT0, "Capcom", "Final Fight (World, set 1, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
 GAME( 1989,  strider17p,  strider,   cps1_10MHz,  strider,   cps_state,  init_cps1,  ROT0, "Capcom", "Strider (USA, B-Board 89624B-2, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
 GAME( 1989,  willow17p,   willow,    cps1_10MHz,  willow,    cps_state,  init_cps1,  ROT0, "Capcom", "Willow (World, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
+GAME( 1991,  kod17p,      kod,       cps1_10MHz,  kod,       cps_state,  init_cps1,  ROT0, "Capcom", "The King of Dragons (World 910731, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
