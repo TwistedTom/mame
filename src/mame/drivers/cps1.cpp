@@ -14179,7 +14179,7 @@ ROM_END
 // ghouls on pang3 bootleg, b17 hack
 ROM_START( ghouls17p )
 	ROM_REGION( CODE_SIZE, "maincpu", 0 )
-	ROM_LOAD16_WORD_SWAP( "rom17.bin", 0x00000, 0x80000, CRC(e182d2cb) SHA1(89d793042c447828f7de86c2f35c3c5b5535d18d) )  // b17 hack
+	ROM_LOAD16_WORD_SWAP( "rom17.bin", 0x00000, 0x80000, CRC(cf2f5a97) SHA1(59e9bce82b5b952daac25623bd0d97266a940493) )  // b17 hack
 	ROM_LOAD16_WORD_SWAP( "rom16.bin", 0x80000, 0x80000, CRC(595ff2f3) SHA1(ac14b81e15f2c340526a03acbb4c28181d94d5b9) )  // = dm-17.7j byteswapped
 
 	ROM_REGION( 0x400000, "gfx", 0 ) // use same layout as pang 3
