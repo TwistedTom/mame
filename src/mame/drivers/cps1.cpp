@@ -14452,7 +14452,7 @@ ROM_END
 // mtwins on pang3 bootleg, b17 hack
 ROM_START( mtwins17p )
 	ROM_REGION( CODE_SIZE, "maincpu", 0 )
-	ROM_LOAD16_WORD_SWAP( "rom17.bin", 0x00000, 0x80000, CRC(09107115) SHA1(9116fa63f2855ec49d889b003b05e77ea5c9f3c7) )
+	ROM_LOAD16_WORD_SWAP( "rom17.bin", 0x00000, 0x80000, CRC(3543fa12) SHA1(69c3029da401b3dd53b0ab65e789acc2fe11e889) )
 	ROM_LOAD16_WORD_SWAP( "rom16.bin", 0x80000, 0x80000, CRC(9b70bd41) SHA1(28ec37d9d0ace5b9fd212fdc02e0f13dc280c068) )
 
 	ROM_REGION( 0x200000, "gfx", 0 ) // use same layout as pang 3
