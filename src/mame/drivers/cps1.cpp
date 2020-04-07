@@ -12936,7 +12936,7 @@ ROM_START( pang3b3 )
 	ROM_CONTINUE(                  0x000006, 0x100000 )
 
 	ROM_REGION( 0x18000, "audiocpu", 0 ) /* 64k for the audio CPU (+banks) */
-	ROM_LOAD( "u11f1.bin",  0x00000, 0x08000, CRC(278d786c) SHA1(bf226adf766b7d24a60e20d19d586c9fafe0973d) )  // == pa3_11.11f cut to fit 27c512 (just empty space cut)
+	ROM_LOAD( "u11f1.bin",  0x00000, 0x08000, CRC(278d786c) SHA1(bf226adf766b7d24a60e20d19d586c9fafe0973d) )  // == pa3_11.11f (empty space cut to fit into 27c512)
 	ROM_IGNORE( 0x08000 )
 
 	ROM_REGION( 0x40000, "oki", 0 ) /* Samples */
@@ -12954,10 +12954,6 @@ ROM_START( pang3b3 )
 	ROM_LOAD( "cp1b1f.1f",    0x0000, 0x0117, CRC(3979b8e3) SHA1(07c9819d68b4d93bc37b96bd15d689ce54fe034e) )
 	ROM_LOAD( "cp1b8k.8k",    0x0000, 0x0117, CRC(8a52ea7a) SHA1(47a59abc54a83292cfd6faa2d293c8f948c7ea03) )
 	ROM_LOAD( "cp1b9k.9k",    0x0000, 0x0117, CRC(a754bdc3) SHA1(9267b24cbddee4858b219468cc92f9df8f5fd0ef) )
-
-	ROM_REGION( 0x0200, "cboardplds", 0 )
-	ROM_LOAD( "ioc1.ic7",     0x0000, 0x0104, CRC(a399772d) SHA1(55471189db573dd61e3087d12c55564291672c77) )
-	ROM_LOAD( "c632.ic1",     0x0000, 0x0117, CRC(0fbd9270) SHA1(d7e737b20c44d41e29ca94be56114b31934dde81) )
 ROM_END
 
 /* B-Board 91635B-2 */
