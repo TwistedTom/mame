@@ -13722,6 +13722,7 @@ GAME( 1995, pang3,       0,        pang3,      pang3,    cps_state,   init_pang3
 GAME( 1995, pang3r1,     pang3,    pang3,      pang3,    cps_state,   init_pang3,    ROT0,   "Mitchell", "Pang! 3 (Euro 950511)", MACHINE_SUPPORTS_SAVE )
 GAME( 1995, pang3j,      pang3,    pang3,      pang3,    cps_state,   init_pang3,    ROT0,   "Mitchell", "Pang! 3: Kaitou Tachi no Karei na Gogo (Japan 950511)", MACHINE_SUPPORTS_SAVE )
 GAME( 1995, pang3b,      pang3,    pang3,      pang3b,   cps_state,   init_pang3b,   ROT0,   "bootleg",  "Pang! 3 (bootleg, set 1)", MACHINE_SUPPORTS_SAVE )    // 950511 - based on Euro version
+GAME( 1995, pang3b2,     pang3,    pang3,      pang3,    cps_state,   init_pang3,    ROT0,   "bootleg",  "Pang! 3 (bootleg, set 2)", MACHINE_SUPPORTS_SAVE )    // 950601 - based on Euro version
 
 /* Home 'CPS Changer' Unit */
 
