@@ -536,6 +536,7 @@ MACHINES["LH5810"] = true
 MACHINES["LINFLASH"] = true
 MACHINES["LPCI"] = true
 MACHINES["LSI53C810"] = true
+MACHINES["M3002"] = true
 MACHINES["M68307"] = true
 MACHINES["M68340"] = true
 MACHINES["M6M80011AP"] = true
@@ -3281,6 +3282,7 @@ files {
 	MAME_DIR .. "src/mame/drivers/roland_jv80.cpp",
 	MAME_DIR .. "src/mame/drivers/roland_jx3p.cpp",
 	MAME_DIR .. "src/mame/drivers/roland_jx8p.cpp",
+	MAME_DIR .. "src/mame/drivers/roland_mc50.cpp",
 	MAME_DIR .. "src/mame/drivers/roland_mt32.cpp",
 	MAME_DIR .. "src/mame/drivers/roland_r8.cpp",
 	MAME_DIR .. "src/mame/drivers/roland_ra30.cpp",
