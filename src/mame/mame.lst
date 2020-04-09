@@ -2747,6 +2747,7 @@ pg750                           // Siemens PG 750
 pg750eisa                       // Siemens PG 750 486 EISA
 samdm286                        // Samsung Deskmaster 286-12
 zdz248                          // Zenith Z-248
+ncr3433                         // NCR Class 3433
 
 
 @source:atari_s1.cpp
@@ -10295,6 +10296,7 @@ armchmp2                        // (c) 1992 Jaleco
 armchmp2o                       // (c) 1992 Jaleco
 armchmp2o2                      // (c) 1992 Jaleco
 bigrun                          // (c) 1989 Jaleco
+bigrunu                         // (c) 1989 Jaleco
 captflag                        // (c) 1993 Jaleco
 cischeat                        // (c) 1990 Jaleco
 f1gpstar                        // (c) 1992 Jaleco
@@ -10705,6 +10707,7 @@ nemor1                          // 09/11/1990 (c) 1990 (World)
 pang3                           // 01/06/1995 (c) 1995 Mitchell (Euro) not listed on Capcom's site
 pang3b                          // bootleg
 pang3b2                         // bootleg
+pang3b3                         // bootleg
 pang3j                          // 11/05/1995 (c) 1995 Mitchell (Japan) not listed on Capcom's site
 pang3r1                         // 11/05/1995 (c) 1995 Mitchell (Euro) not listed on Capcom's site
 pnickj                          // 08/06/1994 (c) 1994 Compile + Capcom license (Japan) not listed on Capcom's site
@@ -16392,6 +16395,7 @@ xymg                            // (c) 1996
 
 @source:igs017.cpp
 genius6                         // (c) 1998?
+happyskl                        // (c) 2001?
 iqblocka                        // (c) 1996
 iqblockf                        // (c) 1996
 lhzb2                           // (c) 1998
@@ -31727,9 +31731,10 @@ spec2k                          // (c) 2000 Yonatech
 spec2kh                         // (c) 2000 Yonatech
 ssmissin                        // (c) 1992 Comad
 stagger1                        // (c) 1998
-strahl                           // UPL-91074 (c) 1992 UPL (World)
-strahlj                          // UPL-91074 (c) 1992 UPL (Japan)
-strahlja                         // UPL-91074 (c) 1992 UPL (Japan)
+strahl                          // UPL-91074 (c) 1992 UPL (World)
+strahlj                         // UPL-91074 (c) 1992 UPL (Japan)
+strahlja                        // UPL-91074 (c) 1992 UPL (Japan)
+strahljbl                       // bootleg
 tdragon                         // (c) 1991 NMK / Tecmo
 tdragon1                        // (c) 1991 NMK / Tecmo
 tdragon2                        // UPL-93091 (c) 1993 NMK
@@ -34654,6 +34659,11 @@ jx8p                            //
 jx8po                           //
 mks70                           //
 
+@source:roland_mc50.cpp
+mc300                           //
+mc50                            //
+mc50mk2                         //
+
 @source:roland_mt32.cpp
 cm32l                           //
 mt32                            //
@@ -35061,10 +35071,7 @@ safarir                         // (c) 1980 Shin Nihon Kikaku (SNK) + Taito lice
 safarirj                        // (c) 1979 Shin Nihon Kikaku (SNK)
 
 @source:sag.cpp
-sag_baseb4
-sag_footb4
-sag_pinb
-sag_sinv2
+sag
 
 @source:sage2.cpp
 sage2                           //
