@@ -102,6 +102,7 @@ Street Fighter II: The World Warrior (World 910204)                89625B-1   ST
 Street Fighter II: The World Warrior (World 910214)                90629B-2   STF29            IOB1  90632C-1     CPS-B-17  DL-0411-10012  C632
 Street Fighter II: The World Warrior (World 910228)                90629B-3   STF29            IOB2  90632C-1     CPS-B-18  DL-0411-10013  C632B
 Street Fighter II: The World Warrior (World 910318)                90629B-3   STF29            IOB1  90632C-1     CPS-B-05  DL-0411-10006  C632
+Street Fighter II: The World Warrior (World 910411)                90629B-3   STF29            IOB1  90632C-1     CPS-B-15  DL-0411-10010  C632
 Street Fighter II: The World Warrior (World 910522)                90629B-3   STF29            IOB1  90632C-1     CPS-B-11  DL-0411-10004  C632
 Street Fighter II: The World Warrior (USA 910206)                  90629B-2   STF29            IOB1  90632C-1     CPS-B-17  DL-0411-10012  C632
 Street Fighter II: The World Warrior (USA 910214)                  90629B-3   STF29            IOB1  90632C-1     CPS-B-17  DL-0411-10012  C632
@@ -1410,16 +1411,19 @@ pin 19  = B7;  Combinatorial output
 !B0 =  I0 &  I9;
 
 */
-// wrong, need to figure this out from the PAL
 
 #define mapper_KNM10B    { 0x8000, 0x8000, 0x8000, 0 }, mapper_KNM10B_table
 static const struct gfx_range mapper_KNM10B_table[] =
 {
+	// verified from PAL dump:
+	// bank0 = pin 19 (ROMs 1,3) & pin 18 (ROMs 2,4)
+	// bank1 = pin 17 (ROMs 5,7) & pin 16 (ROMs 6,8)
+	// bank2 = pin 15 (ROMs 10,12) & pin 14 (ROMs 11,13)
+	
 	/* type             start    end      bank */
-
 	{ GFXTYPE_SPRITES , 0x00000, 0x07fff, 0 },
 	{ GFXTYPE_SPRITES , 0x08000, 0x0ffff, 1 },
-	{ GFXTYPE_SPRITES , 0x10000, 0x17fff, 2 },
+	{ GFXTYPE_SPRITES , 0x10000, 0x10fff, 2 },
 	{ GFXTYPE_SCROLL2 , 0x04000, 0x07fff, 2 },
 	{ GFXTYPE_SCROLL1,  0x01000, 0x01fff, 2 },
 	{ GFXTYPE_SCROLL3 , 0x02000, 0x03fff, 2 },
@@ -1512,6 +1516,7 @@ static const struct CPS1config cps1_config_table[]=
 	{"sf2eb",       CPS_B_17,     mapper_STF29,  0x36 },
 	{"sf2ed",       CPS_B_05,     mapper_STF29,  0x36 },
 	{"sf2ee",       CPS_B_18,     mapper_STF29,  0x3c },
+	{"sf2ef",       CPS_B_15,     mapper_STF29,  0x36 },
 	{"sf2em",       CPS_B_17,     mapper_STF29,  0x36 },
 	{"sf2en",       CPS_B_17,     mapper_STF29,  0x36 },
 	{"sf2ebbl",     CPS_B_17,     mapper_STF29,  0x36, 0, 0, 1  },
@@ -1639,6 +1644,7 @@ static const struct CPS1config cps1_config_table[]=
 	{"wofu",        CPS_B_21_QS1, mapper_TK263B },
 	{"wofj",        CPS_B_21_QS1, mapper_TK263B },
 	{"wofhfh",      CPS_B_21_DEF, mapper_TK263B, 0x36 },    /* Chinese bootleg */
+	{"wofpic",      CPS_B_21_DEF, mapper_TK263B, 0x36 },
 	{"dino",        CPS_B_21_QS2, mapper_CD63B },   /* layer enable never used */
 	{"dinou",       CPS_B_21_QS2, mapper_CD63B },   /* layer enable never used */
 	{"dinoj",       CPS_B_21_QS2, mapper_CD63B },   /* layer enable never used */
@@ -1693,7 +1699,7 @@ static const struct CPS1config cps1_config_table[]=
 
 	/* CPS1 board + extra support boards */
 
-	{"kenseim",     CPS_B_21_DEF, mapper_KNM10B },  // wrong, need to convert equations from PAL
+	{"kenseim",     CPS_B_21_DEF, mapper_KNM10B },
 
 	{nullptr}     /* End of table */
 };
