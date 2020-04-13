@@ -196,7 +196,7 @@ DEVICE_IMAGE_LOAD_MEMBER(microvision_state::cart_load)
 	m_cart->common_load_rom(m_cart->get_rom_base(), size, "rom");
 
 	// set default settings
-	u32 clock = (size == 0x400) ? 3500000 : 500000;
+	u32 clock = (size == 0x400) ? 3000000 : 500000;
 	m_pla_auto = 0;
 	m_butmask_auto = 0xfff;
 	m_paddle_auto = false;
@@ -215,7 +215,7 @@ DEVICE_IMAGE_LOAD_MEMBER(microvision_state::cart_load)
 	// detect MCU on file size
 	if (size == 0x400)
 	{
-		// I8021 MCU
+		// 8021 MCU
 		memcpy(memregion("i8021_cpu")->base(), m_cart->get_rom_base(), size);
 		m_i8021->set_clock(clock);
 	}
@@ -284,12 +284,9 @@ READ8_MEMBER(microvision_state::tms1100_k_r)
 
 	// K8: paddle capacitor
 	if (m_paddle_on)
-	{
-		u8 paddle = m_paddle_timer->enabled() ? 0 : BIT(m_r, 2);
-		return paddle << 3 | data;
-	}
-	else
-		return data;
+		data |= (m_paddle_timer->enabled() ? 0 : BIT(m_r, 2)) << 3;
+
+	return data;
 }
 
 WRITE16_MEMBER(microvision_state::tms1100_o_w)
@@ -505,5 +502,5 @@ ROM_END
     Drivers
 ******************************************************************************/
 
-//    YEAR  NAME      PARENT CMP MACHINE     INPUT         CLASS              INIT        COMPANY, FULLNAME, FLAGS
+//    YEAR  NAME      PARENT CMP MACHINE      INPUT        CLASS              INIT        COMPANY, FULLNAME, FLAGS
 CONS( 1979, microvsn, 0,      0, microvision, microvision, microvision_state, empty_init, "Milton Bradley", "Microvision", MACHINE_SUPPORTS_SAVE | MACHINE_REQUIRES_ARTWORK )
