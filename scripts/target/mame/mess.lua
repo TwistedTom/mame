@@ -460,6 +460,8 @@ MACHINES["ATAFLASH"] = true
 MACHINES["AY31015"] = true
 MACHINES["BANKDEV"] = true
 MACHINES["BIM68153"] = true
+MACHINES["BQ4847"] = true
+MACHINES["BQ4852"] = true
 MACHINES["CDP1852"] = true
 MACHINES["CDP1871"] = true
 MACHINES["CDP1879"] = true
@@ -1235,6 +1237,7 @@ function linkProjects_mame_mess(_target, _subtarget)
 		"ne",
 		"nec",
 		"netronic",
+		"news_68k",
 		"news_r3k",
 		"next",
 		"nintendo",
@@ -2946,6 +2949,15 @@ files {
 	MAME_DIR .. "src/mame/includes/exp85.h",
 }
 
+createMESSProjects(_target, _subtarget, "news_68k")
+files {
+	MAME_DIR .. "src/mame/drivers/news_68k.cpp",
+	MAME_DIR .. "src/mame/machine/dmac_0266.cpp",
+	MAME_DIR .. "src/mame/machine/dmac_0266.h",
+	MAME_DIR .. "src/mame/machine/news_hid.cpp",
+	MAME_DIR .. "src/mame/machine/news_hid.h",
+}
+
 createMESSProjects(_target, _subtarget, "news_r3k")
 files {
 	MAME_DIR .. "src/mame/drivers/news_r3k.cpp",
@@ -3959,6 +3971,7 @@ files {
 	MAME_DIR .. "src/mame/drivers/bbl380.cpp",
 	MAME_DIR .. "src/mame/drivers/actions_atj2279b.cpp",
 	MAME_DIR .. "src/mame/drivers/pubint_storyreader.cpp",
+	MAME_DIR .. "src/mame/drivers/magiceyes_pollux_vr3520f.cpp",
 }
 
 createMESSProjects(_target, _subtarget, "ultimachine")
