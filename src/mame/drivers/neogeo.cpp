@@ -673,7 +673,6 @@ public:
 	void jockeygp(machine_config &config);
 	void vliner(machine_config &config);
 	void sbp(machine_config &config);
-	void mslug5b(machine_config &config);
 
 protected:
 	virtual void machine_start() override;
@@ -2873,12 +2872,6 @@ void mvs_led_state::sbp(machine_config &config)
 {
 	mv1_fixed(config);
 	cartslot_fixed(config, "boot_sbp");
-}
-
-void mvs_led_state::mslug5b(machine_config &config)
-{
-	mv1_fixed(config);
-	cartslot_fixed(config, "boot_mslug5b");
 }
 
 
@@ -11788,43 +11781,6 @@ ROM_START( samsho5c )  // 270
 ROM_END
 
 
-/*
-   mslug5  my bootleg cart
-*/
-ROM_START( mslug5b )  // 268
-	ROM_REGION( 0x500000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
-	ROM_LOAD16_WORD_SWAP( "268-p1b.p1", 0x000000, 0x100000, CRC(1376f43c) SHA1(7ca4a8b11c7effda2603d04e793cf664e7aa39bf) ) /* MX29F1615PC-10     16Mbit  2nd half empty */
-	ROM_LOAD16_WORD_SWAP( "268-p2b.p2", 0x100000, 0x400000, CRC(4becfba0) SHA1(fd3708f6c8fa26133b29b4b033148dff54dc1e7d) ) /* LH28F320BJD-TTL80  32Mbit  3.3v */
-	
-	// scrambled?  has "PLUS" tiles
-	NEO_SFIX_128K( "268-s1b.s1", CRC(3a427c9f) SHA1(6c6050640adb7148d42d35e3017cc171e53ae957) ) /* W29C011A-15  1Mbit */
-	
-	// S_decrypt opt 6
-	// very similar to mslug5c but with "PLUS" tiles, doesn't match ms5plus
-	//NEO_SFIX_128K( "268-s1b_decoded.s1", CRC(99ef577b) SHA1(82f30b61ea4439a6673e0b70b7a9aceaaafd8943) ) /* W29C011A-15  1Mbit */
-	
-	NEO_BIOS_AUDIO_128K( "268-m1b.m1", CRC(bf1601bc) SHA1(5e285c98c65acefd77e893247482af0d09f3e1e4) ) /* W29EE011-15  1Mbit */
-
-	// TODO: dump
-	ROM_REGION( 0x1000000, "cslot1:ymsnd", 0 )
-	ROM_LOAD( "268-v1d.v1", 0x000000, 0x400000, CRC(f61daa9e) SHA1(c9a64c48a37d9fcbd83f34580f44330aab0a0601) ) /* LH28F320BJD-TTL80  32Mbit  3.3v */
-	ROM_LOAD( "268-v2d.v2", 0x400000, 0x400000, CRC(eeb7c926) SHA1(4d71f59948bdc5ed2e6daf101f16fd979e1ab193) ) /* LH28F320BJD-TTL80  32Mbit  3.3v */
-	ROM_LOAD( "268-v3d.v3", 0x800000, 0x400000, CRC(02fd519e) SHA1(6fbda5bf8dbf52bc110aba7b9d20b24bdc2fe0d7) ) /* LH28F320BJD-TTL80  32Mbit  3.3v */
-	ROM_LOAD( "268-v4d.v4", 0xc00000, 0x400000, CRC(d7c67794) SHA1(345dcbf76b25b2fbd10bcaf08ee395da0a52c5ce) ) /* LH28F320BJD-TTL80  32Mbit  3.3v */
-
-	// TODO: dump
-	ROM_REGION( 0x4000000, "cslot1:sprites", 0 )
-	ROM_LOAD16_BYTE( "268-c1d.c1", 0x0000000, 0x800000, CRC(e8239365) SHA1(e0a75902a783110049730b66ad3cbccdd804bf62) ) /* M59PW064  64Mbit  3.3v */
-	ROM_LOAD16_BYTE( "268-c2d.c2", 0x0000001, 0x800000, CRC(89b21d4c) SHA1(862ac31ce9570529b33e6f58ada0ac867a442679) ) /* M59PW064  64Mbit  3.3v */
-	ROM_LOAD16_BYTE( "268-c3d.c3", 0x1000000, 0x800000, CRC(3cda13a0) SHA1(5d029c92688384eafd65ad711a2954d0b86a3163) ) /* M59PW064  64Mbit  3.3v */
-	ROM_LOAD16_BYTE( "268-c4d.c4", 0x1000001, 0x800000, CRC(9c00160d) SHA1(c612102f9cd288bba4c245b5855d795e4362b217) ) /* M59PW064  64Mbit  3.3v */
-	ROM_LOAD16_BYTE( "268-c5d.c5", 0x2000000, 0x200000, CRC(445d1a08) SHA1(2fe5805467c714e0fce98251867a7b1f26bf6ac4) ) /* LH28F160BJD-TTL80  16Mbit  3.3v */
-	ROM_LOAD16_BYTE( "268-c6d.c6", 0x2000001, 0x200000, CRC(f9aabed1) SHA1(27e8277f5be42c62b3e577150365be2adeb18a5a) ) /* LH28F160BJD-TTL80  16Mbit  3.3v */
-	ROM_LOAD16_BYTE( "268-c7d.c7", 0x3000000, 0x800000, CRC(c9f8c357) SHA1(7064224afa887f57245f5479b0b46228539a131b) ) /* M59PW064  64Mbit  3.3v */
-	ROM_LOAD16_BYTE( "268-c8d.c8", 0x3000001, 0x800000, CRC(fafc3eb9) SHA1(f4f73194cc7fd151be3ca2561f993b5be7628369) ) /* M59PW064  64Mbit  3.3v */
-ROM_END
-
-
 ROM_START( garouc )
 	ROM_REGION( 0x500000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
 	//ROM_LOAD16_WORD_SWAP( "proto_253-p1.p1", 0x000000, 0x100000, CRC(c72f0c16) SHA1(1ff6bb651682f93bef9ff02622c3cf63fe594986) )  // garoup
@@ -12605,7 +12561,6 @@ GAME( 2019, sengoku3c,  neogeo,   neobase,   neogeo,    mvs_led_state, empty_ini
 GAME( 2019, rotdc,      neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Evoga / Playmore", "Rage of the Dragons (NGH-2640?) (PROGBK1/CHA512Y Conversion)", MACHINE_SUPPORTS_SAVE )
 GAME( 2019, svcc,       neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Playmore / Capcom", "SNK vs. Capcom - SVC Chaos (NGM-2690 ~ NGH-2690) (PROGBK1/CHA512Y Conversion)", MACHINE_SUPPORTS_SAVE )
 GAME( 2019, samsho5c,   neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Yuki Enterprise / SNK Playmore", "Samurai Shodown V / Samurai Spirits Zero (NGM-2700) (PROGBK1/CHA512Y Conversion)", MACHINE_SUPPORTS_SAVE )
-GAME( 2019, mslug5b,    neogeo,   mslug5b,   neogeo,    mvs_led_state, empty_init, ROT0, "bootleg", "Metal Slug 5 (bootleg)", MACHINE_SUPPORTS_SAVE )
 GAME( 2020, garouc,     neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "SNK", "Garou - Mark of the Wolves (NGM-2530) (PROGBK1/CHA512Y Conversion)" , MACHINE_SUPPORTS_SAVE )
 
 
