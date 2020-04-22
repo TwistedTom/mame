@@ -15573,6 +15573,7 @@ gunsmokej                       // 11/1985 (c) 1985 (Japan)
 gunsmokeu                       // 11/1985 (c) 1985 + Romstar (US)
 gunsmokeua                      // 11/1985 (c) 1985 (US)
 gunsmokeub                      // 11/1985 (c) 1985 (US)
+gunsmokeg                       //
 
 @source:gyruss.cpp
 gyruss                          // GX347 (c) 1983
@@ -15751,6 +15752,7 @@ cmspacmn                        // Coleco
 cpacman                         // Coleco
 cpacmanr1                       // Coleco (rev 1)
 egalaxn2                        // Entex
+einvader2                       // Entex
 epacman2                        // Entex
 epacman2r                       // Entex
 estargte                        // Entex
@@ -16265,6 +16267,8 @@ hpz80unk                        //
 @source:hp80.cpp
 hp85                            //
 hp86b                           //
+hp86b_001                       //
+hp86b_004                       //
 
 @source:hshavoc.cpp
 hshavoc                         // (c) 1993 Data East
@@ -18825,6 +18829,7 @@ k2000                           // (c) 1990 Kurzweil Music Systems
 ksayakyu                        // ??? (c) 1985 Taito Corporation
 
 @source:ksys573.cpp
+animechmp                       // 2000 - Anime Champ (GCA07 VER. JAA)
 bassang2                        // 1998 - Bass Angler 2 (GE865 VER. JAA)
 bassangl                        // 1998 - Bass Angler (GE765 VER. JAA)
 cr589fw                         // 1999 - CR-589 Firmware (700B04)
@@ -18894,6 +18899,7 @@ fghtmn                          // 2000 - Fighting Mania (QG918 VER. EAA)
 fghtmna                         // 2000 - Fighting Mania (QG918 VER. AAA)
 fghtmnk                         // 2000 - Fighting Mania (QG918 VER. KAA)
 fghtmnu                         // 2000 - Fighting Mania (QG918 VER. IAA)
+gbbchmp                         // 2002 - Great Bishi Bashi Champ (GBA48 VER. JAB)
 gchgchmp                        // 1999 - Gachaga Champ (GE877 VER. JAB)
 gtfrk10m                        // 2003 - Guitar Freaks 10th Mix (G*D10 VER. JAB)
 gtfrk10ma                       // 2003 - Guitar Freaks 10th Mix (G*D10 VER. JAA)
@@ -19188,7 +19194,8 @@ eggventr7                       // (c) 1997 The Game Room
 eggventr8                       // (c) 1997 The Game Room
 eggventra                       // (c) 1997 The Game Room (Allied Leisure license)
 eggventrd                       // (c) 1997 The Game Room
-franticf                        // (c) 1996 The Game Room
+franticf                        // (c) 1998 ICE (Innovative Concepts in Entertainment, Inc.)
+franticfa                       // (c) 1996 The Game Room
 lethalj                         // (c) 1996 The Game Room
 ripribit                        // (c) 1997 LAI Games
 ripribita                       // (c) 1997 LAI Games
@@ -35137,6 +35144,9 @@ cp2000                          //
 @source:saitek_delta1.cpp
 ccdelta1                        //
 
+@source:saitek_exchess.cpp
+exchess
+
 @source:saitek_mark5.cpp
 ccmk5
 ccmk6
@@ -37335,6 +37345,7 @@ lxspidaj
 guitarfv
 guitarss
 guitarssa
+tmntbftc
 gssytts
 jjstrip
 vtechtvs
