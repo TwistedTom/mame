@@ -105,6 +105,9 @@
     <ClCompile Include="..\devices\nld_82S115.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\devices\nld_4013.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\devices\nld_4020.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -259,6 +262,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\devices\nld_4006.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\generated\static_solvers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\devices\nld_74393.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -467,6 +476,9 @@
     <ClInclude Include="..\devices\nlid_cmos.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\devices\nld_4013.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\devices\nld_4020.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -630,6 +642,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\devices\nld_7442.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\devices\nld_74393.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

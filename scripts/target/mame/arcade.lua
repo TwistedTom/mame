@@ -354,6 +354,7 @@ VIDEOS["SCN2674"] = true
 VIDEOS["PWM_DISPLAY"] = true
 --VIDEOS["SED1200"] = true
 --VIDEOS["SED1330"] = true
+--VIDEOS["SED1500"] = true
 --VIDEOS["SED1520"] = true
 VIDEOS["SNES_PPU"] = true
 VIDEOS["STVVDP"] = true
@@ -383,6 +384,7 @@ VIDEOS["VRENDER0"] = true
 
 MACHINES["ACORN_VIDC"] = true
 MACHINES["AKIKO"] = true
+--MACHINES["AM2901B"] = true
 MACHINES["ARM_IOMD"] = true
 MACHINES["AUTOCONFIG"] = true
 MACHINES["BUSMOUSE"] = true
@@ -1217,6 +1219,8 @@ files {
 	MAME_DIR .. "src/mame/drivers/jaguar.cpp",
 	MAME_DIR .. "src/mame/includes/jaguar.h",
 	MAME_DIR .. "src/mame/audio/jaguar.cpp",
+	MAME_DIR .. "src/mame/video/jag_blitter.cpp",
+	MAME_DIR .. "src/mame/video/jag_blitter.h",
 	MAME_DIR .. "src/mame/video/jaguar.cpp",
 	MAME_DIR .. "src/mame/video/jagblit.h",
 	MAME_DIR .. "src/mame/video/jagblit.hxx",
@@ -1520,8 +1524,6 @@ files {
 	MAME_DIR .. "src/mame/includes/mitchell.h",
 	MAME_DIR .. "src/mame/video/mitchell.cpp",
 	MAME_DIR .. "src/mame/drivers/sf.cpp",
-	MAME_DIR .. "src/mame/includes/sf.h",
-	MAME_DIR .. "src/mame/video/sf.cpp",
 	MAME_DIR .. "src/mame/drivers/sidearms.cpp",
 	MAME_DIR .. "src/mame/includes/sidearms.h",
 	MAME_DIR .. "src/mame/video/sidearms.cpp",
@@ -4330,6 +4332,7 @@ files {
 	MAME_DIR .. "src/mame/drivers/unico.cpp",
 	MAME_DIR .. "src/mame/includes/unico.h",
 	MAME_DIR .. "src/mame/video/unico.cpp",
+	MAME_DIR .. "src/mame/drivers/goori.cpp",
 }
 
 createMAMEProjects(_target, _subtarget, "univers")
@@ -4717,6 +4720,7 @@ files {
 	MAME_DIR .. "src/mame/drivers/coinmstr.cpp",
 	MAME_DIR .. "src/mame/drivers/coinmvga.cpp",
 	MAME_DIR .. "src/mame/drivers/comebaby.cpp",
+	MAME_DIR .. "src/mame/drivers/crazybal.cpp",
 	MAME_DIR .. "src/mame/drivers/cromptons.cpp",
 	MAME_DIR .. "src/mame/drivers/cupidon.cpp",
 	MAME_DIR .. "src/mame/drivers/bntyhunt.cpp",
@@ -4747,6 +4751,7 @@ files {
 	MAME_DIR .. "src/mame/drivers/discoboy.cpp",
 	MAME_DIR .. "src/mame/drivers/dominob.cpp",
 	MAME_DIR .. "src/mame/drivers/dorachan.cpp",
+	MAME_DIR .. "src/mame/drivers/drdmania.cpp",
 	MAME_DIR .. "src/mame/drivers/dreamwld.cpp",
 	MAME_DIR .. "src/mame/drivers/dribling.cpp",
 	MAME_DIR .. "src/mame/includes/dribling.h",
