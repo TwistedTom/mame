@@ -69,8 +69,8 @@
     - hard disk
         - 4105 SASI interface card
     - connect RS-232 printer port
-	- Z80 SCC/DART interrupt chain
-	- Z80 SCC DMA request
+    - Z80 SCC/DART interrupt chain
+    - Z80 SCC DMA request
 
 */
 
@@ -641,7 +641,7 @@ WRITE8_MEMBER( abc1600_state::cio_w )
 	m_cio->write(A2_A1, data);
 }
 
-READ8_MEMBER( abc1600_state::cio_pa_r )
+uint8_t abc1600_state::cio_pa_r()
 {
 	/*
 
@@ -672,7 +672,7 @@ READ8_MEMBER( abc1600_state::cio_pa_r )
 	return data;
 }
 
-READ8_MEMBER( abc1600_state::cio_pb_r )
+uint8_t abc1600_state::cio_pb_r()
 {
 	/*
 
@@ -700,7 +700,7 @@ READ8_MEMBER( abc1600_state::cio_pb_r )
 	return data;
 }
 
-WRITE8_MEMBER( abc1600_state::cio_pb_w )
+void abc1600_state::cio_pb_w(uint8_t data)
 {
 	/*
 
@@ -724,7 +724,7 @@ WRITE8_MEMBER( abc1600_state::cio_pb_w )
 	m_dart->rxca_w(prbr);
 }
 
-READ8_MEMBER( abc1600_state::cio_pc_r )
+uint8_t abc1600_state::cio_pc_r()
 {
 	/*
 
@@ -745,7 +745,7 @@ READ8_MEMBER( abc1600_state::cio_pc_r )
 	return data;
 }
 
-WRITE8_MEMBER( abc1600_state::cio_pc_w )
+void abc1600_state::cio_pc_w(uint8_t data)
 {
 	/*
 

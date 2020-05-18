@@ -826,15 +826,25 @@ void vertex_program_simulator::compute_scalar_operation(float t_out[4], int inst
 		t_out[3] = par_in[p3_C + 3];
 		break;
 	case 2: // "RCP"
-		t_out[0] = t_out[1] = t_out[2] = t_out[3] = 1.0f / par_in[p3_C + 0];
+		if (par_in[p3_C + 0] == 0)
+			t.f = std::numeric_limits<float>::infinity();
+		else if (par_in[p3_C + 0] == 1.0f)
+			t.f = 1.0f;
+		else
+			t.f = 1.0f / par_in[p3_C + 0];
+		t_out[0] = t_out[1] = t_out[2] = t_out[3] = t.f;
 		break;
 	case 3: // "RCC"
-		t_out[0] = t_out[1] = t_out[2] = t_out[3] = 1.0f / par_in[p3_C + 0]; // ?
+		t.f = par_in[p3_C + 0];
+		if ((t.f < 0) && (t.f > -5.42101e-20f))
+			t.f = -5.42101e-20f;
+		else if ((t.f >= 0) && (t.f < 5.42101e-20f))
+			t.f = 5.42101e-20f;
+		if (t.f != 1.0f)
+			t.f = 1.0f / t.f;
+		t_out[0] = t_out[1] = t_out[2] = t_out[3] = t.f;
 		break;
 	case 4: // "RSQ"
-		/*
-		 *  NOTE: this was abs which is "int abs(int x)" - and changed to fabsf due to clang 3.6 warning
-		 */
 		t_out[0] = t_out[1] = t_out[2] = t_out[3] = 1.0f / sqrtf(fabsf(par_in[p3_C + 0]));
 		break;
 	case 5: // "EXP"
@@ -849,9 +859,6 @@ void vertex_program_simulator::compute_scalar_operation(float t_out[4], int inst
 		t_out[1] = frexp(par_in[p3_C + 0], &e)*2.0; // frexp gives mantissa as 0.5....1
 		t_out[0] = e - 1;
 #ifndef __OS2__
-		/*
-		 *  NOTE: this was abs which is "int abs(int x)" - and changed to fabsf due to clang 3.6 warning
-		 */
 		t.f = log2(fabsf(par_in[p3_C + 0]));
 #else
 		static double log_2 = 0.0;
@@ -3570,11 +3577,11 @@ int nv2a_renderer::execute_method_3d(address_space& space, uint32_t chanel, uint
 			offset = data;
 			texture[unit].buffer = direct_access_ptr(offset);
 			/*if (dma0 != 0) {
-				dmahand=channel[channel][subchannel].object.method[0x184/4];
-				geforce_read_dma_object(dmahand,dmaoff,dmasiz);
+			    dmahand=channel[channel][subchannel].object.method[0x184/4];
+			    geforce_read_dma_object(dmahand,dmaoff,dmasiz);
 			} else if (dma1 != 0) {
-				dmahand=channel[channel][subchannel].object.method[0x188/4];
-				geforce_read_dma_object(dmahand,dmaoff,dmasiz);
+			    dmahand=channel[channel][subchannel].object.method[0x188/4];
+			    geforce_read_dma_object(dmahand,dmaoff,dmasiz);
 			}*/
 		}
 		if (maddress == 0x1b04) {
@@ -4631,7 +4638,7 @@ void nv2a_renderer::combiner_compute_a_outputs(int stage_number)
 WRITE_LINE_MEMBER(nv2a_renderer::vblank_callback)
 {
 /*#ifdef LOG_NV2A
-	printf("vblank_callback\n\r");
+    printf("vblank_callback\n\r");
 #endif*/
 	if ((state != 0) && (puller_waiting == 1)) {
 		puller_waiting = 0;

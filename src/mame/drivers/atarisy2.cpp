@@ -148,24 +148,24 @@
 void atarisy2_state::update_interrupts()
 {
 	if (m_video_int_state)
-		m_maincpu->set_input_line(3, ASSERT_LINE);
+		m_maincpu->set_input_line(t11_device::CP3_LINE, ASSERT_LINE);
 	else
-		m_maincpu->set_input_line(3, CLEAR_LINE);
+		m_maincpu->set_input_line(t11_device::CP3_LINE, CLEAR_LINE);
 
 	if (m_scanline_int_state)
-		m_maincpu->set_input_line(2, ASSERT_LINE);
+		m_maincpu->set_input_line(t11_device::CP2_LINE, ASSERT_LINE);
 	else
-		m_maincpu->set_input_line(2, CLEAR_LINE);
+		m_maincpu->set_input_line(t11_device::CP2_LINE, CLEAR_LINE);
 
 	if (m_p2portwr_state)
-		m_maincpu->set_input_line(1, ASSERT_LINE);
+		m_maincpu->set_input_line(t11_device::CP1_LINE, ASSERT_LINE);
 	else
-		m_maincpu->set_input_line(1, CLEAR_LINE);
+		m_maincpu->set_input_line(t11_device::CP1_LINE, CLEAR_LINE);
 
 	if (m_p2portrd_state)
-		m_maincpu->set_input_line(0, ASSERT_LINE);
+		m_maincpu->set_input_line(t11_device::CP0_LINE, ASSERT_LINE);
 	else
-		m_maincpu->set_input_line(0, CLEAR_LINE);
+		m_maincpu->set_input_line(t11_device::CP0_LINE, CLEAR_LINE);
 }
 
 
@@ -302,6 +302,14 @@ INTERRUPT_GEN_MEMBER(atarisy2_state::sound_irq_gen)
 void atarisy2_state::sound_irq_ack_w(uint8_t data)
 {
 	m_audiocpu->set_input_line(m6502_device::IRQ_LINE, CLEAR_LINE);
+}
+
+
+WRITE_LINE_MEMBER(atarisy2_state::boost_interleave_hack)
+{
+	// apb3 fails the self-test with a 100 µs delay or less
+	if (state)
+		machine().scheduler().boost_interleave(attotime::zero, attotime::from_usec(200));
 }
 
 
@@ -1277,6 +1285,7 @@ void atarisy2_state::atarisy2(machine_config &config)
 
 	GENERIC_LATCH_8(config, m_soundlatch);
 	m_soundlatch->data_pending_callback().set_inputline(m_audiocpu, m6502_device::NMI_LINE);
+	m_soundlatch->data_pending_callback().append(FUNC(atarisy2_state::boost_interleave_hack));
 
 	GENERIC_LATCH_8(config, m_mainlatch);
 
