@@ -137,7 +137,11 @@ namespace devices
 				// Woodbury Formula
 				return create_it<solver::matrix_solver_w_t<FT, SIZE>>(state(), solvername, nets, m_params, size);
 #else
-			default:
+			case solver::matrix_type_e::GMRES:
+			case solver::matrix_type_e::SOR:
+			case solver::matrix_type_e::SOR_MAT:
+			case solver::matrix_type_e::SM:
+			case solver::matrix_type_e::W:
 				state().log().warning(MW_SOLVER_METHOD_NOT_SUPPORTED(m_params.m_method().name(), "MAT_CR"));
 				return create_it<solver::matrix_solver_GCR_t<FT, SIZE>>(state(), solvername, nets, m_params, size);
 #endif
@@ -183,30 +187,27 @@ namespace devices
 				{
 					return create_solver<FT, -16>(net_count, sname, nets);
 				}
-				else if (net_count <= 32)
+				if (net_count <= 32)
 				{
 					return create_solver<FT, -32>(net_count, sname, nets);
 				}
-				else if (net_count <= 64)
+				if (net_count <= 64)
 				{
 					return create_solver<FT, -64>(net_count, sname, nets);
 				}
-				else if (net_count <= 128)
+				if (net_count <= 128)
 				{
 					return create_solver<FT, -128>(net_count, sname, nets);
 				}
-				else if (net_count <= 256)
+				if (net_count <= 256)
 				{
 					return create_solver<FT, -256>(net_count, sname, nets);
 				}
-				else if (net_count <= 512)
+				if (net_count <= 512)
 				{
 					return create_solver<FT, -512>(net_count, sname, nets);
 				}
-				else
-				{
-					return create_solver<FT, 0>(net_count, sname, nets);
-				}
+				return create_solver<FT, 0>(net_count, sname, nets);
 				break;
 		}
 	}
@@ -278,6 +279,7 @@ namespace devices
 			return false;
 		}
 
+		// NOLINTNEXTLINE(misc-no-recursion)
 		void process_net(netlist_state_t &netlist, analog_net_t &n)
 		{
 			// ignore empty nets. FIXME: print a warning message

@@ -13,8 +13,11 @@
         * Road Runner (1985) [3 sets]
         * Road Blasters (1987) [10 sets]
 
-    Known bugs:
-        * none at this time
+    TODO:
+        * indytemp: "Welcome" doesn't play at start (regression). Code for
+          speech (0x46) is written but fails to play due to timing issues.
+        * is MOTHERBOARD_ALPHA actually 16KB, or maybe only for the LSI version?
+          see romsets of indytempc, roadblstcg
 
 ****************************************************************************
 
@@ -78,7 +81,7 @@
     MAIN CPU
     ========================================================================
     000000-07FFFF   R     xxxxxxxx xxxxxxxx   Program ROM
-    080000-087FFF   R     xxxxxxxx xxxxxxxx   Slapstic-protected ROM
+    080000-087FFF   R     xxxxxxxx xxxxxxxx   Slapstic-protected ROM (depending on game board)
     2E0000          R     -------- x-------   Sprite interrupt state
     400000-401FFF   R/W   xxxxxxxx xxxxxxxx   Program RAM
     800000            W   -------x xxxxxxxx   Playfield X scroll
@@ -144,7 +147,7 @@
     SOUND CPU
     ========================================================================
     0000-0FFF   R/W   xxxxxxxx   Program RAM
-    1000-100F   R/W   xxxxxxxx   M6522
+    1000-100F   R/W   xxxxxxxx   M6522 (on game board)
     1000-1FFF   R/W   xxxxxxxx   Catridge external RAM/ROM
     1800-1801   R/W   xxxxxxxx   YM2151 communications
     1810        R     xxxxxxxx   Sound command read
@@ -440,7 +443,6 @@ void atarisy1_state::main_map(address_map &map)
 void atarisy1_state::sound_map(address_map &map)
 {
 	map(0x0000, 0x0fff).mirror(0x2000).ram();
-	map(0x1000, 0x100f).mirror(0x27f0).m(m_via, FUNC(via6522_device::map)); // SNDEXT
 	map(0x1800, 0x1801).mirror(0x278e).rw("ymsnd", FUNC(ym2151_device::read), FUNC(ym2151_device::write));
 	map(0x1810, 0x1810).mirror(0x278f).r(m_soundlatch, FUNC(generic_latch_8_device::read));
 	map(0x1810, 0x1810).mirror(0x278f).w(m_mainlatch, FUNC(generic_latch_8_device::write));
@@ -450,6 +452,11 @@ void atarisy1_state::sound_map(address_map &map)
 	map(0x4000, 0xffff).rom();
 }
 
+void atarisy1_state::sound_ext_map(address_map &map)
+{
+	sound_map(map);
+	map(0x1000, 0x100f).mirror(0x27f0).m(m_via, FUNC(via6522_device::map)); // SNDEXT
+}
 
 
 /*************************************
@@ -702,6 +709,21 @@ void atarisy1_state::add_adc(machine_config &config)
 	m_ajsint->output_handler().set_inputline(m_maincpu, M68K_IRQ_2);
 }
 
+void atarisy1_state::add_speech(machine_config &config)
+{
+	m_audiocpu->set_addrmap(AS_PROGRAM, &atarisy1_state::sound_ext_map);
+
+	TMS5220C(config, m_tms, 14.318181_MHz_XTAL/2/11);
+	m_tms->add_route(ALL_OUTPUTS, "lspeaker", 1.0);
+	m_tms->add_route(ALL_OUTPUTS, "rspeaker", 1.0);
+
+	VIA6522(config, m_via, 14.318181_MHz_XTAL/8);
+	m_via->readpa_handler().set(m_tms, FUNC(tms5220_device::status_r));
+	m_via->readpb_handler().set(FUNC(atarisy1_state::via_pb_r));
+	m_via->writepa_handler().set(m_tms, FUNC(tms5220_device::data_w));
+	m_via->writepb_handler().set(FUNC(atarisy1_state::via_pb_w));
+}
+
 void atarisy1_state::atarisy1(machine_config &config)
 {
 	// basic machine hardware
@@ -764,16 +786,6 @@ void atarisy1_state::atarisy1(machine_config &config)
 	pokey_device &pokey(POKEY(config, "pokey", 14.318181_MHz_XTAL/8));
 	pokey.add_route(ALL_OUTPUTS, "lspeaker", 0.40);
 	pokey.add_route(ALL_OUTPUTS, "rspeaker", 0.40);
-
-	TMS5220C(config, m_tms, 14.318181_MHz_XTAL/2/11);
-	m_tms->add_route(ALL_OUTPUTS, "lspeaker", 1.0);
-	m_tms->add_route(ALL_OUTPUTS, "rspeaker", 1.0);
-
-	VIA6522(config, m_via, 14.318181_MHz_XTAL/8);
-	m_via->readpa_handler().set(m_tms, FUNC(tms5220_device::status_r));
-	m_via->readpb_handler().set(FUNC(atarisy1_state::via_pb_r));
-	m_via->writepa_handler().set(m_tms, FUNC(tms5220_device::data_w));
-	m_via->writepb_handler().set(FUNC(atarisy1_state::via_pb_w));
 }
 
 void atarisy1_state::marble(machine_config &config)
@@ -799,6 +811,7 @@ void atarisy1_state::indytemp(machine_config &config)
 {
 	atarisy1(config);
 	add_adc(config);
+	add_speech(config);
 	SLAPSTIC(config, "slapstic", 105, true);
 
 	// Digital joystick read through ADC
@@ -812,6 +825,7 @@ void atarisy1_state::roadrunn(machine_config &config)
 {
 	atarisy1(config);
 	add_adc(config);
+	add_speech(config);
 	SLAPSTIC(config, "slapstic", 108, true);
 
 	// Hall-effect analog joystick
@@ -823,6 +837,7 @@ void atarisy1_state::roadb109(machine_config &config)
 {
 	atarisy1(config);
 	add_adc(config);
+	add_speech(config);
 	SLAPSTIC(config, "slapstic", 109, true);
 
 	// Road Blasters gas pedal
@@ -833,6 +848,7 @@ void atarisy1_state::roadb110(machine_config &config)
 {
 	atarisy1(config);
 	add_adc(config);
+	add_speech(config);
 	SLAPSTIC(config, "slapstic", 110, true);
 
 	// Road Blasters gas pedal
@@ -869,24 +885,24 @@ void atarisy1_state::roadb110(machine_config &config)
 	ROM_LOAD16_BYTE_BIOS(0, "136032.205.l13", 0x00000, 0x04000, CRC(88d0be26) SHA1(d124045eccc562ff0423b23a240e27ad740fa0c9) ) \
 	ROM_LOAD16_BYTE_BIOS(0, "136032.206.l12", 0x00001, 0x04000, CRC(3c79ef05) SHA1(20fdca7131478e1ee12691bdafd2d5bb74cbd16f) ) \
 	ROM_SYSTEM_BIOS( 1, "ttl1", "TTL Motherboard (Rev 1)" )                                                                    \
-	ROM_LOAD16_BYTE_BIOS(1, "136032.105.l13", 0x00000, 0x04000, CRC(690b37d3) SHA1(547372f1044a3442aa52fcd2b3546540aba59344) ) \
+	ROM_LOAD16_BYTE_BIOS(1, "136032.105.l13", 0x00000, 0x04000, CRC(79021d3c) SHA1(85febd34bcb166fc3326b5e5e4e80e157b660a08) ) \
 	ROM_LOAD16_BYTE_BIOS(1, "136032.106.l12", 0x00001, 0x04000, CRC(76ee86c4) SHA1(cbcd424510435a04e9041967a13781fd19b0f2c4) ) \
 	ROM_SYSTEM_BIOS( 2, "lsi", "LSI Motherboard" )                                                                             \
 	ROM_LOAD16_BYTE_BIOS(2, "136032.114.j11", 0x00000, 0x04000, CRC(195c54ad) SHA1(d7cda3cd3db4c6f77074ca05e96ae11b62e048b7) ) \
-	ROM_LOAD16_BYTE_BIOS(2, "136032.115.j10", 0x00001, 0x04000, CRC(7275b4dc) SHA1(0896ab37ea832a1335046353612c1b4c86d8d040) )
+	ROM_LOAD16_BYTE_BIOS(2, "136032.115.j10", 0x00001, 0x04000, CRC(9af9fe29) SHA1(1d5077662e4111ece9f8a5124394dad8b1abdc13) )
 
 #define MOTHERBOARD_ALPHA                                                                                              \
 	ROM_LOAD_BIOS(0, "136032.104.f5", 0x00000, 0x02000, CRC(7a29dc07) SHA1(72ba464da01bd6d3a91b8d9997d5ac14b6f47aad) ) \
 	ROM_LOAD_BIOS(1, "136032.104.f5", 0x00000, 0x02000, CRC(7a29dc07) SHA1(72ba464da01bd6d3a91b8d9997d5ac14b6f47aad) ) \
-	ROM_LOAD_BIOS(2, "136032.107.b2", 0x00000, 0x02000, CRC(315e4bea) SHA1(a00ea23fbdbf075f8f3f184275be83387e8ac82b) ) /* is this bad? it just seems to be missing upper nibbles and hence some of the planes? */
+	ROM_LOAD_BIOS(2, "136032.107.b2", 0x00000, 0x02000, CRC(7a29dc07) SHA1(72ba464da01bd6d3a91b8d9997d5ac14b6f47aad) )
 
 #define MOTHERBOARD_PROMS                                                                                              \
-	ROM_LOAD_BIOS(0, "136032.101.e3",     0x00000, 0x00100, CRC(7e84972a) SHA1(84d422b53547271e3a07342704a05ef481db3f99) ) \
-	ROM_LOAD_BIOS(0, "136032.102.e5",     0x00000, 0x00100, CRC(ebf1e0ae) SHA1(2d327e78832edd67ca3909c25b8c8c839637a1ed) ) \
-	ROM_LOAD_BIOS(0, "136032.103.f7.bin", 0x00000, 0x000eb, CRC(92d6a0b4) SHA1(0a42a4816c89447b16e1f3245409591efea98a4a) ) /* N82S153 */                                        \
-	ROM_LOAD_BIOS(1, "136032.101.e3",     0x00000, 0x00100, CRC(7e84972a) SHA1(84d422b53547271e3a07342704a05ef481db3f99) ) \
-	ROM_LOAD_BIOS(1, "136032.102.e5",     0x00000, 0x00100, CRC(ebf1e0ae) SHA1(2d327e78832edd67ca3909c25b8c8c839637a1ed) ) \
-	ROM_LOAD_BIOS(1, "136032.103.f7.bin", 0x00000, 0x000eb, CRC(92d6a0b4) SHA1(0a42a4816c89447b16e1f3245409591efea98a4a) ) /* N82S153 */
+	ROM_LOAD_BIOS(0, "136032.101.e3", 0x00000, 0x00100, CRC(7e84972a) SHA1(84d422b53547271e3a07342704a05ef481db3f99) ) \
+	ROM_LOAD_BIOS(0, "136032.102.e5", 0x00000, 0x00100, CRC(ebf1e0ae) SHA1(2d327e78832edd67ca3909c25b8c8c839637a1ed) ) \
+	ROM_LOAD_BIOS(0, "136032.103.f7", 0x00000, 0x000eb, CRC(92d6a0b4) SHA1(0a42a4816c89447b16e1f3245409591efea98a4a) ) /* N82S153 */ \
+	ROM_LOAD_BIOS(1, "136032.101.e3", 0x00000, 0x00100, CRC(7e84972a) SHA1(84d422b53547271e3a07342704a05ef481db3f99) ) \
+	ROM_LOAD_BIOS(1, "136032.102.e5", 0x00000, 0x00100, CRC(ebf1e0ae) SHA1(2d327e78832edd67ca3909c25b8c8c839637a1ed) ) \
+	ROM_LOAD_BIOS(1, "136032.103.f7", 0x00000, 0x000eb, CRC(92d6a0b4) SHA1(0a42a4816c89447b16e1f3245409591efea98a4a) ) /* N82S153 */
 
 ROM_START( atarisy1 )
 	ROM_REGION( 0x88000, "maincpu", 0 ) /* 8.5*64k for 68000 code & slapstic ROM */
@@ -1826,31 +1842,29 @@ Dumped from the original Atari
 // different IC positions and different GFX rom configuration.
 ROM_START( roadblstgu )
 	ROM_REGION( 0x88000, "maincpu", 0 ) /* 8.5*64k for 68000 code & slapstic ROM */
-	// expects bios roms 114/115, does not work properly with others (corrupt insert coin text)
-	ROM_LOAD16_BYTE( "136032-114.j7", 0x00000, 0x04000, CRC(195c54ad) SHA1(d7cda3cd3db4c6f77074ca05e96ae11b62e048b7) )
-	ROM_LOAD16_BYTE( "136032-115.j8", 0x00001, 0x04000, CRC(7275b4dc) SHA1(0896ab37ea832a1335046353612c1b4c86d8d040) )
+	MOTHERBOARD_BIOS
+	ROM_DEFAULT_BIOS("lsi") // only works with LSI BIOS
 
 	ROM_LOAD16_BYTE( "136048-1257.c11", 0x010000, 0x008000, CRC(604a5cc0) SHA1(a057a2e47ac7b7c727e9c1bfce28ba955ce75442) )
 	ROM_LOAD16_BYTE( "136048-1258.a11", 0x010001, 0x008000, CRC(3d10929d) SHA1(aa4d568e5d5b62fb8ea11094bad78bb8f713404e) )
 	ROM_LOAD16_BYTE( "136048-1259.c13", 0x020000, 0x008000, CRC(b9c807ac) SHA1(ca955790c98037045aa49425392581f21d33caa9) )
 	ROM_LOAD16_BYTE( "136048-1260.a13", 0x020001, 0x008000, CRC(eaeb1196) SHA1(82bf14244b342c97adde893f19a050baab30ab1e) )
-
-	ROM_LOAD16_BYTE( "136048-1163.c12",  0x050000, 0x008000, CRC(054273b2) SHA1(4c820c00d3b67825c361edc9615c89c2a9a1c6d3) )//
-	ROM_LOAD16_BYTE( "136048-1164.a12",  0x050001, 0x008000, CRC(49181bec) SHA1(79e042e4f079a9806ef12c5c8dfdc2e6e4f90011) )//
-	ROM_LOAD16_BYTE( "136048-1165.c14",  0x060000, 0x008000, CRC(f63dc29a) SHA1(e54637b9d0b271aa9b58e89a442ac03ec812e1eb) )//
-	ROM_LOAD16_BYTE( "136048-1166.a14",  0x060001, 0x008000, CRC(b1fc5955) SHA1(b860213a9b5ae7547c258812045e71795129598f) )//
-	ROM_LOAD16_BYTE( "136048-1167.c16",  0x070000, 0x008000, CRC(c6d30d6f) SHA1(acb552976b2dcfa585097ea246ca88034549c8ab) )//
-	ROM_LOAD16_BYTE( "136048-1168.a16",  0x070001, 0x008000, CRC(16951020) SHA1(5e5a6ad4ae87723060232c7ecb837f5fc2a9be68) )//
-	ROM_LOAD16_BYTE( "136048-2147.c17",  0x080000, 0x004000, CRC(5c1adf67) SHA1(53838a2f5059797991aa337a7bec32f7e694610a) )//
-	ROM_LOAD16_BYTE( "136048-2148.a17",  0x080001, 0x004000, CRC(d9ac8966) SHA1(7d056c1eb8184b4261c5713b0d5799b2fd8bde2a) )//
+	ROM_LOAD16_BYTE( "136048-1163.c12", 0x050000, 0x008000, CRC(054273b2) SHA1(4c820c00d3b67825c361edc9615c89c2a9a1c6d3) )
+	ROM_LOAD16_BYTE( "136048-1164.a12", 0x050001, 0x008000, CRC(49181bec) SHA1(79e042e4f079a9806ef12c5c8dfdc2e6e4f90011) )
+	ROM_LOAD16_BYTE( "136048-1165.c14", 0x060000, 0x008000, CRC(f63dc29a) SHA1(e54637b9d0b271aa9b58e89a442ac03ec812e1eb) )
+	ROM_LOAD16_BYTE( "136048-1166.a14", 0x060001, 0x008000, CRC(b1fc5955) SHA1(b860213a9b5ae7547c258812045e71795129598f) )
+	ROM_LOAD16_BYTE( "136048-1167.c16", 0x070000, 0x008000, CRC(c6d30d6f) SHA1(acb552976b2dcfa585097ea246ca88034549c8ab) )
+	ROM_LOAD16_BYTE( "136048-1168.a16", 0x070001, 0x008000, CRC(16951020) SHA1(5e5a6ad4ae87723060232c7ecb837f5fc2a9be68) )
+	ROM_LOAD16_BYTE( "136048-2147.c17", 0x080000, 0x004000, CRC(5c1adf67) SHA1(53838a2f5059797991aa337a7bec32f7e694610a) )
+	ROM_LOAD16_BYTE( "136048-2148.a17", 0x080001, 0x004000, CRC(d9ac8966) SHA1(7d056c1eb8184b4261c5713b0d5799b2fd8bde2a) )
 
 	ROM_REGION( 0x10000, "audiocpu", 0 )    /* 64k for 6502 code */
 	ROM_LOAD( "136048-1149.e14",   0x4000, 0x4000, CRC(2e54f95e) SHA1(5056ddec3c88384ada1d2ee9b1532b9ba9f34e08) )
-	ROM_LOAD( "136048-1169.e15",   0x8000, 0x4000, CRC(ee318052) SHA1(f66ff39499697b7439dc62567e727fec769c1505) )//
-	ROM_LOAD( "136048-1170.e17",   0xc000, 0x4000, CRC(75dfec33) SHA1(3092348b98419bb23181d21406733d5d21cd3d82) )//
+	ROM_LOAD( "136048-1169.e15",   0x8000, 0x4000, CRC(ee318052) SHA1(f66ff39499697b7439dc62567e727fec769c1505) )
+	ROM_LOAD( "136048-1170.e17",   0xc000, 0x4000, CRC(75dfec33) SHA1(3092348b98419bb23181d21406733d5d21cd3d82) )
 
 	ROM_REGION( 0x2000, "alpha", 0 )
-	ROM_LOAD( "136032.107.b2", 0x00000, 0x02000, CRC(7a29dc07) SHA1(72ba464da01bd6d3a91b8d9997d5ac14b6f47aad) )
+	MOTHERBOARD_ALPHA
 
 	ROM_REGION( 0x380000, "tiles", ROMREGION_INVERT | ROMREGION_ERASEFF )
 	ROM_LOAD( "136048-1101.b4",  0x000000, 0x008000, CRC(fe342d27) SHA1(72deac16ab9b6b811f49d70d700d6bc3a904f9d5) )  /* bank 1, plane 0 *///
@@ -1893,11 +1907,7 @@ ROM_START( roadblstgu )
 	ROM_LOAD( "136048-1174.a7", 0x000000, 0x000200, CRC(db4a4d53) SHA1(c5468f3585ec9bc23c9ee990b3ae3738b0309823) )//
 	ROM_LOAD( "136048-1173.a5", 0x000200, 0x000200, CRC(c80574af) SHA1(9a3dc83f70e79915ce0db3e6e69b5dcfee3acb6f) )//
 
-	// FIXME: this game requires the LSI BIOS, so why are we loading the PROMs that are only present on TTL boards?
 	ROM_REGION( 0x201, "motherbrd_proms", 0) /* Motherboard PROM's (Only used by TTL version.) */
-	ROM_SYSTEM_BIOS( 0, "ttl", "TTL Motherboard (Rev 2)" )
-	ROM_SYSTEM_BIOS( 1, "ttl1", "TTL Motherboard (Rev 1)" )
-	ROM_SYSTEM_BIOS( 2, "lsi", "LSI Motherboard" )
 	MOTHERBOARD_PROMS
 ROM_END
 
@@ -2318,8 +2328,8 @@ Note: The text on the board says "cocktail" but I suppose this is the cockpit ve
 
 ROM_START( roadblstcg )
 	ROM_REGION( 0x88000, "maincpu", 0 ) /* 8.5*64k for 68000 code & slapstic ROM */
-	ROM_LOAD16_BYTE( "136032-117-l9",  0x000001, 0x004000, CRC(9af9fe29) SHA1(1d5077662e4111ece9f8a5124394dad8b1abdc13) ) // alt bios roms? (to put in bios structure, or are they specific to this set?)
-	ROM_LOAD16_BYTE( "136032-116.m9",  0x000000, 0x004000, CRC(195c54ad) SHA1(d7cda3cd3db4c6f77074ca05e96ae11b62e048b7) ) //
+	MOTHERBOARD_BIOS
+	ROM_DEFAULT_BIOS("lsi") // only works with LSI BIOS
 
 	ROM_LOAD16_BYTE( "136048-1235.7p",  0x010000, 0x008000, CRC(58b2998f) SHA1(7e9f4ca2b15cf60c61e0615f214f9fcc518cb194) )
 	ROM_LOAD16_BYTE( "136048-1236.8p",  0x010001, 0x008000, CRC(02e23a40) SHA1(6525351669e95dab869c7adc7d992d12d9313aee) )
@@ -2333,7 +2343,6 @@ ROM_START( roadblstcg )
 	ROM_LOAD16_BYTE( "136048-2146.8n",  0x070001, 0x008000, CRC(16951020) SHA1(5e5a6ad4ae87723060232c7ecb837f5fc2a9be68) )
 	ROM_LOAD16_BYTE( "136048-2147.7k",  0x080000, 0x004000, CRC(5c1adf67) SHA1(53838a2f5059797991aa337a7bec32f7e694610a) )
 	ROM_LOAD16_BYTE( "136048-2148.8k",  0x080001, 0x004000, CRC(d9ac8966) SHA1(7d056c1eb8184b4261c5713b0d5799b2fd8bde2a) )
-
 
 	ROM_REGION( 0x10000, "audiocpu", 0 )    /* 64k for 6502 code */
 	ROM_LOAD( "136048-1149.c8",   0x4000, 0x4000, CRC(2e54f95e) SHA1(5056ddec3c88384ada1d2ee9b1532b9ba9f34e08) ) //
@@ -2388,11 +2397,7 @@ ROM_START( roadblstcg )
 	ROM_LOAD( "136048-1174.12d", 0x000000, 0x000200, CRC(db4a4d53) SHA1(c5468f3585ec9bc23c9ee990b3ae3738b0309823) )
 	ROM_LOAD( "136048-1173.2d",  0x000200, 0x000200, CRC(c80574af) SHA1(9a3dc83f70e79915ce0db3e6e69b5dcfee3acb6f) )
 
-	// FIXME: this game requires the LSI BIOS, so why are we loading the PROMs that are only present on TTL boards?
 	ROM_REGION( 0x201, "motherbrd_proms", 0) /* Motherboard PROM's (Only used by TTL version.) */
-	ROM_SYSTEM_BIOS( 0, "ttl", "TTL Motherboard (Rev 2)" )
-	ROM_SYSTEM_BIOS( 1, "ttl1", "TTL Motherboard (Rev 1)" )
-	ROM_SYSTEM_BIOS( 2, "lsi", "LSI Motherboard" )
 	MOTHERBOARD_PROMS
 ROM_END
 
@@ -2400,6 +2405,8 @@ ROM_END
 ROM_START( roadblstc1 )
 	ROM_REGION( 0x88000, "maincpu", 0 ) /* 8.5*64k for 68000 code & slapstic ROM */
 	MOTHERBOARD_BIOS
+	ROM_DEFAULT_BIOS("lsi") // only works with LSI BIOS
+
 	ROM_LOAD16_BYTE( "136048-2135.7p",  0x010000, 0x008000, CRC(c0ef86df) SHA1(7dd4d2acba55dc001e009c37fae5a97a53ea1e66) )
 	ROM_LOAD16_BYTE( "136048-2136.8p",  0x010001, 0x008000, CRC(9637e2f0) SHA1(86257e1316356c1a7d86bcf7b57bcaff33ac3df5) )
 	ROM_LOAD16_BYTE( "136048-2137.7r",  0x020000, 0x008000, CRC(5382ab85) SHA1(1511dfaf8537980e506e4180a23ffcfcfec81451) )
@@ -2532,12 +2539,12 @@ GAME( 1984, marble5,    marble,   marble,   marble,   atarisy1_state, init_marbl
 
 GAME( 1984, peterpak,   atarisy1, peterpak, peterpak, atarisy1_state, init_peterpak, ROT0, "Atari Games", "Peter Pack Rat", 0 )
 
-GAME( 1985, indytemp,   atarisy1, indytemp, indytemp, atarisy1_state, init_indytemp, ROT0, "Atari Games", "Indiana Jones and the Temple of Doom (set 1)", 0 )
-GAME( 1985, indytemp2,  indytemp, indytemp, indytemp, atarisy1_state, init_indytemp, ROT0, "Atari Games", "Indiana Jones and the Temple of Doom (set 2)", 0 )
-GAME( 1985, indytemp3,  indytemp, indytemp, indytemp, atarisy1_state, init_indytemp, ROT0, "Atari Games", "Indiana Jones and the Temple of Doom (set 3)", 0 )
-GAME( 1985, indytemp4,  indytemp, indytemp, indytemp, atarisy1_state, init_indytemp, ROT0, "Atari Games", "Indiana Jones and the Temple of Doom (set 4)", 0 )
-GAME( 1985, indytempd,  indytemp, indytemp, indytemp, atarisy1_state, init_indytemp, ROT0, "Atari Games", "Indiana Jones and the Temple of Doom (German)", 0 )
-GAME( 1985, indytempc,  indytemp, indytemp, indytemc, atarisy1_state, init_indytemp, ROT0, "Atari Games", "Indiana Jones and the Temple of Doom (Cocktail)", MACHINE_IMPERFECT_GRAPHICS )
+GAME( 1985, indytemp,   atarisy1, indytemp, indytemp, atarisy1_state, init_indytemp, ROT0, "Atari Games", "Indiana Jones and the Temple of Doom (set 1)", MACHINE_IMPERFECT_SOUND )
+GAME( 1985, indytemp2,  indytemp, indytemp, indytemp, atarisy1_state, init_indytemp, ROT0, "Atari Games", "Indiana Jones and the Temple of Doom (set 2)", MACHINE_IMPERFECT_SOUND )
+GAME( 1985, indytemp3,  indytemp, indytemp, indytemp, atarisy1_state, init_indytemp, ROT0, "Atari Games", "Indiana Jones and the Temple of Doom (set 3)", MACHINE_IMPERFECT_SOUND )
+GAME( 1985, indytemp4,  indytemp, indytemp, indytemp, atarisy1_state, init_indytemp, ROT0, "Atari Games", "Indiana Jones and the Temple of Doom (set 4)", MACHINE_IMPERFECT_SOUND )
+GAME( 1985, indytempd,  indytemp, indytemp, indytemp, atarisy1_state, init_indytemp, ROT0, "Atari Games", "Indiana Jones and the Temple of Doom (German)", MACHINE_IMPERFECT_SOUND )
+GAME( 1985, indytempc,  indytemp, indytemp, indytemc, atarisy1_state, init_indytemp, ROT0, "Atari Games", "Indiana Jones and the Temple of Doom (cocktail)", MACHINE_IMPERFECT_SOUND | MACHINE_IMPERFECT_GRAPHICS )
 
 GAME( 1985, roadrunn,   atarisy1, roadrunn, roadrunn, atarisy1r_state, init_roadrunn, ROT0, "Atari Games", "Road Runner (rev 2)", 0 )
 GAME( 1985, roadrunn2,  roadrunn, roadrunn, roadrunn, atarisy1r_state, init_roadrunn, ROT0, "Atari Games", "Road Runner (rev 1+)", 0 )
@@ -2551,6 +2558,6 @@ GAME( 1987, roadblst2,  roadblst, roadb110, roadblst, atarisy1r_state, init_road
 GAME( 1987, roadblstg1, roadblst, roadb109, roadblst, atarisy1r_state, init_roadblst, ROT0, "Atari Games", "Road Blasters (upright, German, rev 1)", 0 )
 GAME( 1987, roadblst1,  roadblst, roadb109, roadblst, atarisy1r_state, init_roadblst, ROT0, "Atari Games", "Road Blasters (upright, rev 1)", 0 )
 GAME( 1987, roadblstc,  roadblst, roadb110, roadblst, atarisy1r_state, init_roadblst, ROT0, "Atari Games", "Road Blasters (cockpit, rev 2)", 0 )
-GAME( 1987, roadblstcg, roadblst, roadb109, roadblst, atarisy1r_state, init_roadblst, ROT0, "Atari Games", "Road Blasters (cockpit, German, rev 1)", MACHINE_IMPERFECT_GRAPHICS )
-GAME( 1987, roadblstc1, roadblst, roadb109, roadblst, atarisy1r_state, init_roadblst, ROT0, "Atari Games", "Road Blasters (cockpit, rev 1)", MACHINE_IMPERFECT_GRAPHICS )
+GAME( 1987, roadblstcg, roadblst, roadb109, roadblst, atarisy1r_state, init_roadblst, ROT0, "Atari Games", "Road Blasters (cockpit, German, rev 1)", 0 )
+GAME( 1987, roadblstc1, roadblst, roadb109, roadblst, atarisy1r_state, init_roadblst, ROT0, "Atari Games", "Road Blasters (cockpit, rev 1)", 0 )
 GAME( 1987, roadblstgu, roadblst, roadb109, roadblst, atarisy1r_state, init_roadblst, ROT0, "Atari Games", "Road Blasters (upright, German, rev ?)", 0 )

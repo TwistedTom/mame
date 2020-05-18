@@ -19,15 +19,19 @@
 #endif
 
 // noexcept on move operator -> issue with macosx clang
-#define COPYASSIGNMOVE(name, def)  \
+#define PCOPYASSIGNMOVE(name, def)  \
 		name(const name &) = def; \
 		name(name &&) noexcept = def; \
 		name &operator=(const name &) = def; \
 		name &operator=(name &&) noexcept = def;
 
-#define COPYASSIGN(name, def)  \
+#define PCOPYASSIGN(name, def)  \
 		name(const name &) = def; \
 		name &operator=(const name &) = def; \
+
+#define PMOVEASSIGN(name, def)  \
+		name(name &&) noexcept = def; \
+		name &operator=(name &&) noexcept = def;
 
 namespace plib
 {
@@ -65,6 +69,10 @@ namespace plib
 
 	template<typename T> struct is_floating_point : public std::is_floating_point<T> { };
 
+	template< class T >
+	struct is_arithmetic : std::integral_constant<bool,
+		plib::is_integral<T>::value || plib::is_floating_point<T>::value> {};
+
 #if PUSE_FLOAT128
 	template<> struct is_floating_point<FLOAT128> { static constexpr bool value = true; };
 	template<> struct numeric_limits<FLOAT128>
@@ -80,30 +88,27 @@ namespace plib
 	};
 #endif
 
-	//============================================================
-	// prevent implicit copying
-	//============================================================
-
-	struct nocopyassignmove
+	template<unsigned bits>
+	struct least_size_for_bits
 	{
-		nocopyassignmove(const nocopyassignmove &) = delete;
-		nocopyassignmove(nocopyassignmove &&) noexcept = delete;
-		nocopyassignmove &operator=(const nocopyassignmove &) = delete;
-		nocopyassignmove &operator=(nocopyassignmove &&) noexcept = delete;
-	protected:
-		nocopyassignmove() = default;
-		~nocopyassignmove() noexcept = default;
+		enum { value =
+			bits <= 8       ?   1 :
+			bits <= 16      ?   2 :
+			bits <= 32      ?   4 :
+								8
+		};
 	};
 
-	struct nocopyassign
+	template<unsigned N> struct least_type_for_size;
+	template<> struct least_type_for_size<1> { using type = uint_least8_t; };
+	template<> struct least_type_for_size<2> { using type = uint_least16_t; };
+	template<> struct least_type_for_size<4> { using type = uint_least32_t; };
+	template<> struct least_type_for_size<8> { using type = uint_least64_t; };
+
+	template<unsigned bits>
+	struct least_type_for_bits
 	{
-		nocopyassign(const nocopyassign &) = delete;
-		nocopyassign &operator=(const nocopyassign &) = delete;
-	protected:
-		nocopyassign() = default;
-		~nocopyassign() noexcept = default;
-		nocopyassign(nocopyassign &&) noexcept = default;
-		nocopyassign &operator=(nocopyassign &&) noexcept = default;
+		using type = typename least_type_for_size<least_size_for_bits<bits>::value>::type;
 	};
 
 	//============================================================

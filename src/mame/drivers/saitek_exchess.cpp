@@ -11,19 +11,19 @@ Hardware notes:
 - 1KB RAM (2*TC5514P)
 - HLCD0538, HLCD0539, LCD screen
 
-TODO:
-- SVG screen
-
 ******************************************************************************/
 
 #include "emu.h"
+
 #include "cpu/f8/f8.h"
 #include "machine/f3853.h"
 #include "video/hlcd0538.h"
 #include "video/pwm.h"
 
+#include "screen.h"
+
 // internal artwork
-//#include "saitek_exchess.lh" // clickable
+#include "saitek_exchess.lh" // clickable
 
 
 namespace {
@@ -37,10 +37,14 @@ public:
 		m_lcd1(*this, "lcd1"),
 		m_lcd2(*this, "lcd2"),
 		m_display(*this, "display"),
+		m_battery(*this, "battery"),
 		m_inputs(*this, "IN.%u", 0)
 	{ }
 
 	void exchess(machine_config &config);
+
+	// battery status indicator is not software controlled
+	DECLARE_INPUT_CHANGED_MEMBER(battery) { m_battery = newval; }
 
 protected:
 	virtual void machine_start() override;
@@ -51,7 +55,8 @@ private:
 	required_device<hlcd0538_device> m_lcd1;
 	required_device<hlcd0539_device> m_lcd2;
 	required_device<pwm_display_device> m_display;
-	required_ioport_array<3> m_inputs;
+	output_finder<> m_battery;
+	required_ioport_array<4> m_inputs;
 
 	void main_map(address_map &map);
 	void main_io(address_map &map);
@@ -72,6 +77,7 @@ private:
 
 void exchess_state::machine_start()
 {
+	m_battery.resolve();
 	m_ram = make_unique_clear<u8[]>(0x400);
 
 	// register for savestates
@@ -115,7 +121,7 @@ void exchess_state::lcd_data_w(u8 data)
 template<int N>
 void exchess_state::ram_address_w(u8 data)
 {
-	// P00-P17: RAM A0-A7
+	// P00-P07: RAM A0-A7
 	// P10-P11: RAM A8-A9
 	// P12: RAM CE
 	m_ram_address[N] = data;
@@ -127,7 +133,7 @@ u8 exchess_state::ram_address_r()
 	u8 data = m_ram_address[N];
 
 	// P13: Enter button
-	return (N) ? data | m_inputs[0]->read() : data;
+	return (N) ? data | (m_inputs[0]->read() & 8) : data;
 }
 
 void exchess_state::ram_data_w(u8 data)
@@ -168,21 +174,32 @@ void exchess_state::main_io(address_map &map)
 
 static INPUT_PORTS_START( exchess )
 	PORT_START("IN.0")
-	PORT_BIT(0x08, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_9)
+	PORT_BIT(0x08, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_ENTER) PORT_CODE(KEYCODE_ENTER_PAD) PORT_NAME("Enter")
 	PORT_BIT(0xf7, IP_ACTIVE_HIGH, IPT_UNUSED)
 
 	PORT_START("IN.1")
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_1)
-	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_2)
-	PORT_BIT(0x04, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_3)
-	PORT_BIT(0x08, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_4)
-	PORT_BIT(0x10, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_5)
-	PORT_BIT(0x20, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_6)
-	PORT_BIT(0x40, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_7)
-	PORT_BIT(0x80, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_8)
+	PORT_BIT(0x01, 0x01, IPT_CUSTOM) PORT_CONDITION("IN.2", 0x51, NOTEQUALS, 0x00)
+	PORT_BIT(0x02, 0x02, IPT_CUSTOM) PORT_CONDITION("IN.2", 0x32, NOTEQUALS, 0x00)
+	PORT_BIT(0x04, 0x04, IPT_CUSTOM) PORT_CONDITION("IN.2", 0xa4, NOTEQUALS, 0x00)
+	PORT_BIT(0x08, 0x08, IPT_CUSTOM) PORT_CONDITION("IN.2", 0xc8, NOTEQUALS, 0x00)
+	PORT_BIT(0x30, IP_ACTIVE_HIGH, IPT_UNUSED)
+	PORT_BIT(0x40, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_N) PORT_NAME("New Game")
+	PORT_BIT(0x80, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_2) PORT_CODE(KEYCODE_2_PAD) PORT_CODE(KEYCODE_F) PORT_NAME("2nd F")
 
-	PORT_START("IN.2")
-	PORT_BIT(0xff, IP_ACTIVE_HIGH, IPT_UNUSED)
+	PORT_START("IN.2") // square 'd-pad' (8-way, so define joystick)
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_JOYSTICK_LEFT) PORT_CODE(KEYCODE_LEFT) PORT_NAME("Cursor Left")
+	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_JOYSTICK_UP) PORT_CODE(KEYCODE_UP) PORT_NAME("Cursor Up")
+	PORT_BIT(0x04, IP_ACTIVE_HIGH, IPT_JOYSTICK_RIGHT) PORT_CODE(KEYCODE_RIGHT) PORT_NAME("Cursor Right")
+	PORT_BIT(0x08, IP_ACTIVE_HIGH, IPT_JOYSTICK_DOWN) PORT_CODE(KEYCODE_DOWN) PORT_NAME("Cursor Down")
+	PORT_BIT(0x10, IP_ACTIVE_HIGH, IPT_OTHER) // ul
+	PORT_BIT(0x20, IP_ACTIVE_HIGH, IPT_OTHER) // ur
+	PORT_BIT(0x40, IP_ACTIVE_HIGH, IPT_OTHER) // dl
+	PORT_BIT(0x80, IP_ACTIVE_HIGH, IPT_OTHER) // dr
+
+	PORT_START("IN.3")
+	PORT_CONFNAME( 0x01, 0x00, "Battery Status" ) PORT_CHANGED_MEMBER(DEVICE_SELF, exchess_state, battery, 0)
+	PORT_CONFSETTING(    0x01, "Low" )
+	PORT_CONFSETTING(    0x00, DEF_STR( Normal ) )
 INPUT_PORTS_END
 
 
@@ -217,7 +234,13 @@ void exchess_state::exchess(machine_config &config)
 	m_lcd2->write_interrupt().set("psu", FUNC(f38t56_device::ext_int_w)).invert();
 
 	PWM_DISPLAY(config, m_display).set_size(8, 26+34);
-	//config.set_default_layout(layout_saitek_exchess);
+	m_display->set_interpolation(0.2);
+	config.set_default_layout(layout_saitek_exchess);
+
+	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_SVG));
+	screen.set_refresh_hz(60);
+	screen.set_size(1020, 1080);
+	screen.set_visarea_full();
 }
 
 
@@ -229,6 +252,9 @@ void exchess_state::exchess(machine_config &config)
 ROM_START( exchess )
 	ROM_REGION( 0x1000, "maincpu", 0 )
 	ROM_LOAD("sl90553", 0x0000, 0x1000, CRC(a61b0c7e) SHA1(a13b11a93f78236223c5c0b9879a93284b7f7525) )
+
+	ROM_REGION( 852610, "screen", 0 )
+	ROM_LOAD("exchess.svg", 0, 852610, CRC(cb36f9d3) SHA1(83be9b5d906d185b7cf6895f50992e7eea390c7a) )
 ROM_END
 
 } // anonymous namespace
@@ -240,4 +266,4 @@ ROM_END
 ******************************************************************************/
 
 //    YEAR  NAME     PARENT CMP MACHINE  INPUT    STATE          INIT        COMPANY, FULLNAME, FLAGS
-CONS( 1981, exchess, 0,      0, exchess, exchess, exchess_state, empty_init, "SciSys", "Executive Chess", MACHINE_NOT_WORKING | MACHINE_NO_SOUND_HW | MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+CONS( 1981, exchess, 0,      0, exchess, exchess, exchess_state, empty_init, "SciSys", "Executive Chess", MACHINE_NO_SOUND_HW | MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
