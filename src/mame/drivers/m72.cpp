@@ -442,25 +442,25 @@ INTERRUPT_GEN_MEMBER(m72_state::fake_nmi)
 }
 
 
-WRITE16_MEMBER(m72_state::bchopper_sample_trigger_w)
+void m72_state::bchopper_sample_trigger_w(offs_t offset, u16 data, u16 mem_mask)
 {
 	static const int a[6] = { 0x0000, 0x0010, 0x2510, 0x6510, 0x8510, 0x9310 };
 	if (ACCESSING_BITS_0_7 && (data & 0xff) < 6) m_audio->set_sample_start(a[data & 0xff]);
 }
 
-WRITE16_MEMBER(m72_state::nspirit_sample_trigger_w)
+void m72_state::nspirit_sample_trigger_w(offs_t offset, u16 data, u16 mem_mask)
 {
 	static const int a[9] = { 0x0000, 0x0020, 0x2020, 0, 0x5720, 0, 0x7b60, 0x9b60, 0xc360 };
 	if (ACCESSING_BITS_0_7 && (data & 0xff) < 9) m_audio->set_sample_start(a[data & 0xff]);
 }
 
-WRITE16_MEMBER(m72_state::imgfight_sample_trigger_w)
+void m72_state::imgfight_sample_trigger_w(offs_t offset, u16 data, u16 mem_mask)
 {
 	static const int a[7] = { 0x0000, 0x0020, 0x44e0, 0x98a0, 0xc820, 0xf7a0, 0x108c0 };
 	if (ACCESSING_BITS_0_7 && (data & 0xff) < 7) m_audio->set_sample_start(a[data & 0xff]);
 }
 
-WRITE16_MEMBER(m72_state::loht_sample_trigger_w)
+void m72_state::loht_sample_trigger_w(offs_t offset, u16 data, u16 mem_mask)
 {
 	static const int a[7] = { 0x0000, 0x0020, 0, 0x2c40, 0x4320, 0x7120, 0xb200 };
 	if (ACCESSING_BITS_0_7 && (data & 0xff) < 7) m_audio->set_sample_start(a[data & 0xff]);
@@ -468,13 +468,13 @@ WRITE16_MEMBER(m72_state::loht_sample_trigger_w)
 
 
 
-WRITE16_MEMBER(m72_state::dbreedm72_sample_trigger_w)
+void m72_state::dbreedm72_sample_trigger_w(offs_t offset, u16 data, u16 mem_mask)
 {
 	static const int a[9] = { 0x00000, 0x00020, 0x02c40, 0x08160, 0x0c8c0, 0x0ffe0, 0x13000, 0x15820, 0x15f40 };
 	if (ACCESSING_BITS_0_7 && (data & 0xff) < 9) m_audio->set_sample_start(a[data & 0xff]);
 }
 
-WRITE16_MEMBER(m72_state::dkgenm72_sample_trigger_w)
+void m72_state::dkgenm72_sample_trigger_w(offs_t offset, u16 data, u16 mem_mask)
 {
 	static const int a[28] = {
 		0x00000, 0x00020, 0x01800, 0x02da0, 0x03be0, 0x05ae0, 0x06100, 0x06de0,
@@ -485,7 +485,7 @@ WRITE16_MEMBER(m72_state::dkgenm72_sample_trigger_w)
 	if (ACCESSING_BITS_0_7 && (data & 0xff) < 28) m_audio->set_sample_start(a[data & 0xff]);
 }
 
-WRITE16_MEMBER(m72_state::gallop_sample_trigger_w)
+void m72_state::gallop_sample_trigger_w(offs_t offset, u16 data, u16 mem_mask)
 {
 	static const int a[31] = {
 		0x00000, 0x00020, 0x00040, 0x01360, 0x02580, 0x04f20, 0x06240, 0x076e0,
@@ -632,14 +632,14 @@ void m72_state::copy_le(u16 *dest, const u8 *src, u8 bytes)
 		dest[i/2] = src[i+0] | (src[i+1] << 8);
 }
 
-READ16_MEMBER(m72_state::protection_r)
+u16 m72_state::protection_r(offs_t offset, u16 mem_mask)
 {
 	if (ACCESSING_BITS_8_15)
 		copy_le(m_protection_ram.get(),m_protection_code,CODE_LEN);
 	return m_protection_ram[0xffa/2+offset];
 }
 
-WRITE16_MEMBER(m72_state::protection_w)
+void m72_state::protection_w(offs_t offset, u16 data, u16 mem_mask)
 {
 	data ^= 0xffff;
 	COMBINE_DATA(&m_protection_ram[offset]);
@@ -655,8 +655,8 @@ void m72_state::install_protection_handler(const u8 *code,const u8 *crc)
 	m_protection_code = code;
 	m_protection_crc =  crc;
 	m_maincpu->space(AS_PROGRAM).install_read_bank(0xb0000, 0xb0fff, "bank1");
-	m_maincpu->space(AS_PROGRAM).install_read_handler(0xb0ffa, 0xb0ffb, read16_delegate(*this, FUNC(m72_state::protection_r)));
-	m_maincpu->space(AS_PROGRAM).install_write_handler(0xb0000, 0xb0fff, write16_delegate(*this, FUNC(m72_state::protection_w)));
+	m_maincpu->space(AS_PROGRAM).install_read_handler(0xb0ffa, 0xb0ffb, read16s_delegate(*this, FUNC(m72_state::protection_r)));
+	m_maincpu->space(AS_PROGRAM).install_write_handler(0xb0000, 0xb0fff, write16s_delegate(*this, FUNC(m72_state::protection_w)));
 	membank("bank1")->configure_entry(0, m_protection_ram.get());
 
 	save_pointer(NAME(m_protection_ram), 0x1000/2);
@@ -665,36 +665,36 @@ void m72_state::install_protection_handler(const u8 *code,const u8 *crc)
 void m72_state::init_bchopper()
 {
 	install_protection_handler(bchopper_code,bchopper_crc);
-	m_maincpu->space(AS_IO).install_write_handler(0xc0, 0xc1, write16_delegate(*this, FUNC(m72_state::bchopper_sample_trigger_w)));
+	m_maincpu->space(AS_IO).install_write_handler(0xc0, 0xc1, write16s_delegate(*this, FUNC(m72_state::bchopper_sample_trigger_w)));
 }
 
 void m72_state::init_nspirit()
 {
 	install_protection_handler(nspirit_code,nspirit_crc);
-	m_maincpu->space(AS_IO).install_write_handler(0xc0, 0xc1, write16_delegate(*this, FUNC(m72_state::nspirit_sample_trigger_w)));
+	m_maincpu->space(AS_IO).install_write_handler(0xc0, 0xc1, write16s_delegate(*this, FUNC(m72_state::nspirit_sample_trigger_w)));
 }
 
 void m72_state::init_imgfight()
 {
 	install_protection_handler(imgfight_code,imgfightj_crc);
-	m_maincpu->space(AS_IO).install_write_handler(0xc0, 0xc1, write16_delegate(*this, FUNC(m72_state::imgfight_sample_trigger_w)));
+	m_maincpu->space(AS_IO).install_write_handler(0xc0, 0xc1, write16s_delegate(*this, FUNC(m72_state::imgfight_sample_trigger_w)));
 }
 
 void m72_state::init_dbreedm72()
 {
 	install_protection_handler(dbreedm72_code,dbreedm72_crc);
-	m_maincpu->space(AS_IO).install_write_handler(0xc0, 0xc1, write16_delegate(*this, FUNC(m72_state::dbreedm72_sample_trigger_w)));
+	m_maincpu->space(AS_IO).install_write_handler(0xc0, 0xc1, write16s_delegate(*this, FUNC(m72_state::dbreedm72_sample_trigger_w)));
 }
 
 void m72_state::init_dkgenm72()
 {
 	install_protection_handler(dkgenm72_code,dkgenm72_crc);
-	m_maincpu->space(AS_IO).install_write_handler(0xc0, 0xc1, write16_delegate(*this, FUNC(m72_state::dkgenm72_sample_trigger_w)));
+	m_maincpu->space(AS_IO).install_write_handler(0xc0, 0xc1, write16s_delegate(*this, FUNC(m72_state::dkgenm72_sample_trigger_w)));
 }
 
 void m72_state::init_gallop()
 {
-	m_maincpu->space(AS_IO).install_write_handler(0xc0, 0xc1, write16_delegate(*this, FUNC(m72_state::gallop_sample_trigger_w)));
+	m_maincpu->space(AS_IO).install_write_handler(0xc0, 0xc1, write16s_delegate(*this, FUNC(m72_state::gallop_sample_trigger_w)));
 }
 
 
@@ -3381,7 +3381,7 @@ ROM_START( xmultiplm72 )
 	ROM_LOAD( "t45.01.ic52", 0x20000, 0x20000, CRC(4d0764d4) SHA1(4942333336a110b033f16ac1afa06ffef7b2dad6) )
 	ROM_LOAD( "t46.10.ic51", 0x40000, 0x20000, CRC(f0c465a4) SHA1(69c107c860d4e8736431fd86b6821b70a8367eb3) )
 	ROM_LOAD( "t47.11.ic50", 0x60000, 0x20000, CRC(1263b24b) SHA1(0445a5381df3a868bed6967c8e5de7169e4be6a3) )
-	ROM_LOAD( "t48.20.ic48", 0x80000, 0x20000, CRC(4129944f) SHA1(988b072032d1667c3ac0731fada32fb6978505dc) )
+	ROM_LOAD( "t48.20.ic49", 0x80000, 0x20000, CRC(4129944f) SHA1(988b072032d1667c3ac0731fada32fb6978505dc) )
 	ROM_LOAD( "t49.21.ic48", 0xa0000, 0x20000, CRC(2346e6f9) SHA1(b3de017dd0353e04d279f57e151c47f5fcc70e9c) )
 	ROM_LOAD( "t50.30.ic47", 0xc0000, 0x20000, CRC(e322543e) SHA1(b4c3a7f202d81485d5f0a7b7668ee89fc1edb215) )
 	ROM_LOAD( "t51.31.ic46", 0xe0000, 0x20000, CRC(229bf7b1) SHA1(ae42c7efbb6278dd3fa56842361138391f2d49ca) )
