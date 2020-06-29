@@ -47,10 +47,7 @@ void s11c_state::s11c_bg_map(address_map &map)
 }
 
 static INPUT_PORTS_START( s11c )
-	PORT_START("X0")
-	PORT_BIT( 0xff, IP_ACTIVE_LOW, IPT_UNUSED )
-
-	PORT_START("X1")
+	PORT_START("SW.0")
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_TILT )
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_OTHER )
 	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_START )
@@ -60,7 +57,7 @@ static INPUT_PORTS_START( s11c )
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_OTHER )
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_OTHER )
 
-	PORT_START("X2")
+	PORT_START("SW.1")
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_A)
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_S)
 	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_D)
@@ -70,7 +67,7 @@ static INPUT_PORTS_START( s11c )
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_J)
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_K)
 
-	PORT_START("X4")
+	PORT_START("SW.2")
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_L)
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_Z)
 	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_C)
@@ -80,7 +77,7 @@ static INPUT_PORTS_START( s11c )
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_M)
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_COMMA)
 
-	PORT_START("X8")
+	PORT_START("SW.3")
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_STOP)
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_SLASH)
 	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_COLON)
@@ -90,7 +87,7 @@ static INPUT_PORTS_START( s11c )
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_EQUALS)
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_BACKSPACE)
 
-	PORT_START("X10")
+	PORT_START("SW.4")
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_OPENBRACE)
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_CLOSEBRACE)
 	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_BACKSLASH)
@@ -100,10 +97,10 @@ static INPUT_PORTS_START( s11c )
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_UP)
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_DOWN)
 
-	PORT_START("X20")
+	PORT_START("SW.5")
 	PORT_BIT( 0xff, IP_ACTIVE_LOW, IPT_UNKNOWN )
 
-	PORT_START("X40")
+	PORT_START("SW.6")
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_Q)
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_W)
 	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_E)
@@ -113,7 +110,7 @@ static INPUT_PORTS_START( s11c )
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_I)
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_OTHER ) PORT_CODE(KEYCODE_O)
 
-	PORT_START("X80")
+	PORT_START("SW.7")
 	PORT_BIT( 0xff, IP_ACTIVE_LOW, IPT_UNKNOWN )
 
 	PORT_START("DIAGS")
@@ -127,7 +124,7 @@ static INPUT_PORTS_START( s11c )
 INPUT_PORTS_END
 
 /*
-WRITE8_MEMBER( s11c_state::bgbank_w )
+void s11c_state::bgbank_w(uint8_t data)
 {
     uint8_t bank = ((data & 0x04) >> 2) | ((data & 0x03) << 1);
     membank("bgbank")->set_entry(bank);
@@ -149,7 +146,7 @@ void s11c_state::init_s11c()
 //  membank("bgbank")->set_entry(0);
 	set_invert(true);
 	set_timer(timer);
-	timer->adjust(attotime::from_ticks(S11_IRQ_CYCLES,E_CLOCK),1);
+	timer->adjust(attotime::from_ticks(32,E_CLOCK),0);
 }
 
 void s11c_state::s11c(machine_config &config)
@@ -157,6 +154,8 @@ void s11c_state::s11c(machine_config &config)
 	/* basic machine hardware */
 	M6808(config, m_maincpu, XTAL(4'000'000));
 	m_maincpu->set_addrmap(AS_PROGRAM, &s11c_state::s11c_main_map);
+	INPUT_MERGER_ANY_HIGH(config, m_mainirq).output_handler().set(FUNC(s11_state::main_irq));
+	INPUT_MERGER_ANY_HIGH(config, m_piairq).output_handler().set(FUNC(s11_state::pia_irq));
 
 	/* Video */
 	config.set_default_layout(layout_s11c);
@@ -167,48 +166,51 @@ void s11c_state::s11c(machine_config &config)
 	/* Devices */
 	PIA6821(config, m_pia21, 0);
 	m_pia21->readpa_handler().set(FUNC(s11_state::sound_r));
+	m_pia21->set_port_a_input_overrides_output_mask(0xff);
 	m_pia21->writepa_handler().set(FUNC(s11_state::sound_w));
 	m_pia21->writepb_handler().set(FUNC(s11_state::sol2_w));
 	m_pia21->ca2_handler().set(FUNC(s11_state::pia21_ca2_w));
 	m_pia21->cb2_handler().set(FUNC(s11_state::pia21_cb2_w));
-	m_pia21->irqa_handler().set(FUNC(s11_state::pia_irq));
-	m_pia21->irqb_handler().set(FUNC(s11_state::pia_irq));
+	m_pia21->irqa_handler().set(m_piairq, FUNC(input_merger_device::in_w<1>));
+	m_pia21->irqb_handler().set(m_piairq, FUNC(input_merger_device::in_w<2>));
 
 	PIA6821(config, m_pia24, 0);
 	m_pia24->writepa_handler().set(FUNC(s11_state::lamp0_w));
 	m_pia24->writepb_handler().set(FUNC(s11_state::lamp1_w));
 	m_pia24->cb2_handler().set(FUNC(s11_state::pia24_cb2_w));
-	m_pia24->irqa_handler().set(FUNC(s11_state::pia_irq));
-	m_pia24->irqb_handler().set(FUNC(s11_state::pia_irq));
+	m_pia24->irqa_handler().set(m_piairq, FUNC(input_merger_device::in_w<3>));
+	m_pia24->irqb_handler().set(m_piairq, FUNC(input_merger_device::in_w<4>));
 
 	PIA6821(config, m_pia28, 0);
 	m_pia28->readpa_handler().set(FUNC(s11_state::pia28_w7_r));
+	m_pia28->set_port_a_input_overrides_output_mask(0xff);
 	m_pia28->writepa_handler().set(FUNC(s11a_state::dig0_w));
 	m_pia28->writepb_handler().set(FUNC(s11b_state::dig1_w));
 	m_pia28->ca2_handler().set(FUNC(s11_state::pia28_ca2_w));
 	m_pia28->cb2_handler().set(FUNC(s11_state::pia28_cb2_w));
-	m_pia28->irqa_handler().set(FUNC(s11_state::pia_irq));
-	m_pia28->irqb_handler().set(FUNC(s11_state::pia_irq));
+	m_pia28->irqa_handler().set(m_piairq, FUNC(input_merger_device::in_w<5>));
+	m_pia28->irqb_handler().set(m_piairq, FUNC(input_merger_device::in_w<6>));
 
 	PIA6821(config, m_pia2c, 0);
 	m_pia2c->writepa_handler().set(FUNC(s11b_state::pia2c_pa_w));
 	m_pia2c->writepb_handler().set(FUNC(s11b_state::pia2c_pb_w));
-	m_pia2c->irqa_handler().set(FUNC(s11_state::pia_irq));
-	m_pia2c->irqb_handler().set(FUNC(s11_state::pia_irq));
+	m_pia2c->irqa_handler().set(m_piairq, FUNC(input_merger_device::in_w<7>));
+	m_pia2c->irqb_handler().set(m_piairq, FUNC(input_merger_device::in_w<8>));
 
 	PIA6821(config, m_pia30, 0);
 	m_pia30->readpa_handler().set(FUNC(s11_state::switch_r));
+	m_pia30->set_port_a_input_overrides_output_mask(0xff);
 	m_pia30->writepb_handler().set(FUNC(s11_state::switch_w));
 	m_pia30->cb2_handler().set(FUNC(s11_state::pia30_cb2_w));
-	m_pia30->irqa_handler().set(FUNC(s11_state::pia_irq));
-	m_pia30->irqb_handler().set(FUNC(s11_state::pia_irq));
+	m_pia30->irqa_handler().set(m_piairq, FUNC(input_merger_device::in_w<9>));
+	m_pia30->irqb_handler().set(m_piairq, FUNC(input_merger_device::in_w<10>));
 
 	PIA6821(config, m_pia34, 0);
 	m_pia34->writepa_handler().set(FUNC(s11b_state::pia34_pa_w));
 	m_pia34->writepb_handler().set(FUNC(s11b_state::pia34_pb_w));
 	m_pia34->cb2_handler().set(FUNC(s11b_state::pia34_cb2_w));
-	m_pia34->irqa_handler().set(FUNC(s11_state::pia_irq));
-	m_pia34->irqb_handler().set(FUNC(s11_state::pia_irq));
+	m_pia34->irqa_handler().set(m_piairq, FUNC(input_merger_device::in_w<11>));
+	m_pia34->irqb_handler().set(m_piairq, FUNC(input_merger_device::in_w<12>));
 
 	NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_1);
 

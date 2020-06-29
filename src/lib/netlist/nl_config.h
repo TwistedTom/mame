@@ -44,6 +44,17 @@
 #define NL_USE_MEMPOOL               (1)
 #endif
 
+/// brief default minimum alignment of mempool_arena
+///
+/// 256 is the best compromise between logic applications like MAME
+/// TTL games (e.g. pong) and analog applications like e.g. kidnikik sound.
+///
+/// Best performance for pong is achieved with a value of 16, but this degrades
+/// kidniki performance by ~10%.
+///
+/// More work is needed here.
+#define NL_MEMPOOL_ALIGN			(16)
+
 /// \brief  Enable queue statistics.
 ///
 /// Queue statistics come at a performance cost. Although
@@ -113,6 +124,15 @@
 
 #ifndef NL_USE_FLOAT128
 #define NL_USE_FLOAT128 PUSE_FLOAT128
+#endif
+
+/// \brief Prefer 128bit int type for ptime if supported
+///
+/// Set this to one if you want to use 128 bit int for ptime.
+/// This is about 10% slower on a skylake processor for pongf.
+///
+#ifndef NL_PREFER_INT128
+#define NL_PREFER_INT128 (0)
 #endif
 
 /// \brief Support float type for matrix calculations.
@@ -190,6 +210,12 @@ namespace netlist
 		/// \brief Maximum queue size
 		///
 		using MAX_QUEUE_SIZE = std::integral_constant<std::size_t, 512>; // NOLINT
+
+		using use_float_matrix = std::integral_constant<bool, NL_USE_FLOAT_MATRIX>;
+		using use_long_double_matrix = std::integral_constant<bool, NL_USE_LONG_DOUBLE_MATRIX>;
+		using use_float128_matrix = std::integral_constant<bool, NL_USE_FLOAT128>;
+
+		using use_mempool = std::integral_constant<bool, NL_USE_MEMPOOL>;
 
 		/// \brief  Floating point types used
 		///
