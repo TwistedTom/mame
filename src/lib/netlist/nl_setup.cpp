@@ -3,6 +3,7 @@
 
 #include "plib/palloc.h"
 #include "analog/nld_twoterm.h"
+#include "core/setup.h"
 #include "devices/nlid_proxy.h"
 #include "devices/nlid_system.h"
 #include "devices/nlid_truthtable.h"
@@ -21,9 +22,8 @@ namespace netlist
 	// nl_parse_t
 	// ----------------------------------------------------------------------------------------
 
-	nlparse_t::nlparse_t(log_type &log, abstract_t &abstract)
-	: m_factory(log)
-	, m_abstract(abstract)
+	nlparse_t::nlparse_t(log_type &log, detail::abstract_t &abstract)
+	: m_abstract(abstract)
 	, m_log(log)
 	, m_frontier_cnt(0)
 	{ }
@@ -70,7 +70,7 @@ namespace netlist
 		factory::element_t **felem)
 	{
 
-		auto *f = m_factory.factory_by_name(classname);
+		auto *f = factory().factory_by_name(classname);
 
 		// make sure we parse macro library entries
 		// FIXME: this could be done here if e.g. f
@@ -150,8 +150,9 @@ namespace netlist
 			*felem = f;
 	}
 
-	void nlparse_t::register_hint(const pstring &name)
+	void nlparse_t::register_hint(const pstring &objname, const pstring &hintname)
 	{
+		const auto name = build_fqn(objname) + hintname;
 		if (!m_abstract.m_hints.insert({name, false}).second)
 		{
 			log().fatal(MF_ADDING_HINT_1(name));
@@ -255,9 +256,20 @@ namespace netlist
 		m_abstract.m_defparams.emplace_back(namespace_prefix() + name, val);
 	}
 
-	void nlparse_t::register_lib_entry(const pstring &name, factory::properties &&props)
+	factory::list_t &nlparse_t::factory() noexcept
 	{
-		m_factory.add(plib::make_unique<factory::library_element_t, host_arena>(name, std::move(props)));
+		return m_abstract.m_factory;
+	}
+
+	const factory::list_t &nlparse_t::factory() const noexcept
+	{
+		return m_abstract.m_factory;
+	}
+
+
+	void nlparse_t::register_lib_entry(const pstring &name, const pstring &def_params, plib::source_location &&loc)
+	{
+		factory().add(plib::make_unique<factory::library_element_t, host_arena>(name, factory::properties(def_params, std::move(loc))));
 	}
 
 	void nlparse_t::register_frontier(const pstring &attach, const pstring &r_IN,
@@ -293,10 +305,15 @@ namespace netlist
 		register_link(attach, frontier_name + ".Q");
 	}
 
-	void nlparse_t::truthtable_create(tt_desc &desc, factory::properties &&props)
+	void nlparse_t::register_source_proc(const pstring &name, nlsetup_func func)
 	{
-		auto fac = factory::truthtable_create(desc, std::move(props));
-		m_factory.add(std::move(fac));
+		register_source<netlist::source_proc_t>(name, func);
+	}
+
+	void nlparse_t::truthtable_create(tt_desc &desc, const pstring &def_params, plib::source_location &&loc)
+	{
+		auto fac = factory::truthtable_create(desc, netlist::factory::properties(def_params, std::move(loc)));
+		factory().add(std::move(fac));
 	}
 
 	pstring nlparse_t::namespace_prefix() const
@@ -320,7 +337,7 @@ namespace netlist
 
 	void nlparse_t::register_link_fqn(const pstring &sin, const pstring &sout)
 	{
-		link_t temp = link_t(sin, sout);
+		detail::abstract_t::link_t temp(sin, sout);
 		log().debug("link {1} <== {2}", sin, sout);
 		m_abstract.m_links.push_back(temp);
 	}
@@ -417,7 +434,7 @@ namespace netlist
 
 
 setup_t::setup_t(netlist_state_t &nlstate)
-	: m_abstract()
+	: m_abstract(nlstate.log())
 	, m_parser(nlstate.log(), m_abstract)
 	, m_nlstate(nlstate)
 	, m_models(m_abstract.m_models) // FIXME : parse abstract_t only
@@ -851,9 +868,13 @@ void setup_t::connect_terminal_output(terminal_t &in, detail::core_terminal_t &o
 		// no proxy needed, just merge existing terminal net
 		if (in.has_net())
 		{
-			if (&out.net() == &in.net())
-				log().warning(MW_CONNECTING_1_TO_2_SAME_NET(in.name(), out.name(), in.net().name()));
-			merge_nets(out.net(), in.net());
+			if (&out.net() != &in.net())
+				merge_nets(out.net(), in.net());
+			else
+				// Only an info - some ICs (CD4538) connect pins internally to GND
+				// and the schematics again externally. This will cause this warning.
+				// FIXME: Add a hint to suppress the warning.
+				log().info(MI_CONNECTING_1_TO_2_SAME_NET(in.name(), out.name(), in.net().name()));
 		}
 		else
 			add_terminal(out.net(), in);
@@ -1430,6 +1451,22 @@ const logic_family_desc_t *setup_t::family_from_model(const pstring &model)
 	ret->m_R_low = modv.m_ORL();
 	ret->m_R_high = modv.m_ORH();
 
+	switch (ft)
+	{
+		case family_type::CUSTOM:
+		case family_type::TTL:
+		case family_type::NMOS:
+			ret->m_vcc = "VCC";
+			ret->m_gnd = "GND";
+			break;
+		case family_type::MOS:
+		case family_type::CMOS:
+		case family_type::PMOS:
+			ret->m_vcc = "VDD";
+			ret->m_gnd = "VSS";
+			break;
+	}
+
 	auto *retp = ret.get();
 
 	m_nlstate.family_cache().emplace(model, std::move(ret));
@@ -1592,11 +1629,11 @@ void setup_t::prepare_to_run()
 
 	for (auto &n : m_nlstate.nets())
 		for (auto & term : n->core_terms())
-		{
-			core_device_t *dev = &term->device();
-			dev->set_default_delegate(*term);
-		}
-
+			if (!term->delegate().is_set())
+			{
+				log().fatal(MF_DELEGATE_NOT_SET_1(term->name()));
+				throw nl_exception(MF_DELEGATE_NOT_SET_1(term->name()));
+			}
 }
 
 // ----------------------------------------------------------------------------------------
