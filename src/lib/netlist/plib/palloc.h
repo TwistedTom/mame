@@ -244,7 +244,9 @@ namespace plib {
 		static /*constexpr*/ const std::size_t align_size = ALIGN;
 		using arena_type = ARENA;
 
-		static_assert(align_size >= alignof(T) && (align_size % alignof(T)) == 0,
+		static_assert(align_size >= alignof(T),
+			"ALIGN must be greater than alignof(T) and a multiple");
+		static_assert((align_size % alignof(T)) == 0,
 			"ALIGN must be greater than alignof(T) and a multiple");
 
 		arena_allocator() noexcept
@@ -436,8 +438,13 @@ namespace plib {
 			//unused_var(size);
 			dec_alloc_stat(size);
 			#if (PUSE_ALIGNED_ALLOCATION)
+				#if defined(_WIN32) || defined(_WIN64) || defined(_MSC_VER)
+				// NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
+				_aligned_free(ptr);
+				#else
 				// NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
 				::free(ptr);
+				#endif
 			#else
 				::operator delete(ptr);
 			#endif

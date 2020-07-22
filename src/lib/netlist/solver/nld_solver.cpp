@@ -3,6 +3,7 @@
 
 
 #include "netlist/nl_factory.h"
+#include "core/setup.h"
 #include "netlist/nl_setup.h" // FIXME: only needed for splitter code
 #include "nld_matrix_solver.h"
 #include "nld_ms_direct.h"
@@ -41,7 +42,7 @@ namespace devices
 			s->log_stats();
 	}
 
-	NETLIB_UPDATE(solver)
+	NETLIB_HANDLER(solver, fb_step)
 	{
 		if (m_params.m_dynamic_ts)
 			return;
