@@ -1,6 +1,7 @@
 // license:GPL-2.0+
 // copyright-holders:Couriersud
 
+#include "macro/nlm_base_lib.h"
 #include "solver/nld_matrix_solver.h"
 #include "solver/nld_solver.h"
 
@@ -12,8 +13,6 @@
 
 #include "core/setup.h"
 #include "devices/nlid_proxy.h"
-#include "devices/nlid_system.h"
-#include "macro/nlm_base.h"
 #include "nl_base.h"
 
 #include "nl_errstr.h"
@@ -35,45 +34,6 @@ namespace netlist
 	// ----------------------------------------------------------------------------------------
 	// queue_t
 	// ----------------------------------------------------------------------------------------
-
-	detail::queue_t::queue_t(netlist_t &nl, const pstring &name)
-		: timed_queue<plib::pqentry_t<netlist_time_ext, net_t *>, false>(config::MAX_QUEUE_SIZE::value)
-		, netlist_object_t(nl, name)
-		, m_qsize(0)
-		, m_times(config::MAX_QUEUE_SIZE::value)
-		, m_net_ids(config::MAX_QUEUE_SIZE::value)
-	{
-	}
-
-	void detail::queue_t::register_state(plib::state_manager_t &manager, const pstring &module)
-	{
-		//state().log().debug("register_state\n");
-		manager.save_item(this, m_qsize, module + "." + "qsize");
-		manager.save_item(this, &m_times[0], module + "." + "times", m_times.size());
-		manager.save_item(this, &m_net_ids[0], module + "." + "names", m_net_ids.size());
-	}
-
-	void detail::queue_t::on_pre_save(plib::state_manager_t &manager)
-	{
-		plib::unused_var(manager);
-		m_qsize = this->size();
-		for (std::size_t i = 0; i < m_qsize; i++ )
-		{
-			m_times[i] =  this->listptr()[i].exec_time().as_raw();
-			m_net_ids[i] = state().find_net_id(this->listptr()[i].object());
-		}
-	}
-
-	void detail::queue_t::on_post_load(plib::state_manager_t &manager)
-	{
-		plib::unused_var(manager);
-		this->clear();
-		for (std::size_t i = 0; i < m_qsize; i++ )
-		{
-			detail::net_t *n = state().nets()[m_net_ids[i]].get();
-			this->push<false>(queue_t::entry_t(netlist_time_ext::from_raw(m_times[i]),n));
-		}
-	}
 
 	// ----------------------------------------------------------------------------------------
 	// device_object_t
@@ -101,6 +61,30 @@ namespace netlist
 		//return terminal_type::TERMINAL; // please compiler
 	}
 
+	netlist_state_t &detail::device_object_t::state() noexcept
+	{
+		return m_device->state();
+	}
+
+	const netlist_state_t &detail::device_object_t::state() const noexcept
+	{
+		return m_device->state();
+	}
+
+	// ----------------------------------------------------------------------------------------
+	// netlist_object_t
+	// ----------------------------------------------------------------------------------------
+
+	netlist_state_t & detail::netlist_object_t::state() noexcept
+	{
+		return m_netlist.nlstate();
+	}
+
+	const netlist_state_t & detail::netlist_object_t::state() const noexcept
+	{
+		return m_netlist.nlstate();
+	}
+
 	// ----------------------------------------------------------------------------------------
 	// netlist_t
 	// ----------------------------------------------------------------------------------------
@@ -110,7 +94,9 @@ namespace netlist
 		, m_solver(nullptr)
 		, m_time(netlist_time_ext::zero())
 		, m_mainclock(nullptr)
-		, m_queue(*this, aname + "." + "m_queue")
+		, m_queue(config::MAX_QUEUE_SIZE::value,
+			detail::queue_t::id_delegate(&netlist_state_t :: find_net_id, &state),
+			detail::queue_t::obj_delegate(&netlist_state_t :: net_by_id, &state))
 		, m_use_stats(false)
 	{
 		state.save(*this, static_cast<plib::state_manager_t::callback_t &>(m_queue), aname, "m_queue");
@@ -128,7 +114,6 @@ namespace netlist
 	, m_extended_validation(false)
 	, m_dummy_version(1)
 	{
-
 		m_lib = m_callbacks->static_solver_lib();
 
 		m_setup = plib::make_unique<setup_t, host_arena>(*this);
@@ -143,7 +128,6 @@ namespace netlist
 		devices::initialize_factory(m_setup->parser().factory());
 
 		// Add default include file
-		using a = plib::psource_str_t;
 		const pstring content =
 		"#define RES_R(res) (res)            \n"
 		"#define RES_K(res) ((res) * 1e3)    \n"
@@ -154,8 +138,26 @@ namespace netlist
 		"#define IND_U(ind) ((ind) * 1e-6)   \n"
 		"#define IND_N(ind) ((ind) * 1e-9)   \n"
 		"#define IND_P(ind) ((ind) * 1e-12)  \n";
-		m_setup->parser().add_include<a>("netlist/devices/net_lib.h", content);
-		NETLIST_NAME(base)(m_setup->parser());
+		m_setup->parser().add_include<plib::psource_str_t>("netlist/devices/net_lib.h", content);
+#if 1
+		NETLIST_NAME(base_lib)(m_setup->parser());
+#else
+		// FIXME: This is very slow - need optimized parsing scanning
+#if 1
+		m_setup->parser().register_source<source_pattern_t>("src/lib/netlist/macro/nlm_{1}.cpp");
+		m_setup->parser().include("base_lib");
+#else
+		pstring dir = "src/lib/netlist/macro/";
+		//m_setup->parser().register_source<source_pattern_t>("src/lib/netlist/macro/nlm_{}.cpp");
+		m_setup->parser().register_source<source_file_t>(dir + "nlm_base_lib.cpp");
+		m_setup->parser().register_source<source_file_t>(dir + "nlm_opamp_lib.cpp");
+		m_setup->parser().register_source<source_file_t>(dir + "nlm_roms_lib.cpp");
+		m_setup->parser().register_source<source_file_t>(dir + "nlm_cd4xxx_lib.cpp");
+		m_setup->parser().register_source<source_file_t>(dir + "nlm_otheric_lib.cpp");
+		m_setup->parser().register_source<source_file_t>(dir + "nlm_ttl74xx_lib.cpp");
+		m_setup->parser().include("base_lib");
+#endif
+#endif
 	}
 
 
@@ -174,6 +176,10 @@ namespace netlist
 			if (m_nets[i].get() == net)
 				return i;
 		return std::numeric_limits<std::size_t>::max();
+	}
+	detail::net_t *netlist_state_t::net_by_id(std::size_t id) const
+	{
+		return m_nets[id].get();
 	}
 
 	void netlist_state_t::rebuild_lists()
@@ -702,14 +708,6 @@ namespace netlist
 		state().setup().register_term(*this, *otherterm);
 	}
 
-	void terminal_t::solve_now() const
-	{
-		const auto *solv(solver());
-		// Nets may belong to railnets which do not have a solver attached
-		if (solv != nullptr)
-				solver()->solve_now();
-	}
-
 	void terminal_t::set_ptrs(nl_fptype *gt, nl_fptype *go, nl_fptype *Idr) noexcept(false)
 	{
 		// NOLINTNEXTLINE(readability-implicit-bool-conversion)
@@ -775,6 +773,16 @@ namespace netlist
 		if (has_net())
 			net().initial(val);
 	}
+
+	// -----------------------------------------------------------------------------
+	// tristate_output_t
+	// -----------------------------------------------------------------------------
+	tristate_output_t::tristate_output_t(device_t &dev, const pstring &aname, bool force_logic)
+	: logic_output_t(dev, aname)
+	, m_last_logic(dev, name() + "." + "m_last_logic", 1) // force change
+	, m_tristate(dev, name() + "." + "m_tristate", force_logic ? 0 : 2) // force change
+	, m_force_logic(force_logic)
+	{}
 
 	// ----------------------------------------------------------------------------------------
 	// analog_input_t
@@ -898,7 +906,7 @@ namespace netlist
 	}
 
 
-	std::unique_ptr<std::istream> param_data_t::stream()
+	plib::psource_t::stream_ptr param_data_t::stream()
 	{
 		return device().state().parser().get_data_stream(str());
 	}
@@ -955,6 +963,94 @@ namespace netlist
 
 	nlparse_t &netlist_state_t::parser() { return m_setup->parser(); }
 	const nlparse_t &netlist_state_t::parser() const { return m_setup->parser(); }
+
+	void netlist_state_t::remove_device(core_device_t *dev)
+	{
+		for (auto it = m_devices.begin(); it != m_devices.end(); it++)
+			if (it->second.get() == dev)
+			{
+				m_state.remove_save_items(dev);
+				m_devices.erase(it);
+				return;
+			}
+	}
+
+	// ----------------------------------------------------------------------------------------
+	// netlist_t
+	//
+	// Hot section
+	//
+	// Any changes below will impact performance.
+	// -----------------------------------------------------------------------------
+
+	template <bool KEEP_STATS>
+	void netlist_t::process_queue_stats(const netlist_time_ext delta) noexcept
+	{
+		netlist_time_ext stop(m_time + delta);
+
+		qpush(stop, nullptr);
+
+		if (m_mainclock == nullptr)
+		{
+			m_time = m_queue.top().exec_time();
+			detail::net_t *obj(m_queue.top().object());
+			m_queue.pop();
+
+			while (obj != nullptr)
+			{
+				obj->template update_devs<KEEP_STATS>();
+				if (KEEP_STATS)
+					m_perf_out_processed.inc();
+				const detail::queue_t::entry_t *top = &m_queue.top();
+				m_time = top->exec_time();
+				obj = top->object();
+				m_queue.pop();
+			}
+		}
+		else
+		{
+			logic_net_t &mc_net(m_mainclock->m_Q.net());
+			const netlist_time inc(m_mainclock->m_inc);
+			netlist_time_ext mc_time(mc_net.next_scheduled_time());
+
+			do
+			{
+				const detail::queue_t::entry_t *top = &m_queue.top();
+				while (top->exec_time() > mc_time)
+				{
+					m_time = mc_time;
+					mc_net.toggle_new_Q();
+					mc_net.update_devs<KEEP_STATS>();
+					top = &m_queue.top();
+					mc_time += inc;
+				}
+
+				m_time = top->exec_time();
+				auto *const obj(top->object());
+				m_queue.pop();
+				if (obj != nullptr)
+					obj->template update_devs<KEEP_STATS>();
+				else
+					break;
+				if (KEEP_STATS)
+					m_perf_out_processed.inc();
+			} while (true);
+
+			mc_net.set_next_scheduled_time(mc_time);
+		}
+	}
+
+	void netlist_t::process_queue(netlist_time_ext delta) noexcept
+	{
+		if (!m_use_stats)
+			process_queue_stats<false>(delta);
+		else
+		{
+			auto sm_guard(m_stat_mainloop.guard());
+			process_queue_stats<true>(delta);
+		}
+	}
+
 
 	template struct state_var<std::uint8_t>;
 	template struct state_var<std::uint16_t>;

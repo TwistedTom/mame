@@ -1692,8 +1692,16 @@ if (BUSES["O2"]~=null) then
 		MAME_DIR .. "src/devices/bus/odyssey2/slot.h",
 		MAME_DIR .. "src/devices/bus/odyssey2/rom.cpp",
 		MAME_DIR .. "src/devices/bus/odyssey2/rom.h",
+		MAME_DIR .. "src/devices/bus/odyssey2/4in1.cpp",
+		MAME_DIR .. "src/devices/bus/odyssey2/4in1.h",
 		MAME_DIR .. "src/devices/bus/odyssey2/chess.cpp",
 		MAME_DIR .. "src/devices/bus/odyssey2/chess.h",
+		MAME_DIR .. "src/devices/bus/odyssey2/homecomp.cpp",
+		MAME_DIR .. "src/devices/bus/odyssey2/homecomp.h",
+		MAME_DIR .. "src/devices/bus/odyssey2/ktaa.cpp",
+		MAME_DIR .. "src/devices/bus/odyssey2/ktaa.h",
+		MAME_DIR .. "src/devices/bus/odyssey2/rally.cpp",
+		MAME_DIR .. "src/devices/bus/odyssey2/rally.h",
 		MAME_DIR .. "src/devices/bus/odyssey2/voice.cpp",
 		MAME_DIR .. "src/devices/bus/odyssey2/voice.h",
 	}
@@ -2356,6 +2364,8 @@ if (BUSES["A2BUS"]~=null) then
 		MAME_DIR .. "src/devices/bus/a2bus/computereyes2.h",
 		MAME_DIR .. "src/devices/bus/a2bus/byte8251.cpp",
 		MAME_DIR .. "src/devices/bus/a2bus/byte8251.h",
+		MAME_DIR .. "src/devices/bus/a2bus/cmsscsi.cpp",
+		MAME_DIR .. "src/devices/bus/a2bus/cmsscsi.h",
 	}
 end
 
@@ -3778,6 +3788,8 @@ if (BUSES["SPECTRUM"]~=null) then
 		MAME_DIR .. "src/devices/bus/spectrum/kempdisc.h",
 		MAME_DIR .. "src/devices/bus/spectrum/logitek.cpp",
 		MAME_DIR .. "src/devices/bus/spectrum/logitek.h",
+		MAME_DIR .. "src/devices/bus/spectrum/lprint.cpp",
+		MAME_DIR .. "src/devices/bus/spectrum/lprint.h",
 		MAME_DIR .. "src/devices/bus/spectrum/melodik.cpp",
 		MAME_DIR .. "src/devices/bus/spectrum/melodik.h",
 		MAME_DIR .. "src/devices/bus/spectrum/mface.cpp",
@@ -4094,10 +4106,26 @@ if (BUSES["HP9845_IO"]~=null) then
 		MAME_DIR .. "src/devices/bus/hp9845_io/98034.h",
 		MAME_DIR .. "src/devices/bus/hp9845_io/98035.cpp",
 		MAME_DIR .. "src/devices/bus/hp9845_io/98035.h",
+		MAME_DIR .. "src/devices/bus/hp9845_io/98036.cpp",
+		MAME_DIR .. "src/devices/bus/hp9845_io/98036.h",
 		MAME_DIR .. "src/devices/bus/hp9845_io/98046.cpp",
 		MAME_DIR .. "src/devices/bus/hp9845_io/98046.h",
 		MAME_DIR .. "src/devices/bus/hp9845_io/hp9885.cpp",
 		MAME_DIR .. "src/devices/bus/hp9845_io/hp9885.h",
+	}
+end
+
+---------------------------------------------------
+--
+--@src/devices/bus/hp_ipc_io/hp_ipc_io.h,BUSES["HP_IPC_IO"] = true
+---------------------------------------------------
+
+if (BUSES["HP_IPC_IO"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/bus/hp_ipc_io/hp_ipc_io.cpp",
+		MAME_DIR .. "src/devices/bus/hp_ipc_io/hp_ipc_io.h",
+		MAME_DIR .. "src/devices/bus/hp_ipc_io/82919.cpp",
+		MAME_DIR .. "src/devices/bus/hp_ipc_io/829919.h",
 	}
 end
 
