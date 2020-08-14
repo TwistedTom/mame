@@ -21,29 +21,6 @@ namespace netlist
 namespace devices
 {
 	// -----------------------------------------------------------------------------
-	// netlistparams
-	// -----------------------------------------------------------------------------
-
-	NETLIB_OBJECT(netlistparams)
-	{
-		NETLIB_CONSTRUCTOR(netlistparams)
-		, m_use_deactivate(*this, "USE_DEACTIVATE", false)
-		, m_startup_strategy(*this, "STARTUP_STRATEGY", 0)
-		, m_mos_capmodel(*this, "DEFAULT_MOS_CAPMODEL", 2)
-		, m_max_link_loops(*this, "MAX_LINK_RESOLVE_LOOPS", 100)
-		{
-		}
-		//NETLIB_RESETI() {}
-		//NETLIB_UPDATE_PARAMI() { }
-	public:
-		param_logic_t m_use_deactivate;
-		param_num_t<unsigned>   m_startup_strategy;
-		param_num_t<unsigned>   m_mos_capmodel;
-		//! How many times do we try to resolve links (connections)
-		param_num_t<unsigned>   m_max_link_loops;
-	};
-
-	// -----------------------------------------------------------------------------
 	// clock
 	// -----------------------------------------------------------------------------
 
@@ -102,7 +79,7 @@ namespace devices
 				for (int i=0; i < m_N(); i++)
 				{
 					pstring inpname = plib::pfmt("A{1}")(i);
-					m_I.push_back(state().make_pool_object<analog_input_t>(*this, inpname, NETLIB_DELEGATE(fb)));
+					m_I.push_back(owner.template make_pool_object<analog_input_t>(*this, inpname, NETLIB_DELEGATE(fb)));
 					inps.push_back(inpname);
 					m_vals.push_back(nlconst::zero());
 				}
@@ -300,54 +277,63 @@ namespace devices
 		param_fp_t m_IN;
 	};
 
-	// -----------------------------------------------------------------------------
-	// nld_gnd
-	// -----------------------------------------------------------------------------
-
-	NETLIB_OBJECT(gnd)
-	{
-		NETLIB_CONSTRUCTOR(gnd)
-		, m_Q(*this, "Q")
-		{
-		}
-
-		NETLIB_UPDATE_PARAMI()
-		{
-			m_Q.push(nlconst::zero());
-		}
-
-		//NETLIB_RESETI() {}
-	protected:
-		analog_output_t m_Q;
-	};
-
-	// -----------------------------------------------------------------------------
-	// nld_nc_pin
-	// -----------------------------------------------------------------------------
-
-	NETLIB_OBJECT(nc_pin)
-	{
-	public:
-		NETLIB_CONSTRUCTOR(nc_pin)
-		, m_I(*this, "I", NETLIB_DELEGATE(noop))
-		{
-		}
-
-	protected:
-		//NETLIB_RESETI() {}
-
-	private:
-		NETLIB_HANDLERI(noop)
-		{
-		}
-
-		analog_input_t m_I;
-
-	};
 
 	// -----------------------------------------------------------------------------
 	// nld_frontier
 	// -----------------------------------------------------------------------------
+
+
+	/// \brief Frontiers divides a netlist into sub netlist
+	///
+	/// Example:
+	///
+	/// Consider the following mixing stage
+	///
+	///                 R1
+	///      S1 >-----1RRRR2---------+
+	///                              |
+	///                 R2           |
+	///      S2 >-----1RRRR2---------+----------> Out
+	///                              |
+	///                              R
+	///                           R3 R
+	///                              R
+	///                              |
+	///                             GND
+	///
+	/// With OPTIMIZE_FRONTIER(R2.2, R3, R2) this becomes:
+	///
+	///                 R1
+	///      S1 >-----1RRRR2--------------------------------+
+	///                                                     |
+	///                       ##########################    |
+	///                 R2    #                    R2  #    |
+	///      S2 >-----1RRRR2-----+-->AnIn AnOut>--RRRR------+----------> Out
+	///                       #  |                     #    |
+	///                       #  R                     #    R
+	///                       #  R R3                  # R3 R
+	///                       #  R                     #    R
+	///                       #  |                     #    |
+	///                       # GND          Frontier  #   GND
+	///                       #                        #
+	///                       ##########################
+	///
+	/// As a result, provided there are no other connections between the parts
+	/// generating S1 and S2 the "S2 part" will now have a separate solver.
+	///
+	/// The size (aka number of nets) of the solver for S1 will be smaller.
+	/// The size of the solver for S2 and the rest of the circuit will be smaller
+	/// as well.
+	///
+	///
+	///
+	///
+	///
+	///
+	///
+	///
+	///
+	///
 
 	NETLIB_OBJECT(frontier)
 	{
@@ -407,7 +393,7 @@ namespace devices
 			for (int i=0; i < m_N(); i++)
 			{
 				pstring inpname = plib::pfmt("A{1}")(i);
-				m_I.push_back(state().make_pool_object<analog_input_t>(*this, inpname, NETLIB_DELEGATE(inputs)));
+				m_I.push_back(owner.template make_pool_object<analog_input_t>(*this, inpname, NETLIB_DELEGATE(inputs)));
 				inps.push_back(inpname);
 				m_vals.push_back(nlconst::zero());
 			}
