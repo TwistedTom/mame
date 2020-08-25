@@ -28,6 +28,7 @@
 
     Notes:
         * Toggle both 'Back door' and 'Key switch' to enter test mode
+        * Opening the back door will disable coinup
         * Video hardware seems to match JPM System 5
         * IRQ 1 inits the PPIs, IRQ 2 does nothing
 
@@ -135,6 +136,7 @@ void guab_state::guab_map(address_map &map)
 	map(0x0c00e0, 0x0c00e7).rw(m_fdc, FUNC(wd1773_device::read), FUNC(wd1773_device::write)).umask16(0x00ff);
 	map(0x080000, 0x080fff).ram();
 	map(0x100001, 0x100001).rw("ef9369", FUNC(ef9369_device::data_r), FUNC(ef9369_device::data_w));
+	map(0x100002, 0x100003).nopr(); // uses a clr instruction on address which generates a dummy read
 	map(0x100003, 0x100003).w("ef9369", FUNC(ef9369_device::address_w));
 	map(0x800000, 0xb0ffff).rw(FUNC(guab_state::tms34061_r), FUNC(guab_state::tms34061_w));
 	map(0xb10000, 0xb1ffff).ram();
@@ -503,14 +505,14 @@ void guab_state::guab(machine_config &config)
 	ppi4.out_pc_callback().set(FUNC(guab_state::watchdog_w));
 
 	bacta_datalogger_device &bacta(BACTA_DATALOGGER(config, "bacta", 0));
-	
+
 	acia6850_device &acia1(ACIA6850(config, "acia6850_1", 0));
 	acia1.txd_handler().set("bacta", FUNC(bacta_datalogger_device::write_txd));
 	acia1.irq_handler().set_inputline("maincpu", 4);
 
 	bacta.rxd_handler().set("acia6850_1", FUNC(acia6850_device::write_rxd));
 
-	clock_device &acia_clock(CLOCK(config, "acia_clock", 153600)); // source? the ptm doesn't seem to output any common baud values
+	clock_device &acia_clock(CLOCK(config, "acia_clock", 19200)); // source? the ptm doesn't seem to output any common baud values
 	acia_clock.signal_handler().set("acia6850_1", FUNC(acia6850_device::write_txc));
 	acia_clock.signal_handler().append("acia6850_1", FUNC(acia6850_device::write_rxc));
 

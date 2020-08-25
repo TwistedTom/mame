@@ -11,8 +11,8 @@
 #include "nl_parser.h"
 #include "nl_setup.h"
 #include "plib/penum.h"
-#include "plib/putil.h"
 #include "plib/pstonum.h"
+#include "plib/putil.h"
 
 #include "solver/nld_solver.h"
 
@@ -87,8 +87,8 @@ namespace netlist
 		pstring key = build_fqn(name);
 		if (device_exists(key))
 		{
-			log().fatal(MF_DEVICE_ALREADY_EXISTS_1(name));
-			throw nl_exception(MF_DEVICE_ALREADY_EXISTS_1(name));
+			log().fatal(MF_DEVICE_ALREADY_EXISTS_1(key));
+			throw nl_exception(MF_DEVICE_ALREADY_EXISTS_1(key));
 		}
 
 		m_abstract.m_device_factory.insert(m_abstract.m_device_factory.end(), {key, f});
@@ -332,8 +332,8 @@ namespace netlist
 	{
 		if (!m_abstract.m_alias.insert({alias, out}).second)
 		{
-			log().fatal(MF_ADDING_ALI1_TO_ALIAS_LIST(alias));
-			throw nl_exception(MF_ADDING_ALI1_TO_ALIAS_LIST(alias));
+			log().fatal(MF_ALIAS_ALREAD_EXISTS_1(alias));
+			throw nl_exception(MF_ALIAS_ALREAD_EXISTS_1(alias));
 		}
 	}
 
@@ -448,7 +448,12 @@ namespace netlist
 		pstring model = plib::ucase(plib::trim(plib::left(model_in, pos)));
 		pstring def = plib::trim(model_in.substr(pos + 1));
 		if (!m_abstract.m_models.insert({model, def}).second)
-			throw nl_exception(MF_MODEL_ALREADY_EXISTS_1(model_in));
+		{
+			// FIXME: Add an directive MODEL_OVERWRITE to netlist language
+			//throw nl_exception(MF_MODEL_ALREADY_EXISTS_1(model_in));
+			log().info(MI_MODEL_OVERWRITE_1(model, model_in));
+			m_abstract.m_models[model] = def;
+		}
 	}
 
 
@@ -1623,6 +1628,7 @@ void setup_t::prepare_to_run()
 	// resolve inputs
 	resolve_inputs();
 
+#if 0
 	log().verbose("looking for two terms connected to rail nets ...");
 	for (auto & t : m_nlstate.get_device_list<analog::NETLIB_NAME(twoterm)>())
 	{
@@ -1638,6 +1644,7 @@ void setup_t::prepare_to_run()
 #endif
 		}
 	}
+#endif
 
 	log().verbose("looking for unused hints ...");
 	for (auto &h : m_abstract.m_hints)
@@ -1681,12 +1688,15 @@ void setup_t::prepare_to_run()
 	}
 
 	for (auto &n : m_nlstate.nets())
+	{
 		for (auto & term : n->core_terms())
-			if (!term->delegate().is_set())
+			if (!term->delegate())
 			{
 				log().fatal(MF_DELEGATE_NOT_SET_1(term->name()));
 				throw nl_exception(MF_DELEGATE_NOT_SET_1(term->name()));
 			}
+		n->rebuild_list();
+	}
 }
 
 // ----------------------------------------------------------------------------------------
@@ -1731,10 +1741,8 @@ source_file_t::stream_ptr source_pattern_t::stream(const pstring &name)
 {
 	pstring filename = plib::pfmt(m_pattern)(name);
 	auto f = std::make_unique<plib::ifstream>(plib::filesystem::u8path(filename));
-	printf("checking <%s> %s\n", name.c_str(), filename.c_str());
 	if (f->is_open())
 	{
-		printf("found\n");
 		return stream_ptr(std::move(f), filename);
 	}
 	else

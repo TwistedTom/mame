@@ -1,4 +1,4 @@
-// license:GPL-2.0+
+// license:CC0
 // copyright-holders:Couriersud
 
 #ifndef NLM_ROMS_H_
@@ -8,7 +8,7 @@
 /// \file nlm_roms.h
 ///
 
-#include "netlist/nl_setup.h"
+#include "../nl_setup.h"
 
 #ifndef __PLIB_PREPROCESSOR__
 
@@ -30,6 +30,9 @@
 #define PROM_74S287_DIP(name)                                                  \
 		NET_REGISTER_DEV(PROM_74S287_DIP, name)
 
+#define PROM_MK28000_DIP(name)                                                 \
+		NET_REGISTER_DEV(PROM_MK28000_DIP, name)
+
 #define EPROM_2716_DIP(name)                                                   \
 		NET_REGISTER_DEV(EPROM_2716_DIP, name)
 
@@ -39,6 +42,9 @@
 
 #define RAM_2102A_DIP(name)                                                    \
 		NET_REGISTER_DEV(RAM_2102A_DIP, name)
+
+#define ROM_TMS4800_DIP(name)                                                    \
+		NET_REGISTER_DEV(ROM_TMS4800, name)
 
 #endif // NL_AUTO_DEVICES
 
