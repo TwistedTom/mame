@@ -1,7 +1,7 @@
 // license:CC0
 // copyright-holders:Couriersud
 
-#include "netlist/devices/net_lib.h"
+#include "devices/net_lib.h"
 
 
 //- Identifier:  PROM_82S126_DIP
@@ -266,16 +266,16 @@ static NETLIST_START(EPROM_2716_DIP)
 	ALIAS(6, A.A2)
 	ALIAS(7, A.A1)
 	ALIAS(8, A.A0)
-	ALIAS(9, A.D0)
-	ALIAS(10, A.D1)
-	ALIAS(11, A.D2)
+	ALIAS(9, A.O0)
+	ALIAS(10, A.O1)
+	ALIAS(11, A.O2)
 	ALIAS(12, A.GND)
 
-	ALIAS(13, A.D3)
-	ALIAS(14, A.D4)
-	ALIAS(15, A.D5)
-	ALIAS(16, A.D6)
-	ALIAS(17, A.D7)
+	ALIAS(13, A.O3)
+	ALIAS(14, A.O4)
+	ALIAS(15, A.O5)
+	ALIAS(16, A.O6)
+	ALIAS(17, A.O7)
 	ALIAS(18, A.CE1Q) // CEQ
 	ALIAS(19, A.A10)
 	ALIAS(20, A.CE2Q) // OEQ
@@ -312,7 +312,7 @@ static NETLIST_START(TTL_82S16_DIP)
 		A.DOUTQ, /*  DOUTQ |6           11| A7    */ A.A7,
 		   A.A4, /*     A4 |7           10| A6    */ A.A6,
 		  A.GND, /*    GND |8            9| A5    */ A.A5
-			     /*        +--------------+       */
+				 /*        +--------------+       */
 	)
 NETLIST_END()
 
@@ -355,6 +355,52 @@ static NETLIST_START(PROM_82S115_DIP)
 	)
 NETLIST_END()
 
+//- Identifier:  PROM_MK28000_DIP
+//- Title: MK28000 (2048 x 8 or 4096 x 4) 16384-Bit TTL PROM
+//- Description: This dynamic ROM is organized internally as 2048 x 8 bits,
+//-    but has separate enables for the upper and lower nybbles, permitting
+//-    use as 4096 x 4 as well.
+//.
+//- Pinalias: VCC,A1,A2,A3,A4,A5,A6,A10,GND,A9,A8,A7,ARQ,OE2,A11,O8,O7,O6,O5,O4,O3,O2,O1,OE1
+//- Package: DIP
+//- Param: ROM
+//-    The name of the source to load the rom content from
+//- NamingConvention: Naming conventions follow Mostek datasheet
+//- Limitations:
+//-    None.
+
+static NETLIST_START(PROM_MK28000_DIP)
+
+	PROM_MK28000(A)
+
+	DEFPARAM(ROM, "unknown")
+	PARAM(A.ROM, "$(@.ROM)")
+	ALIAS(1, A.VCC)
+	ALIAS(2, A.A1)
+	ALIAS(3, A.A2)
+	ALIAS(4, A.A3)
+	ALIAS(5, A.A4)
+	ALIAS(6, A.A5)
+	ALIAS(7, A.A6)
+	ALIAS(8, A.A10)
+	ALIAS(9, A.GND)
+	ALIAS(10, A.A9)
+	ALIAS(11, A.A8)
+	ALIAS(12, A.A7)
+	ALIAS(13, A.ARQ)
+	ALIAS(14, A.OE2)
+	ALIAS(15, A.A11)
+	ALIAS(16, A.O8)
+	ALIAS(17, A.O7)
+	ALIAS(18, A.O6)
+	ALIAS(19, A.O5)
+	ALIAS(20, A.O4)
+	ALIAS(21, A.O3)
+	ALIAS(22, A.O2)
+	ALIAS(23, A.O1)
+	ALIAS(24, A.OE1)
+NETLIST_END()
+
 /*  2102: 1024 x 1-bit Static RAM
  *
  *          +--------------+
@@ -368,8 +414,7 @@ NETLIST_END()
  *       A0 |8            9| GND
  *          +--------------+
  */
-
- static NETLIST_START(RAM_2102A_DIP)
+static NETLIST_START(RAM_2102A_DIP)
 	RAM_2102A(A)
 
 	DIPPINS(   /*      +--------------+      */
@@ -385,6 +430,27 @@ NETLIST_END()
 	)
 NETLIST_END()
 
+//FIXME: Documentation
+static NETLIST_START(ROM_TMS4800_DIP)
+	ROM_TMS4800(A)
+
+	DIPPINS(   /*       +----------------+     */
+		A.VSS, /*   VSS |1      ++     24| OE1 */ A.OE1,
+		A.A1,  /*    A1 |2             23| O1  */ A.O1,
+		A.A2,  /*    A2 |3             22| O2  */ A.O2,
+		A.A3,  /*    A3 |4   TMS-4800  21| O3  */ A.O3,
+		A.A4,  /*    A4 |5             20| O4  */ A.O4,
+		A.A5,  /*    A5 |6             19| O5  */ A.O5,
+		A.A6,  /*    A6 |7             18| O6  */ A.O6,
+		A.A10, /*   A10 |8             17| O7  */ A.O7,
+		A.VGG, /*   VGG |9             16| O8  */ A.O8,
+		A.A9,  /*    A9 |10            15| A11 */ A.A11,
+		A.A8,  /*    A8 |11            14| OE2 */ A.OE2,
+		A.A7,  /*    A7 |12            13| AR  */ A.AR
+			   /*       +----------------+      */
+	)
+NETLIST_END()
+
 
 NETLIST_START(roms_lib)
 
@@ -394,7 +460,8 @@ NETLIST_START(roms_lib)
 	LOCAL_LIB_ENTRY(EPROM_2716_DIP)
 	LOCAL_LIB_ENTRY(TTL_82S16_DIP)
 	LOCAL_LIB_ENTRY(PROM_82S115_DIP)
+	LOCAL_LIB_ENTRY(PROM_MK28000_DIP)
 	LOCAL_LIB_ENTRY(RAM_2102A_DIP)
-
+	LOCAL_LIB_ENTRY(ROM_TMS4800_DIP)
 	NETLIST_END()
 

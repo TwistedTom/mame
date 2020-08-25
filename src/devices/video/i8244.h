@@ -31,10 +31,11 @@ public:
 
 	// configuration helpers
 	auto irq_cb() { return m_irq_func.bind(); }
-	i8244_device &set_screen_size(int width, int height, int cropx, int cropy);
+	i8244_device &set_screen_size(int width, int height, int cropx = 0, int cropy = 0);
 
 	uint8_t read(offs_t offset);
 	void write(offs_t offset, uint8_t data);
+	void write_cx(int x, bool cx); // CX pin on current scanline
 
 	int vblank();
 	int hblank();
@@ -139,15 +140,13 @@ protected:
 
 	uint8_t m_x_beam_pos = 0;
 	uint8_t m_y_beam_pos = 0;
-	uint8_t m_y_latch = 0;
 	uint8_t m_control_status = 0;
 	uint8_t m_collision_status = 0;
-	bool m_pos_hold = false;
-	bool m_y_hold = false;
 
 	bool m_sh_written = false;
 	bool m_sh_pending = false;
-	u8 m_sh_prescaler = 0 ;
+	u8 m_sh_prescaler = 0;
+	u8 m_sh_count = 0;
 	int m_sh_output = 0;
 	u8 m_sh_duty = 0;
 };

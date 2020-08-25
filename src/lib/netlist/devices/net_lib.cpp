@@ -3,15 +3,13 @@
 
 // ***************************************************************************
 //
-//    netlib.c
-//
-//    Discrete netlist implementation.
+//    net_lib.cpp
 //
 // ***************************************************************************
 
 #include "net_lib.h"
-#include "netlist/nl_factory.h"
-#include "netlist/solver/nld_solver.h"
+#include "nl_factory.h"
+#include "solver/nld_solver.h"
 
 
 #define NETLIB_DEVICE_DECL(chip) extern factory::constructor_ptr_t decl_ ## chip
@@ -25,6 +23,13 @@ namespace devices
 
 	void initialize_factory(factory::list_t &factory)
 	{
+		// The following is from a script which automatically creates
+		// the entries.
+		// FIXME: the list should be either included or the whole
+		// initialize factory code should be created programmatically.
+#if (NL_AUTO_DEVICES)
+		#include "../generated/lib_entries.hxx"
+#else
 		LIB_ENTRY(R)
 		LIB_ENTRY(POT)
 		LIB_ENTRY(POT2)
@@ -70,9 +75,8 @@ namespace devices
 		LIB_ENTRY(nicDelay)
 		LIB_ENTRY(2102A)
 		LIB_ENTRY(2716)
-#if !(NL_USE_TRUTHTABLE_7448)
 		LIB_ENTRY(7448)
-#endif
+		LIB_ENTRY(MK28000)
 		LIB_ENTRY(7450)
 		LIB_ENTRY(7473)
 		LIB_ENTRY(7473A)
@@ -85,9 +89,7 @@ namespace devices
 		LIB_ENTRY(7492)
 		LIB_ENTRY(7493)
 		LIB_ENTRY(7497)
-#if (!NL_USE_TRUTHTABLE_74107)
 		LIB_ENTRY(74107)
-#endif
 		LIB_ENTRY(74107A)
 		LIB_ENTRY(74113)
 		LIB_ENTRY(74113A)
@@ -117,19 +119,18 @@ namespace devices
 		LIB_ENTRY(82S123)
 		LIB_ENTRY(82S126)
 		LIB_ENTRY(74S287)
+		LIB_ENTRY(8277)
 		LIB_ENTRY(9310)
 		LIB_ENTRY(9314)
 		LIB_ENTRY(9316)
-		LIB_ENTRY(9322_GATE)
+		LIB_ENTRY(9321)
 		LIB_ENTRY(9322)
 		LIB_ENTRY(9334)
 		LIB_ENTRY(AM2847)
-		// FIXME: duplicate?
 		LIB_ENTRY(CD4006)
 		LIB_ENTRY(CD4013)
 		LIB_ENTRY(CD4017)
 		LIB_ENTRY(CD4022)
-		LIB_ENTRY(CD4020_WI)
 		LIB_ENTRY(CD4020)
 		LIB_ENTRY(CD4024)
 		LIB_ENTRY(CD4053_GATE)
@@ -137,27 +138,15 @@ namespace devices
 		LIB_ENTRY(CD4316_GATE)
 		LIB_ENTRY(4538)
 		LIB_ENTRY(schmitt_trigger)
-		// entries with suffix WI are legacy only
-		//ENTRY(4066,                 CD_4066,              "+A,B")
 		LIB_ENTRY(NE555)
-		LIB_ENTRY(NE555_dip)
 		LIB_ENTRY(MC1455P)
-		LIB_ENTRY(MC1455P_dip)
 		LIB_ENTRY(TMS4800)
-		LIB_ENTRY(TMS4800_dip)
 		LIB_ENTRY(r2r_dac)
 		LIB_ENTRY(tristate)
 		LIB_ENTRY(tristate3)
-		LIB_ENTRY(74175_dip)
-		LIB_ENTRY(74192_dip)
-		LIB_ENTRY(74193_dip)
-		LIB_ENTRY(74194_dip)
-		LIB_ENTRY(74365_dip)
 		LIB_ENTRY(9602)
-		LIB_ENTRY(9314_dip)
-		LIB_ENTRY(9334_dip)
-		LIB_ENTRY(AM2847_dip)
-		LIB_ENTRY(MM5837_dip)
+		LIB_ENTRY(MM5837)
+#endif
 	}
 
 } //namespace devices
