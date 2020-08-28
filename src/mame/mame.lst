@@ -22163,6 +22163,7 @@ sonic2mb                        // MegaDrive-based hack
 srmdb                           // MegaDrive-based hack
 ssf2mdb                         // MegaDrive-based hack
 topshoot                        // (c) 1995 Sun Mixing
+sbubsm                          // (c) 1996 Sun Mixing
 twinktmb                        // MegaDrive-based hack
 
 @source:megadriv_rad.cpp
@@ -37703,6 +37704,7 @@ kinstb                          // bootleg
 rushbets                        // bootleg
 sblast2b                        // bootleg
 venom                           // bootleg
+wldgunsb                        // bootleg
 
 @source:snk.cpp
 alphamis                        // (c) 1985
@@ -40286,6 +40288,7 @@ bgareggabla                     // hack
 bgareggacn                      // (c) 1996 Raizing/8ing
 bgareggahk                      // (c) 1996 Raizing/8ing
 bgaregganv                      // (c) 1996 Raizing/8ing
+bgareggat                       // (c) 1996 Raizing/8ing
 bgareggat2                      // (c) 1996 Raizing/8ing
 bgareggatw                      // (c) 1996 Raizing/8ing
 dogyuun                         // TP-022 (c) 1992 Toaplan
@@ -42649,6 +42652,9 @@ zerozone                        // (c) 1993 Comad
 
 @source:zexall.cpp
 zexall                          // zexall z80 test suite with kevtris' preloader/serial interface at 0000-00ff
+
+@source:zeebo_qualcomm_adreno130.cpp
+zeebo
 
 @source:zms8085.cpp
 zephyr                          //

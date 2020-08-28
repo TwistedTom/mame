@@ -2896,7 +2896,6 @@ files {
 createMESSProjects(_target, _subtarget, "mos")
 files {
 	MAME_DIR .. "src/mame/drivers/kim1.cpp",
-	MAME_DIR .. "src/mame/includes/kim1.h",
 }
 
 createMESSProjects(_target, _subtarget, "motorola")
@@ -4520,6 +4519,7 @@ files {
 	MAME_DIR .. "src/mame/drivers/gscpm.cpp",
 	MAME_DIR .. "src/mame/drivers/gsz80.cpp",
 	MAME_DIR .. "src/mame/drivers/ultim809.cpp",
+	MAME_DIR .. "src/mame/drivers/zeebo_qualcomm_adreno130.cpp",
 }
 
 end
