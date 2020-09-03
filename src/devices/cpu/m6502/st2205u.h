@@ -24,7 +24,36 @@ public:
 		ST_T3C,
 		ST_T4C,
 		ST_TIEN,
+		ST_FIFOS0,
+		ST_FIFOS1,
+		ST_FIFOS2,
+		ST_FIFOS3,
+		ST_PSGC,
+		ST_PSGM,
+		ST_VOL0,
+		ST_VOL1,
+		ST_VOL2,
+		ST_VOL3,
+		ST_VOLM0,
+		ST_VOLM1,
+		ST_LBUF,
 		ST_BRR,
+		ST_DMS0,
+		ST_DMS1,
+		ST_DMD0,
+		ST_DMD1,
+		ST_DBKS0,
+		ST_DBKS1,
+		ST_DBKD0,
+		ST_DBKD1,
+		ST_DCNT0,
+		ST_DCNT1,
+		ST_DCTR,
+		ST_DMOD0,
+		ST_DMOD1,
+		ST_USBCON,
+		ST_USBIEN,
+		ST_RCTR,
 		ST_LVCTR
 	};
 
@@ -50,6 +79,7 @@ protected:
 	virtual u8 st2xxx_lckr_mask() const override { return 0x3f; }
 	virtual u8 st2xxx_lpwm_mask() const override { return 0xff; }
 	virtual unsigned st2xxx_lfr_clocks() const override;
+	virtual u8 st2xxx_uctr_mask() const override { return 0x3f; }
 	virtual u8 st2xxx_bctr_mask() const override { return 0xb7; }
 
 private:
@@ -90,6 +120,41 @@ private:
 	void t4c_w(u8 data);
 	u8 tien_r();
 	void tien_w(u8 data);
+	u8 psg_r(offs_t offset);
+	void psg_w(offs_t offset, u8 data);
+	u8 psgc_r();
+	void psgc_w(u8 data);
+	u8 psgm_r();
+	void psgm_w(u8 data);
+	u8 vol_r(offs_t offset);
+	void vol_w(offs_t offset, u8 data);
+	u8 volm_r(offs_t offset);
+	void volm_w(offs_t offset, u8 data);
+	u8 lbuf_r();
+	void lbuf_w(u8 data);
+	void lpal_w(u8 data);
+	u8 usbcon_r();
+	void usbcon_w(u8 data);
+	u8 usbien_r();
+	void usbien_w(u8 data);
+	u8 dptrl_r();
+	void dptrl_w(u8 data);
+	u8 dptrh_r();
+	void dptrh_w(u8 data);
+	u8 dbkrl_r();
+	void dbkrl_w(u8 data);
+	u8 dbkrh_r();
+	void dbkrh_w(u8 data);
+	u8 dcntl_r();
+	void dcntl_w(u8 data);
+	u8 dcnth_r();
+	void dcnth_w(u8 data);
+	u8 dctr_r();
+	void dctr_w(u8 data);
+	u8 dmod_r();
+	void dmod_w(u8 data);
+	u8 rctr_r();
+	void rctr_w(u8 data);
 	u8 lvctr_r();
 	void lvctr_w(u8 data);
 
@@ -108,6 +173,23 @@ private:
 	u16 m_tc_12bit[4];
 	u8 m_t4c;
 	u8 m_tien;
+	u16 m_dac_fifo[4][16];
+	u8 m_fifo_filled[4];
+	u8 m_psgc;
+	u8 m_psgm;
+	u8 m_psg_vol[4];
+	u8 m_psg_volm[2];
+	u8 m_lbuf;
+	u8 m_lpal_index;
+	u8 m_gray_levels[16];
+	u8 m_usbcon;
+	u8 m_usbien;
+	u16 m_dptr[4];
+	u16 m_dbkr[4];
+	u16 m_dcnt[2];
+	u8 m_dctr;
+	u8 m_dmod[2];
+	u8 m_rctr;
 	u8 m_lvctr;
 };
 
