@@ -69,6 +69,9 @@ st2xxx_device::st2xxx_device(const machine_config &mconfig, device_type type, co
 	, m_lpwm(0)
 	, m_lcd_ireq(0)
 	, m_lcd_timer(nullptr)
+	, m_uctr(0)
+	, m_usr(0)
+	, m_irctr(0)
 	, m_bctr(0)
 {
 	program_config.m_internal_map = std::move(internal_map);
@@ -158,11 +161,7 @@ void st2xxx_device::save_common_registers()
 		save_item(NAME(intf->prr));
 	}
 	if (m_drr_mask != 0)
-	{
 		save_item(NAME(intf->drr));
-		if (st2xxx_has_dma())
-			save_item(NAME(intf->dmr));
-	}
 	if (m_bt_mask != 0)
 	{
 		save_item(NAME(m_bten));
@@ -187,8 +186,11 @@ void st2xxx_device::save_common_registers()
 	save_item(NAME(m_lfra));
 	save_item(NAME(m_lac));
 	save_item(NAME(m_lpwm));
-	if (st2xxx_bctr_mask() != 0)
+	if (st2xxx_uctr_mask() != 0)
 	{
+		save_item(NAME(m_uctr));
+		save_item(NAME(m_usr));
+		save_item(NAME(m_irctr));
 		save_item(NAME(m_bctr));
 		save_item(NAME(m_brs));
 		save_item(NAME(m_bdiv));
@@ -214,7 +216,6 @@ void st2xxx_device::device_reset()
 	m.irr = 0;
 	m.prr = 0;
 	m.drr = 0;
-	m.dmr = 0;
 
 	// reset interrupt registers
 	m_ireq = 0;
@@ -246,6 +247,9 @@ void st2xxx_device::device_reset()
 	m_lcd_timer->adjust(attotime::never);
 
 	// reset UART and BRG
+	m_uctr = 0;
+	m_usr = BIT(st2xxx_uctr_mask(), 4) ? 0x01 : 0;
+	m_irctr = 0;
 	m_bctr = 0;
 }
 
@@ -563,28 +567,6 @@ void st2xxx_device::drrh_w(u8 data)
 	drr = ((u16(data) << 8) & m_drr_mask) | (drr & 0x00ff);
 }
 
-u8 st2xxx_device::dmrl_r()
-{
-	return downcast<mi_st2xxx &>(*mintf).dmr & 0xff;
-}
-
-void st2xxx_device::dmrl_w(u8 data)
-{
-	u16 &dmr = downcast<mi_st2xxx &>(*mintf).dmr;
-	dmr = (data & m_drr_mask) | (dmr & 0xff00);
-}
-
-u8 st2xxx_device::dmrh_r()
-{
-	return downcast<mi_st2xxx &>(*mintf).dmr >> 8;
-}
-
-void st2xxx_device::dmrh_w(u8 data)
-{
-	u16 &dmr = downcast<mi_st2xxx &>(*mintf).dmr;
-	dmr = ((u16(data) << 8) & m_drr_mask) | (dmr & 0x00ff);
-}
-
 u8 st2xxx_device::ireql_r()
 {
 	return m_ireq & 0x00ff;
@@ -758,7 +740,7 @@ void st2xxx_device::lfr_recalculate_period()
 
 u8 st2xxx_device::lac_r()
 {
-	return m_lac;
+	return m_lac | 0xe0;
 }
 
 void st2xxx_device::lac_w(u8 data)
@@ -768,7 +750,7 @@ void st2xxx_device::lac_w(u8 data)
 
 u8 st2xxx_device::lpwm_r()
 {
-	return m_lpwm;
+	return m_lpwm | ~st2xxx_lpwm_mask();
 }
 
 void st2xxx_device::lpwm_w(u8 data)
@@ -776,9 +758,54 @@ void st2xxx_device::lpwm_w(u8 data)
 	m_lpwm = data & st2xxx_lpwm_mask();
 }
 
+u8 st2xxx_device::uctr_r()
+{
+	return m_uctr | ~st2xxx_uctr_mask();
+}
+
+void st2xxx_device::uctr_w(u8 data)
+{
+	m_uctr = data & st2xxx_uctr_mask();
+}
+
+u8 st2xxx_device::usr_r()
+{
+	return m_usr | 0x80;
+}
+
+void st2xxx_device::ustr_trg_w(u8 data)
+{
+	m_usr = (m_usr & 0x7a) | (data & 0x05);
+}
+
+void st2xxx_device::usr_clr_w(u8 data)
+{
+	m_usr &= ~data;
+}
+
+u8 st2xxx_device::irctr_r()
+{
+	return m_irctr | 0x3c;
+}
+
+void st2xxx_device::irctr_w(u8 data)
+{
+	m_irctr = data & 0xc7;
+}
+
+u8 st2xxx_device::udata_r()
+{
+	return 0;
+}
+
+void st2xxx_device::udata_w(u8 data)
+{
+	logerror("Writing %02X to UART transmitter (PC = %04X)\n", data, PPC);
+}
+
 u8 st2xxx_device::bctr_r()
 {
-	return m_bctr;
+	return m_bctr | ~st2xxx_bctr_mask();
 }
 
 void st2xxx_device::bctr_w(u8 data)

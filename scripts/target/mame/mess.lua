@@ -480,6 +480,7 @@ MACHINES["COP452"] = true
 MACHINES["CR589"] = true
 MACHINES["CS4031"] = true
 MACHINES["CS8221"] = true
+MACHINES["CS8900A"] = true
 MACHINES["CXD1095"] = true
 MACHINES["DP8390"] = true
 MACHINES["DP83932C"] = true
@@ -3059,6 +3060,7 @@ files {
 	MAME_DIR .. "src/mame/machine/vt1682_alu.cpp",
 	MAME_DIR .. "src/mame/machine/vt1682_timer.h",
 	MAME_DIR .. "src/mame/machine/vt1682_timer.cpp",
+	MAME_DIR .. "src/mame/drivers/vt_unknown.cpp",
 	MAME_DIR .. "src/mame/drivers/compmahj.cpp",
 }
 
@@ -3336,6 +3338,7 @@ files {
 	MAME_DIR .. "src/mame/drivers/roland_sc55.cpp",
 	MAME_DIR .. "src/mame/drivers/roland_sc88.cpp",
 	MAME_DIR .. "src/mame/drivers/roland_tb303.cpp",
+	MAME_DIR .. "src/mame/drivers/roland_tr505.cpp",
 	MAME_DIR .. "src/mame/drivers/roland_tr606.cpp",
 	MAME_DIR .. "src/mame/drivers/roland_tr707.cpp",
 	MAME_DIR .. "src/mame/drivers/roland_tr909.cpp",
@@ -3344,6 +3347,8 @@ files {
 	MAME_DIR .. "src/mame/audio/bu3905.h",
 	MAME_DIR .. "src/mame/audio/jx8p_synth.cpp",
 	MAME_DIR .. "src/mame/audio/jx8p_synth.h",
+	MAME_DIR .. "src/mame/audio/mb63h114.cpp",
+	MAME_DIR .. "src/mame/audio/mb63h114.h",
 	MAME_DIR .. "src/mame/machine/mb62h195.cpp",
 	MAME_DIR .. "src/mame/machine/mb62h195.h",
 	MAME_DIR .. "src/mame/machine/mb63h149.cpp",
@@ -4123,6 +4128,7 @@ files {
 
 createMESSProjects(_target, _subtarget, "votrax")
 files {
+	MAME_DIR .. "src/mame/drivers/votrhv.cpp",
 	MAME_DIR .. "src/mame/drivers/votrpss.cpp",
 	MAME_DIR .. "src/mame/drivers/votrtnt.cpp",
 }
@@ -4349,6 +4355,7 @@ files {
 	MAME_DIR .. "src/mame/drivers/fs3216.cpp",
 	MAME_DIR .. "src/mame/drivers/ft68m.cpp",
 	MAME_DIR .. "src/mame/drivers/gameking.cpp",
+	MAME_DIR .. "src/mame/drivers/gem_rp.cpp",
 	MAME_DIR .. "src/mame/drivers/gigatron.cpp",
 	MAME_DIR .. "src/mame/drivers/gimix.cpp",
 	MAME_DIR .. "src/mame/drivers/gnat10.cpp",
