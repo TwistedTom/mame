@@ -715,7 +715,8 @@ private:
 			util::xml::data_node const &parentnode,
 			group_map &groupmap,
 			std::vector<layout_group const *> &seen,
-			bool empty,
+			bool &empty,
+			bool vistoggle,
 			bool repeat,
 			bool init);
 
