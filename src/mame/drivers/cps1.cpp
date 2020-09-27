@@ -3334,6 +3334,43 @@ static INPUT_PORTS_START( sfzch )
 
 INPUT_PORTS_END
 
+static INPUT_PORTS_START( sfzh )
+	PORT_INCLUDE( cps1_6b )
+
+	PORT_MODIFY("IN0")
+	PORT_SERVICE_NO_TOGGLE( 0x40, IP_ACTIVE_LOW )
+
+	PORT_START("DSWA")
+	PORT_DIPUNUSED_DIPLOC( 0x01, 0x01, "SW(A):1" )
+	PORT_DIPUNUSED_DIPLOC( 0x02, 0x02, "SW(A):2" )
+	PORT_DIPUNUSED_DIPLOC( 0x04, 0x04, "SW(A):3" )
+	PORT_DIPUNUSED_DIPLOC( 0x08, 0x08, "SW(A):4" )
+	PORT_DIPUNUSED_DIPLOC( 0x10, 0x10, "SW(A):5" )
+	PORT_DIPUNUSED_DIPLOC( 0x20, 0x20, "SW(A):6" )
+	PORT_DIPUNUSED_DIPLOC( 0x40, 0x40, "SW(A):7" )
+	PORT_DIPUNUSED_DIPLOC( 0x80, 0x80, "SW(A):8" )
+
+	PORT_START("DSWB")
+	PORT_DIPUNUSED_DIPLOC( 0x01, 0x01, "SW(B):1" )
+	PORT_DIPUNUSED_DIPLOC( 0x02, 0x02, "SW(B):2" )
+	PORT_DIPUNUSED_DIPLOC( 0x04, 0x04, "SW(B):3" )
+	PORT_DIPUNUSED_DIPLOC( 0x08, 0x08, "SW(B):4" )
+	PORT_DIPUNUSED_DIPLOC( 0x10, 0x10, "SW(B):5" )
+	PORT_DIPUNUSED_DIPLOC( 0x20, 0x20, "SW(B):6" )
+	PORT_DIPUNUSED_DIPLOC( 0x40, 0x40, "SW(B):7" )
+	PORT_DIPUNUSED_DIPLOC( 0x80, 0x80, "SW(B):8" )
+
+	PORT_START("DSWC")
+	PORT_DIPUNUSED_DIPLOC( 0x01, 0x01, "SW(C):1" )
+	PORT_DIPUNUSED_DIPLOC( 0x02, 0x02, "SW(C):2" )
+	PORT_DIPUNUSED_DIPLOC( 0x04, 0x04, "SW(C):3" )
+	PORT_DIPUNUSED_DIPLOC( 0x08, 0x08, "SW(C):4" )
+	PORT_DIPUNUSED_DIPLOC( 0x10, 0x10, "SW(C):5" )
+	PORT_DIPUNUSED_DIPLOC( 0x20, 0x20, "SW(C):6" )
+	PORT_DIPUNUSED_DIPLOC( 0x40, 0x40, "SW(C):7" )
+	PORT_DIPUNUSED_DIPLOC( 0x80, 0x80, "SW(C):8" )
+INPUT_PORTS_END
+
 static INPUT_PORTS_START( wofch )
 	PORT_INCLUDE( sfzch )
 
@@ -14778,6 +14815,40 @@ ROM_END
 	//ROM_REGION( CODE_SIZE, "maincpu", 0 )
 	//ROM_LOAD( "mainrom.bin", 0x000000, 0x100000, CRC(0000) SHA1(000000) )
 
+ROM_START( sfzh )
+	ROM_REGION( CODE_SIZE, "maincpu",0 )      /* 68000 code */
+	ROM_LOAD( "sfzch-h.bin", 0x000000, 0x200000, CRC(4fc583db) SHA1(28460f97e800e33644beca2a7c9fcde419d31afb) )
+
+	ROM_REGION( 0x800000, "gfx", 0 )
+	ROM_LOAD64_WORD( "sfz_01.3a",  0x000000, 0x80000, CRC(0dd53e62) SHA1(5f3bcf5ca0fd564d115fe5075a4163d3ee3226df) )
+	ROM_LOAD64_WORD( "sfz_02.4a",  0x000002, 0x80000, CRC(94c31e3f) SHA1(2187b3d4977514f2ae486eb33ed76c86121d5745) )
+	ROM_LOAD64_WORD( "sfz_03.5a",  0x000004, 0x80000, CRC(9584ac85) SHA1(bbd62d66b0f6909630e801ce5d6331d43f44d741) )
+	ROM_LOAD64_WORD( "sfz_04.6a",  0x000006, 0x80000, CRC(b983624c) SHA1(841106bb9453e3dfb7869c4b0e9149cc610d515a) )
+	ROM_LOAD64_WORD( "sfz_05.7a",  0x200000, 0x80000, CRC(2b47b645) SHA1(bc6426eff5df9417f32666586744626fa544f7b5) )
+	ROM_LOAD64_WORD( "sfz_06.8a",  0x200002, 0x80000, CRC(74fd9fb1) SHA1(7945472591f3c06970e96611a0363ed8f3d52c36) )
+	ROM_LOAD64_WORD( "sfz_07.9a",  0x200004, 0x80000, CRC(bb2c734d) SHA1(97a06935f86f31755d2ffdc5b56bef53944bdecd) )
+	ROM_LOAD64_WORD( "sfz_08.10a", 0x200006, 0x80000, CRC(454f7868) SHA1(eecccba7542d893bc41676246a20aa4914b79bbc) )
+	ROM_LOAD64_WORD( "sfz_10.3c",  0x400000, 0x80000, CRC(2a7d675e) SHA1(0144ba34a29fb08b41c780ce65bb06d25724e88f) )
+	ROM_LOAD64_WORD( "sfz_11.4c",  0x400002, 0x80000, CRC(e35546c8) SHA1(7b08aa3413494d12c5c550263a5f00b64b98e6ab) )
+	ROM_LOAD64_WORD( "sfz_12.5c",  0x400004, 0x80000, CRC(f122693a) SHA1(71ce901d8d30207e506b6a8d6a4e0fcf3a1b0eac) )
+	ROM_LOAD64_WORD( "sfz_13.6c",  0x400006, 0x80000, CRC(7cf942c8) SHA1(a7109facb97a8a11ddf1b4e07de6ff3164d713a1) )
+	ROM_LOAD64_WORD( "sfz_14.7c",  0x600000, 0x80000, CRC(09038c81) SHA1(3461d70902fbfb92ce40f804be6388276a01d153) )
+	ROM_LOAD64_WORD( "sfz_15.8c",  0x600002, 0x80000, CRC(1aa17391) SHA1(b4d0f760a430b7fc4443b6c94da2659315c5b926) )
+	ROM_LOAD64_WORD( "sfz_16.9c",  0x600004, 0x80000, CRC(19a5abd6) SHA1(73ba1de15c883fdc69fd7dccdb58d00ca512d4ea) )
+	ROM_LOAD64_WORD( "sfz_17.10c", 0x600006, 0x80000, CRC(248b3b73) SHA1(95810a17b1caf6372b33ed3e4ee8a7e51482c70d) )
+
+	ROM_REGION( 0x8000, "stars", 0 )
+	ROM_COPY( "gfx", 0x000000, 0x000000, 0x8000 )
+
+	ROM_REGION( 0x18000, "audiocpu",0 ) /* 64k for the audio CPU (+banks) */
+	ROM_LOAD( "sfz_09.12a",  0x00000, 0x08000, CRC(c772628b) SHA1(ebc5b7c173caf1e151f733f23c1b20abec24e16d) )
+	ROM_CONTINUE(            0x10000, 0x08000 )
+
+	ROM_REGION( 0x40000, "oki",0 )  /* Samples */
+	ROM_LOAD( "sfz_18.11c",  0x00000, 0x20000, CRC(61022b2d) SHA1(6369d0c1d08a30ee19b94e52ab1463a7784b9de5) )
+	ROM_LOAD( "sfz_19.12c",  0x20000, 0x20000, CRC(3b5886d5) SHA1(7e1b7d40ef77b5df628dd663d45a9a13c742cf58) )
+ROM_END
+
 //                        PARENT     MACHINE      INPUT       CLASS       INIT
 GAME( 1988,  ghouls21,    ghouls,    cps1_12MHz,  ghouls,    cps_state,  init_cps1,  ROT0, "Capcom", "Ghouls'n Ghosts (World, 91635B-2)", MACHINE_SUPPORTS_SAVE )
 GAME( 1990,  mswordr121,  msword,    cps1_10MHz,  msword,    cps_state,  init_cps1,  ROT0, "Capcom", "Magic Sword: Heroic Fantasy (World 900623, CPS-B-21 patch)", MACHINE_SUPPORTS_SAVE )
@@ -14798,3 +14869,4 @@ GAME( 1989,  strider17p,  strider,   cps1_10MHz,  strider,   cps_state,  init_cp
 GAME( 1989,  willow17p,   willow,    cps1_10MHz,  willow,    cps_state,  init_cps1,  ROT0, "Capcom", "Willow (World, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
 GAME( 1991,  kod17p,      kod,       cps1_10MHz,  kod,       cps_state,  init_cps1,  ROT0, "Capcom", "The King of Dragons (World 910731, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
 GAME( 1990,  mtwins17p,   mtwins,    cps1_10MHz,  mtwins,    cps_state,  init_cps1,  ROT0, "Capcom", "Mega Twins (World 900619, Pang 3 bootleg board)", MACHINE_SUPPORTS_SAVE )
+GAME( 1995,  sfzh,        sfzch,     cps1_12MHz,  sfzh,      cps_state,  init_cps1,  ROT0, "Capcom", "Street Fighter Zero (hack)", MACHINE_SUPPORTS_SAVE )
