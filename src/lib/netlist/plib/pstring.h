@@ -178,11 +178,23 @@ public:
 	const_iterator cend() const noexcept { return const_iterator(m_str.end()); }
 
 	// C string conversion helpers
-	const mem_t *c_str() const noexcept  {   return static_cast<const mem_t *>(m_str.c_str()); }
-	const mem_t *data() const noexcept  {    return c_str(); }
+	const mem_t *c_str() const noexcept  { return static_cast<const mem_t *>(m_str.c_str()); }
+	const mem_t *data() const noexcept  { return c_str(); }
 
+	/// \brief return number of codes in the string
+	///
+	/// This may report a number less than what \ref size reports. pstrings
+	/// operate on character codes. In the case of utf pstrings thus the physical size
+	/// may be bigger than the logical size.
 	size_type length() const noexcept { return traits_type::len(m_str); }
-	size_type size() const noexcept { return traits_type::len(m_str); }
+
+	/// \brief return number of memory units in the string
+	///
+	/// This function returns the number of memory units used by a string.
+	/// Depending on the string type the size may be reported as bytes, words
+	/// or quad-words.
+	size_type size() const noexcept { return m_str.size(); }
+
 	bool empty() const noexcept { return m_str.empty(); }
 	void clear() noexcept { m_str.clear(); }
 
@@ -284,7 +296,7 @@ struct putf_traits<1, CT>
 
 	static constexpr code_t code(const mem_t *p) noexcept
 	{
-		const auto *p1 = reinterpret_cast<const unsigned char *>(p); // NOLINT(cppcoreguidelines-pro-type-reinterpret)
+		const auto *p1 = reinterpret_cast<const unsigned char *>(p); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
 		return ((*p1 & 0x80) == 0x00) ? *p1 : // NOLINT
 			   ((*p1 & 0xE0) == 0xC0) ? static_cast<code_t>(((p1[0] & 0x3f) << 6) | (p1[1] & 0x3f)) : // NOLINT
 			   ((*p1 & 0xF0) == 0xE0) ? static_cast<code_t>(((p1[0] & 0x1f) << 12) | ((p1[1] & 0x3f) << 6) | ((p1[2] & 0x3f) << 0)) : // NOLINT
@@ -463,7 +475,7 @@ pstring_t<F>::pstring_t(C *string)
 {
 	m_str.clear();
 	putf8string utf8(string);
-	for (auto &c : utf8)
+	for (const auto &c : utf8)
 		*this += c;
 }
 
@@ -478,14 +490,18 @@ namespace plib
 	struct string_info<pstring_t<T>>
 	{
 		using mem_t = typename T::mem_t;
+#if 0
 		static std::size_t mem_size(const pstring_t<T> &s) { return s.mem_t_size(); }
+#endif
 	};
 
 	template<typename T>
 	struct string_info<std::basic_string<T>>
 	{
 		using mem_t = T;
+#if 0
 		static std::size_t mem_size(const std::basic_string<T> &s) { return s.size(); }
+#endif
 	};
 } // namespace plib
 

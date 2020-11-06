@@ -52,6 +52,7 @@ namespace netlist
 	//PERRMSGV(MF_PARAM_NOT_FP_1,                     1, "Parameter value <{1}> not floating point")
 	PERRMSGV(MF_TT_LINE_WITHOUT_HEAD,               0, "TT_LINE found without TT_HEAD")
 	PERRMSGV(MF_LOCAL_SOURCE_NOT_FOUND_1,           1, "Local source not found: <{1}>")
+	PERRMSGV(MF_EXTERNAL_SOURCE_IS_LOCAL_1,         1, "External lib entry appears as a local one: <{1}>")
 	PERRMSGV(MF_TRUTHTABLE_NOT_FOUND_1,             1, "Truthtable not found: <{1}>")
 
 	// nl_setup.cpp
@@ -148,6 +149,17 @@ namespace netlist
 
 	PERRMSGV(MI_NO_SPECIFIC_SOLVER,                 1, "No specific solver found for netlist of size {1}")
 	PERRMSGV(MW_SOLVER_METHOD_NOT_SUPPORTED,        2, "Solver method {1} not supported. Falling back to {2}")
+
+	PERRMSGV(ME_SOLVER_CONSISTENCY_NOT_ANALOG_NET,  1, "Solver consistency: {1} is not an analog net")
+	PERRMSGV(ME_SOLVER_CONSISTENCY_RAIL_NET,        1, "Solver consistency: {1} is a rail net")
+	PERRMSGV(ME_SOLVER_TERMINAL_NO_NET,             1, "Solver consistency: Terminal {1} has no net")
+	PERRMSGV(ME_SOLVER_NO_RAIL_TERMINAL,            1, "Solver consistency: No rail terminals in group with nets: {1}\n"
+		"At least one rail terminal (like ANALOG_INPUT) needs to be part of a group of nets\n"
+		"solved by a solver. Without a singular matrix would be created\n"
+		"which has the potential to cause a crash now or in the future.\n"
+		"A common cause of this error are BJT or FET devices which\n"
+		"are defined but not used in the netlist.")
+	PERRMSGV(MF_SOLVER_CONSISTENCY_ERRORS,          1, "Found {1} errors during solver consistency test")
 
 	// nld_mm5837.cpp
 

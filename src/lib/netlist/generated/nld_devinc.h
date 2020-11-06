@@ -103,7 +103,7 @@
 	NET_REGISTER_DEVEXT(CS, __VA_ARGS__)
 
 // ---------------------------------------------------------------------
-// Source: ../devices/nld_2102A.cpp
+// Source: ../devices/nld_2102a.cpp
 // ---------------------------------------------------------------------
 
 // usage       : RAM_2102A(name, CEQ, A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, RWQ, DI)
@@ -154,6 +154,24 @@
 	NET_REGISTER_DEVEXT(CD4024, __VA_ARGS__)
 
 // ---------------------------------------------------------------------
+// Source: ../devices/nld_4029.cpp
+// ---------------------------------------------------------------------
+
+// usage       : CD4029(name, PE, J1, J2, J3, J4, CI, UD, BD, CLK)
+// auto connect: VCC, GND
+#define CD4029(...)                                                   \
+	NET_REGISTER_DEVEXT(CD4029, __VA_ARGS__)
+
+// ---------------------------------------------------------------------
+// Source: ../devices/nld_4042.cpp
+// ---------------------------------------------------------------------
+
+// usage       : CD4042(name, D1, D2, D3, D4, POL, CLK)
+// auto connect: VCC, GND
+#define CD4042(...)                                                   \
+	NET_REGISTER_DEVEXT(CD4042, __VA_ARGS__)
+
+// ---------------------------------------------------------------------
 // Source: ../devices/nld_4053.cpp
 // ---------------------------------------------------------------------
 
@@ -168,6 +186,15 @@
 // usage       : CD4066_GATE(name, )
 #define CD4066_GATE(...)                                                   \
 	NET_REGISTER_DEVEXT(CD4066_GATE, __VA_ARGS__)
+
+// ---------------------------------------------------------------------
+// Source: ../devices/nld_4076.cpp
+// ---------------------------------------------------------------------
+
+// usage       : CD4076(name, I1, I2, I3, I4, ID1, ID2, OD1, OD2)
+// auto connect: VCC, GND
+#define CD4076(...)                                                   \
+	NET_REGISTER_DEVEXT(CD4076, __VA_ARGS__)
 
 // ---------------------------------------------------------------------
 // Source: ../devices/nld_4316.cpp
@@ -493,7 +520,7 @@
 	NET_REGISTER_DEVEXT(TTL_8277, __VA_ARGS__)
 
 // ---------------------------------------------------------------------
-// Source: ../devices/nld_82S115.cpp
+// Source: ../devices/nld_82s115.cpp
 // ---------------------------------------------------------------------
 
 // usage       : PROM_82S115(name, CE1Q, CE2, A0, A1, A2, A3, A4, A5, A6, A7, A8, STROBE)
@@ -502,7 +529,7 @@
 	NET_REGISTER_DEVEXT(PROM_82S115, __VA_ARGS__)
 
 // ---------------------------------------------------------------------
-// Source: ../devices/nld_82S16.cpp
+// Source: ../devices/nld_82s16.cpp
 // ---------------------------------------------------------------------
 
 // usage       : TTL_82S16(name, )
@@ -652,6 +679,11 @@
 #define PROM_MK28000(...)                                                   \
 	NET_REGISTER_DEVEXT(PROM_MK28000, __VA_ARGS__)
 
+// usage       : ROM_MCM14524(name, EN, CLK, A0, A1, A2, A3, A4, A5, A6, A7)
+// auto connect: VCC, GND
+#define ROM_MCM14524(...)                                                   \
+	NET_REGISTER_DEVEXT(ROM_MCM14524, __VA_ARGS__)
+
 // ---------------------------------------------------------------------
 // Source: ../devices/nld_schmitt.cpp
 // ---------------------------------------------------------------------
@@ -769,6 +801,14 @@
 #define CD4011_GATE(...)                                                   \
 	NET_REGISTER_DEVEXT(CD4011_GATE, __VA_ARGS__)
 
+// usage       : CD4030_GATE(name, )
+#define CD4030_GATE(...)                                                   \
+	NET_REGISTER_DEVEXT(CD4030_GATE, __VA_ARGS__)
+
+// usage       : CD4049_GATE(name, )
+#define CD4049_GATE(...)                                                   \
+	NET_REGISTER_DEVEXT(CD4049_GATE, __VA_ARGS__)
+
 // usage       : CD4069_GATE(name, )
 #define CD4069_GATE(...)                                                   \
 	NET_REGISTER_DEVEXT(CD4069_GATE, __VA_ARGS__)
@@ -776,6 +816,14 @@
 // usage       : CD4070_GATE(name, )
 #define CD4070_GATE(...)                                                   \
 	NET_REGISTER_DEVEXT(CD4070_GATE, __VA_ARGS__)
+
+// usage       : CD4071_GATE(name, )
+#define CD4071_GATE(...)                                                   \
+	NET_REGISTER_DEVEXT(CD4071_GATE, __VA_ARGS__)
+
+// usage       : CD4081_GATE(name, )
+#define CD4081_GATE(...)                                                   \
+	NET_REGISTER_DEVEXT(CD4081_GATE, __VA_ARGS__)
 
 // usage       : CD4001_DIP(name, )
 #define CD4001_DIP(...)                                                   \
@@ -785,6 +833,14 @@
 #define CD4011_DIP(...)                                                   \
 	NET_REGISTER_DEVEXT(CD4011_DIP, __VA_ARGS__)
 
+// usage       : CD4030_DIP(name, )
+#define CD4030_DIP(...)                                                   \
+	NET_REGISTER_DEVEXT(CD4030_DIP, __VA_ARGS__)
+
+// usage       : CD4049_DIP(name, )
+#define CD4049_DIP(...)                                                   \
+	NET_REGISTER_DEVEXT(CD4049_DIP, __VA_ARGS__)
+
 // usage       : CD4069_DIP(name, )
 #define CD4069_DIP(...)                                                   \
 	NET_REGISTER_DEVEXT(CD4069_DIP, __VA_ARGS__)
@@ -792,6 +848,14 @@
 // usage       : CD4070_DIP(name, )
 #define CD4070_DIP(...)                                                   \
 	NET_REGISTER_DEVEXT(CD4070_DIP, __VA_ARGS__)
+
+// usage       : CD4071_DIP(name, )
+#define CD4071_DIP(...)                                                   \
+	NET_REGISTER_DEVEXT(CD4071_DIP, __VA_ARGS__)
+
+// usage       : CD4081_DIP(name, )
+#define CD4081_DIP(...)                                                   \
+	NET_REGISTER_DEVEXT(CD4081_DIP, __VA_ARGS__)
 
 // usage       : CD4006_DIP(name, )
 #define CD4006_DIP(...)                                                   \
@@ -817,6 +881,14 @@
 #define CD4024_DIP(...)                                                   \
 	NET_REGISTER_DEVEXT(CD4024_DIP, __VA_ARGS__)
 
+// usage       : CD4029_DIP(name, )
+#define CD4029_DIP(...)                                                   \
+	NET_REGISTER_DEVEXT(CD4029_DIP, __VA_ARGS__)
+
+// usage       : CD4042_DIP(name, )
+#define CD4042_DIP(...)                                                   \
+	NET_REGISTER_DEVEXT(CD4042_DIP, __VA_ARGS__)
+
 // usage       : CD4053_DIP(name, )
 #define CD4053_DIP(...)                                                   \
 	NET_REGISTER_DEVEXT(CD4053_DIP, __VA_ARGS__)
@@ -828,6 +900,10 @@
 // usage       : CD4016_DIP(name, )
 #define CD4016_DIP(...)                                                   \
 	NET_REGISTER_DEVEXT(CD4016_DIP, __VA_ARGS__)
+
+// usage       : CD4076_DIP(name, )
+#define CD4076_DIP(...)                                                   \
+	NET_REGISTER_DEVEXT(CD4076_DIP, __VA_ARGS__)
 
 // usage       : CD4316_DIP(name, )
 #define CD4316_DIP(...)                                                   \
@@ -892,6 +968,10 @@
 // usage       : LM324_DIP(name, )
 #define LM324_DIP(...)                                                   \
 	NET_REGISTER_DEVEXT(LM324_DIP, __VA_ARGS__)
+
+// usage       : LM348_DIP(name, )
+#define LM348_DIP(...)                                                   \
+	NET_REGISTER_DEVEXT(LM348_DIP, __VA_ARGS__)
 
 // usage       : LM358_DIP(name, )
 #define LM358_DIP(...)                                                   \
@@ -988,6 +1068,10 @@
 // usage       : PROM_MK28000_DIP(name, )
 #define PROM_MK28000_DIP(...)                                                   \
 	NET_REGISTER_DEVEXT(PROM_MK28000_DIP, __VA_ARGS__)
+
+// usage       : ROM_MCM14524_DIP(name, )
+#define ROM_MCM14524_DIP(...)                                                   \
+	NET_REGISTER_DEVEXT(ROM_MCM14524_DIP, __VA_ARGS__)
 
 // usage       : RAM_2102A_DIP(name, )
 #define RAM_2102A_DIP(...)                                                   \

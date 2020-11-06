@@ -6,8 +6,8 @@
 
 
     WIP
-     - hangs "checking floppy", probably ns32016 cpu bug
-     - debug port should activate on NMI
+     - scsi scan fails, selection code seems buggy
+     - debug port serial parameters aren't correct
 
 ***********************************************************************************************************************************/
 
@@ -49,7 +49,7 @@ public:
 		, m_lcdc(*this, "lcdc")
 		, m_fdc(*this, "fdc")
 		, m_fdd(*this, "fdc:0:35dd")
-		, m_hdc(*this, "scsi:7:ncr5380")
+		, m_hdc(*this, "scsi:0:ncr5380")
 		, m_pit(*this, "pit")
 		, m_scc(*this, "scc")
 		, m_ddt(*this, "ddt")
@@ -60,8 +60,11 @@ public:
 
 	void emu3(machine_config &config);
 
+	DECLARE_INPUT_CHANGED_MEMBER(nmi_button);
+
 protected:
 	virtual void machine_start() override;
+	virtual void machine_reset() override;
 
 private:
 	void emu3_map(address_map &map);
@@ -131,10 +134,17 @@ void emu3_state::machine_start()
 	m_irq_state = false;
 }
 
+void emu3_state::machine_reset()
+{
+	m_fdc->set_floppy(m_fdd);
+	m_fdc->dden_w(0);
+}
+
 void emu3_state::emu3_map(address_map &map)
 {
 	map(0x000000, 0x007fff).rom().region("bootprom", 0);
 	map(0x008000, 0x027fff).ram();
+	map(0x2c0000, 0x2c0000).rw(m_hdc, FUNC(ncr5380n_device::dma_r), FUNC(ncr5380n_device::dma_w));
 	map(0x300000, 0x30000f).rw(m_hdc, FUNC(ncr5380n_device::read), FUNC(ncr5380n_device::write)).umask16(0x00ff);
 	map(0x390000, 0x390007).rw(m_pit, FUNC(pit8254_device::read), FUNC(pit8254_device::write)).umask16(0x00ff);
 	map(0x400000, 0xbfffff).ram();
@@ -144,7 +154,7 @@ void emu3_state::emu3_map(address_map &map)
 	map(0xd70000, 0xd70000).lw8(
 		[this](u8 data)
 		{
-			m_fdd->ss_w(BIT(data, MISC_SIDE));
+			m_fdd->ss_w(!BIT(data, MISC_SIDE));
 			m_fdd->mon_w(BIT(data, MISC_MTR));
 			m_led[16] = BIT(data, MISC_LED);
 		}, "misc_w");
@@ -154,6 +164,8 @@ void emu3_state::emu3_map(address_map &map)
 			for (unsigned i = 0; i < 16; i++)
 				m_led[i] = BIT(data, i);
 		}, "led_w");
+
+	map(0xde0060, 0xde007f).nopw(); // temporarily mute logging
 
 	map(0xeb0000, 0xeb0000).w(m_lcdc, FUNC(hd44780_device::control_w));
 	map(0xeb0002, 0xeb0002).r(m_lcdc, FUNC(hd44780_device::control_r));
@@ -204,10 +216,8 @@ void emu3_state::emu3(machine_config &config)
 	WD1772(config, m_fdc, 16_MHz_XTAL / 2);
 	m_fdc->intrq_wr_callback().set(*this, FUNC(emu3_state::irq_w<FDCINT>));
 	m_fdc->set_disable_motor_control(true);
-	m_fdc->sso_wr_callback().set([this](int state) {});
-	m_fdc->dden_w(0);
 
-	FLOPPY_CONNECTOR(config, "fdc:0", emu3_floppies, "35dd", floppy_image_device::default_floppy_formats);
+	FLOPPY_CONNECTOR(config, "fdc:0", emu3_floppies, "35dd", floppy_image_device::default_floppy_formats).enable_sound(true);
 
 	PIT8254(config, m_pit); // 8254-2
 	m_pit->set_clk<0>(20_MHz_XTAL / 2);
@@ -219,22 +229,22 @@ void emu3_state::emu3(machine_config &config)
 	// scsi bus and devices
 	NSCSI_BUS(config, "scsi");
 
-	NSCSI_CONNECTOR(config, "scsi:0", emu_scsi_devices, "harddisk");
-	NSCSI_CONNECTOR(config, "scsi:1", emu_scsi_devices, nullptr);
-	NSCSI_CONNECTOR(config, "scsi:2", emu_scsi_devices, nullptr);
-	NSCSI_CONNECTOR(config, "scsi:3", emu_scsi_devices, nullptr);
-	NSCSI_CONNECTOR(config, "scsi:4", emu_scsi_devices, nullptr);
-	NSCSI_CONNECTOR(config, "scsi:5", emu_scsi_devices, nullptr);
-	NSCSI_CONNECTOR(config, "scsi:6", emu_scsi_devices, nullptr);
-
 	// scsi host adapter
-	NSCSI_CONNECTOR(config, "scsi:7").option_set("ncr5380", NCR5380N).machine_config(
+	NSCSI_CONNECTOR(config, "scsi:0").option_set("ncr5380", NCR5380N).machine_config(
 		[this](device_t *device)
 		{
 			ncr5380n_device &adapter = downcast<ncr5380n_device &>(*device);
 
 			adapter.irq_handler().set(*this, FUNC(emu3_state::irq_w<HDINT>));
 		});
+
+	NSCSI_CONNECTOR(config, "scsi:1", emu_scsi_devices, "harddisk");
+	NSCSI_CONNECTOR(config, "scsi:2", emu_scsi_devices, nullptr);
+	NSCSI_CONNECTOR(config, "scsi:3", emu_scsi_devices, nullptr);
+	NSCSI_CONNECTOR(config, "scsi:4", emu_scsi_devices, nullptr);
+	NSCSI_CONNECTOR(config, "scsi:5", emu_scsi_devices, nullptr);
+	NSCSI_CONNECTOR(config, "scsi:6", emu_scsi_devices, nullptr);
+	NSCSI_CONNECTOR(config, "scsi:7", emu_scsi_devices, nullptr);
 
 	SCC85230(config, m_scc, 16_MHz_XTAL / 4);
 	m_scc->out_int_callback().set(*this, FUNC(emu3_state::irq_w<SCCINT>)).invert();
@@ -263,7 +273,15 @@ void emu3_state::emu3(machine_config &config)
 	m_ddt->txd_handler().set(m_ddt_port, FUNC(rs232_port_device::write_txd)).invert();
 }
 
+INPUT_CHANGED_MEMBER(emu3_state::nmi_button)
+{
+	if (newval)
+		m_maincpu->set_input_line(INPUT_LINE_NMI, ASSERT_LINE);
+}
+
 static INPUT_PORTS_START(emu3)
+	PORT_START("ddt")
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYBOARD) PORT_CODE(KEYCODE_D) PORT_CHAR('d') PORT_CHAR('D') PORT_CHANGED_MEMBER(DEVICE_SELF, emu3_state, nmi_button, 0)
 INPUT_PORTS_END
 
 ROM_START(emu3)
@@ -275,44 +293,4 @@ ROM_START(emu3)
 	ROM_LOAD("im368.ic31", 0x000, 0xc00, NO_DUMP)
 ROM_END
 
-class emax2_state : public driver_device
-{
-public:
-	emax2_state(const machine_config &mconfig, device_type type, const char *tag)
-		: driver_device(mconfig, type, tag)
-		, m_maincpu(*this, "maincpu")
-	{
-	}
-
-	void emax2(machine_config &config);
-
-private:
-	void emax2_map(address_map &map);
-
-	required_device<cpu_device> m_maincpu;
-};
-
-void emax2_state::emax2_map(address_map &map)
-{
-	map(0x000000, 0x003fff).rom().region("bootprom", 0);
-}
-
-void emax2_state::emax2(machine_config &config)
-{
-	NS32016(config, m_maincpu, 20_MHz_XTAL / 2); // NS32CG16V-10 (EMAX I uses a NS32008D-8)
-	m_maincpu->set_addrmap(AS_PROGRAM, &emax2_state::emax2_map);
-
-	// TODO: add NMC93C06N EEPROM & other unknown peripherals
-}
-
-static INPUT_PORTS_START(emax2)
-INPUT_PORTS_END
-
-ROM_START(emax2)
-	ROM_REGION16_LE(0x4000, "bootprom", 0)
-	ROM_LOAD16_BYTE("ip43aemu_3891.ic20", 0x0000, 0x2000, CRC(51fdccb8) SHA1(0cab6540ed5d03ba202569b8730e0ec6dce1a477)) // Am27C64-250DC
-	ROM_LOAD16_BYTE("ip43bemu_4291.ic19", 0x0001, 0x2000, CRC(810160b3) SHA1(6f490f9014bc221e047ccd77428b002d0a3c3168)) // Am27C64-250DC
-ROM_END
-
 SYST(1987, emu3, 0, 0, emu3, emu3, emu3_state, empty_init, "E-mu Systems", "Emulator Three Digital Sound Production System", MACHINE_IS_SKELETON)
-SYST(1989, emax2, 0, 0, emax2, emax2, emax2_state, empty_init, "E-mu Systems", "EMAX II 16-Bit Digital Sound System", MACHINE_IS_SKELETON)

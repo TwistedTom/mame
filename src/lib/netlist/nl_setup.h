@@ -8,15 +8,12 @@
 #ifndef NLSETUP_H_
 #define NLSETUP_H_
 
-#define NL_AUTO_DEVICES 0
-
 #include "plib/ppreprocessor.h"
 #include "plib/psource.h"
 #include "plib/pstream.h"
 #include "plib/pstring.h"
 
 #include "nl_config.h"
-#include "nl_parser.h"
 #include "nltypes.h"
 
 #include <initializer_list>
@@ -26,7 +23,7 @@
 #include <vector>
 
 //============================================================
-//  MACROS / inline netlist definitions
+//  MACROS - netlist definitions
 //============================================================
 
 #define NET_STR(x) # x
@@ -82,17 +79,20 @@ void NETLIST_NAME(name)(netlist::nlparse_t &setup)                             \
 		setup.register_source_proc(# name, &NETLIST_NAME(name));
 
 #define EXTERNAL_SOURCE(name)                                                  \
+		NETLIST_EXTERNAL(name)                                                 \
 		setup.register_source_proc(# name, &NETLIST_NAME(name));
 
-#define LOCAL_LIB_ENTRY_1(name)                                                \
-		LOCAL_SOURCE(name)                                                     \
+#define LOCAL_LIB_ENTRY_2(type, name)                                          \
+		type ## _SOURCE(name)                                                  \
 		setup.register_lib_entry(# name, "", PSOURCELOC());
 
-#define LOCAL_LIB_ENTRY_2(name, param_spec)                                    \
-		LOCAL_SOURCE(name)                                                     \
+#define LOCAL_LIB_ENTRY_3(type, name, param_spec)                              \
+		type ## _SOURCE(name)                                                  \
 		setup.register_lib_entry(# name, param_spec, PSOURCELOC());
 
-#define LOCAL_LIB_ENTRY(...) PCALLVARARG(LOCAL_LIB_ENTRY_, __VA_ARGS__)
+#define LOCAL_LIB_ENTRY(...) PCALLVARARG(LOCAL_LIB_ENTRY_, LOCAL, __VA_ARGS__)
+
+#define EXTERNAL_LIB_ENTRY(...) PCALLVARARG(LOCAL_LIB_ENTRY_, EXTERNAL, __VA_ARGS__)
 
 #define INCLUDE(name)                                                          \
 		setup.include(# name);
@@ -228,7 +228,7 @@ namespace netlist
 
 		// FIXME: used by source_t - need a different approach at some time
 		bool parse_stream(plib::istream_uptr &&istrm, const pstring &name);
-		bool parse_tokens(const parser_t::token_store &tokens, const pstring &name);
+		bool parse_tokens(const plib::detail::token_store &tokens, const pstring &name);
 
 		template <typename S, typename... Args>
 		void add_include(Args&&... args)
@@ -273,10 +273,6 @@ namespace netlist
 		log_type &m_log;
 		unsigned m_frontier_cnt;
 	};
-
-	// -----------------------------------------------------------------------------
-	// inline implementations
-	// -----------------------------------------------------------------------------
 
 } // namespace netlist
 
