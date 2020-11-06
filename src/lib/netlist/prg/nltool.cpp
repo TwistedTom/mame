@@ -46,7 +46,7 @@ public:
 		m_errors(0),
 
 		opt_grp1(*this,     "General options",              "The following options apply to all commands."),
-		opt_cmd (*this,     "c", "cmd",         0,          std::vector<pstring>({"run","validate","convert","listdevices","static","header","docheader","tests"}), "run|validate|convert|listdevices|static|header|docheader|tests"),
+		opt_cmd (*this,     "c", "cmd",         0,          std::vector<pstring>({"run","validate","convert","listdevices","listmodels","static","header","docheader","tests"}), "run|validate|convert|listdevices|listmodels|static|header|docheader|tests"),
 		opt_includes(*this, "I", "include",                 "Add the directory to the list of directories to be searched for header files. This option may be specified repeatedly."),
 		opt_defines(*this,  "D", "define",                  "predefine value as macro, e.g. -Dname=value. If '=value' is omitted predefine it as 1. This option may be specified repeatedly."),
 		opt_rfolders(*this, "r", "rom",                     "where to look for data files"),
@@ -82,7 +82,6 @@ public:
 		opt_type(*this,     "y", "type",        0,           std::vector<pstring>({"spice","eagle","rinf"}), "type of file to be converted: spice,eagle,rinf"),
 
 		opt_grp6(*this,     "Options for validate command",  "These options are only used by the validate command."),
-		opt_extended_validation(*this, "", "extended",       "Identify issues with power terminals."),
 
 		opt_grp7(*this,     "Options for header command",    "These options are only used by the header command."),
 		opt_tabwidth(*this, "", "tab-width", 4,              "Tab width for output."),
@@ -153,7 +152,6 @@ private:
 	plib::option_str_limit<unsigned> opt_type;
 
 	plib::option_group  opt_grp6;
-	plib::option_bool   opt_extended_validation;
 	plib::option_group  opt_grp7;
 	plib::option_num<unsigned> opt_tabwidth;
 	plib::option_num<unsigned> opt_linewidth;
@@ -194,6 +192,7 @@ private:
 	void create_header();
 	void create_docheader();
 
+	void listmodels();
 	void listdevices();
 
 	std::vector<pstring> m_defines;
@@ -547,8 +546,6 @@ void tool_app_t::validate()
 	m_errors = 0;
 	m_warnings = 0;
 
-	nt.set_extended_validation(opt_extended_validation());
-
 	try
 	{
 		nt.read_netlist(opt_files()[0], opt_name(),
@@ -693,18 +690,22 @@ void tool_app_t::static_compile()
 			throw netlist::nl_exception(netlist::MF_FILE_OPEN_ERROR(opt_out()));
 
 		sout << "#include \"plib/pdynlib.h\"\n\n";
+		sout << "#if !defined(__EMSCRIPTEN__)\n\n";
 		for (auto &e : map)
 		{
 			sout << "// " << putf8string(e.second.m_module) << "\n";
 			sout << putf8string(e.second.m_code);
 		}
+		sout << "#endif\n\n";
 		sout << "extern const plib::dynlib_static_sym nl_static_solver_syms[];\n";
 		sout << "const plib::dynlib_static_sym nl_static_solver_syms[] = {\n";
+		sout << "#if !defined(__EMSCRIPTEN__)\n\n";
 		for (auto &e : map)
 		{
 			sout << "// " << putf8string(e.second.m_module) << "\n";
-			sout << "\t{\"" << putf8string(e.first) << "\", reinterpret_cast<void *>(&" << putf8string(e.first) << ")},\n";
+			sout << "\t{\"" << putf8string(e.first) << "\", reinterpret_cast<void *>(&" << putf8string(e.first) << ")}, // NOLINT\n";
 		}
+		sout << "#endif\n\n";
 		sout << "{\"\", nullptr}\n";
 		sout << "};\n";
 
@@ -1142,6 +1143,49 @@ void tool_app_t::listdevices()
 	}
 }
 
+void tool_app_t::listmodels()
+{
+	netlist_tool_t nt(plib::plog_delegate(&tool_app_t::logger, this), "netlist", opt_boostlib());
+
+	nt.log().verbose.set_enabled(false);
+	nt.log().info.set_enabled(false);
+	nt.log().warning.set_enabled(false);
+
+	nt.parser().register_source<netlist::source_proc_t>("dummy", &netlist_dummy);
+	nt.parser().include("dummy");
+	nt.setup().prepare_to_run();
+
+	using epair = std::pair<pstring, pstring>;
+
+	struct comp_s {
+	  bool operator() (const epair &i, const epair &j)
+	  {
+		  if (i.first < j.first)
+			  return true;
+		  if (i.first == j.first)
+			  return (i.second < j.second);
+		  return false;
+	  }
+	} comp;
+
+	std::vector<epair> elems;
+
+	for (auto & e : nt.setup().models().known_models())
+	{
+		auto model = nt.setup().models().get_model(e);
+
+		elems.emplace_back(model.type(), e);
+	}
+
+	std::sort(elems.begin(), elems.end(), comp);
+
+	for (auto & e : elems)
+	{
+		pstring out = plib::pfmt("{1:-15} {2}")(e.first, e.second);
+		pout("{}\n", out);
+	}
+}
+
 // -------------------------------------------------
 //    convert - convert spice et al to netlist
 // -------------------------------------------------
@@ -1259,6 +1303,8 @@ int tool_app_t::execute()
 		pstring cmd = opt_cmd.as_string();
 		if (cmd == "listdevices")
 			listdevices();
+		else if (cmd == "listmodels")
+			listmodels();
 		else if (cmd == "run")
 			run();
 		else if (cmd == "validate")

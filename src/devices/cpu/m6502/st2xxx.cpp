@@ -4,15 +4,19 @@
 
     Sitronix ST2XXX LCD MCUs
 
-    This extended SoC family combines a 65C02 CPU core (including the
-    Rockwell bit opcodes) with a wide variety of on-chip peripherals.
-    Features common to all besides internal RAM and ROM are parallel
-    ports, internal timers, a multi-level interrupt controller, LCD
-    controllers (of varying degrees of sophistication), R/C/slow XTAL
-    clock generators, power management and PSG channels for speaker
-    output. Each MCU also has numerous pins dedicated to LCD segment
-    drivers, an external bus addressing several MB of off-chip
-    memory using multiple chip select signals, or both.
+    This extended SoC family combines a W65C02S 8-bit CPU core
+    (including the Rockwell bit opcodes) with a wide variety of on-
+    chip peripherals. Common features besides internal RAM and ROM are
+    parallel ports, internal timers, a vectored interrupt controller,
+    LCD controllers (of varying degrees of sophistication), R/C/slow
+    XTAL clock generators, power management and PSG channels for
+    speaker output. Each MCU also has numerous pins dedicated to LCD
+    segment drivers (ST20XX, ST2104, ST2108), an external bus capable
+    of addressing several MB of off-chip memory using multiple chip
+    select signals (ST2100, ST22XX), or both (ST25XX, ST26XX). The
+    later ST23XX series, targeted mostly at digital greeting card
+    applications, eliminated on-chip LCD control but retained other
+    typical ST2XXX features.
 
     On all ST2XXX MCUs but the smallest single-chip ST20XX models,
     4000–7FFF (nominally program memory) and 8000–FFFF (nominally
@@ -22,6 +26,9 @@
     register for DMA reads from the 8000–FFFF area, and will also
     switch 4000–7FFF to a different bank during interrupt service if
     the IRREN bit in the SYS register is set.
+
+    At some time between 2010 and 2012, Sitronix spun off all of its
+    SoC product line to mCore Technology Corporation.
 
 **********************************************************************/
 
@@ -69,6 +76,10 @@ st2xxx_device::st2xxx_device(const machine_config &mconfig, device_type type, co
 	, m_lpwm(0)
 	, m_lcd_ireq(0)
 	, m_lcd_timer(nullptr)
+	, m_sctr(0)
+	, m_sckr(0)
+	, m_ssr(0)
+	, m_smod(0)
 	, m_uctr(0)
 	, m_usr(0)
 	, m_irctr(0)
@@ -175,17 +186,28 @@ void st2xxx_device::save_common_registers()
 		save_item(NAME(m_misc));
 	save_item(NAME(m_ireq));
 	save_item(NAME(m_iena));
-	save_item(NAME(m_lssa));
-	save_item(NAME(m_lvpw));
-	save_item(NAME(m_lxmax));
-	save_item(NAME(m_lymax));
-	if (st2xxx_lpan_mask() != 0)
-		save_item(NAME(m_lpan));
-	save_item(NAME(m_lctr));
-	save_item(NAME(m_lckr));
-	save_item(NAME(m_lfra));
-	save_item(NAME(m_lac));
-	save_item(NAME(m_lpwm));
+	if (st2xxx_lctr_mask() != 0)
+	{
+		save_item(NAME(m_lssa));
+		save_item(NAME(m_lvpw));
+		save_item(NAME(m_lxmax));
+		save_item(NAME(m_lymax));
+		if (st2xxx_lpan_mask() != 0)
+			save_item(NAME(m_lpan));
+		save_item(NAME(m_lctr));
+		save_item(NAME(m_lckr));
+		save_item(NAME(m_lfra));
+		save_item(NAME(m_lac));
+		save_item(NAME(m_lpwm));
+	}
+	if (st2xxx_has_spi())
+	{
+		save_item(NAME(m_sctr));
+		save_item(NAME(m_sckr));
+		save_item(NAME(m_ssr));
+		if (st2xxx_spi_iis())
+			save_item(NAME(m_smod));
+	}
 	if (st2xxx_uctr_mask() != 0)
 	{
 		save_item(NAME(m_uctr));
@@ -245,6 +267,12 @@ void st2xxx_device::device_reset()
 	m_lac = 0;
 	m_lpwm = 0;
 	m_lcd_timer->adjust(attotime::never);
+
+	// reset SPI
+	m_sctr = 0;
+	m_sckr = 0;
+	m_ssr = 0;
+	m_smod = 0;
 
 	// reset UART and BRG
 	m_uctr = 0;
@@ -421,19 +449,6 @@ void st2xxx_device::btclr_all_w(u8 data)
 	// Only bit 7 has any effect
 	if (BIT(data, 7))
 		m_btsr = 0;
-}
-
-u32 st2xxx_device::tclk_pres_div(u8 mode) const
-{
-	assert(mode < 8);
-	if (mode == 0)
-		return 0x10000;
-	else if (mode < 4)
-		return 0x20000 >> (mode * 2);
-	else if (mode == 4)
-		return 0x100;
-	else
-		return 0x8000 >> (mode * 2);
 }
 
 u16 st2xxx_device::pres_count() const
@@ -756,6 +771,51 @@ u8 st2xxx_device::lpwm_r()
 void st2xxx_device::lpwm_w(u8 data)
 {
 	m_lpwm = data & st2xxx_lpwm_mask();
+}
+
+u8 st2xxx_device::sctr_r()
+{
+	return m_sctr;
+}
+
+void st2xxx_device::sctr_w(u8 data)
+{
+	// TXEMP on wakeup?
+	if (!BIT(m_sctr, 7) && BIT(data, 7))
+		m_ssr |= 0x20;
+
+	m_sctr = data;
+}
+
+u8 st2xxx_device::sckr_r()
+{
+	return m_sckr | 0x80;
+}
+
+void st2xxx_device::sckr_w(u8 data)
+{
+	m_sckr = data & 0x7f;
+}
+
+u8 st2xxx_device::ssr_r()
+{
+	return m_ssr | 0x88;
+}
+
+void st2xxx_device::ssr_w(u8 data)
+{
+	// Write any value to clear
+	m_ssr = 0;
+}
+
+u8 st2xxx_device::smod_r()
+{
+	return m_smod | 0xf0;
+}
+
+void st2xxx_device::smod_w(u8 data)
+{
+	m_smod = data & 0x0f;
 }
 
 u8 st2xxx_device::uctr_r()

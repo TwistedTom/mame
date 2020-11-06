@@ -328,7 +328,9 @@ void multipcm_device::write_slot(slot_t &slot, int32_t reg, uint8_t data)
 	{
 		case 0: // PANPOT
 			slot.m_pan = (data >> 4) & 0xf;
+			slot.m_format = (data & 0x0f);	// bit 3: 0 = 8-bit linear, 1 = 12-bit linear
 			break;
+
 		case 1: // Sample
 		{
 			//according to YMF278 sample write causes some base params written to the regs (envelope+lfos)
@@ -450,22 +452,22 @@ void multipcm_device::write(offs_t offset, uint8_t data)
 
 DEFINE_DEVICE_TYPE(MULTIPCM, multipcm_device, "ymw258f", "Yamaha YMW-258-F")
 
-multipcm_device::multipcm_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: device_t(mconfig, MULTIPCM, tag, owner, clock),
-		device_sound_interface(mconfig, *this),
-		device_rom_interface(mconfig, *this),
-		m_stream(nullptr),
-		m_slots(nullptr),
-		m_cur_slot(0),
-		m_address(0),
-		m_rate(0),
-		m_attack_step(nullptr),
-		m_decay_release_step(nullptr),
-		m_freq_step_table(nullptr),
-		m_left_pan_table(nullptr),
-		m_right_pan_table(nullptr),
-		m_linear_to_exp_volume(nullptr),
-		m_total_level_steps(nullptr)
+multipcm_device::multipcm_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock) :
+	device_t(mconfig, MULTIPCM, tag, owner, clock),
+	device_sound_interface(mconfig, *this),
+	device_rom_interface(mconfig, *this),
+	m_stream(nullptr),
+	m_slots(nullptr),
+	m_cur_slot(0),
+	m_address(0),
+	m_rate(0),
+	m_attack_step(nullptr),
+	m_decay_release_step(nullptr),
+	m_freq_step_table(nullptr),
+	m_left_pan_table(nullptr),
+	m_right_pan_table(nullptr),
+	m_linear_to_exp_volume(nullptr),
+	m_total_level_steps(nullptr)
 {
 }
 
@@ -479,7 +481,7 @@ void multipcm_device::device_start()
 	const float clock_divider = 180.0f;
 	m_rate = (float)clock() / clock_divider;
 
-	m_stream = machine().sound().stream_alloc(*this, 0, 2, m_rate);
+	m_stream = stream_alloc(0, 2, m_rate);
 
 	// Volume + pan table
 	m_left_pan_table = make_unique_clear<int32_t[]>(0x800);
@@ -575,7 +577,7 @@ void multipcm_device::device_start()
 	save_item(NAME(m_address));
 
 	// Slots
-	m_slots = make_unique_clear<slot_t []>(28);
+	m_slots = std::make_unique<slot_t []>(28);
 
 	save_pointer(STRUCT_MEMBER(m_slots, m_regs), 28);
 	save_pointer(STRUCT_MEMBER(m_slots, m_playing), 28);
@@ -587,6 +589,7 @@ void multipcm_device::device_start()
 	save_pointer(STRUCT_MEMBER(m_slots, m_dest_total_level), 28);
 	save_pointer(STRUCT_MEMBER(m_slots, m_total_level_step), 28);
 	save_pointer(STRUCT_MEMBER(m_slots, m_prev_sample), 28);
+	save_pointer(STRUCT_MEMBER(m_slots, m_format), 28);
 
 	for (int32_t slot = 0; slot < 28; ++slot)
 	{
@@ -628,21 +631,9 @@ void multipcm_device::device_clock_changed()
 }
 
 //-----------------------------------------------------
-//  clamp_to_int16 - clamp a 32-bit value to 16 bits
+//  convert_to_stream_sample - clamp a 32-bit value to
+//  16 bits and convert to a stream_buffer::sample_t
 //-----------------------------------------------------
-
-int16_t multipcm_device::clamp_to_int16(int32_t value)
-{
-	if (value < -32768)
-	{
-		return -32768;
-	}
-	else if (value > 32767)
-	{
-		return 32767;
-	}
-	return (int16_t)value;
-}
 
 #if MULTIPCM_LOG_SAMPLES
 void multipcm_device::dump_sample(slot_t &slot)
@@ -680,17 +671,9 @@ void multipcm_device::dump_sample(slot_t &slot)
 //  sound_stream_update - handle a stream update
 //-------------------------------------------------
 
-void multipcm_device::sound_stream_update(sound_stream &stream, stream_sample_t **inputs, stream_sample_t **outputs, int32_t samples)
+void multipcm_device::sound_stream_update(sound_stream &stream, std::vector<read_stream_view> const &inputs, std::vector<write_stream_view> &outputs)
 {
-	stream_sample_t  *datap[2];
-
-	datap[0] = outputs[0];
-	datap[1] = outputs[1];
-
-	memset(datap[0], 0, sizeof(*datap[0]) * samples);
-	memset(datap[1], 0, sizeof(*datap[1]) * samples);
-
-	for (int32_t i = 0; i < samples; ++i)
+	for (int32_t i = 0; i < outputs[0].samples(); ++i)
 	{
 		int32_t smpl = 0;
 		int32_t smpr = 0;
@@ -700,10 +683,49 @@ void multipcm_device::sound_stream_update(sound_stream &stream, stream_sample_t 
 			if (slot.m_playing)
 			{
 				uint32_t vol = (slot.m_total_level >> TL_SHIFT) | (slot.m_pan << 7);
-				uint32_t adr = slot.m_offset >> TL_SHIFT;
+				uint32_t spos = slot.m_offset >> TL_SHIFT;
 				uint32_t step = slot.m_step;
-				int32_t csample = (int16_t) (read_byte(slot.m_base + adr) << 8);
+				int32_t csample = 0;
 				int32_t fpart = slot.m_offset & ((1 << TL_SHIFT) - 1);
+
+				if (slot.m_format & 8)	// 12-bit linear
+				{
+					offs_t adr = slot.m_base + (spos >> 2) * 6;
+					switch (spos & 3)
+					{
+						case 0:
+						{ // .abc .... ....
+							u16 w0 = read_word(adr);
+							csample = (w0 & 0x0fff) << 4;
+							break;
+						}
+						case 1:
+						{ // C... ..AB ....
+							u16 w0 = read_word(adr);
+							u16 w1 = read_word(adr + 2);
+							csample = ((w0 & 0xf000) >> 8) | ((w1 & 0x00ff) << 8);
+							break;
+						}
+						case 2:
+						{ // .... bc.. ...a
+							u16 w0 = read_word(adr + 2);
+							u16 w1 = read_word(adr + 4);
+							csample = ((w0 & 0xff00) >> 4) | ((w1 & 0x000f) << 12);
+							break;
+						}
+						case 3:
+						{ // .... .... ABC.
+							u16 w1 = read_word(adr + 4);
+							csample = w1 & 0xfff0;
+							break;
+						}
+					}
+				}
+				else
+				{
+					csample = (int16_t)(read_byte(slot.m_base + spos) << 8);
+				}
+
 				int32_t sample = (csample * fpart + slot.m_prev_sample * ((1 << TL_SHIFT) - fpart)) >> TL_SHIFT;
 
 				if (slot.m_regs[6] & 7) // Vibrato enabled
@@ -718,7 +740,7 @@ void multipcm_device::sound_stream_update(sound_stream &stream, stream_sample_t 
 					slot.m_offset = slot.m_sample.m_loop << TL_SHIFT;
 				}
 
-				if (adr ^ (slot.m_offset >> TL_SHIFT))
+				if (spos ^ (slot.m_offset >> TL_SHIFT))
 				{
 					slot.m_prev_sample = csample;
 				}
@@ -741,8 +763,8 @@ void multipcm_device::sound_stream_update(sound_stream &stream, stream_sample_t 
 			}
 		}
 
-		datap[0][i] = clamp_to_int16(smpl);
-		datap[1][i] = clamp_to_int16(smpr);
+		outputs[0].put_int_clamp(i, smpl, 32768);
+		outputs[1].put_int_clamp(i, smpr, 32768);
 	}
 }
 

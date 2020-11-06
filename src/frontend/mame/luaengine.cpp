@@ -1171,7 +1171,7 @@ void lua_engine::initialize()
 	item_type.set("read", [this](save_item &item, int offset) -> sol::object {
 			if(!item.base || (offset >= item.count))
 				return sol::make_object(sol(), sol::nil);
-			const void *const data = reinterpret_cast<const uint8_t *>(item.base) + (item.size * item.stride * (offset / item.valcount));
+			const void *const data = reinterpret_cast<const uint8_t *>(item.base) + (item.stride * (offset / item.valcount));
 			uint64_t ret = 0;
 			switch(item.size)
 			{
@@ -1199,7 +1199,6 @@ void lua_engine::initialize()
 			else
 			{
 				const uint32_t blocksize = item.size * item.valcount;
-				const uint32_t bytestride = item.size * item.stride;
 				uint32_t remaining = buff->get_len();
 				uint8_t *dest = reinterpret_cast<uint8_t *>(buff->get_ptr());
 				while(remaining)
@@ -1207,7 +1206,7 @@ void lua_engine::initialize()
 					const uint32_t blockno = offset / blocksize;
 					const uint32_t available = blocksize - (offset % blocksize);
 					const uint32_t chunk = (available < remaining) ? available : remaining;
-					const void *const source = reinterpret_cast<const uint8_t *>(item.base) + (blockno * bytestride) + (offset % blocksize);
+					const void *const source = reinterpret_cast<const uint8_t *>(item.base) + (blockno * item.stride) + (offset % blocksize);
 					std::memcpy(dest, source, chunk);
 					offset += chunk;
 					remaining -= chunk;
@@ -1219,7 +1218,7 @@ void lua_engine::initialize()
 	item_type.set("write", [](save_item &item, int offset, uint64_t value) {
 			if(!item.base || (offset >= item.count))
 				return;
-			void *const data = reinterpret_cast<uint8_t *>(item.base) + (item.size * item.stride * (offset / item.valcount));
+			void *const data = reinterpret_cast<uint8_t *>(item.base) + (item.stride * (offset / item.valcount));
 			switch(item.size)
 			{
 				case 1:
@@ -1571,7 +1570,7 @@ void lua_engine::initialize()
  * debugger.execution_state - accessor for active cpu run state
  */
 
-	struct wrap_textbuf { wrap_textbuf(text_buffer *buf) { textbuf = buf; }; text_buffer *textbuf; };
+	struct wrap_textbuf { wrap_textbuf(const text_buffer &buf) : textbuf(buf) { } std::reference_wrapper<const text_buffer> textbuf; };
 
 	auto debugger_type = sol().registry().create_simple_usertype<debugger_manager>("new", sol::no_constructor);
 	debugger_type.set("command", [](debugger_manager &debug, const std::string &cmd) { debug.console().execute_command(cmd, false); });
@@ -1949,6 +1948,7 @@ void lua_engine::initialize()
  *
  * ioport:count_players() - get count of player controllers
  * ioport:type_group(type, player)
+ * ioport:type_seq(type, player, seqtype) - get input sequence for ioport type/player
  *
  * ioport.ports[] - ioports table (k=tag, v=ioport_port)
  */
@@ -1965,6 +1965,9 @@ void lua_engine::initialize()
 				port_table[port.second->tag()] = port.second.get();
 			return port_table;
 		}));
+	ioport_manager_type.set("type_seq", [](ioport_manager &m, ioport_type type, int player, input_seq_type seqtype) {
+			return sol::make_user(m.type_seq(type, player, seqtype));
+		});
 	sol().registry().set_usertype("ioport", ioport_manager_type);
 
 

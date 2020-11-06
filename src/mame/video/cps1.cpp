@@ -29,6 +29,7 @@ Forgotten Worlds (USA, B-Board 88618B-2, Rev. AA)                  88618B-2   LW
 Forgotten Worlds (USA, B-Board 88618B-2, Rev. C)                   88618B-2   LWCHR            LWIO  None         CPS-B-01  DL-0411-10001  N/A
 Forgotten Worlds (USA, B-Board 88618B-2, Rev. E)                   88618B-2   LWCHR            LWIO  None         CPS-B-01  DL-0411-10001  N/A
 Forgotten Worlds (USA, B-Board 88621B-2, Rev. C)                   88621B-2   LW621            LWIO  None         CPS-B-01  DL-0411-10001  N/A
+Forgotten Worlds (Japan)                                           88618B-2   LWCHR            LWIO  None         CPS-B-01  DL-0411-10001  N/A
 Lost Worlds (Japan Old Ver.)                                       88618B-2   LWCHR            LWIO  None         CPS-B-01  DL-0411-10001  N/A
 Lost Worlds (Japan)                                                88618B-2   LWCHR            LWIO  None         CPS-B-01  DL-0411-10001  N/A
 
@@ -1698,6 +1699,7 @@ static const struct CPS1config cps1_config_table[]=
 	{"forgottnuc",  CPS_B_01,     mapper_LWCHR },
 	{"forgottnua",  CPS_B_01,     mapper_LWCHR },
 	{"forgottnuaa", CPS_B_01,     mapper_LWCHR },
+	{"forgottnj",   CPS_B_01,     mapper_LWCHR },
 	{"lostwrld",    CPS_B_01,     mapper_LWCHR },
 	{"lostwrldo",   CPS_B_01,     mapper_LWCHR },
 	{"ghouls",      CPS_B_01,     mapper_DM620 },
@@ -1865,6 +1867,10 @@ static const struct CPS1config cps1_config_table[]=
 	{"sf2mdta",     CPS_B_21_DEF, mapper_S9263B, 0x36, 0, 0, 1 },
 	{"sf2mdtb",     CPS_B_21_DEF, mapper_S9263B, 0x36, 0, 0, 1 },
 	{"sf2ceb",      CPS_B_21_DEF, mapper_S9263B, 0x36, 0, 0, 1 },
+	{"sf2ceb2",     CPS_B_21_DEF, mapper_S9263B, 0x36, 0, 0, 1 },
+	{"sf2ceb3",     CPS_B_21_DEF, mapper_S9263B, 0x36, 0, 0, 1 },
+	{"sf2ceb4",     CPS_B_21_DEF, mapper_S9263B, 0x36, 0, 0, 1 },
+	{"sf2ceb5",     CPS_B_21_DEF, mapper_S9263B, 0x36, 0, 0, 1 },
 	{"sf2b",        CPS_B_17,     mapper_STF29,  0x36, 0, 0, 1 },
 	{"sf2b2",       CPS_B_17,     mapper_STF29,  0x36, 0, 0, 1 },
 	{"sf2ceupl",    HACK_B_1,     mapper_S9263B, 0x36, 0, 0, 1 },
@@ -3203,8 +3209,7 @@ void cps2_state::cps2_render_sprites( screen_device &screen, bitmap_ind16 &bitma
 
 void cps_state::cps1_render_stars( screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect )
 {
-	int offs;
-	uint8_t *stars_rom = m_region_stars->base();
+	uint8_t const *const stars_rom = m_region_stars->base();
 
 	if (!stars_rom && (m_stars_enabled[0] || m_stars_enabled[1]))
 	{
@@ -3216,7 +3221,7 @@ void cps_state::cps1_render_stars( screen_device &screen, bitmap_ind16 &bitmap, 
 
 	if (m_stars_enabled[0])
 	{
-		for (offs = 0; offs < m_stars_rom_size / 2; offs++)
+		for (int offs = 0; offs < m_stars_rom_size / 2; offs++)
 		{
 			int col = stars_rom[8 * offs + 4];
 			if (col != 0x0f)
@@ -3234,14 +3239,14 @@ void cps_state::cps1_render_stars( screen_device &screen, bitmap_ind16 &bitmap, 
 				col = ((col & 0xe0) >> 1) + (screen.frame_number() / 16 & 0x0f);
 
 				if (cliprect.contains(sx, sy))
-					bitmap.pix16(sy, sx) = 0xa00 + col;
+					bitmap.pix(sy, sx) = 0xa00 + col;
 			}
 		}
 	}
 
 	if (m_stars_enabled[1])
 	{
-		for (offs = 0; offs < m_stars_rom_size / 2; offs++)
+		for (int offs = 0; offs < m_stars_rom_size / 2; offs++)
 		{
 			int col = stars_rom[8*offs];
 			if (col != 0x0f)
@@ -3259,7 +3264,7 @@ void cps_state::cps1_render_stars( screen_device &screen, bitmap_ind16 &bitmap, 
 				col = ((col & 0xe0) >> 1) + (screen.frame_number() / 16 & 0x0f);
 
 				if (cliprect.contains(sx, sy))
-					bitmap.pix16(sy, sx) = 0x800 + col;
+					bitmap.pix(sy, sx) = 0x800 + col;
 			}
 		}
 	}
