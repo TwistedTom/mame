@@ -71,43 +71,46 @@
 #include "machine/apple2common.h"
 //#include "machine/apple2host.h"
 
+#include "bus/a2bus/4play.h"
+#include "bus/a2bus/a2alfam2.h"
+#include "bus/a2bus/a2applicard.h"
+#include "bus/a2bus/a2arcadebd.h"
 #include "bus/a2bus/a2bus.h"
-#include "bus/a2bus/ramcard16k.h"
-#include "bus/a2bus/a2diskiing.h"
-#include "bus/a2bus/a2mockingboard.h"
 #include "bus/a2bus/a2cffa.h"
-#include "bus/a2bus/a2memexp.h"
-#include "bus/a2bus/a2scsi.h"
+#include "bus/a2bus/a2corvus.h"
+#include "bus/a2bus/a2diskiing.h"
+#include "bus/a2bus/a2dx1.h"
+#include "bus/a2bus/a2echoii.h"
 #include "bus/a2bus/a2hsscsi.h"
-#include "bus/a2bus/cmsscsi.h"
-#include "bus/a2bus/a2thunderclock.h"
+#include "bus/a2bus/a2mcms.h"
+#include "bus/a2bus/a2memexp.h"
+#include "bus/a2bus/a2midi.h"
+#include "bus/a2bus/a2mockingboard.h"
+#include "bus/a2bus/a2parprn.h"
+#include "bus/a2bus/a2pic.h"
+#include "bus/a2bus/a2sam.h"
+#include "bus/a2bus/a2scsi.h"
 #include "bus/a2bus/a2softcard.h"
-#include "bus/a2bus/a2videoterm.h"
 #include "bus/a2bus/a2ssc.h"
 #include "bus/a2bus/a2swyft.h"
 #include "bus/a2bus/a2themill.h"
-#include "bus/a2bus/a2sam.h"
-#include "bus/a2bus/a2alfam2.h"
-#include "bus/a2bus/laser128.h"
-#include "bus/a2bus/a2echoii.h"
-#include "bus/a2bus/a2arcadebd.h"
-#include "bus/a2bus/a2midi.h"
-#include "bus/a2bus/a2zipdrive.h"
-#include "bus/a2bus/a2applicard.h"
+#include "bus/a2bus/a2thunderclock.h"
 #include "bus/a2bus/a2ultraterm.h"
-#include "bus/a2bus/a2pic.h"
-#include "bus/a2bus/a2corvus.h"
-#include "bus/a2bus/a2mcms.h"
-#include "bus/a2bus/a2dx1.h"
-#include "bus/a2bus/timemasterho.h"
-#include "bus/a2bus/mouse.h"
-#include "bus/a2bus/ezcgi.h"
+#include "bus/a2bus/a2videoterm.h"
 #include "bus/a2bus/a2vulcan.h"
-#include "bus/a2bus/4play.h"
-//#include "bus/a2bus/pc_xporter.h"
+#include "bus/a2bus/a2zipdrive.h"
 #include "bus/a2bus/byte8251.h"
+#include "bus/a2bus/cmsscsi.h"
+#include "bus/a2bus/ezcgi.h"
+#include "bus/a2bus/grapplerplus.h"
 //#include "bus/a2bus/hostram.h"
+#include "bus/a2bus/laser128.h"
+#include "bus/a2bus/mouse.h"
+//#include "bus/a2bus/pc_xporter.h"
+#include "bus/a2bus/ramcard16k.h"
 //#include "bus/a2bus/ramfast.h"
+#include "bus/a2bus/sider.h"
+#include "bus/a2bus/timemasterho.h"
 #include "bus/a2bus/uthernet.h"
 
 #include "bus/a2gameio/gameio.h"
@@ -783,6 +786,14 @@ WRITE_LINE_MEMBER(apple2gs_state::ay3600_data_ready_w)
 		uint8_t *decode = m_kbdrom->base();
 		uint16_t trans;
 
+		// if the user presses a valid key to start the driver from the info screen,
+		// we will see that key.  ignore keys in the first 25,000 cycles (in my tests,
+		// the unwanted key shows up at 17030 cycles)
+		if (m_maincpu->total_cycles() < 25000)
+		{
+			return;
+		}
+
 		m_lastchar = m_ay3600->b_r();
 
 		trans = m_lastchar & ~(0x1c0);  // clear the 3600's control/shift stuff
@@ -1232,10 +1243,11 @@ void apple2gs_state::machine_start()
 
 	// setup speaker toggle volumes.  this should be done mathematically probably,
 	// but these ad-hoc values aren't too bad.
-	static const int16_t lvlTable[16] =
+#define LVL(x) (double(x) / 32768.0)
+	static const double lvlTable[16] =
 	{
-		0x0000, 0x03ff, 0x04ff, 0x05ff, 0x06ff, 0x07ff, 0x08ff, 0x09ff,
-		0x0aff, 0x0bff, 0x0cff, 0x0fff, 0x1fff, 0x3fff, 0x5fff, 0x7fff
+		LVL(0x0000), LVL(0x03ff), LVL(0x04ff), LVL(0x05ff), LVL(0x06ff), LVL(0x07ff), LVL(0x08ff), LVL(0x09ff),
+		LVL(0x0aff), LVL(0x0bff), LVL(0x0cff), LVL(0x0fff), LVL(0x1fff), LVL(0x3fff), LVL(0x5fff), LVL(0x7fff)
 	};
 	m_speaker->set_levels(16, lvlTable);
 
@@ -1264,8 +1276,7 @@ void apple2gs_state::machine_start()
 	int ramsize = m_ram_size - 0x20000; // subtract 128K for banks 0 and 1, which are handled specially
 
 	// RAM sizes for both classes of machine no longer include the Mega II RAM
-	space.install_readwrite_bank(0x020000, ramsize - 1 + 0x20000, "bank1");
-	membank("bank1")->set_base(m_ram_ptr + 0x020000);
+	space.install_ram(0x020000, ramsize - 1 + 0x20000, m_ram_ptr + 0x020000);
 
 	// setup save states
 	save_item(NAME(m_speaker_state));
@@ -2281,6 +2292,9 @@ uint8_t apple2gs_state::c000_r(offs_t offset)
 		case 0x31:  // DISKREG
 			return m_diskreg;
 
+		case 0x32: // VGCINTCLEAR
+			return 0;
+
 		case 0x33: // CLOCKDATA
 			return m_clkdata;
 
@@ -2508,12 +2522,12 @@ void apple2gs_state::c000_w(offs_t offset, uint8_t data)
 			break;
 
 		case 0x23:  // VGCINT
-			if ((m_vgcint & VGCINT_SECOND) && !(data & VGCINT_SECOND))
+			if ((m_vgcint & VGCINT_SECOND) && !(data & VGCINT_SECONDENABLE))
 			{
 				lower_irq(IRQS_SECOND);
 				m_vgcint &= ~(VGCINT_SECOND);
 			}
-			if ((m_vgcint & VGCINT_SCANLINE) && !(data & VGCINT_SCANLINE))
+			if ((m_vgcint & VGCINT_SCANLINE) && !(data & VGCINT_SCANLINEEN))
 			{
 				lower_irq(IRQS_SCAN);
 				m_vgcint &= ~(VGCINT_SCANLINE);
@@ -2563,14 +2577,14 @@ void apple2gs_state::c000_w(offs_t offset, uint8_t data)
 		case 0x32:  // VGCINTCLEAR
 			//printf("%02x to VGCINTCLEAR\n", data);
 			// one second
-			if ((m_vgcint & VGCINT_SECOND) && !(data & VGCINT_SECOND))
+			if (m_vgcint & VGCINT_SECOND)
 			{
 				lower_irq(IRQS_SECOND);
 				m_vgcint &= ~(VGCINT_SECOND|VGCINT_ANYVGCINT);
 			}
 
 			// scanline
-			if ((m_vgcint & VGCINT_SCANLINE) && !(data & VGCINT_SCANLINE))
+			if (m_vgcint & VGCINT_SCANLINE)
 			{
 				lower_irq(IRQS_SCAN);
 				m_vgcint &= ~(VGCINT_SCANLINE|VGCINT_ANYVGCINT);
@@ -4558,7 +4572,9 @@ static void apple2_cards(device_slot_interface &device)
 	device.option_add("ultraterm", A2BUS_ULTRATERM);    /* Videx UltraTerm (original) */
 	device.option_add("ultratermenh", A2BUS_ULTRATERMENH);    /* Videx UltraTerm (enhanced //e) */
 	device.option_add("aevm80", A2BUS_AEVIEWMASTER80);    /* Applied Engineering ViewMaster 80 */
-	device.option_add("parallel", A2BUS_PIC);   /* Apple Parallel Interface Card */
+	device.option_add("parprn", A2BUS_PARPRN);   /* Apple II Parallel Printer Interface Card */
+	device.option_add("parallel", A2BUS_PIC);   /* Apple II Parallel Interface Card */
+	device.option_add("grapplerplus", A2BUS_GRAPPLERPLUS); /* Orange Micro Grappler+ Printer Interface card */
 	device.option_add("corvus", A2BUS_CORVUS);  /* Corvus flat-cable HDD interface (see notes in a2corvus.c) */
 	device.option_add("mcms1", A2BUS_MCMS1);  /* Mountain Computer Music System, card 1 of 2 */
 	device.option_add("mcms2", A2BUS_MCMS2);  /* Mountain Computer Music System, card 2 of 2.  must be in card 1's slot + 1! */
@@ -4577,7 +4593,9 @@ static void apple2_cards(device_slot_interface &device)
 //  device.option_add("hostram", A2BUS_HOSTRAM); /* Slot 7 RAM for GS Plus host protocol */
 //  device.option_add("ramfast", A2BUS_RAMFAST); /* C.V. Technologies RAMFast SCSI card */
 	device.option_add("cmsscsi", A2BUS_CMSSCSI);  /* CMS Apple II SCSI Card */
-	device.option_add("uthernet", A2BUS_UTHERNET);  /* CMS Apple II SCSI Card */
+	device.option_add("uthernet", A2BUS_UTHERNET);  /* A2RetroSystems Uthernet card */
+	device.option_add("sider2", A2BUS_SIDER2); /* Advanced Tech Systems / First Class Peripherals Sider 2 SASI card */
+	device.option_add("sider1", A2BUS_SIDER1); /* Advanced Tech Systems / First Class Peripherals Sider 1 SASI card */
 }
 
 void apple2gs_state::apple2gs(machine_config &config)
@@ -4791,7 +4809,7 @@ void apple2gs_state::apple2gsr1(machine_config &config)
 ***************************************************************************/
 ROM_START(apple2gs)
 	// M50740/50741 ADB MCU inside the IIgs system unit
-	ROM_REGION(0x1000,M5074X_INTERNAL_ROM(A2GS_ADBMCU_TAG),0)
+	ROM_REGION(0x1000, A2GS_ADBMCU_TAG, 0)
 	ROM_LOAD( "341s0632-2.bin", 0x000000, 0x001000, CRC(e1c11fb0) SHA1(141d18c36a617ab9dce668445440d34354be0672) )
 
 	// i8048 microcontroller inside the IIgs ADB Standard Keyboard
@@ -4819,7 +4837,7 @@ ROM_START(apple2gs)
 ROM_END
 
 ROM_START(apple2gsr3p)
-	ROM_REGION(0x1000,M5074X_INTERNAL_ROM(A2GS_ADBMCU_TAG),0)
+	ROM_REGION(0x1000, A2GS_ADBMCU_TAG, 0)
 	ROM_LOAD( "341s0632-2.bin", 0x000000, 0x001000, CRC(e1c11fb0) SHA1(141d18c36a617ab9dce668445440d34354be0672) )
 
 	ROM_REGION(0x400, "kmcu", 0)
@@ -4839,7 +4857,7 @@ ROM_START(apple2gsr3p)
 ROM_END
 
 ROM_START(apple2gsr1)
-	ROM_REGION(0xc00,M5074X_INTERNAL_ROM(A2GS_ADBMCU_TAG),0)
+	ROM_REGION(0xc00, A2GS_ADBMCU_TAG, 0)
 	ROM_LOAD( "341s0345.bin", 0x000000, 0x000c00, CRC(48cd5779) SHA1(97e421f5247c00a0ca34cd08b6209df573101480) )
 
 	ROM_REGION(0x400, "kmcu", 0)
@@ -4858,7 +4876,7 @@ ROM_START(apple2gsr1)
 ROM_END
 
 ROM_START(apple2gsr0)
-	ROM_REGION(0xc00,M5074X_INTERNAL_ROM(A2GS_ADBMCU_TAG),0)
+	ROM_REGION(0xc00, A2GS_ADBMCU_TAG, 0)
 	ROM_LOAD( "341s0345.bin", 0x000000, 0x000c00, CRC(48cd5779) SHA1(97e421f5247c00a0ca34cd08b6209df573101480) )
 
 	ROM_REGION(0x400, "kmcu", 0)
@@ -4877,7 +4895,7 @@ ROM_START(apple2gsr0)
 ROM_END
 
 ROM_START(apple2gsr0p)  // 6/19/1986 Cortland prototype
-	ROM_REGION(0xc00,M5074X_INTERNAL_ROM(A2GS_ADBMCU_TAG),0)
+	ROM_REGION(0xc00, A2GS_ADBMCU_TAG, 0)
 	ROM_LOAD( "341s0345.bin", 0x000000, 0x000c00, CRC(48cd5779) SHA1(97e421f5247c00a0ca34cd08b6209df573101480) )
 
 	ROM_REGION(0x400, "kmcu", 0)
@@ -4896,7 +4914,7 @@ ROM_START(apple2gsr0p)  // 6/19/1986 Cortland prototype
 ROM_END
 
 ROM_START(apple2gsr0p2)  // 3/10/1986 Cortland prototype, boots as "Apple //'ing - Alpha 2.0"
-	ROM_REGION(0xc00,M5074X_INTERNAL_ROM(A2GS_ADBMCU_TAG),0)
+	ROM_REGION(0xc00, A2GS_ADBMCU_TAG, 0)
 	ROM_LOAD( "341s0345.bin", 0x000000, 0x000c00, CRC(48cd5779) SHA1(97e421f5247c00a0ca34cd08b6209df573101480) )
 
 	ROM_REGION(0x400, "kmcu", 0)

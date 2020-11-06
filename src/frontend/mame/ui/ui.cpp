@@ -164,7 +164,7 @@ static uint32_t const mouse_bitmap[32*32] =
 
 mame_ui_manager::mame_ui_manager(running_machine &machine)
 	: ui_manager(machine)
-	, m_font(nullptr)
+	, m_font()
 	, m_handler_callback(nullptr)
 	, m_handler_callback_type(ui_callback_type::GENERAL)
 	, m_handler_param(0)
@@ -216,7 +216,7 @@ void mame_ui_manager::init()
 			config_save_delegate(&mame_ui_manager::config_save, this));
 
 	// create mouse bitmap
-	uint32_t *dst = &m_mouse_bitmap.pix32(0);
+	uint32_t *dst = &m_mouse_bitmap.pix(0);
 	memcpy(dst,mouse_bitmap,32*32*sizeof(uint32_t));
 	m_mouse_arrow_texture = machine().render().texture_alloc();
 	m_mouse_arrow_texture->set_bitmap(m_mouse_bitmap, m_mouse_bitmap.cliprect(), TEXFORMAT_ARGB32);
@@ -244,11 +244,7 @@ void mame_ui_manager::exit()
 	m_mouse_arrow_texture = nullptr;
 
 	// free the font
-	if (m_font != nullptr)
-	{
-		machine().render().font_free(m_font);
-		m_font = nullptr;
-	}
+	m_font.reset();
 }
 
 
@@ -640,9 +636,9 @@ void mame_ui_manager::update_and_render(render_container &container)
 render_font *mame_ui_manager::get_font()
 {
 	// allocate the font and messagebox string
-	if (m_font == nullptr)
+	if (!m_font)
 		m_font = machine().render().font_alloc(machine().options().ui_font());
-	return m_font;
+	return m_font.get();
 }
 
 
@@ -1008,7 +1004,7 @@ void mame_ui_manager::process_natural_keyboard()
 	while (machine().ui_input().pop_event(&event))
 	{
 		// if this was a UI_EVENT_CHAR event, post it
-		if (event.event_type == ui_event::IME_CHAR)
+		if (event.event_type == ui_event::type::IME_CHAR)
 			machine().ioport().natkeyboard().post_char(event.ch);
 	}
 
@@ -1487,7 +1483,7 @@ std::vector<ui::menu_item>& mame_ui_manager::get_slider_list(void)
 
 std::unique_ptr<slider_state> mame_ui_manager::slider_alloc(int id, const char *title, int32_t minval, int32_t defval, int32_t maxval, int32_t incval, void *arg)
 {
-	auto state = make_unique_clear<slider_state>();
+	auto state = std::make_unique<slider_state>();
 
 	state->minval = minval;
 	state->defval = defval;
@@ -1524,7 +1520,7 @@ std::vector<ui::menu_item> mame_ui_manager::slider_init(running_machine &machine
 		int32_t maxval = 2000;
 		int32_t defval = 1000;
 
-		std::string str = string_format(_("%1$s Volume"), info.stream->input_name(info.inputnum));
+		std::string str = string_format(_("%1$s Volume"), info.stream->input(info.inputnum).name());
 		m_sliders.push_back(slider_alloc(SLIDER_ID_MIXERVOL + item, str.c_str(), 0, defval, maxval, 20, (void *)(uintptr_t)item));
 	}
 
@@ -1762,13 +1758,13 @@ int32_t mame_ui_manager::slider_mixervol(running_machine &machine, void *arg, in
 		return 0;
 	if (newval != SLIDER_NOCHANGE)
 	{
-		int32_t curval = floor(info.stream->user_gain(info.inputnum) * 1000.0f + 0.5f);
+		int32_t curval = floor(info.stream->input(info.inputnum).user_gain() * 1000.0f + 0.5f);
 		if (newval > curval && (newval - curval) <= 4) newval += 4; // round up on increment
-		info.stream->set_user_gain(info.inputnum, (float)newval * 0.001f);
+		info.stream->input(info.inputnum).set_user_gain((float)newval * 0.001f);
 	}
 	if (str)
-		*str = string_format("%4.2f", info.stream->user_gain(info.inputnum));
-	return floorf(info.stream->user_gain(info.inputnum) * 1000.0f + 0.5f);
+		*str = string_format("%4.2f", info.stream->input(info.inputnum).user_gain());
+	return floorf(info.stream->input(info.inputnum).user_gain() * 1000.0f + 0.5f);
 }
 
 

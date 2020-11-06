@@ -564,37 +564,32 @@ void bingor_state::video_start()
 
 uint32_t bingor_state::screen_update_bingor(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect)
 {
-	int x,y,count;
-
 	bitmap.fill(m_palette->black_pen(), cliprect);
 
-	count = (0x2000 / 2);
-
-	for(y = 0; y < 256; y++)
+	int count = (0x2000 / 2);
+	for(int y = 0; y < 256; y++)
 	{
-		for(x = 0; x < 286; x += 4)
+		for(int x = 0; x < 286; x += 4)
 		{
-			uint32_t color;
-
-			color = (m_blit_ram[count] & 0xf000) >> 12;
+			uint32_t color = (m_blit_ram[count] & 0xf000) >> 12;
 
 			if(cliprect.contains(x + 3, y))
-				bitmap.pix32(y, x + 3) = m_palette->pen(color);
+				bitmap.pix(y, x + 3) = m_palette->pen(color);
 
 			color = (m_blit_ram[count] & 0x0f00) >> 8;
 
 			if(cliprect.contains(x + 2, y))
-				bitmap.pix32(y, x + 2) = m_palette->pen(color);
+				bitmap.pix(y, x + 2) = m_palette->pen(color);
 
 			color = (m_blit_ram[count] & 0x00f0) >> 4;
 
 			if(cliprect.contains(x + 1, y))
-				bitmap.pix32(y, x + 1) = m_palette->pen(color);
+				bitmap.pix(y, x + 1) = m_palette->pen(color);
 
 			color = (m_blit_ram[count] & 0x000f) >> 0;
 
 			if(cliprect.contains(x + 0, y))
-				bitmap.pix32(y, x + 0) = m_palette->pen(color);
+				bitmap.pix(y, x + 0) = m_palette->pen(color);
 
 			count++;
 		}
@@ -912,8 +907,8 @@ ROM_START( bingor6 )    // Strings: 1988-1992 AWR Hard & Soft Austria.
 	ROM_LOAD16_BYTE( "turbo_l.bin", 0x000000, 0x10000, CRC(86b10566) SHA1(5f74b250ced3574feffdc40b6ed013ec5a0c2c97) )
 	ROM_LOAD16_BYTE( "turbo_h.bin", 0x000001, 0x10000, CRC(7e18f9d7) SHA1(519b65d6812a3762e3215f4918c834d5a444b28a) )
 
-	ROM_REGION( 0x20000, "pic", 0 ) // protection?
-	ROM_LOAD( "pic16c54rc.bin", 0x000, 0x400, NO_DUMP )
+	ROM_REGION( 0x1fff, "pic", 0 ) // decapped, protection?
+	ROM_LOAD( "pic16c54rc.bin", 0x0000, 0x1fff, CRC(857e8f5a) SHA1(59666b76ec87f3a736f6c7c8f43e63913f53fbfd) )
 
 	ROM_REGION( 0x20000, "eeprom", 0 )  // eeprom
 	ROM_LOAD( "bingor6_24c04a.bin", 0x000000, 0x200, CRC(9d271c5f) SHA1(8ac5c4848fb8d9a156ba760324022839fefcbb72) )
