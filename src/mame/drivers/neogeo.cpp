@@ -11627,10 +11627,10 @@ ROM_START( mslug5c )  // 268
 	// mslug5 (neoragex, no watermark, 2 extra nops: 0x93e, 0x946)
 	//ROM_LOAD16_WORD_SWAP( "268d-p1.rom", 0x000000, 0x100000, CRC(24ae2e4d) SHA1(65eb727731de208e64e155df743d8c1a581980f2) ) /* TC538200    8Mbit  27c800 */
 	//ROM_LOAD16_WORD_SWAP( "268d-p2.rom", 0x100000, 0x400000, CRC(768ee64a) SHA1(76a65a69aee749758a2101aabdd44f3404838b54) ) /* TC5332205  32Mbit  27c322 */
-	
+
 	// decrypted sfix (kawaks)
 	NEO_SFIX_128K( "268-s1d.s1", CRC(64952683) SHA1(88ec728c2fe18a11fdd218bed5d73bb3affe2ec1) ) /* TC531000  1Mbit  27c1000 */
-	
+
 	// decrypted z80 code (m1crypt), split
 	//NEO_BIOS_AUDIO_512K( "268-m1d.m1", CRC(39f3cbba) SHA1(56f9ba6a1ecfc28733b7b88c9796415cba0461f2) ) /* TC534000  4Mbit  27c040 */
 	NEO_BIOS_AUDIO_256K( "268-m1d.m1", CRC(c946ea6d) SHA1(78f6511b4da5cfec5a6ffb5eb38632a5d6e91fab) ) /* 2Mbit  27c020 */
@@ -11666,10 +11666,10 @@ ROM_START( matrimc )  // 266
 	ROM_REGION( 0x500000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
 	ROM_LOAD16_WORD_SWAP( "266-p1d.p1", 0x000000, 0x100000, CRC(5d4c2dc7) SHA1(8d723b0d28ec344eef26009b361a2b97d300dd51) ) /* TC538200    8Mbit  27c800 */
 	ROM_LOAD16_WORD_SWAP( "266-p2d.p2", 0x100000, 0x400000, CRC(b0132cef) SHA1(3780db1b8947a8371a46b67ca1a14a12bf97986b) ) /* TC5332205  32Mbit  27c322 */
-	
+
 	// decrypted sfix (s1grab) page 3
 	NEO_SFIX_128K( "266-s1d.s1", CRC(aff2a3be) SHA1(57aba048573eacf8fbdd228f04a7f30da64cebe5) ) /* TC531000  1Mbit  27c1000 */
-	
+
 	// decrypted z80 code (m1crypt)
 	NEO_BIOS_AUDIO_128K( "266-m1d.m1", CRC(d2f3742d) SHA1(dd42f8a301f07e079fbc2bfd23e788baa03ca72d) ) /* TC531001  1Mbit  27c010 */
 
@@ -11776,25 +11776,25 @@ ROM_START( svcc )  // 269
 	// neoragex (protection fixes)
 	//ROM_REGION( 0x600000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
 	//ROM_LOAD16_WORD_SWAP( "269-p1d.p1", 0x000000, 0x600000, CRC(3c98343b) SHA1(5dd52e84bb11313d372b25250d5a3644746e3429) ) /* ?? */
-	
+
 	// neoragex (protection fixes, split)
 	//ROM_REGION( 0x580000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
 	//ROM_LOAD16_WORD_SWAP( "269-p1d.p1", 0x000000, 0x100000, CRC(6fe0d8eb) SHA1(741877c096c62db7af9955620f9321f5a14e6f02) ) /*  8Mbit  27c800 */
 	//ROM_LOAD16_WORD_SWAP( "269-p2d.p2", 0x100000, 0x400000, CRC(447e100d) SHA1(06c80e06ad483c774bc0e9172b399bcb26ae656a) ) /* 32Mbit  27c322 */
 	//ROM_LOAD16_WORD_SWAP( "269-p3d.p3", 0x500000,  0x80000, CRC(4239220a) SHA1(f2e33ddaa89009cf0fea6788888fcc05d543eda3) ) /*  4Mbit  27c4096 */
-	
+
 	// neoragex (protection fixes, split, bouncy mai patch)
 	ROM_REGION( 0x580000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
 	ROM_LOAD16_WORD_SWAP( "269-p1d.p1", 0x000000, 0x100000, CRC(ea6a729d) SHA1(086aac650ba56c83cd1027e0a0c85fc32ccd429f) ) /*  8Mbit  27c800 */
 	ROM_LOAD16_WORD_SWAP( "269-p2d.p2", 0x100000, 0x400000, CRC(447e100d) SHA1(06c80e06ad483c774bc0e9172b399bcb26ae656a) ) /* 32Mbit  27c322 */
 	ROM_LOAD16_WORD_SWAP( "269-p3d.p3", 0x500000,  0x80000, CRC(4239220a) SHA1(f2e33ddaa89009cf0fea6788888fcc05d543eda3) ) /*  4Mbit  27c4096 */
-	
+
 	// decrypted sfix (kawaks)  seems to use other (all?) pages for flickering power bar effect etc.
 	NEO_SFIX_128K( "269-s1d.s1", CRC(ba3bcaa3) SHA1(d10875127c1399941e7de6710000413951aa9bb4) ) /* TC531000  1Mbit  27c1000 */
 	//NEO_SFIX_128K( "269-s1d.s1", CRC(87635a10) SHA1(666145873f5f3d23968d7ccd5a748a7a248b549b) ) /* TC531000  1Mbit  27c1000 */
 	//NEO_SFIX_128K( "269-s1d.s1", CRC(b3c072d0) SHA1(f4475182f340720a58156c56a8edc280ccbbe6d6) ) /* TC531000  1Mbit  27c1000 */
 	//NEO_SFIX_128K( "269-s1d.s1", CRC(3334ac31) SHA1(ea7c676d5913ca1d524bd3df3d98f216564cfbb5) ) /* TC531000  1Mbit  27c1000 */
-	
+
 	// decrypted z80 code (m1crypt), split 1/4
 	//NEO_BIOS_AUDIO_512K( "269-m1d.m1", CRC(7b7bf462) SHA1(7466a6962de5242f71b9c52d7bd21a9832115e11) ) /* TC534000  4Mbit  27c040 */
 	NEO_BIOS_AUDIO_128K( "269-m1d.m1", CRC(447b3123) SHA1(a09adc2c0ee2ee0f01287ceb97474a1a58093bd2) ) /* 1Mbit  27c010 */
@@ -11832,10 +11832,10 @@ ROM_START( samsho5c )  // 270
 	ROM_REGION( 0x800000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
 	ROM_LOAD16_WORD_SWAP( "270-p1d.p1", 0x000000, 0x400000, CRC(4f8f86bd) SHA1(765c1e576bf8ac6d8cc59bd688973799c0187e09) )
 	ROM_LOAD16_WORD_SWAP( "270-p2d.p2", 0x400000, 0x400000, CRC(91979dee) SHA1(0e03a2a2e3aa493bd839f3754260ddd3935ba25b) )
-	
+
 	// decrypted sfix (kawaks)
 	NEO_SFIX_128K( "270-s1d.s1", CRC(2ad6048b) SHA1(173c8561f0633e0d6e4a9750e632f2e46766e674) ) /* TC531000  1Mbit  27c1000 */
-	
+
 	// decrypted z80 code (m1crypt), split 1/2
 	//NEO_BIOS_AUDIO_512K( "270-m1d.m1", CRC(5218a10a) SHA1(da4968e55d4a56249d85d6742a6acffcff4ad65d) ) /* TC534000  4Mbit  27c040 */
 	NEO_BIOS_AUDIO_256K( "270-m1d.m1", CRC(2fbed8b2) SHA1(0823e9f61005ad5a79818f41277094edaeb7c330) ) /* 2Mbit  27c020 */
@@ -11864,25 +11864,25 @@ ROM_START( garouc )
 	ROM_REGION( 0x500000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
 	//ROM_LOAD16_WORD_SWAP( "proto_253-p1.p1", 0x000000, 0x100000, CRC(c72f0c16) SHA1(1ff6bb651682f93bef9ff02622c3cf63fe594986) )  // garoup
 	//ROM_LOAD16_WORD_SWAP( "proto_253-p2.p2", 0x100000, 0x400000, CRC(bf8de565) SHA1(0e24574168cd38138bed0aa4dca49849f6901ca2) )  // garoup
-	
+
 	//ROM_LOAD16_WORD_SWAP( "253d-p1.rom", 0x000000, 0x800000, CRC(e7c40dfa) SHA1(0d56298eb164e3e09c3b6048e2a7319239aea808) )  // neoragex - crash
-	
+
 	// Garou - Mark of the Wolves (Approach to Arcade v5.0a)
 	//ROM_LOAD16_WORD_SWAP( "253pamu.p1", 0x000000, 0x100000, CRC(d5c54453) SHA1(a7fe7ab68161583e10397b1b1b30299be93ae90c) )    // garoupamu
 	//ROM_LOAD16_WORD_SWAP( "proto_253.p2", 0x100000, 0x400000, CRC(bf8de565) SHA1(0e24574168cd38138bed0aa4dca49849f6901ca2) )  // garoup
-	
+
 	// Garou - Mark of the Wolves (Fixed Bug Patch V1 winning message, sprites and some bugs)
 	//ROM_LOAD16_WORD_SWAP( "253pf.p1", 0x000000, 0x100000, CRC(124bdbf7) SHA1(81f4bc87aa6b7d34ecf4bedf0baa8aeb5b2e179a) )  // garoupf
 	//ROM_LOAD16_WORD_SWAP( "253pf.p2", 0x100000, 0x400000, CRC(19eb641b) SHA1(114be5c20142223cf6bb0938aa3b07b61e3243e1) )  // garoupf
-	
+
 	// Garou - Mark of the Wolves (Fixed Bug Patch V2 winning message, sprites and some bugs)
 	//ROM_LOAD16_WORD_SWAP( "253pfu.p1", 0x000000, 0x100000, CRC(3f41581e) SHA1(f62c64529a79c8867b789bc655182d702824464c) )  // garoupfu
 	//ROM_LOAD16_WORD_SWAP( "253pfu.p2", 0x100000, 0x400000, CRC(cf4b3903) SHA1(cfc00dc3eb0f6d566c3f5dd8ec0d6b4440e17aae) )  // garoupfu
-	
+
 	// Garou - Mark of the Wolves (Rom Fix - Fix Plus)
 	ROM_LOAD16_WORD_SWAP( "253pfp.p1", 0x000000, 0x100000, CRC(0b23e2cb) SHA1(B61730457EFEBFFC4A1F5A31FEFBAF2E4CC8F49E) )     // garoupfp
 	ROM_LOAD16_WORD_SWAP( "proto_253.p2", 0x100000, 0x400000, CRC(bf8de565) SHA1(0e24574168cd38138bed0aa4dca49849f6901ca2) )  // garoup
-	
+
 	// none fix the visible proto differences :(
 
 	//NEO_SFIX_128K( "253-s1d.s1", CRC(2c115b98) SHA1(955e9151adb4a44f0ef3a10a9ac6204a08f99a3d) )  // kawaks
@@ -11915,6 +11915,38 @@ ROM_START( garouc )
 	ROM_LOAD16_BYTE( "proto_253-c6.c6", 0x2000001, 0x800000, CRC(0a6fab38) SHA1(eaee6f2f18af91f7959d84d4b991b3fc182d07c4) )
 	ROM_LOAD16_BYTE( "proto_253-c7.c7", 0x3000000, 0x800000, CRC(d68e806f) SHA1(92bfd9839115bd590972ae4ecc45ad35dce22387) )
 	ROM_LOAD16_BYTE( "proto_253-c8.c8", 0x3000001, 0x800000, CRC(f778fe99) SHA1(c963f6ba90a36d02991728b44ffcf174ca18268a) )
+ROM_END
+
+
+ROM_START( kof2002c )  // 265
+	// unscrambled (mame dump)
+	ROM_REGION( 0x500000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
+	ROM_LOAD16_WORD_SWAP( "265-p1d.p1", 0x000000, 0x100000, CRC(9ede7323) SHA1(ad9d45498777fda9fa58e75781f48e09aee705a6) ) /* TC538200    8Mbit  27c800 */
+	ROM_LOAD16_WORD_SWAP( "265-p2d.p2", 0x100000, 0x400000, CRC(432fdf53) SHA1(d7e542cd84d948162c60768e40ee4ed33d8e7913) ) /* TC5332205  32Mbit  27c322 */
+
+	// decrypted sfix (s1grab==kawaks, single page)
+	NEO_SFIX_128K( "265-s1d.s1", CRC(e0eaaba3) SHA1(831b642da9fe7617498cdb1c86475b3b3d3043bc) ) /* TC531000  1Mbit  27c1000 */
+
+	// decrypted z80 code (m1crypt)
+	NEO_BIOS_AUDIO_128K( "265-m1d.m1", CRC(1c661a4b) SHA1(4e5aa862a0a182a806d538996ddc68d9f2dffaf7) ) /* TC531001  1Mbit  27c010 */
+
+	// decrypted sound samples (neoconv v2 + split into 4x 32Mbit)
+	ROM_REGION( 0x1000000, "cslot1:ymsnd", 0 )
+	ROM_LOAD( "265-v1d.v1", 0x000000, 0x400000, CRC(13d98607) SHA1(0f1a374247992d301bc26c0bab200631a13a9f4a) ) /* TC5332204  32Mbit  28f320 */
+	ROM_LOAD( "265-v2d.v2", 0x400000, 0x400000, CRC(9cf74677) SHA1(073e7cb00127690fdec05c19f00347ec449f15ac) ) /* TC5332204  32Mbit  28f320 */
+	ROM_LOAD( "265-v3d.v3", 0x800000, 0x400000, CRC(8e9448b5) SHA1(c22420649c7c68a172290548cab846345c861cb0) ) /* TC5332204  32Mbit  28f320 */
+	ROM_LOAD( "265-v4d.v4", 0xc00000, 0x400000, CRC(067271b5) SHA1(36e07da78aaf634824c98023053bef802be4e218) ) /* TC5332204  32Mbit  28f320 */
+
+	// decrypted gfx (kawaks)
+	ROM_REGION( 0x4000000, "cslot1:sprites", 0 )
+	ROM_LOAD16_BYTE( "265-c1d.c1", 0x0000000, 0x800000, CRC(7efa6ef7) SHA1(71345a4202e7cc9239538fb978638141416c8893) ) /* TC5364205  64Mbit  28f640 */
+	ROM_LOAD16_BYTE( "265-c2d.c2", 0x0000001, 0x800000, CRC(aa82948b) SHA1(b2a40797f68bdeb80bc54dccc5495be68934bf0e) ) /* TC5364205  64Mbit  28f640 */
+	ROM_LOAD16_BYTE( "265-c3d.c3", 0x1000000, 0x800000, CRC(959fad0b) SHA1(63ab83ddc5f688dc8165a7ff8d262df3fcd942a2) ) /* TC5364205  64Mbit  28f640 */
+	ROM_LOAD16_BYTE( "265-c4d.c4", 0x1000001, 0x800000, CRC(efe6a468) SHA1(2a414285e48aa948b5b0d4a9333bab083b5fb853) ) /* TC5364205  64Mbit  28f640 */
+	ROM_LOAD16_BYTE( "265-c5d.c5", 0x2000000, 0x800000, CRC(74bba7c6) SHA1(e01adc7a4633bc0951b9b4f09abc07d728e9a2d9) ) /* TC5364205  64Mbit  28f640 */
+	ROM_LOAD16_BYTE( "265-c6d.c6", 0x2000001, 0x800000, CRC(e20d2216) SHA1(5d28eea7b581e780b78f391a8179f1678ee0d9a5) ) /* TC5364205  64Mbit  28f640 */
+	ROM_LOAD16_BYTE( "265-c7d.c7", 0x3000000, 0x800000, CRC(8a5b561c) SHA1(a19697d4c2cc8edebc669c95ae1db4c8c2a70b2c) ) /* TC5364205  64Mbit  28f640 */
+	ROM_LOAD16_BYTE( "265-c8d.c8", 0x3000001, 0x800000, CRC(bef667a3) SHA1(d5e8bc185dcf63343d129c31d2ddab9f723f1a12) ) /* TC5364205  64Mbit  28f640 */
 ROM_END
 
 
@@ -12642,6 +12674,7 @@ GAME( 2019, rotdc,      neogeo,   neobase,   neogeo,    mvs_led_state, empty_ini
 GAME( 2019, svcc,       neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Playmore / Capcom", "SNK vs. Capcom - SVC Chaos (NGM-2690 ~ NGH-2690) (PROGBK1/CHA512Y Conversion)", MACHINE_SUPPORTS_SAVE )
 GAME( 2019, samsho5c,   neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Yuki Enterprise / SNK Playmore", "Samurai Shodown V / Samurai Spirits Zero (NGM-2700) (PROGBK1/CHA512Y Conversion)", MACHINE_SUPPORTS_SAVE )
 GAME( 2020, garouc,     neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "SNK", "Garou - Mark of the Wolves (NGM-2530) (PROGBK1/CHA512Y Conversion)" , MACHINE_SUPPORTS_SAVE )
+GAME( 2020, kof2002c,   neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "SNK", "The King of Fighters 2000 (NGM-2570 ~ NGH-2570) (PROGBK1/CHA512Y Conversion)" , MACHINE_SUPPORTS_SAVE )
 
 
 // Last Hope Pink Bullets (c)2008 - MVS/AES
