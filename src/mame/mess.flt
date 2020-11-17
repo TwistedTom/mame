@@ -545,6 +545,7 @@ mc8020.cpp
 mc8030.cpp
 mcb216.cpp
 mccpm.cpp
+md_112.cpp
 mdisk.cpp
 mdt60.cpp
 megadriv.cpp

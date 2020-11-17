@@ -22209,6 +22209,9 @@ spyhunt2a                       // (c) 1987
 trisport                        // (c) 1989
 xenophob                        // (c) 1987
 
+@source:md_112.cpp
+md_112                          // bootleg
+
 @source:mdisk.cpp
 mdisk                           // (c) 198? mupid Computer Ges.m.b.H.
 fl100                           // (c) 198? Grundig
