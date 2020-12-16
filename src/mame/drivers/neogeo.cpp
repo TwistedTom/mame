@@ -11860,64 +11860,6 @@ ROM_START( samsho5c )  // 270
 ROM_END
 
 
-ROM_START( garouc )
-	ROM_REGION( 0x500000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
-	//ROM_LOAD16_WORD_SWAP( "proto_253-p1.p1", 0x000000, 0x100000, CRC(c72f0c16) SHA1(1ff6bb651682f93bef9ff02622c3cf63fe594986) )  // garoup
-	//ROM_LOAD16_WORD_SWAP( "proto_253-p2.p2", 0x100000, 0x400000, CRC(bf8de565) SHA1(0e24574168cd38138bed0aa4dca49849f6901ca2) )  // garoup
-
-	//ROM_LOAD16_WORD_SWAP( "253d-p1.rom", 0x000000, 0x800000, CRC(e7c40dfa) SHA1(0d56298eb164e3e09c3b6048e2a7319239aea808) )  // neoragex - crash
-
-	// Garou - Mark of the Wolves (Approach to Arcade v5.0a)
-	//ROM_LOAD16_WORD_SWAP( "253pamu.p1", 0x000000, 0x100000, CRC(d5c54453) SHA1(a7fe7ab68161583e10397b1b1b30299be93ae90c) )    // garoupamu
-	//ROM_LOAD16_WORD_SWAP( "proto_253.p2", 0x100000, 0x400000, CRC(bf8de565) SHA1(0e24574168cd38138bed0aa4dca49849f6901ca2) )  // garoup
-
-	// Garou - Mark of the Wolves (Fixed Bug Patch V1 winning message, sprites and some bugs)
-	//ROM_LOAD16_WORD_SWAP( "253pf.p1", 0x000000, 0x100000, CRC(124bdbf7) SHA1(81f4bc87aa6b7d34ecf4bedf0baa8aeb5b2e179a) )  // garoupf
-	//ROM_LOAD16_WORD_SWAP( "253pf.p2", 0x100000, 0x400000, CRC(19eb641b) SHA1(114be5c20142223cf6bb0938aa3b07b61e3243e1) )  // garoupf
-
-	// Garou - Mark of the Wolves (Fixed Bug Patch V2 winning message, sprites and some bugs)
-	//ROM_LOAD16_WORD_SWAP( "253pfu.p1", 0x000000, 0x100000, CRC(3f41581e) SHA1(f62c64529a79c8867b789bc655182d702824464c) )  // garoupfu
-	//ROM_LOAD16_WORD_SWAP( "253pfu.p2", 0x100000, 0x400000, CRC(cf4b3903) SHA1(cfc00dc3eb0f6d566c3f5dd8ec0d6b4440e17aae) )  // garoupfu
-
-	// Garou - Mark of the Wolves (Rom Fix - Fix Plus)
-	ROM_LOAD16_WORD_SWAP( "253pfp.p1", 0x000000, 0x100000, CRC(0b23e2cb) SHA1(B61730457EFEBFFC4A1F5A31FEFBAF2E4CC8F49E) )     // garoupfp
-	ROM_LOAD16_WORD_SWAP( "proto_253.p2", 0x100000, 0x400000, CRC(bf8de565) SHA1(0e24574168cd38138bed0aa4dca49849f6901ca2) )  // garoup
-
-	// none fix the visible proto differences :(
-
-	//NEO_SFIX_128K( "253-s1d.s1", CRC(2c115b98) SHA1(955e9151adb4a44f0ef3a10a9ac6204a08f99a3d) )  // kawaks
-	NEO_SFIX_128K( "proto_253-s1.s1", CRC(779989de) SHA1(8bd550857b60f8a907f6d39a4225ceffdd330307) )  // garoup
-
-	NEO_BIOS_AUDIO_256K( "253-m1.m1", CRC(36a806be) SHA1(90fb44dc0c3fb57946a0f35716056abb84a0f191) )
-
-	ROM_REGION( 0x1000000, "cslot1:ymsnd", 0 )
-	ROM_LOAD( "253-v1.v1", 0x000000, 0x400000, CRC(263e388c) SHA1(11f05feee170370c4bfc5053af79246a6e3de5dc) )
-	ROM_LOAD( "253-v2.v2", 0x400000, 0x400000, CRC(2c6bc7be) SHA1(c9c61054ce1a47bf1bf77a31117726b499df24a4) )
-	ROM_LOAD( "253-v3.v3", 0x800000, 0x400000, CRC(0425b27d) SHA1(986863c98fc3445487242dcf2ea75b075e7f33ee) )
-	ROM_LOAD( "253-v4.v4", 0xc00000, 0x400000, CRC(a54be8a9) SHA1(d7123e79b43e8adfaa5ecadbfcbeb6be890ec311) )
-
-	ROM_REGION( 0x4000000, "cslot1:sprites", 0 )
-	// decrypted
-	//ROM_LOAD16_BYTE( "253-c1d.c1", 0x0000000, 0x800000, CRC(497be3f2) SHA1(3b4e524ff185db326cdefe115851ce282272fb58) )
-	//ROM_LOAD16_BYTE( "253-c2d.c2", 0x0000001, 0x800000, CRC(6a9e95ca) SHA1(d9730d2db58edfa660edab5bf0f7fc3ed058bccf) )
-	//ROM_LOAD16_BYTE( "253-c3d.c3", 0x1000000, 0x800000, CRC(39373d2f) SHA1(8c0307150bc31001605efbe0e38ae74e1e466d5d) )
-	//ROM_LOAD16_BYTE( "253-c4d.c4", 0x1000001, 0x800000, CRC(4de23f6c) SHA1(b40bce471fb1815037e4c3705f8238e659a13a82) )
-	//ROM_LOAD16_BYTE( "253-c5d.c5", 0x2000000, 0x800000, CRC(16634ba5) SHA1(e51649efd039270139aa7292a28925e547b2be59) )
-	//ROM_LOAD16_BYTE( "253-c6d.c6", 0x2000001, 0x800000, CRC(95671ffd) SHA1(803ebeb74fefe88b9aba53cbca103c0e9145abcb) )
-	//ROM_LOAD16_BYTE( "253-c7d.c7", 0x3000000, 0x800000, CRC(e36ce77f) SHA1(71931559293182749ded13c52d8bac988a3a062f) )
-	//ROM_LOAD16_BYTE( "253-c8d.c8", 0x3000001, 0x800000, CRC(ddbd1096) SHA1(634cfb61398b3f1b983f7f3966b53f4cc3a78671) )
-	// garoup
-	ROM_LOAD16_BYTE( "proto_253-c1.c1", 0x0000000, 0x800000, CRC(5bb5d137) SHA1(d648febd8e6a0bdd9bdbb6ce1f1f8b08567ec05a) )
-	ROM_LOAD16_BYTE( "proto_253-c2.c2", 0x0000001, 0x800000, CRC(5c8d2960) SHA1(f7503502be0332adf408ee0ea5ee5161c8939fd8) )
-	ROM_LOAD16_BYTE( "proto_253-c3.c3", 0x1000000, 0x800000, CRC(234d16fc) SHA1(7b9221f7ecc438150c8a10be72390329854ed21b) )
-	ROM_LOAD16_BYTE( "proto_253-c4.c4", 0x1000001, 0x800000, CRC(b9b5b993) SHA1(6059793eaf6e58c172235fe64aa9d25a40c38ed6) )
-	ROM_LOAD16_BYTE( "proto_253-c5.c5", 0x2000000, 0x800000, CRC(722615d2) SHA1(798832c535869f0e247c3db0d8253779b103e213) )
-	ROM_LOAD16_BYTE( "proto_253-c6.c6", 0x2000001, 0x800000, CRC(0a6fab38) SHA1(eaee6f2f18af91f7959d84d4b991b3fc182d07c4) )
-	ROM_LOAD16_BYTE( "proto_253-c7.c7", 0x3000000, 0x800000, CRC(d68e806f) SHA1(92bfd9839115bd590972ae4ecc45ad35dce22387) )
-	ROM_LOAD16_BYTE( "proto_253-c8.c8", 0x3000001, 0x800000, CRC(f778fe99) SHA1(c963f6ba90a36d02991728b44ffcf174ca18268a) )
-ROM_END
-
-
 ROM_START( kof2002c )  // 265
 	// unscrambled (mame dump)
 	ROM_REGION( 0x500000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
@@ -12706,7 +12648,6 @@ GAME( 2019, sengoku3c,  neogeo,   neobase,   neogeo,    mvs_led_state, empty_ini
 GAME( 2019, rotdc,      neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Evoga / Playmore", "Rage of the Dragons (NGH-2640?) (PROGBK1/CHA512Y Conversion)", MACHINE_SUPPORTS_SAVE )
 GAME( 2019, svcc,       neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Playmore / Capcom", "SNK vs. Capcom - SVC Chaos (NGM-2690 ~ NGH-2690) (PROGBK1/CHA512Y Conversion)", MACHINE_SUPPORTS_SAVE )
 GAME( 2019, samsho5c,   neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Yuki Enterprise / SNK Playmore", "Samurai Shodown V / Samurai Spirits Zero (NGM-2700) (PROGBK1/CHA512Y Conversion)", MACHINE_SUPPORTS_SAVE )
-GAME( 2020, garouc,     neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "SNK", "Garou - Mark of the Wolves (NGM-2530) (PROGBK1/CHA512Y Conversion)" , MACHINE_SUPPORTS_SAVE )
 GAME( 2020, kof2002c,   neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Eolith / Playmore", "The King of Fighters 2002 (NGM-2650 ~ NGH-2650) (PROGBK1/CHA512Y Conversion)" , MACHINE_SUPPORTS_SAVE )
 GAME( 2020, samsh5spc,  neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Yuki Enterprise / SNK Playmore", "Samurai Shodown V Special / Samurai Spirits Zero Special (NGM-2720) (PROGBK1/CHA512Y Conversion)", MACHINE_SUPPORTS_SAVE )
 
