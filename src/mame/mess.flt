@@ -36,6 +36,7 @@ aid80f.cpp
 aim65.cpp
 aim65_40.cpp
 akaiax80.cpp
+akaivx600.cpp
 alcat7100.cpp
 alesis.cpp
 alesis_qs.cpp
@@ -120,6 +121,7 @@ binbug.cpp
 bitel.cpp
 bitgraph.cpp
 bk.cpp
+blit.cpp
 blw700i.cpp
 bmjr.cpp
 bml3.cpp
@@ -221,6 +223,7 @@ debut.cpp
 decstation.cpp
 dectalk.cpp
 decwritr.cpp
+design.cpp
 dfs500.cpp
 dg680.cpp
 dgn_beta.cpp
@@ -247,6 +250,7 @@ dvk_ksm.cpp
 e100.cpp
 e9161.cpp
 eacc.cpp
+easy_karaoke.cpp
 ec184x.cpp
 ec65.cpp
 ec7915.cpp
@@ -343,6 +347,7 @@ generalplus_gpl16250_nand.cpp
 generalplus_gpl16250_rom.cpp
 generalplus_gpl16250_romram.cpp
 generalplus_gpl16250_spi.cpp
+generalplus_gpl16250_spi_direct.cpp
 generalplus_gpl32612.cpp
 geneve.cpp
 geniusiq.cpp
@@ -931,6 +936,7 @@ spg2xx_pdc.cpp
 spg2xx_playvision.cpp
 spg2xx_senario.cpp
 spg2xx_senario_poker.cpp
+spg2xx_senca.cpp
 spg2xx_shredmjr.cpp
 spg2xx_skannerztv.cpp
 spg2xx_smarttv.cpp
@@ -939,10 +945,10 @@ spg2xx_tvgogo.cpp
 spg2xx_vii.cpp
 spg2xx_wiwi.cpp
 spg2xx_zone.cpp
-spg2xx_zone_32bit.cpp
 squale.cpp
 ssem.cpp
 st17xx.cpp
+st22xx_bbl338.cpp
 storio.cpp
 studio2.cpp
 sun1.cpp
@@ -1139,6 +1145,7 @@ ymmu100.cpp
 ymmu5.cpp
 ymmu50.cpp
 ymmu80.cpp
+ympsr340.cpp
 ymtx81z.cpp
 ymvl70.cpp
 z100.cpp
