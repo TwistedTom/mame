@@ -78,6 +78,7 @@ using util::BIT;
 #include "cpu/lc8670/lc8670dsm.h"
 #include "cpu/lh5801/5801dasm.h"
 #include "cpu/lr35902/lr35902d.h"
+#include "cpu/m32c/m32cdasm.h"
 #include "cpu/m37710/m7700ds.h"
 #include "cpu/m6502/m4510d.h"
 #include "cpu/m6502/m6502d.h"
@@ -119,7 +120,6 @@ using util::BIT;
 #include "cpu/pace/pacedasm.h"
 #include "cpu/patinhofeio/patinho_feio_dasm.h"
 #include "cpu/pdp1/pdp1dasm.h"
-#include "cpu/pdp1/tx0dasm.h"
 #include "cpu/pdp8/pdp8dasm.h"
 #include "cpu/pic16/pic16d.h"
 #include "cpu/pic1670/pic1670d.h"
@@ -166,6 +166,7 @@ using util::BIT;
 #include "cpu/tms7000/7000dasm.h"
 #include "cpu/tms9900/9900dasm.h"
 #include "cpu/tms9900/tms99com.h"
+#include "cpu/tx0/tx0dasm.h"
 #include "cpu/ucom4/ucom4d.h"
 #include "cpu/unsp/unspdasm.h"
 #include "cpu/upd177x/upd177xd.h"
@@ -451,6 +452,7 @@ static const dasm_table_entry dasm_table[] =
 	{ "lh5801",          le,  0, []() -> util::disasm_interface * { return new lh5801_disassembler; } },
 	{ "lr35902",         le,  0, []() -> util::disasm_interface * { return new lr35902_disassembler; } },
 	{ "m146805",         be,  0, []() -> util::disasm_interface * { return new m146805_disassembler; } },
+	{ "m32c",            le,  0, []() -> util::disasm_interface * { return new m32c_disassembler; } },
 	{ "m37710",          le,  0, []() -> util::disasm_interface * { return new m7700_disassembler(&m7700_unidasm); } },
 	{ "m4510",           le,  0, []() -> util::disasm_interface * { return new m4510_disassembler; } },
 	{ "m58846",          le, -1, []() -> util::disasm_interface * { return new melps4_disassembler; } },
@@ -1205,7 +1207,7 @@ int main(int argc, char *argv[])
 #else
 		if (!std::freopen(nullptr, "rb", stdin)) {
 #endif
-			std::fprintf(stderr, "Error reopening stin in binary mode\n");
+			std::fprintf(stderr, "Error reopening stdin in binary mode\n");
 			return 1;
 		}
 		std::size_t allocated = 0x1000;
