@@ -674,6 +674,7 @@ public:
 	void jockeygp(machine_config &config);
 	void vliner(machine_config &config);
 	void sbp(machine_config &config);
+	void garouc(machine_config &config);
 
 protected:
 	virtual void machine_start() override;
@@ -1549,6 +1550,13 @@ void neogeo_base_state::set_slot_idx(int slot)
 			space.install_read_port(0x300000, 0x300001, 0x01ff7e, "DSW");
 			space.install_read_port(0x280000, 0x280001, "IN5");
 			space.install_read_port(0x2c0000, 0x2c0001, "IN6");
+			break;
+		case NEOGEO_GAROUC:
+			// addon_r here gives SMA random number
+			space.install_write_handler(0x2fffc0, 0x2fffc1, write16smo_delegate(*this, FUNC(neogeo_base_state::write_bankprot)));
+			space.install_read_handler(0x2fe446, 0x2fe447, read16m_delegate(*m_slots[m_curr_slot], FUNC(neogeo_cart_slot_device::protection_r)));
+			space.install_read_handler(0x2fffcc, 0x2fffcd, read16sm_delegate(*m_slots[m_curr_slot], FUNC(neogeo_cart_slot_device::addon_r)));
+			space.install_read_handler(0x2ffff0, 0x2ffff1, read16sm_delegate(*m_slots[m_curr_slot], FUNC(neogeo_cart_slot_device::addon_r)));
 			break;
 		}
 	}
@@ -11924,6 +11932,38 @@ ROM_START( samsh5spc )  // 272
 ROM_END
 
 
+// S not working, no way to do bankswitching on convert?
+ROM_START( garouc )
+	ROM_REGION( 0x900000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
+	ROM_LOAD16_WORD_SWAP( "253-p1d.p1", 0x000000, 0x900000, CRC(eb2d1ea5) SHA1(6a64235c77a1263094d4ef9aa49300842e582222) )
+
+	NEO_SFIX_128K( "253-s4d.s4", CRC(2c115b98) SHA1(955e9151adb4a44f0ef3a10a9ac6204a08f99a3d) )  // kawaks
+
+	NEO_BIOS_AUDIO_256K( "253-m1.m1", CRC(36a806be) SHA1(90fb44dc0c3fb57946a0f35716056abb84a0f191) )
+
+	ROM_REGION( 0x1000000, "cslot1:ymsnd", 0 )
+	ROM_LOAD( "253-v1.v1", 0x000000, 0x400000, CRC(263e388c) SHA1(11f05feee170370c4bfc5053af79246a6e3de5dc) )
+	ROM_LOAD( "253-v2.v2", 0x400000, 0x400000, CRC(2c6bc7be) SHA1(c9c61054ce1a47bf1bf77a31117726b499df24a4) )
+	ROM_LOAD( "253-v3.v3", 0x800000, 0x400000, CRC(0425b27d) SHA1(986863c98fc3445487242dcf2ea75b075e7f33ee) )
+	ROM_LOAD( "253-v4.v4", 0xc00000, 0x400000, CRC(a54be8a9) SHA1(d7123e79b43e8adfaa5ecadbfcbeb6be890ec311) )
+
+	ROM_REGION( 0x4000000, "cslot1:sprites", 0 )  // decrypted
+	ROM_LOAD16_BYTE( "253-c1d.c1", 0x0000000, 0x800000, CRC(497be3f2) SHA1(3b4e524ff185db326cdefe115851ce282272fb58) )
+	ROM_LOAD16_BYTE( "253-c2d.c2", 0x0000001, 0x800000, CRC(6a9e95ca) SHA1(d9730d2db58edfa660edab5bf0f7fc3ed058bccf) )
+	ROM_LOAD16_BYTE( "253-c3d.c3", 0x1000000, 0x800000, CRC(39373d2f) SHA1(8c0307150bc31001605efbe0e38ae74e1e466d5d) )
+	ROM_LOAD16_BYTE( "253-c4d.c4", 0x1000001, 0x800000, CRC(4de23f6c) SHA1(b40bce471fb1815037e4c3705f8238e659a13a82) )
+	ROM_LOAD16_BYTE( "253-c5d.c5", 0x2000000, 0x800000, CRC(16634ba5) SHA1(e51649efd039270139aa7292a28925e547b2be59) )
+	ROM_LOAD16_BYTE( "253-c6d.c6", 0x2000001, 0x800000, CRC(95671ffd) SHA1(803ebeb74fefe88b9aba53cbca103c0e9145abcb) )
+	ROM_LOAD16_BYTE( "253-c7d.c7", 0x3000000, 0x800000, CRC(e36ce77f) SHA1(71931559293182749ded13c52d8bac988a3a062f) )
+	ROM_LOAD16_BYTE( "253-c8d.c8", 0x3000001, 0x800000, CRC(ddbd1096) SHA1(634cfb61398b3f1b983f7f3966b53f4cc3a78671) )
+ROM_END
+
+void mvs_led_state::garouc(machine_config &config)
+{
+	mv1_fixed(config);
+	cartslot_fixed(config, "garouc");
+}
+
 
 /*************************************
  *
@@ -12650,6 +12690,7 @@ GAME( 2019, svcc,       neogeo,   neobase,   neogeo,    mvs_led_state, empty_ini
 GAME( 2019, samsho5c,   neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Yuki Enterprise / SNK Playmore", "Samurai Shodown V / Samurai Spirits Zero (NGM-2700) (PROGBK1/CHA512Y Conversion)", MACHINE_SUPPORTS_SAVE )
 GAME( 2020, kof2002c,   neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Eolith / Playmore", "The King of Fighters 2002 (NGM-2650 ~ NGH-2650) (PROGBK1/CHA512Y Conversion)" , MACHINE_SUPPORTS_SAVE )
 GAME( 2020, samsh5spc,  neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Yuki Enterprise / SNK Playmore", "Samurai Shodown V Special / Samurai Spirits Zero Special (NGM-2720) (PROGBK1/CHA512Y Conversion)", MACHINE_SUPPORTS_SAVE )
+GAME( 2020, garouc,     neogeo,   garouc,    neogeo,    mvs_led_state, empty_init, ROT0, "SNK", "Garou - Mark of the Wolves (NGM-2530) (test)" , MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_GRAPHICS )
 
 
 
