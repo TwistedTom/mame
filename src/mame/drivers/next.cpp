@@ -347,7 +347,8 @@ void next_state::dma_read(int slot, uint8_t &val, bool &eof, bool &err)
 		break;
 
 	case 5:
-		val = mo->dma_r();
+		if(mo)
+			val = mo->dma_r();
 		break;
 
 	case 21:
@@ -381,7 +382,8 @@ void next_state::dma_write(int slot, uint8_t data, bool eof, bool &err)
 		break;
 
 	case 5:
-		mo->dma_w(data);
+		if(mo)
+			mo->dma_w(data);
 		break;
 
 	case 17:
@@ -910,7 +912,6 @@ void next_state::next_mem(address_map &map)
 	map(0x0200e000, 0x0200e00b).mirror(0x300000).m(keyboard, FUNC(nextkbd_device::amap));
 //  map(0x0200f000, 0x0200f003).mirror(0x300000); printer
 //  map(0x02010000, 0x02010003).mirror(0x300000); brightness
-	map(0x02012000, 0x0201201f).mirror(0x300000).m(mo, FUNC(nextmo_device::map));
 	map(0x02014000, 0x0201400f).mirror(0x300000).m(scsi, FUNC(ncr5390_device::map));
 	map(0x02014020, 0x02014023).mirror(0x300000).rw(FUNC(next_state::scsictrl_r), FUNC(next_state::scsictrl_w));
 	map(0x02016000, 0x02016003).mirror(0x300000).rw(FUNC(next_state::timer_data_r), FUNC(next_state::timer_data_w));
@@ -933,9 +934,15 @@ void next_state::next_mem(address_map &map)
 //  map(0x1c000000, 0x1c03ffff) main RAM w AB function
 }
 
+void next_state::next_mo_mem(address_map &map)
+{
+	map(0x02012000, 0x0201201f).mirror(0x300000).m(mo, FUNC(nextmo_device::map));
+}
+
 void next_state::next_0b_m_nofdc_mem(address_map &map)
 {
 	next_mem(map);
+	next_mo_mem(map);
 	map(0x0b000000, 0x0b03ffff).ram().share("vram");
 }
 
@@ -952,6 +959,13 @@ void next_state::next_0b_m_mem(address_map &map)
 	map(0x0b000000, 0x0b03ffff).ram().share("vram");
 }
 
+void next_state::next_0b_m_mo_mem(address_map &map)
+{
+	next_fdc_mem(map);
+	next_mo_mem(map);
+	map(0x0b000000, 0x0b03ffff).ram().share("vram");
+}
+
 void next_state::next_0c_m_mem(address_map &map)
 {
 	next_fdc_mem(map);
@@ -961,6 +975,21 @@ void next_state::next_0c_m_mem(address_map &map)
 void next_state::next_0c_c_mem(address_map &map)
 {
 	next_fdc_mem(map);
+	map(0x0c000000, 0x0c1fffff).ram().share("vram");
+	map(0x02018180, 0x02018183).mirror(0x300000).w(FUNC(next_state::ramdac_w));
+}
+
+void next_state::next_0c_m_mo_mem(address_map &map)
+{
+	next_fdc_mem(map);
+	next_mo_mem(map);
+	map(0x0c000000, 0x0c1fffff).ram().share("vram");
+}
+
+void next_state::next_0c_c_mo_mem(address_map &map)
+{
+	next_fdc_mem(map);
+	next_mo_mem(map);
 	map(0x0c000000, 0x0c1fffff).ram().share("vram");
 	map(0x02018180, 0x02018183).mirror(0x300000).w(FUNC(next_state::ramdac_w));
 }
@@ -1041,22 +1070,18 @@ void next_state::next_base(machine_config &config)
 	net->tx_drq().set(FUNC(next_state::net_tx_drq));
 	net->rx_drq().set(FUNC(next_state::net_rx_drq));
 
+	SOFTWARE_LIST(config, "hdd_list").set_original("next_hdd");
+}
+
+void next_state::next_mo_config(machine_config &config)
+{
 	NEXTMO(config, mo, 0);
 	mo->irq_wr_callback().set(FUNC(next_state::mo_irq));
 	mo->drq_wr_callback().set(FUNC(next_state::mo_drq));
 }
 
-void next_state::next(machine_config &config)
+void next_state::next_fdc_config(machine_config &config)
 {
-	next_base(config);
-	M68030(config, maincpu, XTAL(25'000'000));
-	maincpu->set_addrmap(AS_PROGRAM, &next_state::next_0b_m_nofdc_mem);
-}
-
-void next_state::next_fdc_base(machine_config &config)
-{
-	next_base(config);
-
 	N82077AA(config, fdc, 24'000'000, n82077aa_device::mode_t::PS2);
 	fdc->intrq_wr_callback().set(FUNC(next_state::fdc_irq));
 	fdc->drq_wr_callback().set(FUNC(next_state::fdc_drq));
@@ -1064,6 +1089,39 @@ void next_state::next_fdc_base(machine_config &config)
 
 	// software list
 	SOFTWARE_LIST(config, "flop_list").set_original("next");
+}
+
+void next_state::next_mo_base(machine_config &config)
+{
+	next_base(config);
+	next_mo_config(config);
+}
+
+void next_state::next_fdc_base(machine_config &config)
+{
+	next_base(config);
+	next_fdc_config(config);
+}
+
+void next_state::next_mo_fdc_base(machine_config &config)
+{
+	next_base(config);
+	next_mo_config(config);
+	next_fdc_config(config);
+}
+
+void next_state::next(machine_config &config)
+{
+	next_mo_base(config);
+	M68030(config, maincpu, XTAL(25'000'000));
+	maincpu->set_addrmap(AS_PROGRAM, &next_state::next_0b_m_nofdc_mem);
+}
+
+void next_state::nextc(machine_config &config)
+{
+	next_mo_fdc_base(config);
+	M68040(config, maincpu, XTAL(25'000'000));
+	maincpu->set_addrmap(AS_PROGRAM, &next_state::next_0b_m_mo_mem);
 }
 
 void next_state::nexts(machine_config &config)
@@ -1104,16 +1162,16 @@ void next_state::nextstc(machine_config &config)
 
 void next_state::nextct(machine_config &config)
 {
-	next_fdc_base(config);
+	next_mo_fdc_base(config);
 	M68040(config, maincpu, XTAL(33'000'000));
-	maincpu->set_addrmap(AS_PROGRAM, &next_state::next_0c_m_mem);
+	maincpu->set_addrmap(AS_PROGRAM, &next_state::next_0c_m_mo_mem);
 }
 
 void next_state::nextctc(machine_config &config)
 {
-	next_fdc_base(config);
+	next_mo_fdc_base(config);
 	M68040(config, maincpu, XTAL(33'000'000));
-	maincpu->set_addrmap(AS_PROGRAM, &next_state::next_0c_c_mem);
+	maincpu->set_addrmap(AS_PROGRAM, &next_state::next_0c_c_mo_mem);
 	subdevice<screen_device>("screen")->set_visarea(0, 832-1, 0, 624-1);
 }
 
@@ -1154,6 +1212,10 @@ ROM_START(next)
 	ROM_NEXT_V1
 ROM_END
 
+ROM_START(nextc)
+	ROM_NEXT_V2
+ROM_END
+
 ROM_START(nexts)
 	ROM_NEXT_V2
 ROM_END
@@ -1183,6 +1245,11 @@ ROM_START(nextctc)
 ROM_END
 
 void next_state::init_next()
+{
+	setup(0x00010002, 1120, 832, 2, false);
+}
+
+void next_state::init_nextc()
 {
 	setup(0x00010002, 1120, 832, 2, false);
 }
@@ -1225,11 +1292,12 @@ void next_state::init_nextctc()
 /* Driver */
 
 //    YEAR  NAME     PARENT  COMPAT  MACHINE  INPUT  CLASS       INIT          COMPANY              FULLNAME                     FLAGS
-COMP( 1987, next,    0,      0,      next,    next,  next_state, init_next,    "Next Software Inc", "NeXT Cube",                 MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
+COMP( 1987, next,    0,      0,      next,    next,  next_state, init_next,    "Next Software Inc", "NeXT Computer",             MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
 COMP( 1990, nexts,   0,      0,      nexts,   next,  next_state, init_nexts,   "Next Software Inc", "NeXTstation",               MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
+COMP( 1990, nextc,   nexts,  0,      next,    next,  next_state, init_nextc,   "Next Software Inc", "NeXTcube",                  MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
 COMP( 1990, nexts2,  nexts,  0,      nexts2,  next,  next_state, init_nexts2,  "Next Software Inc", "NeXTstation (X15 variant)", MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
-COMP( 1990, nextsc,  nexts,  0,      nextsc,  next,  next_state, init_nextsc,  "Next Software Inc", "NeXTstation color",         MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
-COMP( 1990, nextst,  0,      0,      nextst,  next,  next_state, init_nextst,  "Next Software Inc", "NeXTstation turbo",         MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
-COMP( 1990, nextstc, nextst, 0,      nextstc, next,  next_state, init_nextstc, "Next Software Inc", "NeXTstation turbo color",   MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
-COMP( ????, nextct,  nextst, 0,      nextct,  next,  next_state, init_nextct,  "Next Software Inc", "NeXT Cube turbo",           MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
-COMP( ????, nextctc, nextst, 0,      nextctc, next,  next_state, init_nextctc, "Next Software Inc", "NeXT Cube turbo color",     MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
+COMP( 1990, nextsc,  nexts,  0,      nextsc,  next,  next_state, init_nextsc,  "Next Software Inc", "NeXTstation Color",         MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
+COMP( 1990, nextst,  0,      0,      nextst,  next,  next_state, init_nextst,  "Next Software Inc", "NeXTstation Turbo",         MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
+COMP( 1990, nextstc, nextst, 0,      nextstc, next,  next_state, init_nextstc, "Next Software Inc", "NeXTstation Turbo Color",   MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
+COMP( 1992, nextct,  nextst, 0,      nextct,  next,  next_state, init_nextct,  "Next Software Inc", "NeXTcube Turbo",            MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
+COMP( 1992, nextctc, nextst, 0,      nextctc, next,  next_state, init_nextctc, "Next Software Inc", "NeXTcube Turbo Color",      MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
