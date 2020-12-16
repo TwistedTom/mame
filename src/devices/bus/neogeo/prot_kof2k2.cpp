@@ -32,7 +32,7 @@ void kof2002_prot_device::kof2002_decrypt_68k(uint8_t* cpurom, uint32_t cpurom_s
 
 	for (int i = 0; i < 8; ++i)
 		memcpy(src + i * 0x80000, &dst[sec[i]], 0x80000);
-	
+
 	// dump unscrambled P roms
 	// FILE *fp;
 	// const char *gamename = machine().system().name;
@@ -57,7 +57,7 @@ void kof2002_prot_device::matrim_decrypt_68k(uint8_t* cpurom, uint32_t cpurom_si
 
 	for (int i = 0; i < 8; ++i)
 		memcpy(src + i * 0x80000, &dst[sec[i]], 0x80000);
-	
+
 	// dump unscrambled P roms
 	// FILE *fp;
 	// const char *gamename = machine().system().name;
@@ -81,7 +81,7 @@ void kof2002_prot_device::samsho5_decrypt_68k(uint8_t* cpurom, uint32_t cpurom_s
 	memcpy(&dst[0], src, 0x800000);
 	for (int i = 0; i < 16; ++i)
 		memcpy(src + i * 0x80000, &dst[sec[i]], 0x80000);
-	
+
 	// dump unscrambled P roms
 	// FILE *fp;
 	// const char *gamename = machine().system().name;
@@ -106,4 +106,17 @@ void kof2002_prot_device::samsh5sp_decrypt_68k(uint8_t* cpurom, uint32_t cpurom_
 	memcpy(&dst[0], src, 0x800000);
 	for (int i = 0; i < 16; ++i)
 		memcpy(src + i * 0x80000, &dst[sec[i]], 0x80000);
+
+	// dump unscrambled P roms
+	// FILE *fp;
+	// const char *gamename = machine().system().name;
+	// char filename[256];
+	// sprintf(filename, "%s_p.dump", gamename);
+
+	// fp=fopen(filename, "w+b");
+	// if (fp)
+	// {
+		// fwrite(cpurom, cpurom_size, 1, fp);
+		// fclose(fp);
+	// }
 }

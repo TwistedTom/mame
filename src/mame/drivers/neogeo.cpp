@@ -11568,14 +11568,14 @@ ROM_START( mslug4c )  // 263
 	ROM_LOAD( "263-v3d.v3", 0x800000, 0x400000, CRC(7616fcec) SHA1(83006094379d0373b967603dcaa1cec69c2f746f) ) /* TC5332204  32Mbit  28f320 */
 	ROM_LOAD( "263-v4d.v4", 0xc00000, 0x400000, CRC(7b0b92a1) SHA1(c14320c4652de16ff2535f8743ce0e71ba135e75) ) /* TC5332204  32Mbit  28f320 */
 
-	// decrypted gfx (kawaks)
-	ROM_REGION( 0x3000000, "cslot1:sprites", 0 )
+	// decrypted gfx (kawaks), c5/c6 reduced
+	ROM_REGION( 0x2800000, "cslot1:sprites", 0 )
 	ROM_LOAD16_BYTE( "263-c1d.c1", 0x0000000, 0x800000, CRC(a75ffcde) SHA1(97f405a95a56615ae49f79e1a69f98cc2f2434ef) ) /* TC5364205  64Mbit  28f640 */
 	ROM_LOAD16_BYTE( "263-c2d.c2", 0x0000001, 0x800000, CRC(5ab0d12b) SHA1(8a3d95dd2e9cc1b6dcf6a957fed43ee390248307) ) /* TC5364205  64Mbit  28f640 */
 	ROM_LOAD16_BYTE( "263-c3d.c3", 0x1000000, 0x800000, CRC(61af560c) SHA1(aa7bc45e03a6bbd18eb56d118d4932102ccb196a) ) /* TC5364205  64Mbit  28f640 */
 	ROM_LOAD16_BYTE( "263-c4d.c4", 0x1000001, 0x800000, CRC(f2c544fd) SHA1(179b064f81b49f5808d7a7a5bce28e95b09e5abe) ) /* TC5364205  64Mbit  28f640 */
-	ROM_LOAD16_BYTE( "263-c5d.c5", 0x2000000, 0x800000, CRC(84c66c44) SHA1(9273f44bf11891aa04ddd2cbb6442d084c2a2e04) ) /* TC5364205  64Mbit  28f640 */
-	ROM_LOAD16_BYTE( "263-c6d.c6", 0x2000001, 0x800000, CRC(5ed018ab) SHA1(e78501fa8a80960093a4d54ce952681a98300148) ) /* TC5364205  64Mbit  28f640 */
+	ROM_LOAD16_BYTE( "263-c5d.c5", 0x2000000, 0x400000, CRC(702dc41b) SHA1(4498f5a189e091a13bae92a9e59961bf0ff14661) ) /* TC5332204  32Mbit  28f320 */
+	ROM_LOAD16_BYTE( "263-c6d.c6", 0x2000001, 0x400000, CRC(e74cc76b) SHA1(f8054bd8467c881f3e8482bb6223fe338e3f42e8) ) /* TC5332204  32Mbit  28f320 */
 ROM_END
 
 
@@ -11712,7 +11712,7 @@ ROM_START( sengoku3c ) // 261
 	NEO_BIOS_AUDIO_128K( "261-m1.m1", CRC(36ed9cdd) SHA1(78a7d755e9e9f52255ac6228d9d402fd6a02c126) ) /* 1Mbit  27c010 */
 
 	// original sound samples, v4 reduced
-	ROM_REGION( 0x0e00000, "cslot1:ymsnd", 0 )
+	ROM_REGION( 0x0d00000, "cslot1:ymsnd", 0 )
 	ROM_LOAD( "261-v1.v1", 0x000000, 0x400000, CRC(64c30081) SHA1(f9ebd20cf59b72e864b7274c1bdb6d99ecaf4595) ) /* TC5332204  32Mbit  28f320 */
 	ROM_LOAD( "261-v2.v2", 0x400000, 0x400000, CRC(392a9c47) SHA1(7ab90a54089236ca6c3ef1af8e566a8025d38159) ) /* TC5332204  32Mbit  28f320 */
 	ROM_LOAD( "261-v3.v3", 0x800000, 0x400000, CRC(c1a7ebe3) SHA1(1d7bb481451f5ee0457e954bb5210300182c3c9c) ) /* TC5332204  32Mbit  28f320 */
@@ -11948,6 +11948,39 @@ ROM_START( kof2002c )  // 265
 	ROM_LOAD16_BYTE( "265-c7d.c7", 0x3000000, 0x800000, CRC(8a5b561c) SHA1(a19697d4c2cc8edebc669c95ae1db4c8c2a70b2c) ) /* TC5364205  64Mbit  28f640 */
 	ROM_LOAD16_BYTE( "265-c8d.c8", 0x3000001, 0x800000, CRC(bef667a3) SHA1(d5e8bc185dcf63343d129c31d2ddab9f723f1a12) ) /* TC5364205  64Mbit  28f640 */
 ROM_END
+
+
+ROM_START( samsh5spc )  // 272
+	// unscrambled (mame dump)
+	ROM_REGION( 0x800000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
+	ROM_LOAD16_WORD_SWAP( "272-p1d.p1", 0x000000, 0x400000, CRC(d5d492a9) SHA1(12d2fecd1a0e0678488276034cf6cfc74c19b1be) )
+	ROM_LOAD16_WORD_SWAP( "272-p2d.p2", 0x400000, 0x400000, CRC(b85f2c0f) SHA1(4a2065aff92a684da2ff490db417adee890a8819) )
+
+	// decrypted sfix (kawaks, other pages just junk)
+	NEO_SFIX_128K( "272-s1d.s1", CRC(c297f973) SHA1(b31af6b51e7536b538cd7eb3542c631c6327e826) ) /* TC531000  1Mbit  27c1000 */
+
+	// decrypted z80 code (m1crypt), split 1/4
+	NEO_BIOS_AUDIO_128K( "272-m1d.m1", CRC(654e9236) SHA1(e13a1b4b73d43008565ee419c9714a220927d0bc) ) /* TC531001  1Mbit  27c010 */
+
+	// decrypted sound samples (neoconv v2 + split into 4x 32Mbit)
+	ROM_REGION( 0x1000000, "cslot1:ymsnd", 0 )
+	ROM_LOAD( "272-v1d.v1", 0x000000, 0x400000, CRC(32156cfe) SHA1(6478c7a4f226ce3252556ecc039b611c15e65a6c) ) /* TC5332204  32Mbit  28f320 */
+	ROM_LOAD( "272-v2d.v2", 0x400000, 0x400000, CRC(0e46d2f8) SHA1(b8b0838124ea29f73f31e08d5cced8797cea75b1) ) /* TC5332204  32Mbit  28f320 */
+	ROM_LOAD( "272-v3d.v3", 0x800000, 0x400000, CRC(3f0f7554) SHA1(2581e297725f3b950b59e9086ac5569171da6140) ) /* TC5332204  32Mbit  28f320 */
+	ROM_LOAD( "272-v4d.v4", 0xc00000, 0x400000, CRC(ad8fabb4) SHA1(cebe3b7306e1431ebb99df13bfc2270b1d3ba1ff) ) /* TC5332204  32Mbit  28f320 */
+
+	// decrypted gfx (kawaks)
+	ROM_REGION( 0x4000000, "cslot1:sprites", 0 )
+	ROM_LOAD16_BYTE( "272-c1d.c1", 0x0000000, 0x800000, CRC(8548097e) SHA1(99177f64039d2914fa4ebd4afc7eb0fbf4ffe0af) ) /* TC5364205  64Mbit  28f640 */
+	ROM_LOAD16_BYTE( "272-c2d.c2", 0x0000001, 0x800000, CRC(8c1b48d0) SHA1(3f20288ed369e6276cfaedff7e9703d4ea1cf6f6) ) /* TC5364205  64Mbit  28f640 */
+	ROM_LOAD16_BYTE( "272-c3d.c3", 0x1000000, 0x800000, CRC(96ddb28c) SHA1(7ebe5166d279c0d3efef65618d015b4ea13f2c49) ) /* TC5364205  64Mbit  28f640 */
+	ROM_LOAD16_BYTE( "272-c4d.c4", 0x1000001, 0x800000, CRC(99ef7a0a) SHA1(9ac3ef339bc1d6e3482e0b32d40b259ec2b44fc1) ) /* TC5364205  64Mbit  28f640 */
+	ROM_LOAD16_BYTE( "272-c5d.c5", 0x2000000, 0x800000, CRC(772e8b1e) SHA1(8de4898bbd8ede593763bfa93bbf26492492d23a) ) /* TC5364205  64Mbit  28f640 */
+	ROM_LOAD16_BYTE( "272-c6d.c6", 0x2000001, 0x800000, CRC(5fff21fc) SHA1(5d0a23a41f5277ab09fd11f227be35f1713a4b4f) ) /* TC5364205  64Mbit  28f640 */
+	ROM_LOAD16_BYTE( "272-c7d.c7", 0x3000000, 0x800000, CRC(9ac56a0e) SHA1(ea4ffec3fe2e58df16b40fdf33e1708680010414) ) /* TC5364205  64Mbit  28f640 */
+	ROM_LOAD16_BYTE( "272-c8d.c8", 0x3000001, 0x800000, CRC(cfde7aff) SHA1(25185f471dd35e5d388b75b83d8652085cd5e17d) ) /* TC5364205  64Mbit  28f640 */
+ROM_END
+
 
 
 /*************************************
@@ -12674,7 +12707,9 @@ GAME( 2019, rotdc,      neogeo,   neobase,   neogeo,    mvs_led_state, empty_ini
 GAME( 2019, svcc,       neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Playmore / Capcom", "SNK vs. Capcom - SVC Chaos (NGM-2690 ~ NGH-2690) (PROGBK1/CHA512Y Conversion)", MACHINE_SUPPORTS_SAVE )
 GAME( 2019, samsho5c,   neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Yuki Enterprise / SNK Playmore", "Samurai Shodown V / Samurai Spirits Zero (NGM-2700) (PROGBK1/CHA512Y Conversion)", MACHINE_SUPPORTS_SAVE )
 GAME( 2020, garouc,     neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "SNK", "Garou - Mark of the Wolves (NGM-2530) (PROGBK1/CHA512Y Conversion)" , MACHINE_SUPPORTS_SAVE )
-GAME( 2020, kof2002c,   neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "SNK", "The King of Fighters 2000 (NGM-2570 ~ NGH-2570) (PROGBK1/CHA512Y Conversion)" , MACHINE_SUPPORTS_SAVE )
+GAME( 2020, kof2002c,   neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Eolith / Playmore", "The King of Fighters 2002 (NGM-2650 ~ NGH-2650) (PROGBK1/CHA512Y Conversion)" , MACHINE_SUPPORTS_SAVE )
+GAME( 2020, samsh5spc,  neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Yuki Enterprise / SNK Playmore", "Samurai Shodown V Special / Samurai Spirits Zero Special (NGM-2720) (PROGBK1/CHA512Y Conversion)", MACHINE_SUPPORTS_SAVE )
+
 
 
 // Last Hope Pink Bullets (c)2008 - MVS/AES
