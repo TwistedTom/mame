@@ -75,6 +75,8 @@ public:
 
 	int m_bppshift; // 4 for 4bpp gfx (NeoGeo) 8 for 8bpp gfx (Midas)
 
+	uint8_t m_multicart;
+
 protected:
 	neosprite_base_device(
 			const machine_config &mconfig,

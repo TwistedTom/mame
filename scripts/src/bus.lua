@@ -3003,6 +3003,7 @@ if (BUSES["NEOGEO"]~=null) then
 		MAME_DIR .. "src/devices/bus/neogeo/boot_kof10th.h",
 		MAME_DIR .. "src/devices/bus/neogeo/prot_misc.cpp",
 		MAME_DIR .. "src/devices/bus/neogeo/prot_misc.h",
+		MAME_DIR .. "src/devices/bus/neogeo/ngmc120.cpp",
 	}
 end
 

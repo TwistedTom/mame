@@ -20,6 +20,7 @@ neosprite_base_device::neosprite_base_device(
 	: device_t(mconfig, type, tag, owner, clock)
 	, device_video_interface(mconfig, *this)
 	, m_bppshift(4)
+	, m_multicart(0)
 	, m_region_zoomy(*this, "zoomy")
 {
 }
@@ -179,6 +180,10 @@ void neosprite_base_device::draw_fixed_layer(bitmap_rgb32 &bitmap, int scanline)
 	assert((m_fixed_layer_source && m_region_fixed != nullptr) || (m_region_fixedbios != nullptr));
 
 	uint8_t* gfx_base = m_fixed_layer_source ? m_region_fixed : m_region_fixedbios->base();
+
+	if (m_multicart)
+		gfx_base += 0x20000;
+
 	uint32_t addr_mask = ( m_fixed_layer_source ? m_region_fixed_size : m_region_fixedbios->bytes() ) - 1;
 	uint16_t *video_data = &m_videoram_drawsource[0x7000 | (scanline >> 3)];
 	uint32_t *pixel_addr = &bitmap.pix(scanline, NEOGEO_HBEND);

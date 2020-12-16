@@ -22,6 +22,7 @@
 #include "bus/neogeo/boot_kof2k3.h"
 #include "bus/neogeo/boot_kof10th.h"
 #include "bus/neogeo/sbp.h"
+#include "bus/neogeo/ngmc120.cpp"
 
 
 void neogeo_cart(device_slot_interface &device)
@@ -114,4 +115,6 @@ void neogeo_cart(device_slot_interface &device)
 
 	device.option_add_internal("boot_kf10th",   NEOGEO_KOF10TH_CART);
 	device.option_add_internal("boot_sbp",      NEOGEO_SBP_CART);
+
+	device.option_add_internal("ngmc120",  NEOGEO_NGMC120_CART);
 }

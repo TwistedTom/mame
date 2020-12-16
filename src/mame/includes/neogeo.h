@@ -101,6 +101,10 @@ protected:
 	void write_bankprot_kof10th(offs_t offset, uint16_t data, uint16_t mem_mask = ~0);
 	uint16_t read_lorom_kof10th(offs_t offset);
 
+	void multicart_w1(offs_t offset, uint16_t data);
+	void multicart_w2(offs_t offset, uint16_t data);
+	void multicart_w3(offs_t offset, uint16_t data);
+
 	DECLARE_WRITE_LINE_MEMBER(set_screen_shadow);
 	DECLARE_WRITE_LINE_MEMBER(set_palette_bank);
 
