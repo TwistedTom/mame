@@ -165,6 +165,7 @@ if (CPUS["ARM7"]~=null) then
 		MAME_DIR .. "src/devices/cpu/arm7/arm7drc.hxx",
 		MAME_DIR .. "src/devices/cpu/arm7/arm7help.h",
 		MAME_DIR .. "src/devices/cpu/arm7/arm7tdrc.hxx",
+		MAME_DIR .. "src/devices/cpu/arm7/cecalls.hxx",
 	}
 end
 
@@ -3150,7 +3151,7 @@ end
 
 --------------------------------------------------
 -- National Semiconductor CR16B
---@src/devices/cpu/cr16b/cr16bdasm.h,CPUS["CR16B"] = true
+--@src/devices/cpu/cr16b/cr16b.h,CPUS["CR16B"] = true
 --------------------------------------------------
 
 if (CPUS["CR16B"]~=null) then
@@ -3163,6 +3164,15 @@ end
 if (CPUS["CR16B"]~=null or _OPTIONS["with-tools"]) then
 	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/cr16b/cr16bdasm.cpp")
 	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/cr16b/cr16bdasm.h")
+end
+
+--------------------------------------------------
+-- National Semiconductor CR16C, disassembler only
+--------------------------------------------------
+
+if (_OPTIONS["with-tools"]) then
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/cr16c/cr16cdasm.cpp")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/cr16c/cr16cdasm.h")
 end
 
 --------------------------------------------------
@@ -3358,6 +3368,7 @@ if (CPUS["ROMP"]~=null) then
 	files {
 		MAME_DIR .. "src/devices/cpu/romp/romp.cpp",
 		MAME_DIR .. "src/devices/cpu/romp/romp.h",
+		MAME_DIR .. "src/devices/cpu/romp/rsc.h",
 	}
 end
 
