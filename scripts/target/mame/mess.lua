@@ -314,6 +314,7 @@ SOUNDS["S_DSP"] = true
 SOUNDS["ROLANDPCM"] = true
 --SOUNDS["TT5665"] = true
 SOUNDS["RP2C33_SOUND"] = true
+SOUNDS["UDA1344"] = true
 
 --------------------------------------------------
 -- specify available video cores
@@ -390,10 +391,12 @@ VIDEOS["PSX"] = true
 VIDEOS["RAMDAC"] = true
 VIDEOS["S2636"] = true
 VIDEOS["SAA5050"] = true
+VIDEOS["SAA5240"] = true
 VIDEOS["PWM_DISPLAY"] = true
 VIDEOS["SDA5708"] = true
 VIDEOS["SED1200"] = true
 VIDEOS["SED1330"] = true
+VIDEOS["SED1356"] = true
 VIDEOS["SED1500"] = true
 VIDEOS["SED1520"] = true
 VIDEOS["SNES_PPU"] = true
@@ -483,6 +486,7 @@ MACHINES["CDP1879"] = true
 --MACHINES["CDU76S"] = true
 MACHINES["CHESSMACHINE"] = true
 MACHINES["CMOS40105"] = true
+MACHINES["COM52C50"] = true
 MACHINES["COM8116"] = true
 MACHINES["COP452"] = true
 MACHINES["CR589"] = true
@@ -510,6 +514,7 @@ MACHINES["ER1400"] = true
 MACHINES["ER2055"] = true
 MACHINES["EXORTERM"] = true
 MACHINES["F3853"] = true
+MACHINES["F4702"] = true
 MACHINES["HD63450"] = true
 MACHINES["HD64610"] = true
 MACHINES["HP_DC100_TAPE"] = true
@@ -653,6 +658,7 @@ MACHINES["S3520CF"] = true
 MACHINES["S3C24XX"] = true
 MACHINES["S3C44B0"] = true
 MACHINES["SA1110"] = true
+MACHINES["SA1111"] = true
 MACHINES["SAA1043"] = true
 MACHINES["SATURN"] = true
 MACHINES["SCC68070"] = true
@@ -2594,6 +2600,7 @@ files {
 	MAME_DIR .. "src/mame/drivers/hp2640.cpp",
 	MAME_DIR .. "src/mame/drivers/hp95lx.cpp",
 	MAME_DIR .. "src/mame/drivers/hp9825.cpp",
+	MAME_DIR .. "src/mame/drivers/jornada.cpp",
 }
 
 createMESSProjects(_target, _subtarget, "hec2hrp")
@@ -3141,6 +3148,7 @@ files {
 	MAME_DIR .. "src/mame/drivers/novag_micro2.cpp",
 	MAME_DIR .. "src/mame/drivers/novag_savant.cpp",
 	MAME_DIR .. "src/mame/drivers/novag_sexpert.cpp",
+	MAME_DIR .. "src/mame/drivers/novag_snova.cpp",
 	MAME_DIR .. "src/mame/drivers/novag_supremo.cpp",
 }
 
@@ -3758,6 +3766,7 @@ files {
 createMESSProjects(_target, _subtarget, "synertek")
 files {
 	MAME_DIR .. "src/mame/drivers/ktm3.cpp",
+	MAME_DIR .. "src/mame/drivers/mbc020.cpp",
 	MAME_DIR .. "src/mame/drivers/sym1.cpp",
 }
 
@@ -4102,8 +4111,10 @@ files {
 	MAME_DIR .. "src/mame/machine/xavix2002_io.h",
 	MAME_DIR .. "src/mame/drivers/xavix2.cpp",
 	MAME_DIR .. "src/mame/drivers/titan_soc.cpp",
-	MAME_DIR .. "src/mame/drivers/st22xx_bbl338.cpp",
-	MAME_DIR .. "src/mame/drivers/unk6502_st2xxx.cpp",
+	MAME_DIR .. "src/mame/drivers/st2302u_bbl_rom.cpp",
+	MAME_DIR .. "src/mame/drivers/st2302u_bbl_spi.cpp",
+	MAME_DIR .. "src/mame/video/bl_handhelds_lcdc.cpp",
+	MAME_DIR .. "src/mame/video/bl_handhelds_lcdc.h",
 	MAME_DIR .. "src/mame/drivers/actions_atj2279b.cpp",
 	MAME_DIR .. "src/mame/drivers/pubint_storyreader.cpp",
 	MAME_DIR .. "src/mame/drivers/magiceyes_pollux_vr3520f.cpp",
@@ -4394,6 +4405,7 @@ files {
 	MAME_DIR .. "src/mame/drivers/d6800.cpp",
 	MAME_DIR .. "src/mame/drivers/d6809.cpp",
 	MAME_DIR .. "src/mame/drivers/daruma.cpp",
+	MAME_DIR .. "src/mame/drivers/datacast.cpp",
 	MAME_DIR .. "src/mame/drivers/design.cpp",
 	MAME_DIR .. "src/mame/drivers/dg680.cpp",
 	MAME_DIR .. "src/mame/drivers/diablo1300.cpp",
@@ -4485,6 +4497,7 @@ files {
 	MAME_DIR .. "src/mame/drivers/mini2440.cpp",
 	MAME_DIR .. "src/mame/drivers/miniframe.cpp",
 	MAME_DIR .. "src/mame/drivers/minitel_2_rpic.cpp",
+	MAME_DIR .. "src/mame/drivers/miuchiz.cpp",
 	MAME_DIR .. "src/mame/drivers/ml20.cpp",
 	MAME_DIR .. "src/mame/drivers/mmd1.cpp",
 	MAME_DIR .. "src/mame/drivers/mmd2.cpp",
