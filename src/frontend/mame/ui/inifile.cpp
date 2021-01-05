@@ -298,11 +298,11 @@ void favorite_manager::add_favorite(running_machine &machine)
 
 					// start with simple stuff that can just be copied
 					info.shortname = software->shortname();
-					info.longname = imagedev->longname();
+					info.longname = software->longname();
 					info.parentname = software->parentname();
-					info.year = imagedev->year();
-					info.publisher = imagedev->manufacturer();
-					info.supported = imagedev->supported();
+					info.year = software->year();
+					info.publisher = software->publisher();
+					info.supported = software->supported();
 					info.part = part->name();
 					info.driver = &driver;
 					info.listname = imagedev->software_list_name();
@@ -570,8 +570,7 @@ void favorite_manager::save_favorites()
 				buf << info.devicetype << '\n';
 				util::stream_format(buf, "%d\n", info.available);
 
-				buf.put('\0');
-				file.puts(&buf.vec()[0]);
+				file.puts(util::buf_to_string_view(buf));
 			}
 		}
 		file.close();
