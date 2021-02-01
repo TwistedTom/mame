@@ -83,9 +83,12 @@ private:
 	void isbc_io(address_map &map);
 	void rpc86_io(address_map &map);
 	void rpc86_mem(address_map &map);
+	void sm1810_mem(address_map &map);
 	void sm1810_io(address_map &map);
 
 	virtual void machine_reset() override;
+
+	static void cfg_fdc_qd(device_t *device);
 
 	required_device<cpu_device> m_maincpu;
 	optional_device<i8251_device> m_uart8251;
@@ -156,10 +159,20 @@ void isbc_state::isbc8630_io(address_map &map)
 	map(0x0100, 0x0100).w("isbc_215g", FUNC(isbc_215g_device::write));
 }
 
+void isbc_state::sm1810_mem(address_map &map)
+{
+	map.unmap_value_high();
+	map(0x00000, 0xeffff).ram();
+	map(0xf8000, 0xfffff).rom().region("bios", 0);
+}
+
 void isbc_state::sm1810_io(address_map &map)
 {
-	isbc8630_io(map);
+	rpc86_io(map);
+	map(0x00c0, 0x00c7).w(FUNC(isbc_state::edge_intr_clear_w)).umask16(0xff00);
+	map(0x00c8, 0x00df).w(FUNC(isbc_state::status_register_w)).umask16(0xff00);
 	map(0x00ca, 0x00cb).lr8(NAME([]() { return 0x40; })).umask16(0x00ff); // it reads this without configuring the ppi
+	map(0xefe0, 0xefe0).w("isbc_215g", FUNC(isbc_215g_device::write));
 }
 
 void isbc_state::isbc86_mem(address_map &map)
@@ -224,7 +237,6 @@ INPUT_PORTS_END
 static DEVICE_INPUT_DEFAULTS_START( isbc86_terminal )
 	DEVICE_INPUT_DEFAULTS( "RS232_TXBAUD", 0xff, RS232_BAUD_300 )
 	DEVICE_INPUT_DEFAULTS( "RS232_RXBAUD", 0xff, RS232_BAUD_300 )
-	DEVICE_INPUT_DEFAULTS( "RS232_STARTBITS", 0xff, RS232_STARTBITS_1 )
 	DEVICE_INPUT_DEFAULTS( "RS232_DATABITS", 0xff, RS232_DATABITS_8 )
 	DEVICE_INPUT_DEFAULTS( "RS232_PARITY", 0xff, RS232_PARITY_NONE )
 	DEVICE_INPUT_DEFAULTS( "RS232_STOPBITS", 0xff, RS232_STOPBITS_2 )
@@ -233,7 +245,6 @@ DEVICE_INPUT_DEFAULTS_END
 static DEVICE_INPUT_DEFAULTS_START( isbc286_terminal )
 	DEVICE_INPUT_DEFAULTS( "RS232_TXBAUD", 0xff, RS232_BAUD_9600 )
 	DEVICE_INPUT_DEFAULTS( "RS232_RXBAUD", 0xff, RS232_BAUD_9600 )
-	DEVICE_INPUT_DEFAULTS( "RS232_STARTBITS", 0xff, RS232_STARTBITS_1 )
 	DEVICE_INPUT_DEFAULTS( "RS232_DATABITS", 0xff, RS232_DATABITS_7 )
 	DEVICE_INPUT_DEFAULTS( "RS232_PARITY", 0xff, RS232_PARITY_EVEN )
 	DEVICE_INPUT_DEFAULTS( "RS232_STOPBITS", 0xff, RS232_STOPBITS_1 )
@@ -328,6 +339,11 @@ WRITE_LINE_MEMBER(isbc_state::bus_intr_out1_w)
 WRITE_LINE_MEMBER(isbc_state::bus_intr_out2_w)
 {
 	// Multibus interrupt request (active high)
+}
+
+void isbc_state::cfg_fdc_qd(device_t *device)
+{
+	dynamic_cast<device_slot_interface &>(*device->subdevice("u14:0")).set_default_option("525qd");
 }
 
 void isbc_state::isbc86(machine_config &config)
@@ -525,11 +541,26 @@ void isbc_state::isbc2861(machine_config &config)
 
 void isbc_state::sm1810(machine_config &config)
 {
-	isbc8630(config);
+	rpc86(config);
 	m_maincpu->set_clock(XTAL(4'000'000)); // calibrated clock to pass self test
+	m_maincpu->set_addrmap(AS_PROGRAM, &isbc_state::sm1810_mem);
 	m_maincpu->set_addrmap(AS_IO, &isbc_state::sm1810_io);
 
 	m_uart8251->dtr_handler().set(m_uart8251, FUNC(i8251_device::write_dsr));
+	isbc_215g_device &isbc215(ISBC_215G(config, "isbc_215g", 0, 0xefe0, m_maincpu));
+	isbc215.irq_callback().set(m_pic_0, FUNC(pic8259_device::ir5_w));
+	isbc215.subdevice<isbx_slot_device>("sbx2")->set_option_machine_config("fdc_218a", cfg_fdc_qd);
+
+	LS259(config, m_statuslatch); // U14
+//  m_statuslatch->q_out_cb<0>().set("pit", FUNC(pit8253_device::write_gate0));
+//  m_statuslatch->q_out_cb<1>().set("pit", FUNC(pit8253_device::write_gate1));
+	m_statuslatch->q_out_cb<2>().set(FUNC(isbc_state::nmi_mask_w));
+	m_statuslatch->q_out_cb<3>().set([this] (int state) { m_override = state; }); // 1 = access onboard dual-port RAM
+	m_statuslatch->q_out_cb<4>().set(FUNC(isbc_state::bus_intr_out1_w));
+	m_statuslatch->q_out_cb<5>().set(FUNC(isbc_state::bus_intr_out2_w));
+	m_statuslatch->q_out_cb<5>().append_output("led0").invert(); // ds1
+	m_statuslatch->q_out_cb<6>().set_output("led1").invert(); // ds3
+	m_statuslatch->q_out_cb<7>().set([this] (int state) { m_megabyte_enable = !state; });
 }
 
 /* ROM definition */
