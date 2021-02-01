@@ -49,6 +49,7 @@ device_o2_cart_interface::~device_o2_cart_interface()
 //-------------------------------------------------
 //  o2_cart_slot_device - constructor
 //-------------------------------------------------
+
 o2_cart_slot_device::o2_cart_slot_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock)
 	: device_t(mconfig, O2_CART_SLOT, tag, owner, clock)
 	, device_image_interface(mconfig, *this)
@@ -106,7 +107,7 @@ static int o2_get_pcb_id(const char *slot)
 	if (slot)
 		for (auto & elem : slot_list)
 		{
-			if (!core_stricmp(elem.slot_option, slot))
+			if (!strcmp(elem.slot_option, slot))
 				return elem.pcb_id;
 		}
 
