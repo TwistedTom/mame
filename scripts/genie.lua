@@ -681,14 +681,21 @@ else
 		"LSB_FIRST",
 	}
 	if _OPTIONS["targetos"]=="macosx" then
-		configuration { "x64" }
+		configuration { "arm64" }
+			buildoptions {
+				"-arch arm64",
+			}
+			linkoptions {
+				"-arch arm64",
+			}
+		configuration { "x64", "not arm64" }
 			buildoptions {
 				"-arch x86_64",
 			}
 			linkoptions {
 				"-arch x86_64",
 			}
-		configuration { "x32" }
+		configuration { "x32", "not arm64" }
 			buildoptions {
 				"-arch i386",
 			}
@@ -1091,6 +1098,7 @@ end
 					"-Wno-unused-result", -- needed for fgets,fread on linux
 					-- array bounds checking seems to be buggy in 4.8.1 (try it on video/stvvdp1.c and video/model1.c without -Wno-array-bounds)
 					"-Wno-array-bounds",
+					"-Wno-error=attributes", -- GCC fails to recognize some uses of [[maybe_unused]]
 				}
 			if (version >= 80000) then
 				buildoptions {

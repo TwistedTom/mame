@@ -4273,7 +4273,7 @@ ROM_START( v4turnovd )
 	ROM_REGION( 0x800000, "video", 0 )
 	ROM_LOAD16_BYTE( "tov2.2p1",0x000000, 0x010000, CRC(460a5dd0) SHA1(42bc54b0ca206606b980dd80ccf0cbfb3210769d) )
 	ROM_LOAD16_BYTE( "tov2.2p2",0x000000, 0x010000, NO_DUMP )
-	// + unkonwn additional ROMs
+	// + an unknown number of additional ROMs
 ROM_END
 
 
@@ -8982,7 +8982,7 @@ the copyright dates recorded.
 TODO: Sort these better given the wide variation in dates/versions/core code (SWP version id, for one thing).
 */
 
-GAME(  199?, v4bios,     0,        mod2,       mpu4vid,     mpu4_state,    empty_init,     ROT0, "Barcrest","MPU4 Video Firmware",MACHINE_IS_BIOS_ROOT )
+GAME(  199?, v4bios,     0,        mod2,       mpu4vid,     mpu4_state,    init_m4default_banks,     ROT0, "Barcrest","MPU4 Video Firmware",MACHINE_IS_BIOS_ROOT )
 
 #define GAME_FLAGS MACHINE_NOT_WORKING
 #define GAME_FLAGS_OK (MACHINE_IMPERFECT_GRAPHICS | MACHINE_IMPERFECT_SOUND)
