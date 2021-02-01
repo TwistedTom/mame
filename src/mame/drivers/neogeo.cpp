@@ -12049,6 +12049,78 @@ void neogeo_base_state::multicart_w3(offs_t offset, uint16_t data)
 }
 
 
+ROM_START( ngmc161 )
+	ROM_REGION( 0x100000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
+	ROM_LOAD( "menu-p1.bin", 0x000000, 0x100000, CRC(39815ca6) SHA1(7df4e086319b3ad6d1fe8031d2d988ac71f702c2) )  // chinese
+	// ROM_FILL( 0xe2596, 1, 0x4e)
+	// ROM_FILL( 0xe2597, 1, 0x71)
+	// ROM_FILL( 0xe268e, 1, 0x4e)
+	// ROM_FILL( 0xe268f, 1, 0x71)
+
+	ROM_REGION( 0x20000, "cslot1:fixed", 0 )
+	ROM_LOAD( "menu-s1.bin", 0x000000, 0x20000, CRC(9687a9fe) SHA1(b5ff8eae9f29bf9d223f7d43488216b2638132d5) )
+	ROM_REGION( 0x20000, "fixedbios", 0 )
+	ROM_LOAD( "sfix.sfix", 0x000000, 0x20000, CRC(c2ea0cfd) SHA1(fd4a618cdcdbf849374f0a50dd8efe9dbab706c3) )
+	ROM_Y_ZOOM
+	
+	// no m, v, c  just use anything...
+	NEO_BIOS_AUDIO_128K( "014-m1.m1", CRC(b6683092) SHA1(623ec7ec2915fb077bf65b4a16c815e071c25259) )
+
+	ROM_REGION( 0x200000, "cslot1:ymsnd", 0 )
+	ROM_LOAD( "014-v1.v1", 0x000000, 0x100000, CRC(25419296) SHA1(c9fc04987c4e0875d276e1a0fb671740b6f548ad) )
+	ROM_LOAD( "014-v2.v2", 0x100000, 0x100000, CRC(0de53d5e) SHA1(467f6040da3dfb1974785e95e14c3f608a93720a) )
+
+	ROM_REGION( 0x400000, "cslot1:sprites", 0 )
+	ROM_LOAD16_BYTE( "014-c1.c1", 0x000000, 0x100000, CRC(5e4381bf) SHA1(d429a5e09dafd2fb99495658b3652eecbf58f91b) )
+	ROM_LOAD16_BYTE( "014-c2.c2", 0x000001, 0x100000, CRC(69ba4e18) SHA1(b3369190c47771a790c7adffa958ff55d90e758b) )
+	ROM_LOAD16_BYTE( "014-c3.c3", 0x200000, 0x100000, CRC(890327d5) SHA1(47f97bf120a8480758e1f3bb8982be4c5325c036) )
+	ROM_LOAD16_BYTE( "014-c4.c4", 0x200001, 0x100000, CRC(e4002651) SHA1(17e53a5f4708866a120415bf24f3b89621ad0bcc) )
+ROM_END
+
+
+ROM_START( ngmc161e )
+	ROM_REGION( 0x100000, "cslot1:maincpu", ROMREGION_BE|ROMREGION_16BIT )
+	ROM_LOAD( "menu-p2.bin", 0x000000, 0x100000, CRC(e3f3581a) SHA1(f3c6b9b94746dc5d538c8b936bfe277d21efa903) )  // english
+	// ROM_FILL( 0xe2596, 1, 0x4e)
+	// ROM_FILL( 0xe2597, 1, 0x71)
+	// ROM_FILL( 0xe268e, 1, 0x4e)
+	// ROM_FILL( 0xe268f, 1, 0x71)
+	// ROM_FILL( 0xff028, 1, 0x4e)
+	// ROM_FILL( 0xff029, 1, 0x71)
+	// ROM_FILL( 0xff0e6, 1, 0x4e)
+	// ROM_FILL( 0xff0e7, 1, 0x71)
+	// ROM_FILL( 0xff130, 1, 0x4e)
+	// ROM_FILL( 0xff131, 1, 0x71)
+	// ROM_FILL( 0xff190, 1, 0x4e)
+	// ROM_FILL( 0xff191, 1, 0x71)
+	// ROM_FILL( 0xff23e, 1, 0x4e)
+	// ROM_FILL( 0xff23f, 1, 0x71)
+	// ROM_FILL( 0xff3c4, 1, 0x4e)
+	// ROM_FILL( 0xff3c5, 1, 0x71)
+	// ROM_FILL( 0xff490, 1, 0x4e)
+	// ROM_FILL( 0xff491, 1, 0x71)
+
+	ROM_REGION( 0x20000, "cslot1:fixed", 0 )
+	ROM_LOAD( "menu-s1.bin", 0x000000, 0x20000, CRC(9687a9fe) SHA1(b5ff8eae9f29bf9d223f7d43488216b2638132d5) )
+	ROM_REGION( 0x20000, "fixedbios", 0 )
+	ROM_LOAD( "sfix.sfix", 0x000000, 0x20000, CRC(c2ea0cfd) SHA1(fd4a618cdcdbf849374f0a50dd8efe9dbab706c3) )
+	ROM_Y_ZOOM
+	
+	// no m, v, c  just use anything...
+	NEO_BIOS_AUDIO_128K( "014-m1.m1", CRC(b6683092) SHA1(623ec7ec2915fb077bf65b4a16c815e071c25259) )
+
+	ROM_REGION( 0x200000, "cslot1:ymsnd", 0 )
+	ROM_LOAD( "014-v1.v1", 0x000000, 0x100000, CRC(25419296) SHA1(c9fc04987c4e0875d276e1a0fb671740b6f548ad) )
+	ROM_LOAD( "014-v2.v2", 0x100000, 0x100000, CRC(0de53d5e) SHA1(467f6040da3dfb1974785e95e14c3f608a93720a) )
+
+	ROM_REGION( 0x400000, "cslot1:sprites", 0 )
+	ROM_LOAD16_BYTE( "014-c1.c1", 0x000000, 0x100000, CRC(5e4381bf) SHA1(d429a5e09dafd2fb99495658b3652eecbf58f91b) )
+	ROM_LOAD16_BYTE( "014-c2.c2", 0x000001, 0x100000, CRC(69ba4e18) SHA1(b3369190c47771a790c7adffa958ff55d90e758b) )
+	ROM_LOAD16_BYTE( "014-c3.c3", 0x200000, 0x100000, CRC(890327d5) SHA1(47f97bf120a8480758e1f3bb8982be4c5325c036) )
+	ROM_LOAD16_BYTE( "014-c4.c4", 0x200001, 0x100000, CRC(e4002651) SHA1(17e53a5f4708866a120415bf24f3b89621ad0bcc) )
+ROM_END
+
+
 
 /*************************************
  *
@@ -12777,6 +12849,8 @@ GAME( 2020, kof2002c,   neogeo,   neobase,   neogeo,    mvs_led_state, empty_ini
 GAME( 2020, samsh5spc,  neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "Yuki Enterprise / SNK Playmore", "Samurai Shodown V Special / Samurai Spirits Zero Special (NGM-2720) (PROGBK1/CHA512Y Conversion)", MACHINE_SUPPORTS_SAVE )
 GAME( 2020, ngridummy,  neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "xxxx", "dummy for rom ident", MACHINE_SUPPORTS_SAVE )
 GAME( 2020, ngmc120,    neogeo,   ngmc120,   neogeo,    mvs_led_state, empty_init, ROT0, "bootleg", "120-in-1 multi-cart", MACHINE_SUPPORTS_SAVE )
+GAME( 2020, ngmc161,    neogeo,   neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "bootleg", "161-in-1 multi-cart (chinese)", MACHINE_SUPPORTS_SAVE )
+GAME( 2020, ngmc161e,   ngmc161,  neobase,   neogeo,    mvs_led_state, empty_init, ROT0, "bootleg", "161-in-1 multi-cart (english)", MACHINE_SUPPORTS_SAVE )
 
 
 
