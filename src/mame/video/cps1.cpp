@@ -1979,6 +1979,7 @@ static const struct CPS1config cps1_config_table[]=
 	{"strideruah",  CPS_B_01,     mapper_ST24M1 },
 	{"sf2ceuch",    CPS_B_21_DEF, mapper_S9263B, 0x36 },
 	{"sf2cejch",    CPS_B_21_DEF, mapper_S9263B, 0x36 },
+	{"bmultimenu",  CPS_B_04,     mapper_S224B },   // ffight
 	
 	{nullptr}     /* End of table */
 };

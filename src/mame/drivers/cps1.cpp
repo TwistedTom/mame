@@ -15084,6 +15084,24 @@ ROM_START( sf2cejch )
 	ROM_LOAD( "s92_19.12c",  0x20000, 0x20000, CRC(beade53f) SHA1(277c397dc12752719ec6b47d2224750bd1c07f79) )
 ROM_END
 
+// b-multi menu
+ROM_START( bmultimenu )
+	ROM_REGION( CODE_SIZE, "maincpu", 0 )
+	ROM_LOAD( "bmulti-menu.bin", 0x00000, 0x10000, CRC(a04872fb) SHA1(26bb47af644419b6432b261957f6635f1fc3b8b7) )
+
+	ROM_REGION( 0x200000, "gfx", 0 )  // ffight
+	ROM_LOAD64_WORD( "ff-5m.7a", 0x000000, 0x80000, CRC(9c284108) SHA1(7868f5801347340867720255f8380548ad1a65a7) )
+	ROM_LOAD64_WORD( "ff-7m.9a", 0x000002, 0x80000, CRC(a7584dfb) SHA1(f7b00a3ca8cb85264ab293089f9f540a8292b49c) )
+	ROM_LOAD64_WORD( "ff-1m.3a", 0x000004, 0x80000, CRC(0b605e44) SHA1(5ce16af72858a57aefbf6efed820c2c51935882a) )
+	ROM_LOAD64_WORD( "ff-3m.5a", 0x000006, 0x80000, CRC(52291cd2) SHA1(df5f3d3aa96a7a33ff22f2a31382942c4c4f1111) )
+
+	ROM_REGION( 0x18000, "audiocpu", 0 )
+	ROM_FILL( 0, 0x18000, 0xff )
+
+	ROM_REGION( 0x40000, "oki", 0 )
+	ROM_FILL( 0, 0x40000, 0xff )
+ROM_END
+
 //                        PARENT     MACHINE      INPUT       CLASS       INIT
 GAME( 1988,  ghouls21,    ghouls,    cps1_12MHz,  ghouls,    cps_state,  init_cps1,  ROT0, "Capcom", "Ghouls'n Ghosts (World, 91635B-2)", MACHINE_SUPPORTS_SAVE )
 GAME( 1990,  mswordr121,  msword,    cps1_10MHz,  msword,    cps_state,  init_cps1,  ROT0, "Capcom", "Magic Sword: Heroic Fantasy (World 900623, CPS-B-21 patch)", MACHINE_SUPPORTS_SAVE )
@@ -15109,3 +15127,4 @@ GAME( 1989,  ffighth,     ffight,    cps1_10MHz,  ffight,    cps_state,  init_cp
 GAME( 1989,  strideruah,  strider,   cps1_10MHz,  strider,   cps_state,  init_cps1,  ROT0, "Capcom", "Strider (USA, B-Board 89624B-2, hack)", MACHINE_SUPPORTS_SAVE )
 GAME( 1992,  sf2ceuch,    sf2ce,     cps1_12MHz,  sf2,       cps_state,  init_cps1,  ROT0, "Capcom", "Street Fighter II': Champion Edition (USA 920803, hack)", MACHINE_SUPPORTS_SAVE )
 GAME( 1992,  sf2cejch,    sf2ce,     cps1_12MHz,  sf2,       cps_state,  init_cps1,  ROT0, "Capcom", "Street Fighter II': Champion Edition (Japan 920803, hack)", MACHINE_SUPPORTS_SAVE )
+GAME( 2021,  bmultimenu,  0,         cps1_10MHz,  cps1_3b,   cps_state,  init_cps1,  ROT0, "Tom",    "B-multi Game Select Menu", MACHINE_SUPPORTS_SAVE )
