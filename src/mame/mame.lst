@@ -32352,9 +32352,26 @@ samsho5c                        //
 kof2002c                        // 
 samsh5spc                       // 
 ngmc120                         // 
-ngridummy                       // 
 ngmc161                         // 
 ngmc161e                        // 
+svcpmc               // 001
+svcrmc               // 002
+svcspmc              // 003
+kof2003mc            // 036
+sonicwi2mc           // 048
+sonicwi3mc           // 049
+samsh5spmc           // 076
+pbobblenmc           // 104
+mutnatmc             // 117
+alpham2mc            // 119
+magdrop2mc           // 134
+kotmmc               // 146
+bjourneymc           // 148
+kof2003cmc           // 153
+magdrop3mc           // 155
+wjammersmc           // ---
+kotm2mc              // ---
+ninjamasmc           // new
 
 @source:neopcb.cpp
 kf2k3pcb                        // 0271 (c) 2003 Playmore - JAMMA PCB
