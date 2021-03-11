@@ -578,7 +578,7 @@ INPUT_PORTS_END
 
 void gnw_ball_state::gnw_ball(machine_config &config)
 {
-	sm5a_common(config, 1671, 1080); // R option mask confirmed
+	sm5a_common(config, 1671, 1080); // R mask option confirmed
 }
 
 // roms
@@ -1431,12 +1431,12 @@ INPUT_PORTS_END
 
 void gnw_mmouse_state::gnw_mmouse(machine_config &config)
 {
-	sm5a_common(config, 1684, 1080); // R mask option ?
+	sm5a_common(config, 1684, 1080); // R mask option confirmed
 }
 
 void gnw_mmouse_state::gnw_egg(machine_config &config)
 {
-	sm5a_common(config, 1690, 1080); // R mask option ?
+	sm5a_common(config, 1690, 1080); // R mask option confirmed
 }
 
 void gnw_mmouse_state::nupogodi(machine_config &config)
@@ -6956,7 +6956,7 @@ ROM_END
 
 /***************************************************************************
 
-  Tiger Home Alone (model 78-???)
+  Tiger Home Alone (model 78-502)
   * Sharp SM510 under epoxy (die label MC7)
   * lcd screen with custom segments, 1-bit sound
 
