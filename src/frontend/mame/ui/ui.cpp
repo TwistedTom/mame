@@ -210,7 +210,7 @@ void mame_ui_manager::init()
 				draw_text_box(container, messagebox_text, ui::text_layout::LEFT, 0.5f, 0.5f, colors().background_color());
 				return 0;
 			});
-	m_non_char_keys_down = std::make_unique<uint8_t[]>((ARRAY_LENGTH(non_char_keys) + 7) / 8);
+	m_non_char_keys_down = std::make_unique<uint8_t[]>((std::size(non_char_keys) + 7) / 8);
 	m_mouse_show = machine().system().flags & machine_flags::CLICKABLE_ARTWORK ? true : false;
 
 	// request notification callbacks
@@ -981,11 +981,6 @@ bool mame_ui_manager::is_menu_active(void)
 void mame_ui_manager::process_natural_keyboard()
 {
 	ui_event event;
-	int i, pressed;
-	input_item_id itemid;
-	input_code code;
-	uint8_t *key_down_ptr;
-	uint8_t key_down_mask;
 
 	// loop while we have interesting events
 	while (machine().ui_input().pop_event(&event))
@@ -996,18 +991,18 @@ void mame_ui_manager::process_natural_keyboard()
 	}
 
 	// process natural keyboard keys that don't get UI_EVENT_CHARs
-	for (i = 0; i < ARRAY_LENGTH(non_char_keys); i++)
+	for (int i = 0; i < std::size(non_char_keys); i++)
 	{
 		// identify this keycode
-		itemid = non_char_keys[i];
-		code = machine().input().code_from_itemid(itemid);
+		input_item_id itemid = non_char_keys[i];
+		input_code code = machine().input().code_from_itemid(itemid);
 
 		// ...and determine if it is pressed
-		pressed = machine().input().code_pressed(code);
+		bool pressed = machine().input().code_pressed(code);
 
 		// figure out whey we are in the key_down map
-		key_down_ptr = &m_non_char_keys_down[i / 8];
-		key_down_mask = 1 << (i % 8);
+		uint8_t *key_down_ptr = &m_non_char_keys_down[i / 8];
+		uint8_t key_down_mask = 1 << (i % 8);
 
 		if (pressed && !(*key_down_ptr & key_down_mask))
 		{
@@ -1220,26 +1215,11 @@ uint32_t mame_ui_manager::handler_ingame(render_container &container)
 			machine().set_ui_active(!machine().ui_active());
 
 			// display a popup indicating the new status
+			std::string const name = machine().input().seq_name(machine().ioport().type_seq(IPT_UI_TOGGLE_UI));
 			if (machine().ui_active())
-			{
-				popup_time(2, "%s\n%s\n%s\n%s\n%s\n%s\n",
-					_("Keyboard Emulation Status"),
-					"-------------------------",
-					_("Mode: PARTIAL Emulation"),
-					_("UI:   Enabled"),
-					"-------------------------",
-					_("**Use ScrLock to toggle**"));
-			}
+				popup_time(2, _("UI controls enabled\nUse %1$s to toggle"), name);
 			else
-			{
-				popup_time(2, "%s\n%s\n%s\n%s\n%s\n%s\n",
-					_("Keyboard Emulation Status"),
-					"-------------------------",
-					_("Mode: FULL Emulation"),
-					_("UI:   Disabled"),
-					"-------------------------",
-					_("**Use ScrLock to toggle**"));
-			}
+				popup_time(2, _("UI controls disabled\nUse %1$s to toggle"), name);
 		}
 	}
 
@@ -1260,7 +1240,8 @@ uint32_t mame_ui_manager::handler_ingame(render_container &container)
 	if (machine().ui_input().pressed(IPT_UI_TIMECODE))
 		machine().video().save_input_timecode();
 
-	if (ui_disabled) return ui_disabled;
+	if (ui_disabled)
+		return ui_disabled;
 
 	if (machine().ui_input().pressed(IPT_UI_CANCEL))
 	{
