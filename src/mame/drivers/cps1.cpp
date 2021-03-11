@@ -15161,7 +15161,7 @@ ROM_END
 // b-multi menu
 ROM_START( bmultimenu )
 	ROM_REGION( CODE_SIZE, "maincpu", 0 )
-	ROM_LOAD( "bmulti-menu.bin", 0x00000, 0x10000, CRC(a04872fb) SHA1(26bb47af644419b6432b261957f6635f1fc3b8b7) )
+	ROM_LOAD( "bmulti-menu.bin", 0x00000, 0x10000, CRC(bf770b44) SHA1(561c2433c93b4bcc3ce3e3bbbd3bfebaa6be77e6) )
 
 	ROM_REGION( 0x200000, "gfx", 0 )  // ffight
 	ROM_LOAD64_WORD( "ff-5m.7a", 0x000000, 0x80000, CRC(9c284108) SHA1(7868f5801347340867720255f8380548ad1a65a7) )
