@@ -56,7 +56,7 @@ u8 ym2610_device::read(offs_t offset)
 	u8 result = 0;
 	switch (offset & 3)
 	{
-		case 0:	// status port, YM2203 compatible
+		case 0: // status port, YM2203 compatible
 			result = m_opn.status() & (ymopna_engine::STATUS_TIMERA | ymopna_engine::STATUS_TIMERB | ymopna_engine::STATUS_BUSY);
 			break;
 
@@ -67,11 +67,11 @@ u8 ym2610_device::read(offs_t offset)
 				result = 1;  // ID code
 			break;
 
-		case 2:	// status port, extended
+		case 2: // status port, extended
 			result = m_eos_status & m_flag_mask;
 			break;
 
-		case 3:	// ADPCM-B data
+		case 3: // ADPCM-B data
 			break;
 	}
 	return result;
@@ -87,7 +87,7 @@ void ym2610_device::write(offs_t offset, u8 value)
 {
 	switch (offset & 3)
 	{
-		case 0:	// address port
+		case 0: // address port
 			m_address = value;
 
 			// write register to SSG emulator
@@ -201,11 +201,6 @@ void ym2610_device::device_start()
 	m_adpcm_a.save(*this);
 	m_adpcm_b.save(*this);
 
-	// configure ADPCM-B limit, since these registers are not
-	// directly accessible in the map
-	m_adpcm_b.write(0x0c, 0xff);
-	m_adpcm_b.write(0x0d, 0xff);
-
 	// automatically map memory regions if not configured externally
 	if (!has_configured_map(0) && !has_configured_map(1))
 	{
@@ -285,8 +280,6 @@ void ym2610_device::sound_stream_update(sound_stream &stream, std::vector<read_s
 		// update the OPN content; OPNB is 13-bit with no intermediate clipping
 		s32 lsum = 0, rsum = 0;
 		m_opn.output(lsum, rsum, 1, 32767, m_opn_mask);
-		lsum <<= 1;
-		rsum <<= 1;
 
 		// mix in the ADPCM
 		m_adpcm_a.output(lsum, rsum, 0x3f);
