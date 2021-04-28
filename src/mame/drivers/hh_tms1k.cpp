@@ -3,21 +3,21 @@
 // thanks-to:Sean Riddle, Kevin Horton
 /***************************************************************************
 
-  This driver is a collection of simple dedicated handheld and tabletop
-  toys based around the TMS1000 MCU series. Anything more complex or clearly
-  part of a series is (or will be) in its own driver, see:
-  - eva: Chrysler EVA-11 (and EVA-24)
-  - microvsn: Milton Bradley MicroVision
-  - sag: Entex Select-A-Game Machine
+This driver is a collection of simple dedicated handheld and tabletop
+toys based around the TMS1000 MCU series. Anything more complex or clearly
+part of a series is (or will be) in its own driver, see:
+- eva: Chrysler EVA-11 (and EVA-24)
+- microvsn: Milton Bradley MicroVision
+- sag: Entex Select-A-Game Machine
 
-  (contd.) hh_tms1k child drivers:
-  - tispellb: TI Spelling B series gen. 1
-  - tispeak: TI Speak & Spell series gen. 1
+(contd.) hh_tms1k child drivers:
+- tispellb: TI Spelling B series gen. 1
+- tispeak: TI Speak & Spell series gen. 1
 
-  Let's use this driver for a list of known devices and their serials,
-  excluding most of TI's own products(they normally didn't use "MP" codes).
-  For TI's calculators, a comprehensive list of MCU serials is available
-  on Joerg Woerner's datamath.org: http://www.datamath.org/IC_List.htm
+Let's use this driver for a list of known devices and their serials,
+excluding most of TI's own products(they normally didn't use "MP" codes).
+For TI's calculators, a comprehensive list of MCU serials is available
+on Joerg Woerner's datamath.org: http://www.datamath.org/IC_List.htm
 
   serial   device    etc.
 --------------------------------------------------------------------
@@ -73,7 +73,7 @@
  @MP3201   TMS1000   1977, Milton Bradley Electronic Battleship (1977, model 4750A)
  @MP3208   TMS1000   1977, Milton Bradley Electronic Battleship (1977, model 4750B)
  @MP3226   TMS1000   1978, Milton Bradley Simon (Rev A)
- *MP3232   TMS1000   1979, Fonas 2-Player Baseball (no "MP" on chip label)
+ *MP3232   TMS1000   1979, Fonas 2 Player Baseball (no "MP" on chip label)
  @MP3260   TMS1000   1979, Electroplay Quickfire
  @MP3300   TMS1000   1979, Milton Bradley Simon (Rev F)
  @MP3301A  TMS1000   1979, Milton Bradley Big Trak
@@ -137,21 +137,35 @@
 
   (* means undumped unless noted, @ denotes it's in this driver)
 
+ROM source notes when dumped from another publisher, but confident it's the same game:
+- arrball: Tandy Zingo
+- bcheetah: Fundimensions Incredible Brain Buggy
+- cmsport: Conic Basketball
+- cnbaskb: Cardinal Electronic Basketball
+- cnfball: Elecsonic Football
+- copycat: Sears Follow Me
+- ditto: Tandy Electronic Pocket Repeat
+- fxmcr165: Tandy Science Fair Microcomputer Trainer
+- ginv1000: Tandy Cosmic 1000 Fire Away
+- gjackpot: Entex Electronic Jackpot: Gin Rummy & Black Jack
+- gpoker: Entex Electronic Poker
+- matchnum: LJN Electronic Concentration
+- ti1250: Texas Instruments TI-1200
 
-  TODO:
-  - verify output PLA and microinstructions PLA for MCUs that have been dumped
-    electronically (mpla is usually the default, opla is often custom)
-  - unknown MCU clocks for some: TMS1000 RC curve is documented in the data manual,
-    but not for newer ones (rev. E or TMS1400 MCUs). TMS0970/0980 osc. is on-die.
-  - fake-press ON button when emulation starts for machines that have it on the button matrix
-    (doesn't look like any relies on it though)
-  - 7in1ss: in 2-player mode, game select and skill select can be configured after selecting a game?
-    Possibly BTANB, players are expected to quickly press the "First Up" button after the alarm sound.
-  - bship discrete sound, netlist is documented
-  - finish bshipb SN76477 sound
-  - improve elecbowl driver
-  - tithermos temperature sensor comparator (right now just the digital clock works)
-  - is alphie(patent) the same as the final version?
+TODO:
+- verify output PLA and microinstructions PLA for MCUs that have been dumped
+  electronically (mpla is usually the default, opla is often custom)
+- unknown MCU clocks for some: TMS1000 RC curve is documented in the data manual,
+  but not for newer ones (rev. E or TMS1400 MCUs). TMS0970/0980 osc. is on-die.
+- fake-press ON button when emulation starts for machines that have it on the button matrix
+  (doesn't look like any relies on it though)
+- 7in1ss: in 2-player mode, game select and skill select can be configured after selecting a game?
+  Possibly BTANB, players are expected to quickly press the "First Up" button after the alarm sound.
+- bship discrete sound, netlist is documented
+- finish bshipb SN76477 sound
+- improve elecbowl driver
+- tithermos temperature sensor comparator (right now just the digital clock works)
+- is alphie(patent) the same as the final version?
 
 ***************************************************************************/
 
@@ -387,7 +401,7 @@ namespace {
   used on the boxes for "A-One LSI" is same as "Bandai Electronics" from early-80s.
 
   known releases:
-  - Japan: Match Number (white case, Queen playing card bezel)
+  - Japan: Match Number, published by A-One (white case, Queen playing card bezel)
   - USA: Electronic Concentration, published by LJN (black case, rainbow pattern bezel)
   - UK: Electronic Concentration, published by Peter Pan Playthings (same as USA version)
 
@@ -527,7 +541,7 @@ ROM_END
   * 2-digit 7seg LED display + 22 LEDs, 1-bit sound
 
   known releases:
-  - Japan/World: Arrange Ball (black case)
+  - Japan/World: Arrange Ball, published by A-One (black case)
   - USA(1): Zingo (model 60-2123), published by Tandy (red case)
   - USA(2): Computer Impulse, published by LJN (white case)
   - Germany: Fixball, unknown publisher, same as LJN version
@@ -805,7 +819,7 @@ ROM_END
   and press the go-key.
 
   known releases:
-  - Japan: System Control Car: Cheetah
+  - Japan: System Control Car: Cheetah, published by Bandai
   - USA: The Incredible Brain Buggy, published by Fundimensions
   - UK: The Incredible Brain Buggy, published by Palitoy (same as USA version)
 
@@ -1402,7 +1416,7 @@ ROM_END
   * 9-digit LED grid, 1-bit sound
 
   known releases:
-  - USA(1): Electronic Quarterback
+  - USA(1): Electronic Quarterback, published by Coleco
   - USA(2): Electronic Touchdown, published by Sears
 
 ***************************************************************************/
@@ -1474,9 +1488,9 @@ static INPUT_PORTS_START( cqback )
 	PORT_BIT( 0x02, 0x02, IPT_CUSTOM ) PORT_CONDITION("IN.1", 0x01, EQUALS, 0x00) // run/kick
 
 	PORT_START("IN.2") // K4
-	PORT_CONFNAME( 0x03, 0x02, DEF_STR( Difficulty ) )
-	PORT_CONFSETTING(    0x02, "1" )
-	PORT_CONFSETTING(    0x01, "2" )
+	PORT_CONFNAME( 0x03, 0x01, DEF_STR( Difficulty ) )
+	PORT_CONFSETTING(    0x01, "1" )
+	PORT_CONFSETTING(    0x02, "2" )
 
 	PORT_START("IN.3") // K8
 	PORT_CONFNAME( 0x01, 0x00, "Factory Test" )
@@ -1534,7 +1548,7 @@ ROM_END
   offense blips appear brighter. The hardware is similar to cqback.
 
   known releases:
-  - USA(1): Head to Head: Electronic Football
+  - USA(1): Head to Head: Electronic Football, published by Coleco
   - USA(2): Team Play Football, published by Sears
 
 ***************************************************************************/
@@ -1868,7 +1882,7 @@ ROM_END
   * 9-digit cyan VFD display, and other LEDs behind bezel, 1-bit sound
 
   known releases:
-  - USA: Head to Head: Electronic Baseball
+  - USA: Head to Head: Electronic Baseball, published by Coleco
   - Japan: Computer Baseball, published by Tsukuda
 
 ***************************************************************************/
@@ -2520,7 +2534,7 @@ ROM_END
   MP0907(101-006) are nearly identical. MP0168 is found in Conic Multisport.
 
   known releases:
-  - Hong Kong: Electronic Basketball
+  - Hong Kong: Electronic Basketball, published by Conic
   - USA: Electronic Basketball, published by Cardinal
 
 ***************************************************************************/
@@ -2643,8 +2657,8 @@ ROM_END
   MAME external artwork is needed for the switchable overlays.
 
   known releases:
-  - Hong Kong: Electronic Multisport
-  - Hong Kong: Basketball/Ice Hockey/Soccer (3 separate handhelds)
+  - Hong Kong: Electronic Multisport, published by Conic
+  - Hong Kong: Basketball/Ice Hockey/Soccer, published by Conic (3 separate handhelds)
   - USA(1): Electronic Multisport, published by Innocron
   - USA(2): Sports Arena, published by Tandy (model 60-2158)
 
@@ -2770,9 +2784,9 @@ ROM_END
   by distributing the game under subsidiary brands - see list below.
 
   known releases:
-  - Hong Kong: Electronic Football, Conic
-  - USA(1): Football, E.R.S.(Electronic Readout Systems)
-  - USA(2): Football, ELECsonic
+  - Hong Kong: Electronic Football, published by Conic
+  - USA(1): Football, published by E.R.S.(Electronic Readout Systems)
+  - USA(2): Football, published by ELECsonic
   - USA(3): Football, no brand!
 
   Another hardware revision of this game uses a PIC16 MCU.
@@ -2915,8 +2929,8 @@ ROM_END
   the offense(player) leds brighter.
 
   known releases:
-  - Hong Kong: Electronic Football II, Conic
-  - USA: Electronic Football II, Tandy
+  - Hong Kong: Electronic Football II, published by Conic
+  - USA: Electronic Football II, published by Tandy
 
 ***************************************************************************/
 
@@ -3047,7 +3061,7 @@ ROM_END
   This is a peg solitaire game, with random start position.
 
   known releases:
-  - Hong Kong: Electronic I.Q.
+  - Hong Kong: Electronic I.Q., published by Conic
   - UK: Solitaire, published by Grandstand
 
 ***************************************************************************/
@@ -3216,7 +3230,6 @@ void qfire_state::write_r(u16 data)
 
 	// R3,R4,R6-R8: leds (direct)
 	m_display->write_row(2, (data >> 3 & 3) | (data >> 4 & 0x1c));
-	m_display->update();
 
 	// R9: speaker out
 	m_speaker->level_w(data >> 9 & 1);
@@ -3228,7 +3241,6 @@ void qfire_state::write_o(u16 data)
 	// O1-O7: 2nd digit segments
 	m_display->write_row(0, (data & 1) ? 6 : 0);
 	m_display->write_row(1, data >> 1 & 0x7f);
-	m_display->update();
 }
 
 u8 qfire_state::read_k()
@@ -3770,13 +3782,12 @@ void ebball3_state::set_clock()
 
 void ebball3_state::update_display()
 {
-	m_display->matrix_partial(0, 10, m_r, m_o, false);
+	m_display->matrix_partial(0, 10, m_r, m_o);
 
 	// R0,R1 are normal 7segs
 	// R4,R7 contain segments(only F and B) for the two other digits
 	m_display->write_row(10, (m_display->read_row(4) & 0x20) | (m_display->read_row(7) & 0x02));
 	m_display->write_row(11, ((m_display->read_row(4) & 0x10) | (m_display->read_row(7) & 0x01)) << 1);
-	m_display->update();
 }
 
 void ebball3_state::write_r(u16 data)
@@ -4583,7 +4594,7 @@ ROM_END
   * 4 7seg LEDs, 37 other LEDs, 1-bit sound
 
   known releases:
-  - World: 2 Player Baseball
+  - World: 2 Player Baseball, published by Fonas
   - USA: 2 Player Baseball, published by Sears
   - Canada: 2 Player Baseball, published by Talbot Electronics
 
@@ -4866,7 +4877,7 @@ ROM_END
   * 11-digit cyan VFD display Itron FG1114B, oscillator sound
 
   known releases:
-  - Japan: Poker
+  - Japan: Poker, published by Gakken
   - USA: Electronic Poker, published by Entex
 
 ***************************************************************************/
@@ -5000,7 +5011,7 @@ void gpoker_state::gpoker(machine_config &config)
 
 	/* sound hardware */
 	SPEAKER(config, "mono").front_center();
-	BEEP(config, m_beeper, 2405); // astable multivibrator - C1 and C2 are 0.003uF, R1 and R4 are 1K, R2 and R3 are 100K
+	BEEP(config, m_beeper, 2400); // astable multivibrator - C1 and C2 are 0.003uF, R1 and R4 are 1K, R2 and R3 are 100K
 	m_beeper->add_route(ALL_OUTPUTS, "mono", 0.25);
 }
 
@@ -5028,7 +5039,7 @@ ROM_END
   * 11-digit cyan VFD display Itron FG1114B, oscillator sound
 
   known releases:
-  - Japan: Jackpot(?)
+  - Japan: Jackpot(?), published by Gakken
   - USA: Electronic Jackpot: Gin Rummy & Black Jack, published by Entex
 
 ***************************************************************************/
@@ -5149,7 +5160,7 @@ ROM_END
   * cyan VFD display Itron? CP5008A, 1-bit sound
 
   known releases:
-  - World: Invader
+  - World: Invader, published by Gakken
   - USA(1): Galaxy Invader, published by CGL
   - USA(2): Fire Away, published by Tandy
   - USA(3): Electron Blaster, published by Vanity Fair
@@ -5276,8 +5287,8 @@ ROM_END
   * cyan/red VFD display Futaba DM-25Z 2D, 1-bit sound
 
   known releases:
-  - World: Galaxy Invader 1000
-  - Japan: Invader 1000
+  - World: Galaxy Invader 1000, published by Gakken
+  - Japan: Invader 1000, published by Gakken
   - USA(1): Galaxy Invader 1000, published by CGL
   - USA(2): Cosmic 1000 Fire Away, published by Tandy
 
@@ -5402,7 +5413,7 @@ ROM_END
   * cyan/red/green VFD display, 1-bit sound
 
   known releases:
-  - World: Invader 2000
+  - World: Invader 2000, published by Gakken
   - USA(1): Galaxy Invader 10000, published by CGL
   - USA(2): Cosmic 3000 Fire Away, published by Tandy
 
@@ -5548,7 +5559,7 @@ ROM_END
   the R-165 as GMC-4, obviously on modern hardware, but fully compatible.
 
   known releases:
-  - Japan: FX-Micom R-165
+  - Japan: FX-Micom R-165, published by Gakken
   - USA: Science Fair Microcomputer Trainer, published by Tandy. Of note is
     the complete redesign of the case, adding more adjustable wiring
 
@@ -5577,7 +5588,6 @@ void fxmcr165_state::update_display()
 
 	// leds from R4-R10
 	m_display->write_row(1, m_r >> 4 & 0x7f);
-	m_display->update();
 }
 
 void fxmcr165_state::write_r(u16 data)
@@ -6163,7 +6173,7 @@ public:
 void elecbowl_state::update_display()
 {
 	// standard 7segs
-	m_display->matrix_partial(0, 4, m_r >> 4, m_o, false);
+	m_display->matrix_partial(0, 4, m_r >> 4, m_o);
 
 	// lamp muxes
 	u8 sel = m_o & 7;
@@ -6175,7 +6185,6 @@ void elecbowl_state::update_display()
 
 	// digit 4 is from mux2 Q7
 	m_display->write_row(4, m_display->read_element(6, 7) ? 6 : 0);
-	m_display->update();
 }
 
 void elecbowl_state::write_r(u16 data)
@@ -6325,13 +6334,11 @@ void horseran_state::lcd_output_w(offs_t offset, u32 data)
 		return;
 
 	// update lcd segments
-	m_display->matrix_partial(0, 3, 1 << offset, data, false);
+	m_display->matrix_partial(0, 3, 1 << offset, data);
 
 	// col5-11 and col13-19 are 7segs
 	for (int i = 0; i < 2; i++)
 		m_display->write_row(3 + (offset << 1 | i), bitswap<8>(data >> (4+8*i),7,3,5,2,0,1,4,6) & 0x7f);
-
-	m_display->update();
 }
 
 void horseran_state::write_r(u16 data)
@@ -6654,9 +6661,9 @@ ROM_END
   Refer to the official manual for more information.
 
   known releases:
-  - USA: Comp IV (two versions, different case)
-  - Europe: Logic 5
-  - Japan: Pythaligoras
+  - USA: Comp IV (two versions, different case), published by MB
+  - Europe: Logic 5, published by MB
+  - Japan: Pythaligoras, published by Takara
 
 ***************************************************************************/
 
@@ -7690,8 +7697,6 @@ void mbdtower_state::update_display()
 		m_display->write_row(2, (m_o & 0x80) ? o : 0);
 		m_display->write_row(1, (m_o & 0x80) ? 0 : o);
 		m_display->write_row(0, (m_r >> 8 & 1) | (m_r >> 4 & 0xe));
-
-		m_display->update();
 	}
 	else
 	{
@@ -9260,7 +9265,7 @@ ROM_END
   * 12 lamps behind buttons, 1-bit sound
 
   known releases:
-  - World: Tandy-12: Computerized Arcade
+  - World: Tandy-12: Computerized Arcade, published by Tandy
   - Mexico: Fabuloso Fred, published by Ensueño Toys (also released as
     9-button version, a clone of Mego Fabulous Fred)
 
@@ -9441,7 +9446,7 @@ ROM_END
   tell you if it was right(green) or wrong(red). For example 1+2=3?
 
   known releases:
-  - USA(1): Monkey See
+  - USA(1): Monkey See, published by Tandy
   - USA(2): Heathcliff, published by McNaught Syndicate in 1983
 
 ***************************************************************************/
@@ -9746,13 +9751,12 @@ public:
 
 void tisr16_state::update_display()
 {
-	m_display->matrix(m_r, m_o, false);
+	m_display->matrix(m_r, m_o);
 
 	// exponent sign is from R10 O1, and R10 itself only uses segment G
 	u8 r10 = m_display->read_row(10);
 	m_display->write_row(11, r10 << 5 & 0x40);
 	m_display->write_row(10, r10 & 0x40);
-	m_display->update();
 }
 
 void tisr16_state::write_r(u16 data)
@@ -10943,14 +10947,13 @@ void lilprof78_state::write_r(u16 data)
 	// update leds state
 	u8 seg = bitswap<8>(m_o,7,4,3,2,1,0,6,5) & 0x7f;
 	u16 r = (data & 7) | (data << 1 & 0x1f0);
-	m_display->matrix(r, seg, false);
+	m_display->matrix(r, seg);
 
 	// 3rd digit A/G(equals sign) is from O7
 	m_display->write_row(3, (r != 0 && m_o & 0x80) ? 0x41 : 0);
 
 	// 6th digit is a custom 7seg for math symbols (see wizatron_state write_r)
 	m_display->write_row(6, bitswap<8>(m_display->read_row(6),7,6,1,4,2,3,5,0));
-	m_display->update();
 }
 
 void lilprof78_state::write_o(u16 data)
@@ -11608,7 +11611,7 @@ ROM_END
   * 4 LEDs, 1-bit sound
 
   known releases:
-  - World: Copy Cat
+  - World: Copy Cat, published by Tiger
   - USA(1): Follow Me, published by Sears
   - USA(2): Electronic Repeat, published by Tandy
 
@@ -11815,7 +11818,7 @@ ROM_END
   * 4 LEDs, 1-bit sound
 
   known releases:
-  - World: Ditto
+  - World: Ditto, published by Tiger
   - USA: Electronic Pocket Repeat (model 60-2152/60-2468A), published by Tandy
     note: 1996 model 60-2482 MCU is a Z8, and is assumed to be a clone of Tiger Copycat Jr.
 
@@ -11904,7 +11907,7 @@ ROM_END
   MAME external artwork is needed for the switchable overlays.
 
   known releases:
-  - World: 7 in 1 Sports Stadium
+  - World: 7 in 1 Sports Stadium, published by Tiger
   - USA: 7 in 1 Sports, published by Sears
 
 ***************************************************************************/
@@ -12031,9 +12034,9 @@ ROM_END
   * 2-digit 7seg display, 46 other leds, 1-bit sound
 
   known releases:
-  - USA: Break Up
-  - Japan: Block Attack
-  - UK: Break-In
+  - USA: Break Up, published by Tomy
+  - Japan: Block Attack, published by Tomy
+  - UK: Break-In, published by Tomy
 
   led translation table: led zz from game PCB = MAME y.x:
 
@@ -12109,16 +12112,14 @@ void tbreakup_state::set_clock()
 void tbreakup_state::update_display()
 {
 	// 7seg leds from R0,R1 and O0-O6
-	m_display->matrix_partial(0, 2, m_r, m_o & 0x7f, false);
+	m_display->matrix_partial(0, 2, m_r, m_o & 0x7f);
 
 	// 22 round leds from O2-O7 and expander port 7
-	m_display->matrix_partial(2, 6, m_o >> 2, m_exp_port[6], false);
+	m_display->matrix_partial(2, 6, m_o >> 2, m_exp_port[6]);
 
 	// 24 rectangular leds from expander ports 1-6 (not strobed)
 	for (int y = 0; y < 6; y++)
 		m_display->write_row(y+8, m_exp_port[y]);
-
-	m_display->update();
 }
 
 void tbreakup_state::expander_w(offs_t offset, u8 data)
@@ -12234,9 +12235,9 @@ ROM_END
   * 3 7seg LEDs, and other LEDs behind bezel, 1-bit sound
 
   known releases:
-  - USA: Power House Pinball
-  - Japan: Pinball
-  - Europe: Flipper
+  - USA: Power House Pinball, published by Tomy
+  - Japan: Pinball, published by Tomy
+  - Europe: Flipper, published by Tomy
 
   led translation table: led zz from game PCB = MAME y.x:
 
@@ -12807,4 +12808,4 @@ CONS( 1980, ssports4,   0,         0, ssports4,  ssports4,  ssports4_state,  emp
 CONS( 1983, xl25,       0,         0, xl25,      xl25,      xl25_state,      empty_init, "Vulcan Electronics", "XL 25", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
 
 // ***: As far as MAME is concerned, the game is emulated fine. But for it to be playable, it requires interaction
-// with other, unemulatable, things eg. game board/pieces, playing cards, pen & paper, etc.
+// with other, unemulatable, things eg. game board/pieces, book, playing cards, pen & paper, etc.

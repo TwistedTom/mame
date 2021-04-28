@@ -3172,6 +3172,19 @@ if (MACHINES["T10"]~=null) then
 	}
 end
 
+
+---------------------------------------------------
+--
+--@src/devices/machine/smartboard.h,MACHINES["TASC_SB30"] = true
+---------------------------------------------------
+
+if (MACHINES["TASC_SB30"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/machine/smartboard.cpp",
+		MAME_DIR .. "src/devices/machine/smartboard.h",
+	}
+end
+
 ---------------------------------------------------
 --
 --@src/devices/machine/tc009xlvc.h,MACHINES["TC0091LVC"] = true
@@ -4606,6 +4619,7 @@ end
 ---------------------------------------------------
 
 if (MACHINES["CXD1185"]~=null) then
+	MACHINES["NSCSI"] = true
 	files {
 		MAME_DIR .. "src/devices/machine/cxd1185.cpp",
 		MAME_DIR .. "src/devices/machine/cxd1185.h",
@@ -4664,6 +4678,17 @@ if (MACHINES["SWIM3"]~=null) then
 	files {
 		MAME_DIR .. "src/devices/machine/swim3.cpp",
 		MAME_DIR .. "src/devices/machine/swim3.h",
+	}
+end
+
+---------------------------------------------------
+--
+--@src/devices/machine/mv_sonora.h,MACHINES["MAC_VIDEO_SONORA"] = true
+---------------------------------------------------
+if (MACHINES["MAC_VIDEO_SONORA"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/machine/mv_sonora.cpp",
+		MAME_DIR .. "src/devices/machine/mv_sonora.h",
 	}
 end
 
