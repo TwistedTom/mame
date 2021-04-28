@@ -149,6 +149,7 @@ CPUS["FR"] = true
 CPUS["UPD78K"] = true
 CPUS["KS0164"] = true
 --CPUS["COPS1"] = true
+CPUS["MEG"] = true
 
 --------------------------------------------------
 -- specify available sound cores
@@ -293,6 +294,8 @@ SOUNDS["KS0164"] = true
 SOUNDS["TT5665"] = true
 --SOUNDS["RP2C33_SOUND"] = true
 --SOUNDS["UDA1344"] = true
+SOUNDS["SWP30"] = true
+SOUNDS["XT446"] = true
 
 --------------------------------------------------
 -- specify available video cores
@@ -409,8 +412,6 @@ MACHINES["BUSMOUSE"] = true
 MACHINES["CR511B"] = true
 MACHINES["DMAC"] = true
 MACHINES["GAYLE"] = true
-MACHINES["NCR53C7XX"] = true
-MACHINES["LSI53C810"] = true
 MACHINES["2812FIFO"] = true
 MACHINES["6522VIA"] = true
 MACHINES["TPI6525"] = true
@@ -476,6 +477,7 @@ MACHINES["CR589"] = true
 --MACHINES["CS4031"] = true
 --MACHINES["CS8221"] = true
 MACHINES["CXD1095"] = true
+MACHINES["CXD1185"] = true
 MACHINES["DP8390"] = true
 --MACHINES["DP8573"] = true
 MACHINES["DS1204"] = true
@@ -540,7 +542,7 @@ MACHINES["LDVP931"] = true
 MACHINES["LINFLASH"] = true
 --MACHINES["LOCOMO"] = true
 MACHINES["LPCI"] = true
---MACHINES["LSI53C810"] = true
+MACHINES["LSI53C810"] = true
 --MACHINES["M3002"] = true
 --MACHINES["M68307"] = true
 --MACHINES["M68340"] = true
@@ -591,7 +593,7 @@ MACHINES["NCR5380N"] = true
 MACHINES["NCR5390"] = true
 MACHINES["NCR539x"] = true
 MACHINES["NETLIST"] = true
---MACHINES["NCR53C7XX"] = true
+MACHINES["NCR53C7XX"] = true
 MACHINES["NMC9306"] = true
 --MACHINES["NSC810"] = true
 MACHINES["NSCSI"] = true
@@ -641,7 +643,7 @@ MACHINES["SCSI"] = true
 MACHINES["SCUDSP"] = true
 MACHINES["SDA2006"] = true
 --MACHINES["SECFLASH"] = true
---MACHINES["SENSORBOARD"] = true
+MACHINES["SENSORBOARD"] = true
 MACHINES["SERFLASH"] = true
 MACHINES["SMC91C9X"] = true
 MACHINES["SEGA_SCU"] = true
@@ -650,6 +652,7 @@ MACHINES["SMPC"] = true
 MACHINES["STVCD"] = true
 --MACHINES["SUN4C_MMU"] = true
 MACHINES["SWTPC8212"] = true
+MACHINES["TASC_SB30"] = true
 MACHINES["TC0091LVC"] = true
 --MACHINES["TDC1008"] = true
 MACHINES["TE7750"] = true
@@ -709,6 +712,7 @@ MACHINES["STEPPERS"] = true
 --MACHINES["SWIM1"] = true
 --MACHINES["SWIM2"] = true
 --MACHINES["SWIM3"] = true
+--MACHINES["MAC_VIDEO_SONORA"] = true
 --MACHINES["DIABLO_HD"] = true
 MACHINES["PCI9050"] = true
 MACHINES["TMS1024"] = true
@@ -750,6 +754,7 @@ MACHINES["VRENDER0"] = true
 --BUSES["ABCKB"] = true
 --BUSES["ADAM"] = true
 --BUSES["ADAMNET"] = true
+--BUSES["ADB"] = true
 --BUSES["APF"] = true
 BUSES["AMIGA_KEYBOARD"] = true
 --BUSES["ARCADIA"] = true
@@ -838,6 +843,7 @@ BUSES["VECTREX"] = true
 --BUSES["X68K"] = true
 --BUSES["Z88"] = true
 BUSES["ZORRO"] = true
+--BUSES["THOMSON"] = true
 
 
 --------------------------------------------------
@@ -2553,6 +2559,8 @@ files {
 	MAME_DIR .. "src/mame/machine/k573msu.h",
 	MAME_DIR .. "src/mame/machine/k573npu.cpp",
 	MAME_DIR .. "src/mame/machine/k573npu.h",
+	MAME_DIR .. "src/mame/machine/k007452.cpp",
+	MAME_DIR .. "src/mame/machine/k007452.h",
 	MAME_DIR .. "src/mame/machine/zs01.cpp",
 	MAME_DIR .. "src/mame/machine/zs01.h",
 	MAME_DIR .. "src/mame/drivers/labyrunr.cpp",
@@ -2981,6 +2989,8 @@ files {
 	MAME_DIR .. "src/mame/includes/namcos2.h",
 	MAME_DIR .. "src/mame/machine/namcos2.cpp",
 	MAME_DIR .. "src/mame/video/namcos2.cpp",
+	MAME_DIR .. "src/mame/video/namco_c45road.cpp",
+	MAME_DIR .. "src/mame/video/namco_c45road.h",
 	MAME_DIR .. "src/mame/video/namco_c169roz.cpp",
 	MAME_DIR .. "src/mame/video/namco_c169roz.h",
 	MAME_DIR .. "src/mame/video/namco_c355spr.cpp",
@@ -3078,8 +3088,6 @@ files {
 	MAME_DIR .. "src/mame/audio/namco54.h",
 	MAME_DIR .. "src/mame/video/namco_c116.cpp",
 	MAME_DIR .. "src/mame/video/namco_c116.h",
-	MAME_DIR .. "src/mame/video/c45.cpp",
-	MAME_DIR .. "src/mame/video/c45.h",
 }
 
 createMAMEProjects(_target, _subtarget, "nasco")
@@ -3856,8 +3864,9 @@ files {
 createMAMEProjects(_target, _subtarget, "snk")
 files {
 	MAME_DIR .. "src/mame/drivers/bbusters.cpp",
-	MAME_DIR .. "src/mame/includes/bbusters.h",
-	MAME_DIR .. "src/mame/video/bbusters.cpp",
+	MAME_DIR .. "src/mame/drivers/mechatt.cpp",
+	MAME_DIR .. "src/mame/video/snk_bbusters_spr.cpp",
+	MAME_DIR .. "src/mame/video/snk_bbusters_spr.h",
 	MAME_DIR .. "src/mame/drivers/dmndrby.cpp",
 	MAME_DIR .. "src/mame/drivers/hng64.cpp",
 	MAME_DIR .. "src/mame/includes/hng64.h",
@@ -5154,6 +5163,7 @@ files {
 	MAME_DIR .. "src/mame/drivers/video21.cpp",
 	MAME_DIR .. "src/mame/drivers/videosaa.cpp",
 	MAME_DIR .. "src/mame/drivers/vlc.cpp",
+	MAME_DIR .. "src/mame/drivers/vlc34010.cpp",
 	MAME_DIR .. "src/mame/drivers/voyager.cpp",
 	MAME_DIR .. "src/mame/drivers/vp101.cpp",
 	MAME_DIR .. "src/mame/drivers/vpoker.cpp",
