@@ -1614,7 +1614,7 @@ void towns_state::towns_cdrom_play_cdda(cdrom_image_device* device)
 	lba2 += m_towns_cd.parameter[3] << 8;
 	lba2 += m_towns_cd.parameter[2];
 	m_towns_cd.cdda_current = msf_to_lbafm(lba1);
-	m_towns_cd.cdda_length = msf_to_lbafm(lba2) - m_towns_cd.cdda_current;
+	m_towns_cd.cdda_length = msf_to_lbafm(lba2) - m_towns_cd.cdda_current + 1;
 
 	m_cdda->set_cdrom(device->get_cdrom_file());
 	m_cdda->start_audio(m_towns_cd.cdda_current,m_towns_cd.cdda_length);
@@ -2761,6 +2761,11 @@ void towns_state::machine_start()
 		m_flop[0]->get_device()->set_rpm(360);
 	if (m_flop[1]->get_device())
 		m_flop[1]->get_device()->set_rpm(360);
+
+	// uninitialized PCM RAM filled with 0xff (fmtmarty chasehq relies on that)
+	address_space &space = subdevice<rf5c68_device>("pcm")->space(0);
+	for (int i = 0; i < 0x10000; i++)
+		space.write_byte(i, 0xff);
 
 	m_timer0 = 0;
 	m_timer1 = 0;
