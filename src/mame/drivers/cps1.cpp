@@ -15176,6 +15176,83 @@ ROM_START( bmultimenu )
 	ROM_FILL( 0, 0x40000, 0xff )
 ROM_END
 
+// sf2cebl3
+ROM_START( sf2cemc )
+	ROM_REGION( CODE_SIZE, "maincpu", 0 )
+	//ROM_LOAD( "sf2cemc.bin", 0x000000, 0x140000, CRC(a954e953) SHA1(e97b81efc0a61e0d3a3b33e4ce79834220e54f15) )
+	ROM_LOAD16_BYTE( "mega_4.u222", 0x000000, 0x80000, CRC(9e6d058a) SHA1(8c9adca7b65dc929c325c0a62304d24dc0902c08) )  // 27c040
+	ROM_LOAD16_BYTE( "mega_3.u196", 0x000001, 0x80000, CRC(518d8404) SHA1(635d8ac07126caf3c623d1f28aad38c5bc4c4bae) )  // 27c040
+	ROM_LOAD16_BYTE( "mega_2.u221", 0x100000, 0x20000, CRC(fca4fc1e) SHA1(2b05d67443af099f95ef50f5e25d7a74b957e7a5) )  // 27c010
+	ROM_LOAD16_BYTE( "mega_1.u195", 0x100001, 0x20000, CRC(cfdd6f54) SHA1(2aa3f5a7b36930185382c64712cc0cfceb6f1ab3) )  // 27c010
+	
+	ROM_REGION( 0x600000, "gfx", 0 )
+	ROM_LOAD( "sf2_gfx.bin", 0x000000, 0x600000, CRC(b758db52) SHA1(db52a6314b4c0cd4c48eb324720c83dd142c3bff) )
+	
+	ROM_REGION( 0x18000, "audiocpu", 0 )
+	ROM_LOAD( "s92_09.11a",  0x00000, 0x08000, CRC(08f6b60e) SHA1(8258fcaca4ac419312531eec67079b97f471179c) )
+	ROM_CONTINUE(            0x10000, 0x08000 )
+
+	ROM_REGION( 0x40000, "oki", 0 )
+	ROM_LOAD( "s92_18.11c",  0x00000, 0x20000, CRC(7f162009) SHA1(346bf42992b4c36c593e21901e22c87ae4a7d86d) )
+	ROM_LOAD( "s92_19.12c",  0x20000, 0x20000, CRC(beade53f) SHA1(277c397dc12752719ec6b47d2224750bd1c07f79) )
+	
+	ROM_REGION( 0x400, "plds", 0 )
+	ROM_LOAD( "mega_16v8.u176", 0x000, 0x117, CRC(4d2acc03) SHA1(cef5902d397928b5ce37f9b98c3d806d4450bbca) )
+	ROM_LOAD( "mega_16v8.u177", 0x200, 0x117, CRC(cc3c48a3) SHA1(67065ba31dee45ffe32b5655db07c76f0177a3d0) )
+ROM_END
+
+void cps_state::sf2cemc_map(address_map &map)
+{
+	map(0x000000, 0x3fffff).rom();
+	map(0x800000, 0x800007).portr("IN1");
+	map(0x800018, 0x80001f).r(FUNC(cps_state::cps1_hack_dsw_r));
+	//map(0x800020, 0x800021).nopr();
+	map(0x800030, 0x800037).w(FUNC(cps_state::cps1_coinctrl_w));
+	map(0x800100, 0x80013f).w(FUNC(cps_state::cps1_cps_a_w)).share("cps_a_regs");
+	map(0x800140, 0x80017f).rw(FUNC(cps_state::cps1_cps_b_r), FUNC(cps_state::cps1_cps_b_w)).share("cps_b_regs");
+	map(0x800180, 0x800187).w(FUNC(cps_state::cps1_soundlatch_w));
+	map(0x800188, 0x80018f).w(FUNC(cps_state::cps1_soundlatch2_w));
+	//map(0x8001a2, 0x8001b3).w(FUNC(cps_state::cps1_cps_a_w)); // make 8001b2 point at 800110
+	map(0x8001fe, 0x8001ff).nopw(); // writes FFFF here a lot
+	map(0x900000, 0x92ffff).ram().w(FUNC(cps_state::cps1_gfxram_w)).share("gfxram");
+	//map(0xe00000, 0xefffff).ram(); // it writes to the whole range at start
+	//map(0xf1c000, 0xf1c001).r(FUNC(cps_state::cps1_in2_r));
+	//map(0xfeff00, 0xfeffff).ram(); // fix stack crash at start
+	map(0xff0000, 0xffffff).ram().share("mainram");
+}
+
+void cps_state::sf2cemc(machine_config &config)
+{
+	cps1_10MHz(config);
+	m_maincpu->set_addrmap(AS_PROGRAM, &cps_state::sf2cemc_map);
+}
+
+// palette correction hack
+ROM_START( sf2cemch )
+	ROM_REGION( CODE_SIZE, "maincpu", 0 )
+	//ROM_LOAD( "sf2cemch.bin", 0x000000, 0x140000, CRC(99587264) SHA1(15d47d33659f73d4327ad659128809ca54297126) )
+	ROM_LOAD16_BYTE( "mega_4h.u222", 0x000000, 0x80000, CRC(0b54fbd8) SHA1(e06c053850a23cdf43c55c8f913bfb6776bd7eec) )  // 27c040
+	ROM_LOAD16_BYTE( "mega_3h.u196", 0x000001, 0x80000, CRC(2cb7eeda) SHA1(e2d331964c1e00c246d990a960f721be689bc029) )  // 27c040
+	ROM_LOAD16_BYTE( "mega_2h.u221", 0x100000, 0x20000, CRC(f3b8f84a) SHA1(7a96d3b4fbcabe873d293bee207ee2a00d6bca1a) )  // 27c010
+	ROM_LOAD16_BYTE( "mega_1h.u195", 0x100001, 0x20000, CRC(4e40b9aa) SHA1(dc7fc8ecd0f3af1acd09cc7e1d9319d7973cbf41) )  // 27c010
+
+	ROM_REGION( 0x600000, "gfx", 0 )
+	ROM_LOAD( "sf2_gfx.bin", 0x000000, 0x600000, CRC(b758db52) SHA1(db52a6314b4c0cd4c48eb324720c83dd142c3bff) )
+
+	ROM_REGION( 0x18000, "audiocpu", 0 )
+	ROM_LOAD( "s92_09.11a",  0x00000, 0x08000, CRC(08f6b60e) SHA1(8258fcaca4ac419312531eec67079b97f471179c) )
+	ROM_CONTINUE(            0x10000, 0x08000 )
+
+	ROM_REGION( 0x40000, "oki", 0 )
+	ROM_LOAD( "s92_18.11c",  0x00000, 0x20000, CRC(7f162009) SHA1(346bf42992b4c36c593e21901e22c87ae4a7d86d) )
+	ROM_LOAD( "s92_19.12c",  0x20000, 0x20000, CRC(beade53f) SHA1(277c397dc12752719ec6b47d2224750bd1c07f79) )
+
+	ROM_REGION( 0x400, "plds", 0 )
+	ROM_LOAD( "mega_16v8.u176", 0x000, 0x117, CRC(4d2acc03) SHA1(cef5902d397928b5ce37f9b98c3d806d4450bbca) )
+	ROM_LOAD( "mega_16v8.u177", 0x200, 0x117, CRC(cc3c48a3) SHA1(67065ba31dee45ffe32b5655db07c76f0177a3d0) )
+ROM_END
+
+
 //                        PARENT     MACHINE      INPUT       CLASS       INIT
 GAME( 1988,  ghouls21,    ghouls,    cps1_12MHz,  ghouls,    cps_state,  init_cps1,  ROT0, "Capcom", "Ghouls'n Ghosts (World, 91635B-2)", MACHINE_SUPPORTS_SAVE )
 GAME( 1990,  mswordr121,  msword,    cps1_10MHz,  msword,    cps_state,  init_cps1,  ROT0, "Capcom", "Magic Sword: Heroic Fantasy (World 900623, CPS-B-21 patch)", MACHINE_SUPPORTS_SAVE )
@@ -15202,3 +15279,5 @@ GAME( 1989,  strideruah,  strider,   cps1_10MHz,  strider,   cps_state,  init_cp
 GAME( 1992,  sf2ceuch,    sf2ce,     cps1_12MHz,  sf2,       cps_state,  init_cps1,  ROT0, "Capcom", "Street Fighter II': Champion Edition (USA 920803, hack)", MACHINE_SUPPORTS_SAVE )
 GAME( 1992,  sf2cejch,    sf2ce,     cps1_12MHz,  sf2,       cps_state,  init_cps1,  ROT0, "Capcom", "Street Fighter II': Champion Edition (Japan 920803, hack)", MACHINE_SUPPORTS_SAVE )
 GAME( 2021,  bmultimenu,  0,         cps1_10MHz,  cps1_3b,   cps_state,  init_cps1,  ROT0, "Tom",    "B-multi Game Select Menu", MACHINE_SUPPORTS_SAVE )
+GAME( 1992,  sf2cemc,     sf2ce,     sf2cemc,     sf2m2,     cps_state,  init_cps1,  ROT0, "bootleg", "Street Fighter II': Champion Edition (Mega Co bootleg)", MACHINE_SUPPORTS_SAVE )  // 920313 etc
+GAME( 1992,  sf2cemch,    sf2ce,     sf2cemc,     sf2m2,     cps_state,  init_cps1,  ROT0, "bootleg", "Street Fighter II': Champion Edition (Mega Co bootleg) hack", MACHINE_SUPPORTS_SAVE )  // 920313 etc

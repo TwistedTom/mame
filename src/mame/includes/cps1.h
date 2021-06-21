@@ -144,6 +144,7 @@ public:
 	void sf2cems6(machine_config &config);
 	void sf2m10(machine_config &config);
 	void varthb2(machine_config &config);
+	void sf2cemc(machine_config &config);
 
 	void init_cps1();
 	void init_sf2ee();
@@ -232,6 +233,7 @@ protected:
 	void sf2cems6_map(address_map &map);
 	void sf2m10_map(address_map &map);
 	void varthb2_map(address_map &map);
+	void sf2cemc_map(address_map &map);
 
 	// game-specific
 	uint16_t sf2ceblp_prot;
