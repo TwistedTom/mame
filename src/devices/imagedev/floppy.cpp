@@ -114,6 +114,9 @@ DEFINE_DEVICE_TYPE(EPSON_SD_621L, epson_sd_621l, "epson_sd_621l", "EPSON SD-621L
 DEFINE_DEVICE_TYPE(EPSON_SD_680L, epson_sd_680l, "epson_sd_680l", "EPSON SD-680L Mini-Floppy Disk Drive")
 #endif
 
+// Panasonic 3.5" drive
+DEFINE_DEVICE_TYPE(PANA_JU_363, pana_ju_363, "pana_ju_363", "Panasonic JU-363 Flexible Disk Drive")
+
 // Sony 3.5" drives
 DEFINE_DEVICE_TYPE(SONY_OA_D31V, sony_oa_d31v, "sony_oa_d31v", "Sony OA-D31V Micro Floppydisk Drive")
 DEFINE_DEVICE_TYPE(SONY_OA_D32W, sony_oa_d32w, "sony_oa_d32w", "Sony OA-D32W Micro Floppydisk Drive")
@@ -247,7 +250,6 @@ floppy_image_device::floppy_image_device(const machine_config &mconfig, device_t
 		input_format(nullptr),
 		output_format(nullptr),
 		image(),
-		fif_list(nullptr),
 		index_timer(nullptr),
 		tracks(0),
 		sides(0),
@@ -280,12 +282,8 @@ floppy_image_device::floppy_image_device(const machine_config &mconfig, device_t
 
 floppy_image_device::~floppy_image_device()
 {
-	for(floppy_image_format_t *format = fif_list; format; ) {
-		floppy_image_format_t* tmp_format = format;
-		format = format->next;
-		delete tmp_format;
-	}
-	fif_list = nullptr;
+	for(floppy_image_format_t *format : fif_list)
+		delete format;
 }
 
 void floppy_image_device::setup_load_cb(load_cb cb)
@@ -338,16 +336,12 @@ void floppy_image_device::register_formats()
 		format_registration_cb(fr);
 
 	extension_list[0] = '\0';
-	fif_list = nullptr;
+	fif_list.clear();
 	for(floppy_format_type fft : fr.m_formats)
 	{
 		// allocate a new format
 		floppy_image_format_t *fif = fft();
-		if(!fif_list)
-			fif_list = fif;
-		else
-			fif_list->append(fif);
-
+		fif_list.push_back(fif);
 		add_format(fif->name(), fif->description(), fif->extensions(), "");
 
 		image_specify_extension( extension_list, 256, fif->extensions() );
@@ -367,7 +361,7 @@ void floppy_image_device::set_formats(std::function<void (format_registration &f
 	format_registration_cb = formats;
 }
 
-floppy_image_format_t *floppy_image_device::get_formats() const
+const std::vector<floppy_image_format_t *> &floppy_image_device::get_formats() const
 {
 	return fif_list;
 }
@@ -551,7 +545,7 @@ floppy_image_format_t *floppy_image_device::identify(std::string filename)
 	io.filler = 0xff;
 	int best = 0;
 	floppy_image_format_t *best_format = nullptr;
-	for (floppy_image_format_t *format = fif_list; format; format = format->next)
+	for (floppy_image_format_t *format : fif_list)
 	{
 		int score = format->identify(&io, form_factor, variants);
 		if(score > best) {
@@ -599,7 +593,7 @@ image_init_result floppy_image_device::call_load()
 	io.filler = 0xff;
 	int best = 0;
 	floppy_image_format_t *best_format = nullptr;
-	for (floppy_image_format_t *format = fif_list; format; format = format->next) {
+	for (floppy_image_format_t *format : fif_list) {
 		int score = format->identify(&io, form_factor, variants);
 		if(score > best) {
 			best = score;
@@ -750,7 +744,7 @@ uint32_t floppy_image_device::flux_screen_update(screen_device &device, bitmap_r
 				}
 				ppi++;
 			}
-		}		
+		}
 	} else {
 		for(int y = cliprect.min_y; y <= cliprect.max_y; y++) {
 			flux_per_pixel_info *ppi = m_flux_per_pixel_infos.data() + y * flux_screen_sx + cliprect.min_x;
@@ -804,7 +798,7 @@ image_init_result floppy_image_device::call_create(int format_type, util::option
 	output_format = nullptr;
 
 	// search for a suitable format based on the extension
-	for(floppy_image_format_t *i = fif_list; i; i = i->next)
+	for(floppy_image_format_t *i : fif_list)
 	{
 		// only consider formats that actually support saving
 		if(!i->supports_save())
@@ -2511,6 +2505,39 @@ void epson_sd_321::setup_characteristics()
 	form_factor = floppy_image::FF_525;
 	tracks = 40;
 	sides = 2;
+	set_rpm(300);
+
+	variants.push_back(floppy_image::SSSD);
+	variants.push_back(floppy_image::SSDD);
+	variants.push_back(floppy_image::DSDD);
+}
+
+
+//-------------------------------------------------
+//  3.5" Panasonic Flexible Disk Drive JU-363
+//
+//  track to track: 3 ms
+//  settling time: 15 ms
+//  motor start time: 500 ms
+//  transfer rate: 250 Kbits/s
+//
+//-------------------------------------------------
+
+pana_ju_363::pana_ju_363(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock) :
+	floppy_image_device(mconfig, PANA_JU_363, tag, owner, clock)
+{
+}
+
+pana_ju_363::~pana_ju_363()
+{
+}
+
+void pana_ju_363::setup_characteristics()
+{
+	form_factor = floppy_image::FF_35;
+	tracks = 84;
+	sides = 2;
+	dskchg_writable = true;
 	set_rpm(300);
 
 	variants.push_back(floppy_image::SSSD);
