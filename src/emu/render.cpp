@@ -50,9 +50,9 @@
 
 #include "ui/uimain.h"
 
-#include "xmlfile.h"
-
-#include <zlib.h>
+#include "util/ioprocsfilter.h"
+#include "util/path.h"
+#include "util/xmlfile.h"
 
 #include <algorithm>
 
@@ -899,7 +899,11 @@ template <typename T> render_target::render_target(render_manager &manager, T &&
 	, m_listindex(0)
 	, m_width(640)
 	, m_height(480)
+	, m_keepaspect(false)
+	, m_int_overscan(false)
 	, m_pixel_aspect(0.0f)
+	, m_int_scale_x(0)
+	, m_int_scale_y(0)
 	, m_max_refresh(0)
 	, m_orientation(0)
 	, m_base_view(nullptr)
@@ -913,20 +917,25 @@ template <typename T> render_target::render_target(render_manager &manager, T &&
 	m_base_layerconfig.set_zoom_to_screen(manager.machine().options().artwork_crop());
 
 	// aspect and scale options
-	m_keepaspect = (manager.machine().options().keep_aspect() && !(flags & RENDER_CREATE_HIDDEN));
-	m_int_overscan = manager.machine().options().int_overscan();
-	m_int_scale_x = manager.machine().options().int_scale_x();
-	m_int_scale_y = manager.machine().options().int_scale_y();
-	if (m_manager.machine().options().auto_stretch_xy())
-		m_scale_mode = SCALE_FRACTIONAL_AUTO;
-	else if (manager.machine().options().uneven_stretch_x())
-		m_scale_mode = SCALE_FRACTIONAL_X;
-	else if (manager.machine().options().uneven_stretch_y())
-		m_scale_mode = SCALE_FRACTIONAL_Y;
-	else if (manager.machine().options().uneven_stretch())
-		m_scale_mode = SCALE_FRACTIONAL;
+	if (!(flags & RENDER_CREATE_HIDDEN))
+	{
+		m_keepaspect = manager.machine().options().keep_aspect();
+		m_int_overscan = manager.machine().options().int_overscan();
+		m_int_scale_x = manager.machine().options().int_scale_x();
+		m_int_scale_y = manager.machine().options().int_scale_y();
+		if (m_manager.machine().options().auto_stretch_xy())
+			m_scale_mode = SCALE_FRACTIONAL_AUTO;
+		else if (manager.machine().options().uneven_stretch_x())
+			m_scale_mode = SCALE_FRACTIONAL_X;
+		else if (manager.machine().options().uneven_stretch_y())
+			m_scale_mode = SCALE_FRACTIONAL_Y;
+		else if (manager.machine().options().uneven_stretch())
+			m_scale_mode = SCALE_FRACTIONAL;
+		else
+			m_scale_mode = SCALE_INTEGER;
+	}
 	else
-		m_scale_mode = SCALE_INTEGER;
+		m_scale_mode = SCALE_FRACTIONAL;
 
 	// determine the base orientation based on options
 	if (!manager.machine().options().rotate())
@@ -1193,37 +1202,55 @@ void render_target::compute_visible_area(s32 target_width, s32 target_height, fl
 
 			// get target aspect
 			float target_aspect = (float)target_width / (float)target_height * target_pixel_aspect;
-			bool target_is_portrait = (target_aspect < 1.0f);
 
 			// apply automatic axial stretching if required
 			int scale_mode = m_scale_mode;
 			if (m_scale_mode == SCALE_FRACTIONAL_AUTO)
 			{
 				bool is_rotated = (m_manager.machine().system().flags & ORIENTATION_SWAP_XY) ^ (target_orientation & ORIENTATION_SWAP_XY);
-				scale_mode = is_rotated ^ target_is_portrait ? SCALE_FRACTIONAL_Y : SCALE_FRACTIONAL_X;
+				scale_mode = is_rotated ? SCALE_FRACTIONAL_Y : SCALE_FRACTIONAL_X;
 			}
-
-			// determine the scale mode for each axis
-			bool x_is_integer = !((!target_is_portrait && scale_mode == SCALE_FRACTIONAL_X) || (target_is_portrait && scale_mode == SCALE_FRACTIONAL_Y));
-			bool y_is_integer = !((target_is_portrait && scale_mode == SCALE_FRACTIONAL_X) || (!target_is_portrait && scale_mode == SCALE_FRACTIONAL_Y));
 
 			// first compute scale factors to fit the screen
 			float xscale = (float)target_width / src_width;
 			float yscale = (float)target_height / src_height;
-			float maxxscale = std::max(1.0f, float(m_int_overscan ? render_round_nearest(xscale) : floor(xscale)));
-			float maxyscale = std::max(1.0f, float(m_int_overscan ? render_round_nearest(yscale) : floor(yscale)));
 
-			// now apply desired scale mode and aspect correction
-			if (m_keepaspect && target_aspect > src_aspect) xscale *= src_aspect / target_aspect * (maxyscale / yscale);
-			if (m_keepaspect && target_aspect < src_aspect) yscale *= target_aspect / src_aspect * (maxxscale / xscale);
-			if (x_is_integer) xscale = std::clamp(render_round_nearest(xscale), 1.0f, maxxscale);
-			if (y_is_integer) yscale = std::clamp(render_round_nearest(yscale), 1.0f, maxyscale);
+			// apply aspect correction
+			if (m_keepaspect)
+			{
+				if (target_aspect > src_aspect)
+					xscale *= src_aspect / target_aspect;
+				else
+					yscale *= target_aspect / src_aspect;
+			}
+
+			bool x_fits = render_round_nearest(xscale) * src_width <= target_width;
+			bool y_fits = render_round_nearest(yscale) * src_height <= target_height;
+
+			// compute integer scale factors
+			float integer_x = std::max(1.0f, float(m_int_overscan || x_fits ? render_round_nearest(xscale) : floor(xscale)));
+			float integer_y = std::max(1.0f, float(m_int_overscan || y_fits ? render_round_nearest(yscale) : floor(yscale)));
 
 			// check if we have user defined scale factors, if so use them instead
-			int user_scale_x = target_is_portrait? m_int_scale_y : m_int_scale_x;
-			int user_scale_y = target_is_portrait? m_int_scale_x : m_int_scale_y;
-			xscale = user_scale_x > 0 ? user_scale_x : xscale;
-			yscale = user_scale_y > 0 ? user_scale_y : yscale;
+			integer_x = m_int_scale_x > 0 ? m_int_scale_x : integer_x;
+			integer_y = m_int_scale_y > 0 ? m_int_scale_y : integer_y;
+
+			// now apply desired scale mode
+			if (scale_mode == SCALE_FRACTIONAL_X)
+			{
+				if (m_keepaspect) xscale *= integer_y / yscale;
+				yscale = integer_y;
+			}
+			else if (scale_mode == SCALE_FRACTIONAL_Y)
+			{
+				if (m_keepaspect) yscale *= integer_x / xscale;
+				xscale = integer_x;
+			}
+			else
+			{
+				xscale = integer_x;
+				yscale = integer_y;
+			}
 
 			// set the final width/height
 			visible_width = render_round_nearest(src_width * xscale);
@@ -2090,58 +2117,56 @@ void render_target::load_additional_layout_files(const char *basename, bool have
 bool render_target::load_layout_file(const char *dirname, const internal_layout &layout_data, device_t *device)
 {
 	// +1 to ensure data is terminated for XML parser
-	auto tempout = make_unique_clear<u8 []>(layout_data.decompressed_size + 1);
-
-	z_stream stream;
-	int zerr;
-
-	// initialize the stream
-	memset(&stream, 0, sizeof(stream));
-	stream.next_out = tempout.get();
-	stream.avail_out = layout_data.decompressed_size;
-
-	zerr = inflateInit(&stream);
-	if (zerr != Z_OK)
+	std::unique_ptr<u8 []> tempout(new (std::nothrow) u8 [layout_data.decompressed_size + 1]);
+	auto inflater(util::zlib_read(util::ram_read(layout_data.data, layout_data.compressed_size), 8192));
+	if (!tempout || !inflater)
 	{
-		osd_printf_error("render_target::load_layout_file: zlib initialization error\n");
+		osd_printf_error("render_target::load_layout_file: not enough memory to decompress layout\n");
 		return false;
 	}
 
-	// decompress this chunk
-	stream.next_in = (unsigned char *)layout_data.data;
-	stream.avail_in = layout_data.compressed_size;
-	zerr = inflate(&stream, Z_NO_FLUSH);
-
-	// stop at the end of the stream
-	if (zerr == Z_STREAM_END)
+	size_t decompressed = 0;
+	do
 	{
-		// OK
+		size_t actual;
+		std::error_condition const err = inflater->read(
+				&tempout[decompressed],
+				layout_data.decompressed_size - decompressed,
+				actual);
+		decompressed += actual;
+		if (err)
+		{
+			osd_printf_error(
+					"render_target::load_layout_file: error decompressing layout (%s:%d %s)\n",
+					err.category().name(),
+					err.value(),
+					err.message());
+			return false;
+		}
+		if (!actual && (layout_data.decompressed_size < decompressed))
+		{
+			osd_printf_warning(
+					"render_target::load_layout_file: expected %u bytes of decompressed data but only got %u\n",
+					layout_data.decompressed_size,
+					decompressed);
+			break;
+		}
 	}
-	else if (zerr != Z_OK)
-	{
-		osd_printf_error("render_target::load_layout_file: zlib decompression error\n");
-		inflateEnd(&stream);
-		return false;
-	}
+	while (layout_data.decompressed_size > decompressed);
+	inflater.reset();
 
-	// clean up
-	zerr = inflateEnd(&stream);
-	if (zerr != Z_OK)
-		osd_printf_error("render_target::load_layout_file: zlib cleanup error\n");
-
+	tempout[decompressed] = 0U;
 	util::xml::file::ptr rootnode(util::xml::file::string_read(reinterpret_cast<char const *>(tempout.get()), nullptr));
 	tempout.reset();
 
 	// if we didn't get a properly-formatted XML file, record a warning and exit
 	if (!load_layout_file(device ? *device : m_manager.machine().root_device(), *rootnode, m_manager.machine().options().art_path(), dirname))
 	{
-		osd_printf_warning("Improperly formatted XML string, ignoring\n");
+		osd_printf_warning("render_target::load_layout_file: Improperly formatted XML string, ignoring\n");
 		return false;
 	}
-	else
-	{
-		return true;
-	}
+
+	return true;
 }
 
 bool render_target::load_layout_file(const char *dirname, const char *filename)
@@ -2159,7 +2184,7 @@ bool render_target::load_layout_file(const char *dirname, const char *filename)
 	emu_file layoutfile(m_manager.machine().options().art_path(), OPEN_FLAG_READ);
 	layoutfile.set_restrict_to_mediapath(1);
 	bool result(false);
-	for (osd_file::error filerr = layoutfile.open(fname); osd_file::error::NONE == filerr; filerr = layoutfile.open_next())
+	for (std::error_condition filerr = layoutfile.open(fname); !filerr; filerr = layoutfile.open_next())
 	{
 		// read the file and parse as XML
 		util::xml::file::ptr const rootnode(util::xml::file::read(layoutfile, &parseopt));
@@ -3039,7 +3064,10 @@ render_manager::render_manager(running_machine &machine)
 	, m_ui_container(new render_container(*this))
 {
 	// register callbacks
-	machine.configuration().config_register("video", config_load_delegate(&render_manager::config_load, this), config_save_delegate(&render_manager::config_save, this));
+	machine.configuration().config_register(
+			"video",
+			configuration_manager::load_delegate(&render_manager::config_load, this),
+			configuration_manager::save_delegate(&render_manager::config_save, this));
 
 	// create one container per screen
 	for (screen_device &screen : screen_device_enumerator(machine.root_device()))
@@ -3294,10 +3322,10 @@ void render_manager::container_free(render_container *container)
 //  configuration file
 //-------------------------------------------------
 
-void render_manager::config_load(config_type cfg_type, util::xml::data_node const *parentnode)
+void render_manager::config_load(config_type cfg_type, config_level cfg_level, util::xml::data_node const *parentnode)
 {
-	// we only care about game files with matching nodes
-	if ((cfg_type != config_type::GAME) || !parentnode)
+	// we only care about system-specific configuration with matching nodes
+	if ((cfg_type != config_type::SYSTEM) || !parentnode)
 		return;
 
 	// check the UI target
@@ -3350,8 +3378,8 @@ void render_manager::config_load(config_type cfg_type, util::xml::data_node cons
 
 void render_manager::config_save(config_type cfg_type, util::xml::data_node *parentnode)
 {
-	// we only care about game files
-	if (cfg_type != config_type::GAME)
+	// we only save system-specific configuration
+	if (cfg_type != config_type::SYSTEM)
 		return;
 
 	// write out the interface target

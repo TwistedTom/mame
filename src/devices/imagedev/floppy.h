@@ -15,6 +15,7 @@
 #include "formats/fsmgr.h"
 #include "sound/samples.h"
 #include "softlist_dev.h"
+#include "screen.h"
 
 class floppy_sound_device;
 
@@ -79,7 +80,7 @@ public:
 	virtual ~floppy_image_device();
 
 	void set_formats(std::function<void (format_registration &fr)> formats);
-	floppy_image_format_t *get_formats() const;
+	const std::vector<floppy_image_format_t *> &get_formats() const;
 	const std::vector<fs_info> &get_create_fs() const { return m_create_fs; }
 	const std::vector<fs_info> &get_io_fs() const { return m_io_fs; }
 	floppy_image_format_t *get_load_format() const;
@@ -188,7 +189,7 @@ protected:
 	std::vector<uint32_t> variants;
 	std::unique_ptr<floppy_image> image;
 	char                  extension_list[256];
-	floppy_image_format_t *fif_list;
+	std::vector<floppy_image_format_t *> fif_list;
 	std::vector<fs_info>  m_create_fs, m_io_fs;
 	std::vector<const filesystem_manager_t *> m_fs_managers;
 	emu_timer             *index_timer;
@@ -332,6 +333,7 @@ DECLARE_FLOPPY_IMAGE_DEVICE(FLOPPY_8_DSDD,       floppy_8_dsdd,       "floppy_8"
 DECLARE_FLOPPY_IMAGE_DEVICE(EPSON_SMD_165,       epson_smd_165,       "floppy_3_5")
 DECLARE_FLOPPY_IMAGE_DEVICE(EPSON_SD_320,        epson_sd_320,        "floppy_5_25")
 DECLARE_FLOPPY_IMAGE_DEVICE(EPSON_SD_321,        epson_sd_321,        "floppy_5_25")
+DECLARE_FLOPPY_IMAGE_DEVICE(PANA_JU_363,         pana_ju_363,         "floppy_3_5")
 DECLARE_FLOPPY_IMAGE_DEVICE(SONY_OA_D31V,        sony_oa_d31v,        "floppy_3_5")
 DECLARE_FLOPPY_IMAGE_DEVICE(SONY_OA_D32W,        sony_oa_d32w,        "floppy_3_5")
 DECLARE_FLOPPY_IMAGE_DEVICE(SONY_OA_D32V,        sony_oa_d32v,        "floppy_3_5")
