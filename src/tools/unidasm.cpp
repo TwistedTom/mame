@@ -50,7 +50,7 @@ using util::BIT;
 #include "cpu/e132xs/32xsdasm.h"
 #include "cpu/es5510/es5510d.h"
 #include "cpu/esrip/esripdsm.h"
-#include "cpu/f2mc16/f2mc16dasm.h"
+#include "cpu/f2mc16/f2mc16d.h"
 #include "cpu/f8/f8dasm.h"
 #include "cpu/fr/frdasm.h"
 #include "cpu/g65816/g65816ds.h"
@@ -197,6 +197,7 @@ using util::BIT;
 #include "corefile.h"
 #include "corestr.h"
 #include "eminline.h"
+#include "endianness.h"
 
 #include <algorithm>
 #include <cctype>
@@ -334,12 +335,13 @@ struct nec_unidasm_t : nec_disassembler::config
 } nec_unidasm;
 
 
-enum endianness { le, be };
+static constexpr auto le = util::endianness::little;
+static constexpr auto be = util::endianness::big;
 
 struct dasm_table_entry
 {
 	const char *            name;
-	endianness              endian;
+	util::endianness        endian;
 	int8_t                  pcshift;
 	std::function<util::disasm_interface *()> alloc;
 };
@@ -1219,9 +1221,9 @@ int main(int argc, char *argv[])
 	void *data = nullptr;
 	u32 length = 0;
 	if(std::strcmp(opts.filename, "-") != 0) {
-		osd_file::error filerr = util::core_file::load(opts.filename, &data, length);
-		if(filerr != osd_file::error::NONE) {
-			std::fprintf(stderr, "Error opening file '%s'\n", opts.filename);
+		std::error_condition filerr = util::core_file::load(opts.filename, &data, length);
+		if(filerr) {
+			std::fprintf(stderr, "Error opening file '%s' (%s)\n", opts.filename, filerr.message().c_str());
 			return 1;
 		}
 	}
@@ -1345,7 +1347,7 @@ int main(int argc, char *argv[])
 	}
 
 	// Compute the shift amount from pc delta to granularity-sized elements
-	u32 granularity_shift = 31 - count_leading_zeros(disasm->opcode_alignment());
+	u32 granularity_shift = 31 - count_leading_zeros_32(disasm->opcode_alignment());
 
 	// Number of pc steps to disassemble
 	u32 count = pclength;
@@ -1355,7 +1357,7 @@ int main(int argc, char *argv[])
 
 	// pc to string conversion
 	std::function<std::string (offs_t pc)> pc_to_string;
-	int aw = 32 - count_leading_zeros(pc_mask);
+	int aw = 32 - count_leading_zeros_32(pc_mask);
 	bool is_octal = opts.octal; // Parameter?  Per-cpu config?
 	if((flags & util::disasm_interface::PAGED2LEVEL) == util::disasm_interface::PAGED2LEVEL) {
 		int bits1 = disasm->page_address_bits();
