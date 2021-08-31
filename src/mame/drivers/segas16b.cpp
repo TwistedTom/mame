@@ -1918,13 +1918,8 @@ void dfjail_state::sound_control_w(uint8_t data)
 {
 	int size = memregion("soundcpu")->bytes() - 0x10000;
 
-	// NMI and presumably DAC output clear
-	// TODO: identify which is which
+	// NMI enable in bit 6
 	m_nmi_enable = ((data & 0xc0) == 0);
-	if (m_nmi_enable == false)
-		m_dac->write(0);
-	//m_upd7759->start_w(BIT(data, 7));
-	//m_upd7759->reset_w(BIT(data, 6));
 
 	int bankoffs = 0;
 	bankoffs = ((data & 0x08) >> 3) * 0x20000;
@@ -1934,27 +1929,30 @@ void dfjail_state::sound_control_w(uint8_t data)
 	membank("soundbank")->set_base(memregion("soundcpu")->base() + 0x10000 + (bankoffs % size));
 }
 
-void dfjail_state::dac_data_w(uint8_t data)
+void dfjail_state::dac_data_w(offs_t offset, uint8_t data)
 {
-	// TODO: understand how this is hooked up
-	#if 0
-	switch(offset)
+	/*
+	    Z80 code in the NMI handler at 0x6e:
+	    Sample in A
+	    Copy A to E
+	    Shift A left 2 and AND by 3C
+	    write A to port 0x80
+	    Copy E to A
+	    Shift right 4 times
+	    write A to ports 0x81, 0x82, and 0x83
+
+	    This means port 0x80 gets the bottom 4 bits of the 8-bit sample, offset by 2 bits,
+	    and ports 81/82/83 get the top 4 bits of the sample, shifted right 4 bits.
+	*/
+	if (offset == 0)
 	{
-		case 0:
-			m_dac_data = (data & 0xf) << 0;
-			break;
-		case 1:
-			m_dac_data |= (data & 0xf) << 4;
-			break;
-		case 2:
-			m_dac_data |= (data & 0xf) << 8;
-			break;
-		case 3:
-			m_dac_data |= (data & 0xf) << 12;
-			m_dac->write(m_dac_data);
-			break;
+		m_dac_data = (data>>2) & 0xf;
 	}
-	#endif
+	else if (offset == 1)
+	{
+		m_dac_data |= (data << 4);
+		m_dac->write(m_dac_data);
+	}
 }
 
 void dfjail_state::dfjail_sound_iomap(address_map &map)
@@ -3907,28 +3905,27 @@ static INPUT_PORTS_START( dfjail )
 	PORT_SERVICE_DIPLOC( 0x80, 0x80, "SW1:8" )
 
 	PORT_MODIFY("DSW2")
-	PORT_DIPNAME( 0x01, 0x01, DEF_STR( Unknown ) ) PORT_DIPLOCATION("SW2:1")
-	PORT_DIPSETTING(    0x01, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_DIPNAME( 0x02, 0x02, DEF_STR( Unknown ) ) PORT_DIPLOCATION("SW2:2")
-	PORT_DIPSETTING(    0x02, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
+	PORT_DIPNAME( 0x03, 0x02, DEF_STR( Difficulty ) ) PORT_DIPLOCATION("SW2:1,2")
+	PORT_DIPSETTING(    0x03, DEF_STR( Easy ) )
+	PORT_DIPSETTING(    0x02, DEF_STR( Normal ) )
+	PORT_DIPSETTING(    0x01, DEF_STR( Hard ) )
+	PORT_DIPSETTING(    0x00, DEF_STR( Hardest ) )
 	PORT_DIPNAME( 0x04, 0x00, DEF_STR( Demo_Sounds ) ) PORT_DIPLOCATION("SW2:3") // it's actually BGM in attract mode
 	PORT_DIPSETTING(    0x04, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
 	PORT_DIPNAME( 0x08, 0x08, DEF_STR( Flip_Screen ) ) PORT_DIPLOCATION("SW2:4")
 	PORT_DIPSETTING(    0x08, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_DIPNAME( 0x10, 0x10, DEF_STR( Unknown ) ) PORT_DIPLOCATION("SW2:5")
+	PORT_DIPNAME( 0x10, 0x10, DEF_STR( Unused ) ) PORT_DIPLOCATION("SW2:5") // from here on not used according to the manual
 	PORT_DIPSETTING(    0x10, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_DIPNAME( 0x20, 0x20, DEF_STR( Unknown ) ) PORT_DIPLOCATION("SW2:6")
+	PORT_DIPNAME( 0x20, 0x20, DEF_STR( Unused ) ) PORT_DIPLOCATION("SW2:6")
 	PORT_DIPSETTING(    0x20, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_DIPNAME( 0x40, 0x40, DEF_STR( Unknown ) ) PORT_DIPLOCATION("SW2:7")
+	PORT_DIPNAME( 0x40, 0x40, DEF_STR( Unused ) ) PORT_DIPLOCATION("SW2:7")
 	PORT_DIPSETTING(    0x40, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_DIPNAME( 0x80, 0x80, DEF_STR( Unknown ) ) PORT_DIPLOCATION("SW2:8")
+	PORT_DIPNAME( 0x80, 0x80, DEF_STR( Unused ) ) PORT_DIPLOCATION("SW2:8")
 	PORT_DIPSETTING(    0x80, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
 INPUT_PORTS_END
@@ -4274,16 +4271,16 @@ void dfjail_state::dfjail(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &dfjail_state::dfjail_map);
 	m_maincpu->set_vblank_int("screen", FUNC(dfjail_state::irq4_line_hold));
 
-	Z80(config.replace(), m_soundcpu, XTAL(16'000'000)/4); // ?
+	Z80(config.replace(), m_soundcpu, XTAL(16'000'000)/2); // ?
 	m_soundcpu->set_addrmap(AS_PROGRAM, &dfjail_state::bootleg_sound_map);
 	m_soundcpu->set_addrmap(AS_IO, &dfjail_state::dfjail_sound_iomap);
 	// connected to a 74ls74 clock source
-	m_soundcpu->set_periodic_int(FUNC(dfjail_state::soundirq_cb), attotime::from_hz(4*60)); // TODO: timing
+	m_soundcpu->set_periodic_int(FUNC(dfjail_state::soundirq_cb), attotime::from_hz(8000)); // This sets the sample rate of the DAC samples
 
 	//config.device_remove("ym2151");
 	config.device_remove("upd");
 
-	AD7533(config, m_dac, 0).add_route(ALL_OUTPUTS, "mono", 0.25); // AD7533KN
+	AD7533(config, m_dac, 0).add_route(ALL_OUTPUTS, "mono", 0.5); // AD7533KN
 }
 
 
@@ -5170,8 +5167,8 @@ ROM_START( dfjail )
 
 	ROM_REGION( 0x50000, "soundcpu", 0 ) // z80
 	ROM_LOAD( "29.f3",        0x000000, 0x008000, CRC(7f3ebb6a) SHA1(f265c6215ef457202686b31c9b503a0a371a1139) )
-	ROM_LOAD( "28.g3",        0x010000, 0x020000, CRC(ed96d6b9) SHA1(3ad096e466150d0ca36fec8dd649554e7fb9f654) )
-	ROM_LOAD( "27.g1",        0x030000, 0x020000, CRC(7a88e1c1) SHA1(b238b451522819a5a8c1a9e82058b86d33ac2272) )
+	ROM_LOAD( "28.g3",        0x030000, 0x020000, CRC(ed96d6b9) SHA1(3ad096e466150d0ca36fec8dd649554e7fb9f654) )
+	ROM_LOAD( "27.g1",        0x010000, 0x020000, CRC(7a88e1c1) SHA1(b238b451522819a5a8c1a9e82058b86d33ac2272) )
 
 	ROM_REGION( 0xc0000, "gfx1", 0 ) // tiles
 	ROM_LOAD( "9.f16",        0x000000, 0x020000, CRC(b2a49d12) SHA1(052b96109abc18c562c09042664738bac68f66b4) )
@@ -7982,36 +7979,36 @@ ROM_END
 //
 ROM_START( riotcity )
 	ROM_REGION( 0x80000, "maincpu", 0 ) // 68000 code
-	ROM_LOAD16_BYTE( "epr-14612.bin", 0x000000, 0x20000, CRC(a1b331ec) SHA1(49136ffed35ecc9e5e9a6ea7acbe534e6ccc9dd8) )
-	ROM_LOAD16_BYTE( "epr-14610.bin", 0x000001, 0x20000, CRC(cd4f2c50) SHA1(c7a7e95901c664a72195c202b50a159db8d5981d) )
-	ROM_LOAD16_BYTE( "epr-14613.bin", 0x040000, 0x20000, CRC(0659df4c) SHA1(a24005ce354113732306c318de373c818400a9c8) )
-	ROM_LOAD16_BYTE( "epr-14611.bin", 0x040001, 0x20000, CRC(d9e6f80b) SHA1(5ac56b3685bb121a4f07be3d81209807436e76ec) )
+	ROM_LOAD16_BYTE( "epr-14612.a7", 0x000000, 0x20000, CRC(a1b331ec) SHA1(49136ffed35ecc9e5e9a6ea7acbe534e6ccc9dd8) )
+	ROM_LOAD16_BYTE( "epr-14610.a5", 0x000001, 0x20000, CRC(cd4f2c50) SHA1(c7a7e95901c664a72195c202b50a159db8d5981d) )
+	ROM_LOAD16_BYTE( "epr-14613.a8", 0x040000, 0x20000, CRC(0659df4c) SHA1(a24005ce354113732306c318de373c818400a9c8) )
+	ROM_LOAD16_BYTE( "epr-14611.a6", 0x040001, 0x20000, CRC(d9e6f80b) SHA1(5ac56b3685bb121a4f07be3d81209807436e76ec) )
 
 	ROM_REGION( 0xc0000, "gfx1", 0 ) // tiles
-	ROM_LOAD( "epr-14616.bin", 0x00000, 0x20000, CRC(46d30368) SHA1(a791ef0e881345b6be0b28f32af17127edb5b590) ) // plane 1
-	ROM_LOAD( "epr-14625.bin", 0x20000, 0x20000, CRC(abfb80fe) SHA1(5f0d61d55f27e8f776b573e3193164c4d70ec12b) )
-	ROM_LOAD( "epr-14617.bin", 0x40000, 0x20000, CRC(884e40f9) SHA1(f7eeae57544e7d95139588137605986732937d38) ) // plane 2
-	ROM_LOAD( "epr-14626.bin", 0x60000, 0x20000, CRC(4ef55846) SHA1(2f23474e7d1d8880dc251ada55c5fca2fc19256a) )
-	ROM_LOAD( "epr-14618.bin", 0x80000, 0x20000, CRC(00eb260e) SHA1(f293180fb9a053c98022ef086bf4002563752f61) ) // plane 3
-	ROM_LOAD( "epr-14627.bin", 0xa0000, 0x20000, CRC(961e5f82) SHA1(dc88b511dff6cdebf96fe8bf388bf76098296b0f) )
+	ROM_LOAD( "epr-14616.a14", 0x00000, 0x20000, CRC(46d30368) SHA1(a791ef0e881345b6be0b28f32af17127edb5b590) ) // plane 1
+	ROM_LOAD( "epr-14625.b14", 0x20000, 0x20000, CRC(abfb80fe) SHA1(5f0d61d55f27e8f776b573e3193164c4d70ec12b) )
+	ROM_LOAD( "epr-14617.a15", 0x40000, 0x20000, CRC(884e40f9) SHA1(f7eeae57544e7d95139588137605986732937d38) ) // plane 2
+	ROM_LOAD( "epr-14626.b15", 0x60000, 0x20000, CRC(4ef55846) SHA1(2f23474e7d1d8880dc251ada55c5fca2fc19256a) )
+	ROM_LOAD( "epr-14618.a16", 0x80000, 0x20000, CRC(00eb260e) SHA1(f293180fb9a053c98022ef086bf4002563752f61) ) // plane 3
+	ROM_LOAD( "epr-14627.b16", 0xa0000, 0x20000, CRC(961e5f82) SHA1(dc88b511dff6cdebf96fe8bf388bf76098296b0f) )
 
 	ROM_REGION16_BE( 0x1c0000, "sprites", 0 ) // sprites
-	ROM_LOAD16_BYTE( "epr-14619.bin",  0x000001, 0x020000, CRC(6f2b5ef7) SHA1(a0186fcc5b12c31b65b84355f88bcb10b1434135) )
-	ROM_CONTINUE(                      0x100001, 0x020000 )
-	ROM_LOAD16_BYTE( "epr-14622.bin",  0x000000, 0x020000, CRC(7ca7e40d) SHA1(57d26cc1b530cb867b2a4779bb5108ac457b2154) )
-	ROM_CONTINUE(                      0x100000, 0x020000 )
-	ROM_LOAD16_BYTE( "epr-14620.bin",  0x040001, 0x020000, CRC(66183333) SHA1(44bb9d57cd0308c0d7b6a10ba9bd95763ceea775) )
-	ROM_CONTINUE(                      0x140001, 0x020000 )
-	ROM_LOAD16_BYTE( "epr-14623.bin",  0x040000, 0x020000, CRC(98630049) SHA1(216ae0b4a59f306b51bd50dfcbf831c3186a4d2a) )
-	ROM_CONTINUE(                      0x140000, 0x020000 )
-	ROM_LOAD16_BYTE( "epr-14621.bin",  0x080001, 0x020000, CRC(c0f2820e) SHA1(ae433f6c5065ed495f5f57f50d6abe5ff98b041e) )
-	ROM_CONTINUE(                      0x180001, 0x020000 )
-	ROM_LOAD16_BYTE( "epr-14624.bin",  0x080000, 0x020000, CRC(d1a68448) SHA1(7591f0476e899a11042d9b7e93f99b64de48b0ef) )
-	ROM_CONTINUE(                      0x180000, 0x020000 )
+	ROM_LOAD16_BYTE( "epr-14619.b1",  0x000001, 0x020000, CRC(6f2b5ef7) SHA1(a0186fcc5b12c31b65b84355f88bcb10b1434135) )
+	ROM_CONTINUE(                     0x100001, 0x020000 )
+	ROM_LOAD16_BYTE( "epr-14622.b5",  0x000000, 0x020000, CRC(7ca7e40d) SHA1(57d26cc1b530cb867b2a4779bb5108ac457b2154) )
+	ROM_CONTINUE(                     0x100000, 0x020000 )
+	ROM_LOAD16_BYTE( "epr-14620.b2",  0x040001, 0x020000, CRC(66183333) SHA1(44bb9d57cd0308c0d7b6a10ba9bd95763ceea775) )
+	ROM_CONTINUE(                     0x140001, 0x020000 )
+	ROM_LOAD16_BYTE( "epr-14623.b6",  0x040000, 0x020000, CRC(98630049) SHA1(216ae0b4a59f306b51bd50dfcbf831c3186a4d2a) )
+	ROM_CONTINUE(                     0x140000, 0x020000 )
+	ROM_LOAD16_BYTE( "epr-14621.b3",  0x080001, 0x020000, CRC(c0f2820e) SHA1(ae433f6c5065ed495f5f57f50d6abe5ff98b041e) )
+	ROM_CONTINUE(                     0x180001, 0x020000 )
+	ROM_LOAD16_BYTE( "epr-14624.b7",  0x080000, 0x020000, CRC(d1a68448) SHA1(7591f0476e899a11042d9b7e93f99b64de48b0ef) )
+	ROM_CONTINUE(                     0x180000, 0x020000 )
 
 	ROM_REGION( 0x50000, "soundcpu", 0 ) // sound CPU
-	ROM_LOAD( "epr-14614.bin", 0x00000, 0x10000, CRC(c65cc69a) SHA1(28a75dd2085b8e1447fe4e6af210a54a6666fcb1) )
-	ROM_LOAD( "epr-14615.bin", 0x10000, 0x20000, CRC(46653db1) SHA1(7a43d8742ee451d93bb5f1b0f4f261b274c3f0ef) )
+	ROM_LOAD( "epr-14614.a10", 0x00000, 0x10000, CRC(c65cc69a) SHA1(28a75dd2085b8e1447fe4e6af210a54a6666fcb1) )
+	ROM_LOAD( "epr-14615.all", 0x10000, 0x20000, CRC(46653db1) SHA1(7a43d8742ee451d93bb5f1b0f4f261b274c3f0ef) )
 
 	ROM_REGION( 0x0100, "plds", 0 )
 	ROM_LOAD( "315-5298.b9",  0x0000, 0x00eb, CRC(39b47212) SHA1(432b47aee5ecbf08a8a6dc2f8379c816feb86328) ) // PLS153
@@ -10003,7 +10000,7 @@ GAME( 1990, atomicp,    0,        atomicp,               atomicp,  segas16b_stat
 GAME( 1990, snapper,    0,        atomicp,               snapper,  segas16b_state, init_snapper,            ROT0,   "Philko", "Snapper (Korea)", 0) // korean clone board..
 // board marked 'System 4' and has Philko custom chip - various hw changes (4bpp tiles for example)
 GAME( 1991, lockonph,   0,        lockonph,              lockonph, segas16b_state, init_lockonph,           ROT0,   "Philko", "Lock On (Philko)", MACHINE_IMPERFECT_SOUND ) // Copyright not shown in game, but has 'PHILKO' in the startup warning and tiles / PCB.  1991 is the name entry for the lowest high score.  Clipping issues on left edge in attract look like original game bugs.
-GAME( 199?, dfjail,   0,          dfjail,                dfjail,   dfjail_state,   init_generic_korean,     ROT0,   "Philko", "The Destroyer From Jail (Korea)", MACHINE_IMPERFECT_SOUND | MACHINE_NO_COCKTAIL ) // dips, check sound, not extensively tested
+GAME( 1991, dfjail,   0,          dfjail,                dfjail,   dfjail_state,   init_generic_korean,     ROT0,   "Philko", "The Destroyer From Jail (Korea)", MACHINE_NO_COCKTAIL ) // Regulatory approval document dated "1991. 3.28" based on submission of manual and photos
 
 // decrypted bootleg / 'suicide repair' sets
 
