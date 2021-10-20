@@ -1544,12 +1544,12 @@ Core State/Playback Options
 
     The default is ``NULL`` (no recording).
 
-.. _mame-commandline-snapname:
-
     Example:
         .. code-block:: bash
 
             mame pacman -wavewrite pacsounds
+
+.. _mame-commandline-snapname:
 
 **-snapname** *<name>*
 
@@ -1764,8 +1764,8 @@ Core Performance Options
     benchmarking and automated testing.  By combining this with a fixed set of
     other command line options, you can set up a consistent environment for
     benchmarking MAME's emulation performance.  In addition, upon exit, the
-    **-str** option will write a screenshot called ``final.png`` to the system's
-    snapshot directory.
+    **-str** option will write a screenshot to the system's snapshot directory
+    with the file name determined by the **-snapname** option.
 
     Example:
         .. code-block:: bash
@@ -2824,6 +2824,20 @@ Core Sound Options
 
             mame qbert -nosamples
 
+.. _mame-commandline-nocompressor:
+
+**-[no]compressor**
+
+    Enable audio compressor. It temporarily reduces the overall volume when
+    the audio output is overdriven.
+
+    The default is ON (**-compressor**).
+
+    Example:
+        .. code-block:: bash
+
+            mame popeye -nocompressor
+
 .. _mame-commandline-volume:
 
 **-volume** / **-vol** *<value>*
@@ -3431,9 +3445,10 @@ Debugging Options
 
 **-[no]debug**
 
-    Activates the integrated debugger.  By default, the debugger is entered by
-    pressing the tilde (**~**) key during emulation. It is also entered
-    immediately at startup.
+    Activates the integrated debugger.  By default, pressing the tilde
+    (**~**) key during emulation breaks into the debugger.  MAME also
+    breaks into the debugger after the initial soft reset on startup if
+    the debugger is active.
 
     The default is OFF (**-nodebug**).
 
