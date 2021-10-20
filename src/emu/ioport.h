@@ -357,14 +357,13 @@ enum ioport_type
 		IPT_UI_CLEAR,
 		IPT_UI_ZOOM_IN,
 		IPT_UI_ZOOM_OUT,
-		IPT_UI_ZOOM_AUTO,
+		IPT_UI_ZOOM_DEFAULT,
 		IPT_UI_PREV_GROUP,
 		IPT_UI_NEXT_GROUP,
 		IPT_UI_ROTATE,
 		IPT_UI_SHOW_PROFILER,
 		IPT_UI_TOGGLE_UI,
 		IPT_UI_RELEASE_POINTER,
-		IPT_UI_TOGGLE_DEBUG,
 		IPT_UI_PASTE,
 		IPT_UI_SAVE_STATE,
 		IPT_UI_LOAD_STATE,
@@ -373,8 +372,7 @@ enum ioport_type
 		IPT_UI_DATS,
 		IPT_UI_FAVORITES,
 		IPT_UI_EXPORT,
-		IPT_UI_AUDIT_FAST,
-		IPT_UI_AUDIT_ALL,
+		IPT_UI_AUDIT,
 
 		// additional OSD-specified UI port types (up to 16)
 		IPT_OSD_1,
@@ -1462,7 +1460,7 @@ private:
 	attotime                m_timecode_last_time;
 
 	// storage for inactive configuration
-	util::xml::file *       m_deselected_card_config; // using smart pointer would pull xmlfile.h into emu.h
+	std::unique_ptr<util::xml::file> m_deselected_card_config;
 };
 
 
