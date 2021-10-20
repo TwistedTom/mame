@@ -1393,6 +1393,22 @@ end
 
 ---------------------------------------------------
 --
+--@src/devices/machine/gt913.h,MACHINES["GT913"] = true
+---------------------------------------------------
+
+if (MACHINES["GT913"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/machine/gt913_io.cpp",
+		MAME_DIR .. "src/devices/machine/gt913_io.h",
+		MAME_DIR .. "src/devices/machine/gt913_kbd.cpp",
+		MAME_DIR .. "src/devices/machine/gt913_kbd.h",
+		MAME_DIR .. "src/devices/machine/gt913_snd.cpp",
+		MAME_DIR .. "src/devices/machine/gt913_snd.h",
+	}
+end
+
+---------------------------------------------------
+--
 --@src/devices/machine/hd63450.h,MACHINES["HD63450"] = true
 ---------------------------------------------------
 
@@ -4180,6 +4196,17 @@ if (MACHINES["SMARTMEDIA"]~=null) then
 	files {
 		MAME_DIR .. "src/devices/machine/smartmed.cpp",
 		MAME_DIR .. "src/devices/machine/smartmed.h",
+	}
+end
+
+---------------------------------------------------
+--
+--@src/devices/machine/spi_sdcard.h,MACHINES["SPISDCARD"] = true
+---------------------------------------------------
+if (MACHINES["SPISDCARD"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/machine/spi_sdcard.cpp",
+		MAME_DIR .. "src/devices/machine/spi_sdcard.h",
 	}
 end
 
