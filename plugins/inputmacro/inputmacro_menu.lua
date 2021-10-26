@@ -1,3 +1,7 @@
+-- license:BSD-3-Clause
+-- copyright-holders:Vas Crabb
+
+
 -- Constants
 
 local MENU_TYPES = { MACROS = 0, ADD = 1, EDIT = 2, INPUT = 3 }
@@ -7,6 +11,8 @@ local MENU_TYPES = { MACROS = 0, ADD = 1, EDIT = 2, INPUT = 3 }
 
 local macros
 local menu_stack
+
+local macros_start_macro -- really for the macros menu, but has to be declared local before edit menu functions
 
 
 -- Helpers
@@ -46,6 +52,7 @@ end
 -- Input menu
 
 local input_action
+local input_start_field
 local input_choices
 local input_item_first_choice
 local input_item_cancel
@@ -111,29 +118,60 @@ function populate_input()
 		for tag, port in pairs(manager.machine.ioport.ports) do
 			for name, field in pairs(port.fields) do
 				if supported(field) then
-					input_choices[#input_choices + 1] = field
+					table.insert(input_choices, field)
 				end
 			end
 		end
 		table.sort(input_choices, compare)
+
+		local index = 1
+		local prev
+		while index <= #input_choices do
+			local current = input_choices[index]
+			if (not prev) or (prev.device.tag ~= current.device.tag) then
+				table.insert(input_choices, index, false)
+				index = index + 2
+			else
+				index = index + 1
+			end
+			prev = current
+		end
 	end
 
 	input_item_first_choice = #items + 1
+	local selection = input_item_first_choice
 	for index, field in ipairs(input_choices) do
-		items[#items + 1] = { _p('input-name', field.name), '', '' }
+		if field then
+			items[#items + 1] = { _p('input-name', field.name), '', '' }
+			if input_start_field and (field.port.tag == input_start_field.port.tag) and (field.mask == input_start_field.mask) and (field.type == input_start_field.type) then
+				selection = #items
+				input_start_field = nil
+			end
+		else
+			local device = input_choices[index + 1].device
+			if device.owner then
+				items[#items + 1] = { string.format(_('plugin-inputmacro', '%s [root%s]'), device.name, device.tag), '', 'heading' }
+			else
+				items[#items + 1] = { string.format(_('plugin-inputmacro', '[root%s]'), device.tag), '', 'heading' }
+			end
+		end
 	end
+	input_start_field = nil
 
 	items[#items + 1] = { '---', '', '' }
 	items[#items + 1] = { _p('plugin-inputmacro', 'Cancel'), '', '' }
 	input_item_cancel = #items
 
-	return items
+	return items, selection
 end
 
 
 -- Add/edit menus
 
 local edit_current_macro
+local edit_start_selection
+local edit_start_step
+local edit_menu_active
 local edit_insert_position
 local edit_name_buffer
 local edit_items
@@ -287,6 +325,8 @@ local function handle_edit_items(index, event)
 					inputs[command.input].port = field.port
 					inputs[command.input].field = field
 				end
+			input_start_field = inputs[command.input].field
+			edit_start_selection = index
 			table.insert(menu_stack, MENU_TYPES.INPUT)
 			return true
 		elseif event == 'clear' then
@@ -304,6 +344,7 @@ local function handle_edit_items(index, event)
 						port = field.port,
 						field = field }
 				end
+			edit_start_selection = index
 			table.insert(menu_stack, MENU_TYPES.INPUT)
 			return true
 		end
@@ -317,6 +358,10 @@ local function handle_edit_items(index, event)
 			end
 			if edit_insert_position > command.step then
 				edit_insert_position = edit_insert_position - 1
+			end
+			edit_start_step = command.step
+			if edit_start_step > #edit_current_macro.steps then
+				edit_start_step = edit_start_step - 1
 			end
 			return true
 		end
@@ -336,8 +381,10 @@ local function handle_edit_items(index, event)
 					if edit_current_macro.loop >= edit_insert_position then
 						edit_current_macro.loop = edit_current_macro.loop + 1
 					end
+					edit_start_step = edit_insert_position
 					edit_insert_position = edit_insert_position + 1
 				end
+			edit_start_selection = index
 			table.insert(menu_stack, MENU_TYPES.INPUT)
 			return true
 		elseif event == 'left' then
@@ -359,6 +406,10 @@ local function add_edit_items(items)
 
 	items[#items + 1] = { _p('plugin-inputmacro', 'Name'), edit_name_buffer and (edit_name_buffer .. '_') or edit_current_macro.name, '' }
 	edit_items[#items] = { action = 'name' }
+	if not (edit_start_selection or edit_start_step or edit_menu_active) then
+		edit_start_selection = #items
+	end
+	edit_menu_active = true
 
 	local binding = edit_current_macro.binding
 	local activation = binding and input:seq_name(binding) or _p('plugin-inputmacro', '[not set]')
@@ -386,11 +437,12 @@ local function add_edit_items(items)
 	edit_items[#items] = { action = 'holdaction' }
 
 	for i, step in ipairs(edit_current_macro.steps) do
-		items[#items + 1] = { '---', '', '' }
-
-		items[#items + 1] = { string.format(_p('plugin-inputmacro', 'Step %d'), i), '', 'off' }
+		items[#items + 1] = { string.format(_p('plugin-inputmacro', 'Step %d'), i), '', 'heading' }
 		items[#items + 1] = { _p('plugin-inputmacro', 'Delay (frames)'), step.delay, (step.delay > 0) and 'lr' or 'r' }
 		edit_items[#items] = { action = 'delay', step = i }
+		if edit_start_step == i then
+			edit_start_selection = #items
+		end
 
 		items[#items + 1] = { _p('plugin-inputmacro', 'Duration (frames)'), step.duration, (step.duration > 1) and 'lr' or 'r' }
 		edit_items[#items] = { action = 'duration', step = i }
@@ -411,6 +463,7 @@ local function add_edit_items(items)
 			edit_items[#items] = { action = 'deletestep', step = i }
 		end
 	end
+	edit_start_step = nil
 
 	local laststep = edit_current_macro.steps[#edit_current_macro.steps]
 	if laststep.inputs[#laststep.inputs].field then
@@ -431,14 +484,19 @@ local function handle_add(index, event)
 	if handle_edit_items(index, event) then
 		return true
 	elseif event == 'cancel' then
+		input_choices = nil
 		edit_current_macro = nil
+		edit_menu_active = false
 		edit_items = nil
 		table.remove(menu_stack)
 		return true
 	elseif (index == edit_item_exit) and (event == 'select') then
 		if current_macro_complete() then
 			table.insert(macros, edit_current_macro)
+			macros_start_macro = #macros
 		end
+		input_choices = nil
+		edit_menu_active = false
 		edit_current_macro = nil
 		edit_items = nil
 		table.remove(menu_stack)
@@ -451,7 +509,9 @@ local function handle_edit(index, event)
 	if handle_edit_items(index, event) then
 		return true
 	elseif (event == 'cancel') or ((index == edit_item_exit) and (event == 'select')) then
+		input_choices = nil
 		edit_current_macro = nil
+		edit_menu_active = false
 		edit_items = nil
 		table.remove(menu_stack)
 		return true
@@ -475,7 +535,9 @@ local function populate_add()
 	end
 	edit_item_exit = #items
 
-	return items
+	local selection = edit_start_selection
+	edit_start_selection = nil
+	return items, selection, 'lrrepeat'
 end
 
 local function populate_edit()
@@ -490,13 +552,16 @@ local function populate_edit()
 	items[#items + 1] = { _p('plugin-inputmacro', 'Done'), '', '' }
 	edit_item_exit = #items
 
-	return items
+	local selection = edit_start_selection
+	edit_start_selection = nil
+	return items, selection, 'lrrepeat'
 end
 
 
 -- Macros menu
 
 local macros_item_first_macro
+local macros_selection_save
 local macros_item_add
 
 function handle_macros(index, event)
@@ -504,6 +569,7 @@ function handle_macros(index, event)
 		if event == 'select' then
 			edit_current_macro = new_macro()
 			edit_insert_position = #edit_current_macro.steps + 1
+			macros_selection_save = index
 			table.insert(menu_stack, MENU_TYPES.ADD)
 			return true
 		end
@@ -512,10 +578,17 @@ function handle_macros(index, event)
 		if event == 'select' then
 			edit_current_macro = macros[macro]
 			edit_insert_position = #edit_current_macro.steps + 1
+			macros_selection_save = index
 			table.insert(menu_stack, MENU_TYPES.EDIT)
 			return true
 		elseif event == 'clear' then
 			table.remove(macros, macro)
+			if #macros > 0 then
+				macros_selection_save = index
+				if macro > #macros then
+					macros_selection_save = macros_selection_save - 1
+				end
+			end
 			return true
 		end
 	end
@@ -535,16 +608,22 @@ function populate_macros()
 	if #macros > 0 then
 		for index, macro in ipairs(macros) do
 			items[#items + 1] = { macro.name, input:seq_name(macro.binding), '' }
+			if macros_start_macro == index then
+				macros_selection_save = #items
+			end
 		end
 	else
-		items[#items + 1] = { _p('plugin-inputmacro', 'No macros'), '', 'off' }
+		items[#items + 1] = { _p('plugin-inputmacro', '[no macros]'), '', 'off' }
 	end
+	macros_start_macro = nil
 
 	items[#items + 1] = { '---', '', '' }
 	items[#items + 1] = { _p('plugin-inputmacro', 'Add macro'), '', '' }
 	macros_item_add = #items
 
-	return items
+	local selection = macros_selection_save
+	macros_selection_save = nil
+	return items, selection
 end
 
 
