@@ -84,20 +84,43 @@ enum : unsigned {
 ***************************************************************************/
 
 /*-------------------------------------------------
-    menu_main constructor - populate the main menu
+    menu_main constructor/destructor
 -------------------------------------------------*/
 
-menu_main::menu_main(mame_ui_manager &mui, render_container &container) : menu(mui, container)
+menu_main::menu_main(mame_ui_manager &mui, render_container &container)
+	: menu(mui, container)
+	, m_phase(machine_phase::PREINIT)
 {
 	set_needs_prev_menu_item(false);
 }
 
+menu_main::~menu_main()
+{
+}
+
+
+/*-------------------------------------------------
+    menu_activated - handle coming to foreground
+-------------------------------------------------*/
+
+void menu_main::menu_activated()
+{
+	if (machine().phase() != m_phase)
+		reset(reset_options::REMEMBER_REF);
+}
+
+
+/*-------------------------------------------------
+    populate - populate main menu items
+-------------------------------------------------*/
+
 void menu_main::populate(float &customtop, float &custombottom)
 {
-	/* add main menu items */
+	m_phase = machine().phase();
+
 	item_append(_("Input (general)"), 0, (void *)INPUT_GROUPS);
 
-	item_append(_("Input (this Machine)"), 0, (void *)INPUT_SPECIFIC);
+	item_append(_("Input (this machine)"), 0, (void *)INPUT_SPECIFIC);
 
 	if (ui().machine_info().has_analog())
 		item_append(_("Analog Controls"), 0, (void *)ANALOG);
@@ -129,7 +152,7 @@ void menu_main::populate(float &customtop, float &custombottom)
 		item_append(_("Tape Control"), 0, (void *)TAPE_CONTROL);
 
 	if (pty_interface_enumerator(machine().root_device()).first() != nullptr)
-		item_append(_("Pseudo terminals"), 0, (void *)PTY_INFO);
+		item_append(_("Pseudo Terminals"), 0, (void *)PTY_INFO);
 
 	if (ui().machine_info().has_bioses())
 		item_append(_("BIOS Selection"), 0, (void *)BIOS_SELECTION);
@@ -156,7 +179,7 @@ void menu_main::populate(float &customtop, float &custombottom)
 	if (machine().options().cheat())
 		item_append(_("Cheat"), 0, (void *)CHEAT);
 
-	if (machine().phase() >= machine_phase::RESET)
+	if (machine_phase::RESET <= m_phase)
 	{
 		if (machine().options().plugins() && !mame_machine_manager::instance()->lua()->get_menu().empty())
 			item_append(_("Plugin Options"), 0, (void *)PLUGINS);
@@ -174,13 +197,13 @@ void menu_main::populate(float &customtop, float &custombottom)
 
 	item_append(menu_item_type::SEPARATOR);
 
-	item_append(string_format(_("About %s"), emulator_info::get_appname()), 0, (void *)ABOUT);
+	item_append(string_format(_("About %1$s"), emulator_info::get_appname()), 0, (void *)ABOUT);
 
 	item_append(menu_item_type::SEPARATOR);
 
 //  item_append(_("Quit from Machine"), 0, (void *)QUIT_GAME);
 
-	if (machine().phase() == machine_phase::INIT)
+	if (machine_phase::INIT == m_phase)
 	{
 		item_append(_("Start Machine"), 0, (void *)DISMISS);
 	}
@@ -191,20 +214,18 @@ void menu_main::populate(float &customtop, float &custombottom)
 	}
 }
 
-menu_main::~menu_main()
-{
-}
 
 /*-------------------------------------------------
-    menu_main - handle the main menu
+    handle - handle main menu events
 -------------------------------------------------*/
 
-void menu_main::handle()
+void menu_main::handle(event const *ev)
 {
-	/* process the menu */
-	const event *menu_event = process(0);
-	if (menu_event != nullptr && menu_event->iptkey == IPT_UI_SELECT) {
-		switch(uintptr_t(menu_event->itemref)) {
+	// process the menu
+	if (ev && (ev->iptkey == IPT_UI_SELECT))
+	{
+		switch (uintptr_t(ev->itemref))
+		{
 		case INPUT_GROUPS:
 			menu::stack_push<menu_input_groups>(ui(), container());
 			break;
@@ -314,12 +335,12 @@ void menu_main::handle()
 
 		case ADD_FAVORITE:
 			mame_machine_manager::instance()->favorite().add_favorite(machine());
-			reset(reset_options::REMEMBER_POSITION);
+			reset(reset_options::REMEMBER_REF);
 			break;
 
 		case REMOVE_FAVORITE:
 			mame_machine_manager::instance()->favorite().remove_favorite(machine());
-			reset(reset_options::REMEMBER_POSITION);
+			reset(reset_options::REMEMBER_REF);
 			break;
 
 		case QUIT_GAME:

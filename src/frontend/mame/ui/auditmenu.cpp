@@ -95,7 +95,7 @@ void menu_audit::custom_render(void *selectedref, float top, float bottom, float
 			std::size_t const total(m_fast ? m_unavailable : m_availablesorted.size());
 			std::ostringstream text;
 			util::stream_format(text,
-					_("Auditing ROMs for machine %2$u of %3$u...\n%1$s"),
+					_("Auditing media for machine %2$u of %3$u...\n%1$s"),
 					system ? std::string_view(system->description) : std::string_view(),
 					(std::min)(audited + 1, total),
 					total);
@@ -133,38 +133,34 @@ bool menu_audit::custom_ui_cancel()
 void menu_audit::populate(float &customtop, float &custombottom)
 {
 	if (m_unavailable && (m_availablesorted.size() != m_unavailable))
-		item_append(util::string_format(_("Audit ROMs for %1$u machines marked unavailable"), m_unavailable), 0, ITEMREF_START_FAST);
-	item_append(util::string_format(_("Audit ROMs for all %1$u machines"), m_availablesorted.size()), 0, ITEMREF_START_FULL);
+		item_append(util::string_format(_("Audit media for %1$u machines marked unavailable"), m_unavailable), 0, ITEMREF_START_FAST);
+	item_append(util::string_format(_("Audit media for all %1$u machines"), m_availablesorted.size()), 0, ITEMREF_START_FULL);
 	item_append(menu_item_type::SEPARATOR, 0);
 	custombottom = (ui().get_line_height() * 1.0f) + (ui().box_tb_border() * 3.0f);
 }
 
-void menu_audit::handle()
+void menu_audit::handle(event const *ev)
 {
 	switch (m_phase)
 	{
 	case phase::CONFIRMATION:
+		if (ev && (IPT_UI_SELECT == ev->iptkey))
 		{
-			event const *const menu_event(process(0));
-			if (menu_event && (IPT_UI_SELECT == menu_event->iptkey))
+			if ((ITEMREF_START_FULL == ev->itemref) || (ITEMREF_START_FAST == ev->itemref))
 			{
-				if ((ITEMREF_START_FULL == menu_event->itemref) || (ITEMREF_START_FAST == menu_event->itemref))
-				{
-					m_phase = phase::AUDIT;
-					m_fast = ITEMREF_START_FAST == menu_event->itemref;
-					m_prompt = util::string_format(_("Press %1$s to cancel\n"), ui().get_general_input_setting(IPT_UI_CANCEL));
-					m_future.resize(std::thread::hardware_concurrency());
-					for (auto &future : m_future)
-						future = std::async(std::launch::async, [this] () { return do_audit(); });
-				}
+				set_process_flags(PROCESS_CUSTOM_ONLY | PROCESS_NOINPUT);
+				m_phase = phase::AUDIT;
+				m_fast = ITEMREF_START_FAST == ev->itemref;
+				m_prompt = util::string_format(_("Press %1$s to cancel\n"), ui().get_general_input_setting(IPT_UI_CANCEL));
+				m_future.resize(std::thread::hardware_concurrency());
+				for (auto &future : m_future)
+					future = std::async(std::launch::async, [this] () { return do_audit(); });
 			}
 		}
 		break;
 
 	case phase::AUDIT:
 	case phase::CANCELLATION:
-		process(PROCESS_CUSTOM_ONLY | PROCESS_NOINPUT);
-
 		if ((m_next.load() >= m_availablesorted.size()) || m_cancel.load())
 		{
 			bool done(true);
