@@ -18,10 +18,15 @@
 #include "emuopts.h"
 #include "mame.h"
 
-#include "corestr.h"
+#include "util/corestr.h"
+#include "util/path.h"
+
+#include <locale>
 
 
 namespace ui {
+
+namespace {
 
 static int ADDING = 1;
 static int CHANGE = 2;
@@ -68,6 +73,8 @@ static const folders_entry s_folders[] =
 	{ N_p("path-option", "Covers"),             OPTION_COVER_PATH,         ADDING }
 };
 
+} // anonymous namespace
+
 
 /**************************************************
     MENU DIRECTORY
@@ -90,12 +97,10 @@ menu_directory::~menu_directory()
 //  handle
 //-------------------------------------------------
 
-void menu_directory::handle()
+void menu_directory::handle(event const *ev)
 {
 	// process the menu
-	const event *menu_event = process(0);
-
-	if (menu_event != nullptr && menu_event->itemref != nullptr && menu_event->iptkey == IPT_UI_SELECT)
+	if (ev && ev->itemref && ev->iptkey == IPT_UI_SELECT)
 		menu::stack_push<menu_display_actual>(ui(), container(), selected_index());
 }
 
@@ -146,12 +151,11 @@ menu_display_actual::~menu_display_actual()
 //  handle
 //-------------------------------------------------
 
-void menu_display_actual::handle()
+void menu_display_actual::handle(event const *ev)
 {
 	// process the menu
-	const event *menu_event = process(0);
-	if (menu_event != nullptr && menu_event->itemref != nullptr && menu_event->iptkey == IPT_UI_SELECT)
-		switch ((uintptr_t)menu_event->itemref)
+	if (ev && ev->itemref && ev->iptkey == IPT_UI_SELECT)
+		switch ((uintptr_t)ev->itemref)
 		{
 		case REMOVE:
 			menu::stack_push<menu_remove_folder>(ui(), container(), m_ref);
@@ -245,49 +249,41 @@ menu_add_change_folder::~menu_add_change_folder()
 //  handle
 //-------------------------------------------------
 
-void menu_add_change_folder::handle()
+void menu_add_change_folder::handle(event const *ev)
 {
 	// process the menu
-	const event *menu_event = process(0);
-
-	if (menu_event != nullptr && menu_event->itemref != nullptr)
+	if (ev && ev->itemref)
 	{
-		if (menu_event->iptkey == IPT_UI_SELECT)
+		if (ev->iptkey == IPT_UI_SELECT)
 		{
-			int index = (uintptr_t)menu_event->itemref - 1;
-			const menu_item &pitem = item(index);
+			assert(ev->item);
+			menu_item const &pitem = *ev->item;
 
 			// go up to the parent path
-			if (pitem.text == "..")
+			if (pitem.text() == "..")
 			{
-				size_t first_sep = m_current_path.find_first_of(PATH_SEPARATOR[0]);
-				size_t last_sep = m_current_path.find_last_of(PATH_SEPARATOR[0]);
-				if (first_sep != last_sep)
-					m_current_path.erase(++last_sep);
+				size_t const first_sep = m_current_path.find_first_of(PATH_SEPARATOR[0]);
+				size_t const last_sep = m_current_path.find_last_of(PATH_SEPARATOR[0]);
+				m_current_path.erase(last_sep + ((first_sep == last_sep) ? 1 : 0));
 			}
 			else
 			{
 				// if isn't a drive, appends the directory
-				if (pitem.subtext != "[DRIVE]")
-				{
-					if (m_current_path[m_current_path.length() - 1] == PATH_SEPARATOR[0])
-						m_current_path.append(pitem.text);
-					else
-						m_current_path.append(PATH_SEPARATOR).append(pitem.text);
-				}
+				if (pitem.subtext() != "[DRIVE]")
+					util::path_append(m_current_path, pitem.text());
 				else
-					m_current_path = pitem.text;
+					m_current_path = pitem.text();
 			}
 
 			// reset the char buffer also in this case
 			m_search.clear();
 			reset(reset_options::SELECT_FIRST);
 		}
-		else if (menu_event->iptkey == IPT_SPECIAL)
+		else if (ev->iptkey == IPT_SPECIAL)
 		{
 			bool update_selected = false;
 
-			if (menu_event->unichar == 0x09)
+			if (ev->unichar == 0x09)
 			{
 				// Tab key, save current path
 				std::string error_string;
@@ -296,9 +292,7 @@ void menu_add_change_folder::handle()
 					if (ui().options().exists(s_folders[m_ref].option))
 						ui().options().set_value(s_folders[m_ref].option, m_current_path, OPTION_PRIORITY_CMDLINE);
 					else if (machine().options().value(s_folders[m_ref].option) != m_current_path)
-					{
 						machine().options().set_value(s_folders[m_ref].option, m_current_path, OPTION_PRIORITY_CMDLINE);
-					}
 				}
 				else
 				{
@@ -314,9 +308,7 @@ void menu_add_change_folder::handle()
 					if (ui().options().exists(s_folders[m_ref].option))
 						ui().options().set_value(s_folders[m_ref].option, tmppath, OPTION_PRIORITY_CMDLINE);
 					else if (machine().options().value(s_folders[m_ref].option) != tmppath)
-					{
 						machine().options().set_value(s_folders[m_ref].option, tmppath, OPTION_PRIORITY_CMDLINE);
-					}
 				}
 
 				reset_parent(reset_options::SELECT_FIRST);
@@ -325,7 +317,7 @@ void menu_add_change_folder::handle()
 			else
 			{
 				// if it's any other key and we're not maxed out, update
-				update_selected = input_character(m_search, menu_event->unichar, uchar_is_printable);
+				update_selected = input_character(m_search, ev->unichar, uchar_is_printable);
 			}
 
 			// check for entries which matches our search buffer
@@ -336,12 +328,12 @@ void menu_add_change_folder::handle()
 
 				// from current item to the end
 				for (entry = cur_selected; entry < item_count(); entry++)
-					if (item(entry).ref != nullptr && !m_search.empty())
+					if (item(entry).ref() && !m_search.empty())
 					{
 						int match = 0;
 						for (int i = 0; i < m_search.size() + 1; i++)
 						{
-							if (core_strnicmp(item(entry).text.c_str(), m_search.data(), i) == 0)
+							if (core_strnicmp(item(entry).text().c_str(), m_search.data(), i) == 0)
 								match = i;
 						}
 
@@ -355,12 +347,12 @@ void menu_add_change_folder::handle()
 				// and from the first item to current one
 				for (entry = 0; entry < cur_selected; entry++)
 				{
-					if (item(entry).ref != nullptr && !m_search.empty())
+					if (item(entry).ref() && !m_search.empty())
 					{
 						int match = 0;
 						for (int i = 0; i < m_search.size() + 1; i++)
 						{
-							if (core_strnicmp(item(entry).text.c_str(), m_search.data(), i) == 0)
+							if (core_strnicmp(item(entry).text().c_str(), m_search.data(), i) == 0)
 								match = i;
 						}
 
@@ -374,7 +366,7 @@ void menu_add_change_folder::handle()
 				centre_selection();
 			}
 		}
-		else if (menu_event->iptkey == IPT_UI_CANCEL)
+		else if (ev->iptkey == IPT_UI_CANCEL)
 		{
 			// reset the char buffer also in this case
 			m_search.clear();
@@ -388,21 +380,37 @@ void menu_add_change_folder::handle()
 
 void menu_add_change_folder::populate(float &customtop, float &custombottom)
 {
-	// open a path
-	file_enumerator path(m_current_path.c_str());
-	const osd::directory::entry *dirent;
 	int folders_count = 0;
 
 	// add the drives
 	for (std::string const &volume_name : osd_get_volume_names())
 		item_append(volume_name, "[DRIVE]", 0, (void *)(uintptr_t)++folders_count);
 
-	// add the directories
+	// get subdirectories
+	std::vector<std::string> dirnames;
+	file_enumerator path(m_current_path);
+	const osd::directory::entry *dirent;
 	while ((dirent = path.next()) != nullptr)
 	{
-		if (dirent->type == osd::directory::entry::entry_type::DIR && strcmp(dirent->name, ".") != 0)
-			item_append(dirent->name, "[DIR]", 0, (void *)(uintptr_t)++folders_count);
+		if ((osd::directory::entry::entry_type::DIR == dirent->type) && strcmp(dirent->name, "."))
+			dirnames.emplace_back(dirent->name);
 	}
+
+	// sort
+	std::collate<wchar_t> const &coll = std::use_facet<std::collate<wchar_t> >(std::locale());
+	std::sort(
+			dirnames.begin(),
+			dirnames.end(),
+			[&coll] (std::string const &x, std::string const &y)
+			{
+				std::wstring const xw = wstring_from_utf8(x);
+				std::wstring const yw = wstring_from_utf8(y);
+				return coll.compare(xw.data(), xw.data() + xw.size(), yw.data(), yw.data() + yw.size()) < 0;
+			});
+
+	// add to menu
+	for (std::string const &name : dirnames)
+		item_append(name, "[DIR]", 0, (void *)(uintptr_t)++folders_count);
 
 	item_append(menu_item_type::SEPARATOR);
 
@@ -467,11 +475,10 @@ menu_remove_folder::~menu_remove_folder()
 //  handle
 //-------------------------------------------------
 
-void menu_remove_folder::handle()
+void menu_remove_folder::handle(event const *ev)
 {
 	// process the menu
-	const event *menu_event = process(0);
-	if (menu_event != nullptr && menu_event->itemref != nullptr && menu_event->iptkey == IPT_UI_SELECT)
+	if (ev && ev->itemref && ev->iptkey == IPT_UI_SELECT)
 	{
 		std::string tmppath, error_string;
 		m_folders.erase(m_folders.begin() + selected_index());

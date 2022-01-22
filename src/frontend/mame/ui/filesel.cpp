@@ -19,8 +19,8 @@
 
 #include "imagedev/floppy.h"
 
-#include "corestr.h"
-#include "zippath.h"
+#include "util/corestr.h"
+#include "util/zippath.h"
 
 #include <cstring>
 #include <locale>
@@ -59,6 +59,7 @@ menu_file_selector::menu_file_selector(mame_ui_manager &mui, render_container &c
 	, m_result(result)
 {
 	(void)m_image;
+	set_process_flags(PROCESS_IGNOREPAUSE);
 }
 
 
@@ -132,45 +133,6 @@ bool menu_file_selector::custom_mouse_down()
 	}
 
 	return false;
-}
-
-
-//-------------------------------------------------
-//  compare_file_selector_entries - sorting proc
-//  for file selector entries
-//-------------------------------------------------
-
-int menu_file_selector::compare_entries(const file_selector_entry *e1, const file_selector_entry *e2)
-{
-	int result;
-	const char *e1_basename = e1->basename.c_str();
-	const char *e2_basename = e2->basename.c_str();
-
-	if (e1->type < e2->type)
-	{
-		result = -1;
-	}
-	else if (e1->type > e2->type)
-	{
-		result = 1;
-	}
-	else
-	{
-		result = core_stricmp(e1_basename, e2_basename);
-		if (result == 0)
-		{
-			result = strcmp(e1_basename, e2_basename);
-			if (result == 0)
-			{
-				if (e1 < e2)
-					result = -1;
-				else if (e1 > e2)
-					result = 1;
-			}
-		}
-	}
-
-	return result;
 }
 
 
@@ -449,7 +411,7 @@ void menu_file_selector::populate(float &customtop, float &custombottom)
 	if (m_entrylist.size() > first)
 	{
 		// sort the menu entries
-		const std::collate<wchar_t> &coll = std::use_facet<std::collate<wchar_t>>(std::locale());
+		std::collate<wchar_t> const &coll = std::use_facet<std::collate<wchar_t> >(std::locale());
 		std::sort(
 				m_entrylist.begin() + first,
 				m_entrylist.end(),
@@ -457,7 +419,7 @@ void menu_file_selector::populate(float &customtop, float &custombottom)
 				{
 					std::wstring const xstr = wstring_from_utf8(x.basename);
 					std::wstring const ystr = wstring_from_utf8(y.basename);
-					return coll.compare(xstr.data(), xstr.data()+xstr.size(), ystr.data(), ystr.data()+ystr.size()) < 0;
+					return coll.compare(xstr.data(), xstr.data() + xstr.size(), ystr.data(), ystr.data() + ystr.size()) < 0;
 				});
 	}
 
@@ -478,18 +440,17 @@ void menu_file_selector::populate(float &customtop, float &custombottom)
 //  handle
 //-------------------------------------------------
 
-void menu_file_selector::handle()
+void menu_file_selector::handle(event const *ev)
 {
 	// process the menu
-	event const *const event = process(0);
-	if (event)
+	if (ev)
 	{
-		if (event->iptkey == IPT_SPECIAL)
+		if (ev->iptkey == IPT_SPECIAL)
 		{
 			// if it's any other key and we're not maxed out, update
-			type_search_char(event->unichar);
+			type_search_char(ev->unichar);
 		}
-		else if (event->iptkey == IPT_UI_CANCEL)
+		else if (ev->iptkey == IPT_UI_CANCEL)
 		{
 			// reset the char buffer also in this case
 			if (!m_filename.empty())
@@ -498,10 +459,10 @@ void menu_file_selector::handle()
 				ui().popup_time(ERROR_MESSAGE_TIME, "%s", m_filename);
 			}
 		}
-		else if (event->itemref && (event->iptkey == IPT_UI_SELECT))
+		else if (ev->itemref && (ev->iptkey == IPT_UI_SELECT))
 		{
 			// handle selections
-			select_item(*reinterpret_cast<file_selector_entry const *>(event->itemref));
+			select_item(*reinterpret_cast<file_selector_entry const *>(ev->itemref));
 
 			// reset the char buffer when pressing IPT_UI_SELECT
 			m_filename.clear();
@@ -556,13 +517,12 @@ void menu_select_rw::populate(float &customtop, float &custombottom)
 //  handle
 //-------------------------------------------------
 
-void menu_select_rw::handle()
+void menu_select_rw::handle(event const *ev)
 {
 	// process the menu
-	const event *event = process(0);
-	if (event != nullptr && event->iptkey == IPT_UI_SELECT)
+	if (ev && ev->iptkey == IPT_UI_SELECT)
 	{
-		m_result = result_from_itemref(event->itemref);
+		m_result = result_from_itemref(ev->itemref);
 		stack_pop();
 	}
 }

@@ -125,13 +125,15 @@ DEFINE_DEVICE_TYPE(COCOCART_SLOT, cococart_slot_device, "cococart_slot", "CoCo C
 //  LIVE DEVICE
 //**************************************************************************
 
+ALLOW_SAVE_TYPE(cococart_slot_device::line_value);
+
 //-------------------------------------------------
 //  cococart_slot_device - constructor
 //-------------------------------------------------
 cococart_slot_device::cococart_slot_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock) :
 	device_t(mconfig, COCOCART_SLOT, tag, owner, clock),
 	device_single_card_slot_interface<device_cococart_interface>(mconfig, *this),
-	device_image_interface(mconfig, *this),
+	device_cartrom_image_interface(mconfig, *this),
 	m_cart_callback(*this),
 	m_nmi_callback(*this),
 	m_halt_callback(*this), m_cart(nullptr)
@@ -178,6 +180,24 @@ void cococart_slot_device::device_start()
 	m_halt_line.callback = &m_halt_callback;
 
 	m_cart = get_card_device();
+
+	save_item(STRUCT_MEMBER(m_cart_line, timer_index));
+	save_item(STRUCT_MEMBER(m_cart_line, delay));
+	save_item(STRUCT_MEMBER(m_cart_line, value));
+	save_item(STRUCT_MEMBER(m_cart_line, line));
+	save_item(STRUCT_MEMBER(m_cart_line, q_count));
+
+	save_item(STRUCT_MEMBER(m_nmi_line, timer_index));
+	save_item(STRUCT_MEMBER(m_nmi_line, delay));
+	save_item(STRUCT_MEMBER(m_nmi_line, value));
+	save_item(STRUCT_MEMBER(m_nmi_line, line));
+	save_item(STRUCT_MEMBER(m_nmi_line, q_count));
+
+	save_item(STRUCT_MEMBER(m_halt_line, timer_index));
+	save_item(STRUCT_MEMBER(m_halt_line, delay));
+	save_item(STRUCT_MEMBER(m_halt_line, value));
+	save_item(STRUCT_MEMBER(m_halt_line, line));
+	save_item(STRUCT_MEMBER(m_halt_line, q_count));
 }
 
 
@@ -609,7 +629,7 @@ std::string cococart_slot_device::get_default_card_software(get_default_card_sof
 		// RPK file
 		rpk_file::ptr file;
 		util::core_file::ptr proxy;
-		std::error_condition err = util::core_file::open_proxy(image_core_file(), proxy);
+		std::error_condition err = util::core_file::open_proxy(*hook.image_file(), proxy);
 		if (!err)
 			err = read_coco_rpk(std::move(proxy), file);
 		if (!err)
