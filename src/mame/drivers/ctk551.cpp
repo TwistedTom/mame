@@ -53,6 +53,7 @@
 #include "video/hd44780.h"
 #include "emupal.h"
 #include "screen.h"
+#include "speaker.h"
 
 namespace {
 
@@ -63,7 +64,9 @@ public:
 		: driver_device(mconfig, type, tag)
 		, m_maincpu(*this, "maincpu")
 		, m_lcdc(*this, "lcdc")
+		, m_outputs(*this, "%02x.%d.%d", 0U, 0U, 0U)
 		, m_led_touch(*this, "led_touch")
+		, m_led_power(*this, "led_power")
 	{
 	}
 
@@ -83,21 +86,21 @@ private:
 
 	virtual void driver_start() override;
 
-	HD44780_PIXEL_UPDATE(lcd_update);
-	void palette_init(palette_device &palette);
-
 	required_device<gt913_device> m_maincpu;
 	required_device<hd44780_device> m_lcdc;
 
+	output_finder<64, 8, 5> m_outputs;
 	output_finder<> m_led_touch;
+	output_finder<> m_led_power;
 
 	ioport_value m_switch;
+
+	DECLARE_WRITE_LINE_MEMBER(render_w);
 };
 
 
 INPUT_CHANGED_MEMBER(ctk551_state::switch_w)
 {
-	logerror("switch_w: %x\n", param);
 	if (!oldval && newval)
 	{
 		if (m_switch == 0x1 && param != m_switch)
@@ -112,27 +115,36 @@ INPUT_CHANGED_MEMBER(ctk551_state::switch_w)
 WRITE_LINE_MEMBER(ctk551_state::apo_w)
 {
 	logerror("apo_w: %x\n", state);
-	/* TODO: when 1, this should turn off the LCD, speakers, etc.
+	/* auto power off - disable the LCD and speakers
 	the CPU will go to sleep until the power switch triggers a NMI */
+	if (!state)
+		m_lcdc->reset();
+	m_led_power = state;
+	m_maincpu->set_output_gain(ALL_OUTPUTS, state ? 1.0 : 0.0);
 }
 
-HD44780_PIXEL_UPDATE(ctk551_state::lcd_update)
-{
-	if (x < 6 && y < 8 && line < 2 && pos < 8)
-		bitmap.pix(line * 8 + y, pos * 6 + x) = state;
-}
 
-void ctk551_state::palette_init(palette_device &palette)
+WRITE_LINE_MEMBER(ctk551_state::render_w)
 {
-	palette.set_pen_color(0, rgb_t(255, 255, 255));
-	palette.set_pen_color(1, rgb_t(0, 0, 0));
+	if(!state)
+		return;
+
+	const u8 *render = m_lcdc->render();
+	for(int x=0; x != 64; x++) {
+		for(int y=0; y != 8; y++) {
+			u8 v = *render++;
+			for(int z=0; z != 5; z++)
+				m_outputs[x][y][z] = (v >> z) & 1;
+		}
+		render += 8;
+	}
 }
 
 void ctk551_state::ctk551_io_map(address_map &map)
 {
 	map(h8_device::PORT_1, h8_device::PORT_1).portr("P1_R").portw("P1_W").umask16(0x00ff);
 	map(h8_device::PORT_2, h8_device::PORT_2).portrw("P2").umask16(0x00ff);
-	map(h8_device::PORT_3, h8_device::PORT_3).portrw("P3").umask16(0x00ff);
+	map(h8_device::PORT_3, h8_device::PORT_3).noprw(); // port 3 pins are shared w/ key matrix
 	map(h8_device::ADC_0,  h8_device::ADC_0).portr("AN0");
 	map(h8_device::ADC_1,  h8_device::ADC_1).portr("AN1");
 }
@@ -140,6 +152,8 @@ void ctk551_state::ctk551_io_map(address_map &map)
 void ctk551_state::driver_start()
 {
 	m_led_touch.resolve();
+	m_led_power.resolve();
+	m_outputs.resolve();
 
 	m_switch = 0x2;
 
@@ -149,8 +163,11 @@ void ctk551_state::driver_start()
 void ctk551_state::ctk551(machine_config &config)
 {
 	// CPU
-	GT913(config, m_maincpu, 30'000'000);
+	// 30MHz oscillator, divided down internally (otherwise the test mode's OK/NG sounds play at double speed)
+	GT913(config, m_maincpu, 30'000'000 / 2);
 	m_maincpu->set_addrmap(AS_IO, &ctk551_state::ctk551_io_map);
+	m_maincpu->add_route(0, "lspeaker", 1.0);
+	m_maincpu->add_route(1, "rspeaker", 1.0);
 
 	// MIDI
 	auto &mdin(MIDI_PORT(config, "mdin"));
@@ -164,23 +181,19 @@ void ctk551_state::ctk551(machine_config &config)
 	// LCD
 	HD44780(config, m_lcdc, 0);
 	m_lcdc->set_lcd_size(2, 8);
-	m_lcdc->set_pixel_update_cb(FUNC(ctk551_state::lcd_update));
 
-	// screen (for testing only)
-	// TODO: the actual LCD with custom segments
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_LCD));
+	auto &screen = SCREEN(config, "screen", SCREEN_TYPE_SVG);
 	screen.set_refresh_hz(60);
-	screen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); /* not accurate */
-	screen.set_screen_update("lcdc", FUNC(hd44780_device::screen_update));
-	screen.set_size(6 * 8, 8 * 2);
+	screen.set_size(1000, 737);
 	screen.set_visarea_full();
-	screen.set_palette("palette");
+	screen.screen_vblank().set(FUNC(ctk551_state::render_w));
 
-	PALETTE(config, "palette", FUNC(ctk551_state::palette_init), 2);
+	SPEAKER(config, "lspeaker").front_left();
+	SPEAKER(config, "rspeaker").front_right();
 }
 
 INPUT_PORTS_START(ctk551)
-	PORT_START("maincpu:kbd:KO0")
+	PORT_START("maincpu:kbd:FI0")
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("C2")
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("C2#")
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("D2")
@@ -190,7 +203,7 @@ INPUT_PORTS_START(ctk551)
 	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("F2#")
 	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("G2")
 
-	PORT_START("maincpu:kbd:KO1")
+	PORT_START("maincpu:kbd:FI1")
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("G2#")
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("A2")
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("A2#")
@@ -200,7 +213,7 @@ INPUT_PORTS_START(ctk551)
 	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("D3")
 	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("D3#")
 
-	PORT_START("maincpu:kbd:KO2")
+	PORT_START("maincpu:kbd:FI2")
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("E3")
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("F3")
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("F3#")
@@ -210,7 +223,7 @@ INPUT_PORTS_START(ctk551)
 	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("A3#")
 	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("B3")
 
-	PORT_START("maincpu:kbd:KO3")
+	PORT_START("maincpu:kbd:FI3")
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("C4")
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("C4#")
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("D4")
@@ -220,7 +233,7 @@ INPUT_PORTS_START(ctk551)
 	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("F4#")
 	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("G4")
 
-	PORT_START("maincpu:kbd:KO4")
+	PORT_START("maincpu:kbd:FI4")
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("G4#")
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("A4")
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("A4#")
@@ -230,7 +243,7 @@ INPUT_PORTS_START(ctk551)
 	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("D5")
 	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("D5#")
 
-	PORT_START("maincpu:kbd:KO5")
+	PORT_START("maincpu:kbd:FI5")
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("E5")
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("F5")
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("F5#")
@@ -240,7 +253,7 @@ INPUT_PORTS_START(ctk551)
 	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("A5#")
 	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("B5")
 
-	PORT_START("maincpu:kbd:KO6")
+	PORT_START("maincpu:kbd:FI6")
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("C6")
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("C6#")
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("D6")
@@ -250,7 +263,7 @@ INPUT_PORTS_START(ctk551)
 	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("F6#")
 	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("G6")
 
-	PORT_START("maincpu:kbd:KO7")
+	PORT_START("maincpu:kbd:FI7")
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("G6#")
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("A6")
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("A6#")
@@ -258,7 +271,7 @@ INPUT_PORTS_START(ctk551)
 	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("C7")
 	PORT_BIT( 0xe0, IP_ACTIVE_HIGH, IPT_UNUSED )
 
-	PORT_START("maincpu:kbd:KO8")
+	PORT_START("maincpu:kbd:FI8")
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_KEYPAD ) PORT_NAME("Keypad 9") PORT_CODE(KEYCODE_9_PAD)
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_KEYPAD ) PORT_NAME("Keypad 8") PORT_CODE(KEYCODE_8_PAD)
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_KEYPAD ) PORT_NAME("Keypad 7") PORT_CODE(KEYCODE_7_PAD)
@@ -268,7 +281,7 @@ INPUT_PORTS_START(ctk551)
 	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("Rhythm")
 	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("Tone")
 
-	PORT_START("maincpu:kbd:KO9")
+	PORT_START("maincpu:kbd:FI9")
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_KEYPAD ) PORT_NAME("Keypad 6") PORT_CODE(KEYCODE_6_PAD)
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_KEYPAD ) PORT_NAME("Keypad 5") PORT_CODE(KEYCODE_5_PAD)
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_KEYPAD ) PORT_NAME("Keypad 4") PORT_CODE(KEYCODE_4_PAD)
@@ -278,7 +291,7 @@ INPUT_PORTS_START(ctk551)
 	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("Transpose / Tune / MIDI")
 	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("Chord Book")
 
-	PORT_START("maincpu:kbd:KO10")
+	PORT_START("maincpu:kbd:FI10")
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_KEYPAD ) PORT_NAME("Keypad 3") PORT_CODE(KEYCODE_3_PAD)
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_KEYPAD ) PORT_NAME("Keypad 2") PORT_CODE(KEYCODE_2_PAD)
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_KEYPAD ) PORT_NAME("Keypad 1") PORT_CODE(KEYCODE_1_PAD)
@@ -288,7 +301,7 @@ INPUT_PORTS_START(ctk551)
 	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("Start / Stop")
 	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("Sync / Fill In")
 
-	PORT_START("maincpu:kbd:KO11")
+	PORT_START("maincpu:kbd:KI0")
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("Right Hand On/Off")
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("Left Hand On/Off")
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("Fast Forward")
@@ -298,9 +311,12 @@ INPUT_PORTS_START(ctk551)
 	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("Tempo Up")
 	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("Volume Up")
 
-	PORT_START("maincpu:kbd:KO12")
+	PORT_START("maincpu:kbd:KI1")
 	PORT_BIT( 0x0f, IP_ACTIVE_HIGH, IPT_UNUSED )
 	PORT_BIT( 0xf0, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(ctk551_state, switch_r)
+
+	PORT_START("maincpu:kbd:KI2")
+	PORT_BIT( 0xff, IP_ACTIVE_HIGH, IPT_UNUSED )
 
 	PORT_START("maincpu:kbd:VELOCITY")
 	PORT_BIT( 0x7f, 0x7f, IPT_POSITIONAL ) PORT_NAME("Key Velocity") PORT_SENSITIVITY(100) PORT_KEYDELTA(10) PORT_CENTERDELTA(0)
@@ -320,7 +336,7 @@ INPUT_PORTS_START(ctk551)
 	PORT_START("P1_W")
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OUTPUT )  PORT_WRITE_LINE_MEMBER(ctk551_state, led_touch_w)
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_UNUSED )
-	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OUTPUT )  // unknown
+	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OUTPUT )  PORT_WRITE_LINE_MEMBER(ctk551_state, apo_w)
 	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_OUTPUT )  PORT_WRITE_LINE_DEVICE_MEMBER("lcdc", hd44780_device, e_w)
 	PORT_BIT( 0xf0, IP_ACTIVE_HIGH, IPT_OUTPUT )  PORT_WRITE_LINE_MEMBER(ctk551_state, lcd_w)
 
@@ -329,11 +345,6 @@ INPUT_PORTS_START(ctk551)
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OUTPUT )  PORT_WRITE_LINE_DEVICE_MEMBER("lcdc", hd44780_device, rs_w)
 	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_OUTPUT )  PORT_WRITE_LINE_DEVICE_MEMBER("lcdc", hd44780_device, rw_w)
 	PORT_BIT( 0xf0, IP_ACTIVE_HIGH, IPT_UNKNOWN )
-
-	PORT_START("P3")
-	PORT_BIT( 0x3f, IP_ACTIVE_HIGH, IPT_UNKNOWN )
-	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OUTPUT )  PORT_WRITE_LINE_MEMBER(ctk551_state, apo_w)
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_UNKNOWN )
 
 	PORT_START("AN0")
 	PORT_CONFNAME( 0xff, 0x00, "Power Source" )
@@ -348,9 +359,13 @@ INPUT_PORTS_END
 ROM_START(ctk551)
 	ROM_REGION(0x100000, "maincpu", 0)
 	ROM_LOAD16_WORD_SWAP("ctk551.lsi2", 0x000000, 0x100000, CRC(66fc34cd) SHA1(47e9559edc106132f8a83462ed17a6c5c3872157))
+
+	ROM_REGION(285279, "screen", 0)
+	ROM_LOAD("ctk551lcd.svg", 0, 285279, CRC(1bb5da03) SHA1(a0cf22c6577c4ff0119ee7bb4ba8b487e23872d4))
+
 ROM_END
 
 } // anonymous namespace
 
 //    YEAR  NAME     PARENT  COMPAT  MACHINE  INPUT   CLASS         INIT        COMPANY  FULLNAME     FLAGS
-SYST( 1999, ctk551,  0,      0,      ctk551,  ctk551, ctk551_state, empty_init, "Casio", "CTK-551",   MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_SUPPORTS_SAVE )
+SYST( 1999, ctk551,  0,      0,      ctk551,  ctk551, ctk551_state, empty_init, "Casio", "CTK-551",   MACHINE_SUPPORTS_SAVE )

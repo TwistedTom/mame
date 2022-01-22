@@ -129,6 +129,7 @@ device_nes_cart_interface::device_nes_cart_interface(const machine_config &mconf
 	, m_n163_vol(0)
 	, m_outer_prg_size(0)
 	, m_outer_chr_size(0)
+	, m_smd133_addr(0x6000)
 	, m_mirroring(PPU_MIRROR_NONE)
 	, m_pcb_ctrl_mirror(false)
 	, m_four_screen_vram(false)
@@ -336,48 +337,12 @@ void device_nes_cart_interface::prg16_cdef(int bank)
 	update_prg_banks(2, 3);
 }
 
-void device_nes_cart_interface::prg8_89(int bank)
-{
-	/* assumes that bank references an 8k chunk */
-	bank = prg_8k_bank_num(bank);
-
-	m_prg_bank[0] = bank;
-	update_prg_banks(0, 0);
-}
-
-void device_nes_cart_interface::prg8_ab(int bank)
-{
-	/* assumes that bank references an 8k chunk */
-	bank = prg_8k_bank_num(bank);
-
-	m_prg_bank[1] = bank;
-	update_prg_banks(1, 1);
-}
-
-void device_nes_cart_interface::prg8_cd(int bank)
-{
-	/* assumes that bank references an 8k chunk */
-	bank = prg_8k_bank_num(bank);
-
-	m_prg_bank[2] = bank;
-	update_prg_banks(2, 2);
-}
-
-void device_nes_cart_interface::prg8_ef(int bank)
-{
-	/* assumes that bank references an 8k chunk */
-	bank = prg_8k_bank_num(bank);
-
-	m_prg_bank[3] = bank;
-	update_prg_banks(3, 3);
-}
-
-/* We also define an additional helper to map 8k PRG-ROM to one of the banks (passed as parameter) */
+// We define a parameterized helper to map 8k PRG-ROM to one of the banks
 void device_nes_cart_interface::prg8_x(int start, int bank)
 {
 	assert(start < 4);
 
-	/* assumes that bank references an 8k chunk */
+	// assumes that bank references an 8k chunk
 	bank = prg_8k_bank_num(bank);
 
 	m_prg_bank[start] = bank;
@@ -609,12 +574,6 @@ void device_nes_cart_interface::reset_cpu()
 	m_maincpu->set_pc(0xfffc);
 }
 
-void device_nes_cart_interface::poke(offs_t offset, uint8_t data)
-{
-	// even worse hack
-	m_maincpu->space(AS_PROGRAM).write_byte(offset, data);
-}
-
 //-------------------------------------------------
 //  Other helpers
 //-------------------------------------------------
@@ -795,12 +754,11 @@ void device_nes_cart_interface::nes_banks_restore()
 //-------------------------------------------------
 nes_cart_slot_device::nes_cart_slot_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
 	: device_t(mconfig, NES_CART_SLOT, tag, owner, clock)
-	, device_image_interface(mconfig, *this)
+	, device_cartrom_image_interface(mconfig, *this)
 	, device_single_card_slot_interface<device_nes_cart_interface>(mconfig, *this)
 	, m_crc_hack(0)
 	, m_cart(nullptr)
 	, m_pcb_id(NO_BOARD)
-	, m_must_be_loaded(1)
 {
 }
 
