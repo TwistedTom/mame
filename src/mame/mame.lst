@@ -115,6 +115,7 @@ tourpgum
 unkpacg                         // (c) 19?? ???
 unkpacga                        //
 unkpacgb                        //
+unkpacgc                        //
 unksig                          // 1998?
 unksiga                         // 1998?
 
@@ -11569,6 +11570,7 @@ wulybuly                        //
 @source:airraid.cpp
 airraid                         // (c) 1987 Seibu Kaihatsu
 cshooter                        // (c) 1987 JKH (bootleg)
+failgate                        // (c) 1991 Seibu Kaihatsu
 
 @source:csplayh5.cpp
 aimode                          // (c) 1999
@@ -17159,6 +17161,7 @@ dbc                             // (c) 199?
 drgnwrld                        // (c) 1997
 drgnwrldv10c                    // (c) 1995
 drgnwrldv11h                    // (c) 1995
+drgnwrldv11ha                   // (c) 1995
 drgnwrldv20j                    // (c) 1995
 drgnwrldv21                     // (c) 1995
 drgnwrldv21j                    // (c) 1995
@@ -19826,9 +19829,6 @@ sys573                          //
 @source:ktm3.cpp
 ktm3                            // (c) 1980 Synertek Systems Corp.
 
-@source:kungfum2.cpp
-kungfum2                        // (c) 1986 Irem
-
 @source:kungfur.cpp
 kungfur                         // (c) 1987
 
@@ -19969,6 +19969,9 @@ lckydrawa                       // (c) 1979 Mirco
 
 @source:lcmate2.cpp
 lcmate2                         //
+
+@source:ld50.cpp
+ld50                            //
 
 @source:leapfrog_iquest.cpp
 iquest
@@ -20399,6 +20402,9 @@ spelunkr                        // (c) 1985 licensed from Broderbund
 spelunkrj                       // (c) 1985 licensed from Broderbund
 yanchamr                        // (c) 1986 (Japan)
 youjyudn                        // (c) 1986 (Japan)
+
+@source:m62_bkungfu.cpp
+bkungfu                         // (c) 1987 Irem
 
 @source:m63.cpp
 atomboy                         // M63 (c) 1985 Irem + Memetron license
@@ -33478,6 +33484,7 @@ noki8890                        //
 @source:norautp.cpp
 bjpoker                         // (c) M. Kramer Inc.
 cdrawpkr                        // (c) 1984, Coinmaster
+cgip23b                         // (c) 1998, CGI
 cgip30cs                        // (c) 1999, CGI
 cgidjp                          // (c) 1999, CGI
 df_djpkr                        // (c) DellFern Ltd.
@@ -37524,6 +37531,7 @@ columnsj                        // (c) 1990 Sega
 columnsu                        // (c) 1990 Sega
 headonch                        // (c) 1994 Sega
 ichir                           // (c) 1994 Sega
+ichirbl                         // bootleg
 ichirj                          // (c) 1994 Sega
 ichirjbl                        // bootleg
 ichirk                          // (c) 1994 Sega
@@ -39203,7 +39211,6 @@ spdodgeb                        // TA-0022 (c) 1987
 
 @source:spec128.cpp
 hc128                           // 1991 HC-128
-hc2000                          // 1992 HC-2000
 spec128                         // 1986 ZX Spectrum 128
 specpls2                        // 1986 ZX Spectrum +2
 
@@ -39250,6 +39257,7 @@ didakm92                        // 1992 Didaktik M 92
 didakm93                        // 1993 Didaktik M 93
 didakt90                        // 1990 Didaktik Skalica 90
 didaktk                         // 1992 Didaktik Kompakt
+hc2000                          // 1992 HC-2000
 hc85                            // 1985 HC-85
 hc88                            // 1988 HC-88
 hc90                            // 1990 HC-90
@@ -39545,6 +39553,7 @@ spk116it                        // (c) 199? IGS
 spk116itmx                      // (c) 199? IGS
 spk115it                        // (c) 199? IGS
 spk114it                        // (c) 199? IGS
+spk102u                         // (c) 1996 IGS
 spk102ua                        // (c) 1996 IGS
 3super8                         // unknown
 
