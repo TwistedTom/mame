@@ -13,43 +13,45 @@ TODO:
 #include "includes/m62.h"
 #include "includes/iremipt.h"
 
-class kungfum2_state : public m62_state
+class m62_bkungfu_state : public m62_state
 {
 public:
-	kungfum2_state(const machine_config &mconfig, device_type type, const char *tag)
+	m62_bkungfu_state(const machine_config &mconfig, device_type type, const char *tag)
 		: m62_state(mconfig, type, tag)
 		, m_blitterdatarom(*this, "blitterdat")
 		, m_blittercmdram(*this, "blittercmdram")
 	{ }
 
-	void kungfum2(machine_config& config);
+	void bkungfu(machine_config& config);
 
 private:
 	void mem_map(address_map& map);
 	void io_map(address_map& map);
 
-	uint8_t kungfum2_blitter_r(offs_t offset);
-	void kungfum2_blitter_w(offs_t offset, uint8_t data);
+	uint8_t bkungfu_blitter_r(offs_t offset);
+	void bkungfu_blitter_w(offs_t offset, uint8_t data);
 
-	void kungfum2_io83_w(uint8_t data);
-	void kungfum2_io84_w(uint8_t data);
+	TILE_GET_INFO_MEMBER(get_bkungfu_bg_tile_info);
+	DECLARE_VIDEO_START(bkungfu);
 
-	TILE_GET_INFO_MEMBER(get_kungfum2_bg_tile_info);
-	DECLARE_VIDEO_START(kungfum2);
-
-	std::vector<uint8_t> m_kungfum2_tileram;
+	std::vector<uint8_t> m_bkungfu_tileram;
 
 	required_region_ptr<uint8_t> m_blitterdatarom;
 	required_shared_ptr<uint8_t> m_blittercmdram;
 };
 
 
-TILE_GET_INFO_MEMBER(kungfum2_state::get_kungfum2_bg_tile_info)
-{
-	int code = m_kungfum2_tileram[(tile_index << 1)];
-	int color = m_kungfum2_tileram[(tile_index << 1) | 1];
 
-	tileinfo.set(0, code | ((color & 0xc0)<< 2), color & 0x1f, 0);
+/*******************************************************************************
+    Video
+*******************************************************************************/
+
+TILE_GET_INFO_MEMBER(m62_bkungfu_state::get_bkungfu_bg_tile_info)
+{
+	int code = m_bkungfu_tileram[(tile_index << 1)];
+	int color = m_bkungfu_tileram[(tile_index << 1) | 1];
+
+	tileinfo.set(0, code | ((color & 0xe0) << 3) | (m_kidniki_background_bank << 11), color & 0x1f, 0);
 
 	if ((tile_index / 64) < 6 || ((color & 0x1f) >> 1) > 0x0c)
 		tileinfo.category = 1;
@@ -57,22 +59,27 @@ TILE_GET_INFO_MEMBER(kungfum2_state::get_kungfum2_bg_tile_info)
 		tileinfo.category = 0;
 }
 
-
-VIDEO_START_MEMBER(kungfum2_state,kungfum2)
+VIDEO_START_MEMBER(m62_bkungfu_state,bkungfu)
 {
 	// tileram is private to blitter
-	m_kungfum2_tileram.resize(64*32*2);
-	save_item(NAME(m_kungfum2_tileram));
+	m_bkungfu_tileram.resize(64*32*2);
+	save_item(NAME(m_bkungfu_tileram));
 
-	m62_start(tilemap_get_info_delegate(*this, FUNC(kungfum2_state::get_kungfum2_bg_tile_info)), 32, 0, 8, 8, 64, 32);
+	m62_start(tilemap_get_info_delegate(*this, FUNC(m62_bkungfu_state::get_bkungfu_bg_tile_info)), 32, 0, 8, 8, 64, 32);
 }
 
-uint8_t kungfum2_state::kungfum2_blitter_r(offs_t offset)
+
+
+/*******************************************************************************
+    Blitter
+*******************************************************************************/
+
+uint8_t m62_bkungfu_state::bkungfu_blitter_r(offs_t offset)
 {
 	return 0xfe;
 }
 
-void kungfum2_state::kungfum2_blitter_w(offs_t offset, uint8_t data)
+void m62_bkungfu_state::bkungfu_blitter_w(offs_t offset, uint8_t data)
 {
 	m_blittercmdram[offset] = data;
 
@@ -103,8 +110,8 @@ void kungfum2_state::kungfum2_blitter_w(offs_t offset, uint8_t data)
 				{
 					uint16_t position = (m_blittercmdram[0x003] << 8) | m_blittercmdram[0x002];
 
-					m_kungfum2_tileram[(position) & 0xfff] = blitdat;
-					m_kungfum2_tileram[(position + 1) & 0xfff] = m_blittercmdram[0x004];
+					m_bkungfu_tileram[(position) & 0xfff] = blitdat;
+					m_bkungfu_tileram[(position + 1) & 0xfff] = m_blittercmdram[0x004];
 					m_bg_tilemap->mark_tile_dirty((position&0xfff) >> 1);
 
 					position += 2;
@@ -119,8 +126,8 @@ void kungfum2_state::kungfum2_blitter_w(offs_t offset, uint8_t data)
 		{
 			for (int position = 0; position < 0x1000; position += 2)
 			{
-				m_kungfum2_tileram[(position) & 0xfff] = m_blittercmdram[0x002];
-				m_kungfum2_tileram[(position + 1) & 0xfff] = m_blittercmdram[0x001];
+				m_bkungfu_tileram[(position) & 0xfff] = m_blittercmdram[0x002];
+				m_bkungfu_tileram[(position + 1) & 0xfff] = m_blittercmdram[0x001];
 				m_bg_tilemap->mark_tile_dirty((position &0xfff) >> 1);
 			}
 		}
@@ -157,7 +164,7 @@ void kungfum2_state::kungfum2_blitter_w(offs_t offset, uint8_t data)
 		{
 			//logerror("%s: blitter: coin up\n", machine().describe_context());
 		}
-		else if (data == 0xFE)
+		else if (data == 0xfe)
 		{
 			//logerror("%s: blitter: start up\n", machine().describe_context());
 		}
@@ -172,43 +179,41 @@ void kungfum2_state::kungfum2_blitter_w(offs_t offset, uint8_t data)
 	}
 }
 
-void kungfum2_state::kungfum2_io83_w(uint8_t data)
-{
-	// before blitter commands
-	//logerror("%s: kungfum2_io83_w: %02x\n",machine().describe_context(),data);
-}
 
-void kungfum2_state::kungfum2_io84_w(uint8_t data)
-{
-	//logerror("%s: kungfum2_io84_w: %02x\n",machine().describe_context(),data);
-}
 
-void kungfum2_state::mem_map(address_map& map)
+/*******************************************************************************
+    Address Maps
+*******************************************************************************/
+
+void m62_bkungfu_state::mem_map(address_map& map)
 {
 	map(0x0000, 0xbfff).rom();
 	map(0xc000, 0xc0ff).ram().share("spriteram");
-	map(0xc800, 0xcfff).rw(FUNC(kungfum2_state::kungfum2_blitter_r), FUNC(kungfum2_state::kungfum2_blitter_w)).share("blittercmdram");
+	map(0xc800, 0xcfff).rw(FUNC(m62_bkungfu_state::bkungfu_blitter_r), FUNC(m62_bkungfu_state::bkungfu_blitter_w)).share("blittercmdram");
 	map(0xe000, 0xefff).ram();
 }
 
-void kungfum2_state::io_map(address_map &map)
+void m62_bkungfu_state::io_map(address_map &map)
 {
 	map.global_mask(0xff);
 	map(0x00, 0x00).portr("SYSTEM").w(m_audio, FUNC(irem_audio_device::cmd_w));
-	map(0x01, 0x01).portr("P1").w(FUNC(kungfum2_state::m62_flipscreen_w));  /* + coin counters */
+	map(0x01, 0x01).portr("P1").w(FUNC(m62_bkungfu_state::m62_flipscreen_w));  /* + coin counters */
 	map(0x02, 0x02).portr("P2");
 	map(0x03, 0x03).portr("DSW1");
 	map(0x04, 0x04).portr("DSW2");
-
-	map(0x81, 0x81).w(FUNC(kungfum2_state::m62_hscroll_high_w));
-	map(0x80, 0x80).w(FUNC(kungfum2_state::m62_hscroll_low_w));
-	map(0x83, 0x83).w(FUNC(kungfum2_state::kungfum2_io83_w));
-	map(0x84, 0x84).w(FUNC(kungfum2_state::kungfum2_io84_w));
+	map(0x81, 0x81).w(FUNC(m62_bkungfu_state::m62_hscroll_high_w));
+	map(0x80, 0x80).w(FUNC(m62_bkungfu_state::m62_hscroll_low_w));
+	map(0x83, 0x83).w(FUNC(m62_bkungfu_state::kidniki_background_bank_w));
+	//map(0x84, 0x84).nopw();
 }
 
 
 
-static INPUT_PORTS_START( kungfum2 )
+/*******************************************************************************
+    Input Ports
+*******************************************************************************/
+
+static INPUT_PORTS_START( bkungfu )
 	PORT_START("SYSTEM")
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_START1 )
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_START2 )
@@ -277,19 +282,27 @@ INPUT_PORTS_END
 
 
 
-void kungfum2_state::kungfum2(machine_config& config)
+/*******************************************************************************
+    Machine Configs
+*******************************************************************************/
+
+void m62_bkungfu_state::bkungfu(machine_config& config)
 {
 	kungfum(config);
 
-	m_maincpu->set_addrmap(AS_PROGRAM, &kungfum2_state::mem_map);
-	m_maincpu->set_addrmap(AS_IO, &kungfum2_state::io_map);
+	m_maincpu->set_addrmap(AS_PROGRAM, &m62_bkungfu_state::mem_map);
+	m_maincpu->set_addrmap(AS_IO, &m62_bkungfu_state::io_map);
 
-	MCFG_VIDEO_START_OVERRIDE(kungfum2_state,kungfum2)
+	MCFG_VIDEO_START_OVERRIDE(m62_bkungfu_state,bkungfu)
 }
 
 
 
-ROM_START( kungfum2 )
+/*******************************************************************************
+    ROM Definitions
+*******************************************************************************/
+
+ROM_START( bkungfu )
 	ROM_REGION( 0x10000, "maincpu", 0 )
 	ROM_LOAD( "km-a.4e", 0x00000, 0x4000, CRC(083632aa) SHA1(0a52c6162b2fb55057735a54c59f7cb88d870593) )
 	ROM_LOAD( "km-a.4d", 0x04000, 0x4000, CRC(08b14684) SHA1(8d60abe5f06e1b3ce465ec740df3f4ee8e9398bc) )
@@ -298,7 +311,7 @@ ROM_START( kungfum2 )
 	ROM_REGION( 0x1000, "mcu", 0 )
 	ROM_LOAD( "mcu",     0x0000, 0x1000, NO_DUMP )
 
-	ROM_REGION( 0x8000, "blitterdat", 0 )
+	ROM_REGION( 0x10000, "blitterdat", ROMREGION_ERASEFF )
 	ROM_LOAD( "km-z.4h", 0x0000, 0x8000, CRC(252bb4a9) SHA1(2a69ee113950ea58895b42102bbb5263865ace9d) )
 
 	ROM_REGION( 0x10000, "irem_audio:iremsound", 0 )
@@ -342,4 +355,11 @@ ROM_START( kungfum2 )
 	ROM_LOAD( "km-b.6f", 0x0000, 0x0100, CRC(82c20d12) SHA1(268903f7d9be58a70d030b02bf31a2d6b5b6e249) )
 ROM_END
 
-GAME( 1987, kungfum2,  0,        kungfum2, kungfum2,  kungfum2_state, empty_init, ROT0,   "Irem", "Beyond Kung-Fu (location test)", MACHINE_NOT_WORKING | MACHINE_UNEMULATED_PROTECTION | MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_SOUND | MACHINE_IMPERFECT_GRAPHICS )
+
+
+/*******************************************************************************
+    Drivers
+*******************************************************************************/
+
+//    YEAR  NAME     PARENT  MACHINE  INPUT     CLASS              INIT        ROT     COMPANY  FULLNAME                          FLAGS
+GAME( 1987, bkungfu, 0,      bkungfu, bkungfu,  m62_bkungfu_state, empty_init, ROT0,   "Irem",  "Beyond Kung-Fu (location test)", MACHINE_NOT_WORKING | MACHINE_UNEMULATED_PROTECTION | MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_SOUND | MACHINE_IMPERFECT_GRAPHICS )
