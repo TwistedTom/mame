@@ -3,6 +3,8 @@
 #ifndef MAME_BUS_RS232_NULL_MODEM_H
 #define MAME_BUS_RS232_NULL_MODEM_H
 
+#pragma once
+
 #include "rs232.h"
 #include "imagedev/bitbngr.h"
 #include "diserial.h"
@@ -24,7 +26,7 @@ protected:
 	virtual ioport_constructor device_input_ports() const override;
 	virtual void device_start() override;
 	virtual void device_reset() override;
-	virtual void device_timer(emu_timer &timer, device_timer_id id, int param, void *ptr) override;
+	virtual void device_timer(emu_timer &timer, device_timer_id id, int param) override;
 	virtual void device_add_mconfig(machine_config &config) override;
 
 	virtual void tra_callback() override;

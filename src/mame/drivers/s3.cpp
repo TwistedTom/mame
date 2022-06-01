@@ -32,8 +32,7 @@ Sound:
       line per sound. There's 4 "chime" lines and the tilt line.
 - The later games could send any of 15 codes (but never did), so only needed 4 lines.
 - All soundcard games also have an "alternator" line. By activating this, followed by
-      activating bit 0, the startup tune would play. For it to work properly, both bit
-      4 and 7 must operate at the same time, otherwise the tune gets cut off.
+      activating bit 0, the startup tune would play.
 
 Status:
 - All games are playable
@@ -98,18 +97,18 @@ protected:
 	u8 m_t_c = 0;
 	u8 m_strobe = 0;
 	u8 m_row = 0;
-	bool m_data_ok = 0;
+	bool m_data_ok = false;
 	u8 m_lamp_data = 0;
 	u8 m_game = 0;
 	bool m_disco = false;
-	DECLARE_WRITE_LINE_MEMBER(pia22_ca2_w) { } //ST5
+	DECLARE_WRITE_LINE_MEMBER(pia22_ca2_w) { m_io_outputs[20] = state; } //ST5
 	DECLARE_WRITE_LINE_MEMBER(pia22_cb2_w) { } //ST-solenoids enable
-	DECLARE_WRITE_LINE_MEMBER(pia24_ca2_w) { } //ST2
-	DECLARE_WRITE_LINE_MEMBER(pia24_cb2_w) { } //ST1
+	DECLARE_WRITE_LINE_MEMBER(pia24_ca2_w) { m_io_outputs[17] = state; } //ST2
+	DECLARE_WRITE_LINE_MEMBER(pia24_cb2_w) { m_io_outputs[16] = state; } //ST1
 	DECLARE_WRITE_LINE_MEMBER(pia28_ca2_w) { } //diag leds enable
-	DECLARE_WRITE_LINE_MEMBER(pia28_cb2_w) { } //ST6
-	DECLARE_WRITE_LINE_MEMBER(pia30_ca2_w) { } //ST4
-	DECLARE_WRITE_LINE_MEMBER(pia30_cb2_w) { } //ST3
+	DECLARE_WRITE_LINE_MEMBER(pia28_cb2_w) { m_io_outputs[21] = state; } //ST6
+	DECLARE_WRITE_LINE_MEMBER(pia30_ca2_w) { m_io_outputs[19] = state; } //ST4
+	DECLARE_WRITE_LINE_MEMBER(pia30_cb2_w) { m_io_outputs[18] = state; } //ST3
 	TIMER_DEVICE_CALLBACK_MEMBER(irq);
 	void main_map(address_map &map);
 
@@ -123,7 +122,7 @@ protected:
 	required_ioport_array<2> m_dips;
 	output_finder<32> m_digits;
 	output_finder<2> m_leds;
-	output_finder<80> m_io_outputs; // 16 solenoids + 64 lamps
+	output_finder<86> m_io_outputs; // 22 solenoids + 64 lamps
 
 private:
 	void sol0_w(u8 data);
@@ -228,7 +227,7 @@ static INPUT_PORTS_START( s3 )
 	PORT_START("DIAGS")
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_KEYPAD) PORT_NAME("Main Diag") PORT_CODE(KEYCODE_0_PAD) PORT_CHANGED_MEMBER(DEVICE_SELF, s3_state, main_nmi, 1)
 	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_KEYPAD) PORT_NAME("Advance") PORT_CODE(KEYCODE_1_PAD)
-	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_KEYPAD) PORT_NAME("Manual/Auto") PORT_CODE(KEYCODE_6_PAD)
+	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_KEYPAD) PORT_NAME("Manual/Auto") PORT_CODE(KEYCODE_2_PAD)
 	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_NAME("Enter") PORT_CODE(KEYCODE_ENTER_PAD)
 
 	PORT_START("DS1")
@@ -505,7 +504,7 @@ void s3_state::lamp1_w(u8 data)
 	for (u8 i = 0; i < 8; i++)
 		if (BIT(data, i))
 			for (u8 j = 0; j < 8; j++)
-				m_io_outputs[16U+i*8U+j] = BIT(m_lamp_data, j);
+				m_io_outputs[22U+i*8U+j] = BIT(m_lamp_data, j);
 }
 
 u8 s3_state::dips_r()
@@ -718,10 +717,13 @@ ROM_END
 
 } // Anonymous namespace
 
-GAME( 1977, httip_l1, 0, s3,  httip, s3_state,  empty_init, ROT0, "Williams", "Hot Tip (L-1)",          MACHINE_IS_SKELETON_MECHANICAL )
-GAME( 1977, lucky_l1, 0, s3,  lucky, s3_state,  init_4,     ROT0, "Williams", "Lucky Seven (L-1)",      MACHINE_IS_SKELETON_MECHANICAL )
-GAME( 1978, wldcp_l1, 0, s3a, wldcp, s3a_state, init_1,     ROT0, "Williams", "World Cup (L-1)",        MACHINE_IS_SKELETON_MECHANICAL )
-GAME( 1978, disco_l1, 0, s3a, disco, s3a_state, init_3,     ROT0, "Williams", "Disco Fever (L-1)",      MACHINE_IS_SKELETON_MECHANICAL )
-GAME( 1978, cntct_l1, 0, s3a, cntct, s3a_state, init_2,     ROT0, "Williams", "Contact (L-1)",          MACHINE_IS_SKELETON_MECHANICAL )
-GAME( 1978, phnix_l1, 0, s3a, phnix, s3a_state, init_2,     ROT0, "Williams", "Phoenix (L-1)",          MACHINE_IS_SKELETON_MECHANICAL )
-GAME( 1978, pkrno_l1, 0, s3a, pkrno, s3a_state, empty_init, ROT0, "Williams", "Pokerino (L-1)",         MACHINE_IS_SKELETON_MECHANICAL )
+// Chimes
+GAME( 1977, httip_l1, 0, s3,  httip, s3_state,  empty_init, ROT0, "Williams", "Hot Tip (L-1)",          MACHINE_MECHANICAL | MACHINE_SUPPORTS_SAVE )
+GAME( 1977, lucky_l1, 0, s3,  lucky, s3_state,  init_4,     ROT0, "Williams", "Lucky Seven (L-1)",      MACHINE_MECHANICAL | MACHINE_SUPPORTS_SAVE )
+
+// Sound board
+GAME( 1978, wldcp_l1, 0, s3a, wldcp, s3a_state, init_1,     ROT0, "Williams", "World Cup (L-1)",        MACHINE_MECHANICAL | MACHINE_SUPPORTS_SAVE )
+GAME( 1978, disco_l1, 0, s3a, disco, s3a_state, init_3,     ROT0, "Williams", "Disco Fever (L-1)",      MACHINE_MECHANICAL | MACHINE_SUPPORTS_SAVE )
+GAME( 1978, cntct_l1, 0, s3a, cntct, s3a_state, init_2,     ROT0, "Williams", "Contact (L-1)",          MACHINE_MECHANICAL | MACHINE_SUPPORTS_SAVE )
+GAME( 1978, phnix_l1, 0, s3a, phnix, s3a_state, init_2,     ROT0, "Williams", "Phoenix (L-1)",          MACHINE_MECHANICAL | MACHINE_SUPPORTS_SAVE )
+GAME( 1978, pkrno_l1, 0, s3a, pkrno, s3a_state, empty_init, ROT0, "Williams", "Pokerino (L-1)",         MACHINE_MECHANICAL | MACHINE_SUPPORTS_SAVE )

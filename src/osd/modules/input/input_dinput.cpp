@@ -6,39 +6,26 @@
 //
 //============================================================
 
-#include "input_module.h"
 #include "modules/osdmodule.h"
 
 #if defined(OSD_WINDOWS)
 
-// standard windows headers
-#include <windows.h>
-#include <initguid.h>
-#include <tchar.h>
-#include <wrl/client.h>
+#include "emu.h"
 
-// undef WINNT for dinput.h to prevent duplicate definition
-#undef WINNT
-#include <dinput.h>
-#undef interface
+#include "input_dinput.h"
+
+#include "winutil.h"
 
 #include <mutex>
 
-// MAME headers
-#include "emu.h"
-#include "strconv.h"
+// standard windows headers
+#include <initguid.h>
+#include <tchar.h>
 
-// MAMEOS headers
-#include "window.h"
-#include "winutil.h"
-
-#include "input_common.h"
-#include "input_windows.h"
-#include "input_dinput.h"
-
-using namespace Microsoft::WRL;
 
 namespace {
+
+using namespace Microsoft::WRL;
 
 //============================================================
 //  dinput_joystick_pov_get_state
@@ -238,7 +225,7 @@ public:
 		result = dinput_set_dword_property(devinfo->dinput.device, DIPROP_AXISMODE, 0, DIPH_DEVICE, DIPROPAXISMODE_REL);
 		if (result != DI_OK && result != DI_PROPNOEFFECT)
 		{
-			osd_printf_error("DirectInput: Unable to set relative mode for mouse %u (%s)\n", static_cast<unsigned int>(devicelist()->size()), devinfo->name());
+			osd_printf_error("DirectInput: Unable to set relative mode for mouse %u (%s)\n", static_cast<unsigned int>(devicelist().size()), devinfo->name());
 			goto error;
 		}
 
@@ -277,7 +264,7 @@ public:
 
 	error:
 		if (devinfo)
-			devicelist()->free_device(*devinfo);
+			devicelist().free_device(*devinfo);
 		goto exit;
 	}
 };
@@ -449,10 +436,10 @@ void dinput_joystick_device::poll()
 int dinput_joystick_device::configure()
 {
 	HRESULT result;
-	auto devicelist = static_cast<input_module_base&>(module()).devicelist();
+	auto &devicelist = static_cast<input_module_base&>(module()).devicelist();
 
 	// temporary approximation of index
-	int devindex = devicelist->size();
+	int devindex = devicelist.size();
 
 	// set absolute mode
 	result = dinput_set_dword_property(dinput.device, DIPROP_AXISMODE, 0, DIPH_DEVICE, DIPROPAXISMODE_ABS);
@@ -582,6 +569,8 @@ HRESULT dinput_api_helper::enum_attached_devices(int devclass, device_enum_inter
 }
 
 #else // defined(OSD_WINDOWS)
+
+#include "input_module.h"
 
 MODULE_NOT_SUPPORTED(keyboard_input_dinput, OSD_KEYBOARDINPUT_PROVIDER, "dinput")
 MODULE_NOT_SUPPORTED(mouse_input_dinput, OSD_MOUSEINPUT_PROVIDER, "dinput")

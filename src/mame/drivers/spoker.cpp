@@ -64,6 +64,7 @@ public:
 	void _3super8(machine_config &config);
 
 	void init_spkleftover();
+	void init_spk100();
 	void init_spk114it();
 	void init_spk116it();
 	void init_3super8();
@@ -82,22 +83,22 @@ private:
 	required_device<palette_device> m_palette;
 
 	required_shared_ptr<uint8_t> m_bg_tile_ram;
-	tilemap_t *m_bg_tilemap;
+	tilemap_t *m_bg_tilemap = nullptr;
 
 	required_shared_ptr<uint8_t> m_fg_tile_ram;
 	required_shared_ptr<uint8_t> m_fg_color_ram;
-	tilemap_t *m_fg_tilemap;
+	tilemap_t *m_fg_tilemap = nullptr;
 
 	output_finder<7> m_leds;
 
 	// common
-	int m_nmi_ack;
-	uint8_t m_out[3];
+	int m_nmi_ack = 0;
+	uint8_t m_out[3]{};
 
 	// spk116it and spk115it specific
-	int m_video_enable;
-	int m_hopper;
-	uint8_t m_igs_magic[2];
+	int m_video_enable = 0;
+	int m_hopper = 0;
+	uint8_t m_igs_magic[2]{};
 
 	// common
 	void bg_tile_w(offs_t offset, uint8_t data);
@@ -812,6 +813,22 @@ ROM_START( spk203us )
 	ROM_LOAD( "mx28f2000p_v203_ussp.u34",   0x0000, 0x40000, CRC(33e6089d) SHA1(cd1ad01e92c18bbeab3fe3ea9152f8b0a3eb1b29) )
 ROM_END
 
+ROM_START( spk201ua )
+	ROM_REGION( 0x10000, "maincpu", 0 )
+	ROM_LOAD( "27c512_v201_ua.u27",   0x0000, 0x10000, CRC(c9186a07) SHA1(b62459affa7ade023d7a5ea97289d1a1474ad966) )
+
+	ROM_REGION( 0xc0000, "gfx1", 0 )
+	ROM_LOAD( "1_mx28f2000p_v200_ua.u33",  0x80000, 0x40000, CRC(b309e9cf) SHA1(2e3f81c9c654c859c0fd4c0953302c9283e7a4d8) )
+	ROM_LOAD( "2_mx28f2000p_v200_ua.u32",  0x40000, 0x40000, CRC(05048307) SHA1(38d5ba5522a60ae4f34731ea7bd3e2c16683125d) )
+	ROM_LOAD( "3_mx28f2000p_v200_ua.u31",  0x00000, 0x40000, CRC(beae217b) SHA1(9bfa69954c42ada88bedb7cedaceff841cb88a58) )
+
+	ROM_REGION( 0x30000, "gfx2", 0 )
+	ROM_FILL(                              0x0000, 0x30000, 0xff ) /* filling the whole bank */
+
+	ROM_REGION( 0x40000, "oki", 0 ) /* 4-bit adpcm samples */
+	ROM_LOAD( "mx28f2000p_v200_uasp.u34",   0x0000, 0x40000, CRC(33e6089d) SHA1(cd1ad01e92c18bbeab3fe3ea9152f8b0a3eb1b29) )
+ROM_END
+
 ROM_START( spk200ua )
 	ROM_REGION( 0x10000, "maincpu", 0 )
 	ROM_LOAD( "27c512_v200_ua.u27",   0x0000, 0x10000, CRC(f4572b88) SHA1(b1f845b5340639eee1464acb8a40241868a21070) )
@@ -844,14 +861,14 @@ ROM_START( spk102ua )
 	ROM_LOAD( "mx28f2000p_v102_uasp.u34",   0x0000, 0x40000, CRC(33e6089d) SHA1(cd1ad01e92c18bbeab3fe3ea9152f8b0a3eb1b29) )
 ROM_END
 
-ROM_START( spk102u ) // no labels on the ROMs
+ROM_START( spk100 ) // no labels on the ROMs
 	ROM_REGION( 0x10000, "maincpu", 0 )
 	ROM_LOAD( "u43",   0x0000, 0x10000, CRC(7c17bf58) SHA1(dd16b9f52d8c08a61fe234978cc84b95c25c5dec) )
 
 	ROM_REGION( 0xc0000, "gfx1", 0 )
-	ROM_LOAD( "u25",  0x80000, 0x40000, CRC(67f2a1d6) SHA1(115655cf4718105e7ff054dd662d9d53e9ea91e0) )
+	ROM_LOAD( "u25",  0x00000, 0x40000, CRC(67f2a1d6) SHA1(115655cf4718105e7ff054dd662d9d53e9ea91e0) )
 	ROM_LOAD( "u24",  0x40000, 0x40000, CRC(fb9d8c09) SHA1(6cbefa90f6b866ee682f7981d6f5d30e9346a123) )
-	ROM_LOAD( "u23",  0x00000, 0x40000, CRC(98b71478) SHA1(b5bd9eef91f5cc2e9628e5181fbbd6fd453487f0) )
+	ROM_LOAD( "u23",  0x80000, 0x40000, CRC(98b71478) SHA1(b5bd9eef91f5cc2e9628e5181fbbd6fd453487f0) )
 
 	ROM_REGION( 0x30000, "gfx2", 0 )
 	ROM_FILL(                              0x0000, 0x30000, 0xff ) /* filling the whole bank */
@@ -1033,6 +1050,18 @@ void spoker_state::init_spk114it()
 	}
 }
 
+void spoker_state::init_spk100()
+{
+	uint8_t *rom = memregion("maincpu")->base();
+	for (int A = 0; A < 0x10000; A++)
+	{
+		rom[A] ^= 0x22;
+		if ((A & 0x0090) == 0x0080) rom[A] ^= 0x20;
+		if ((A & 0x04a0) == 0x04a0) rom[A] ^= 0x02;
+		if ((A & 0x1208) == 0x1208) rom[A] ^= 0x01;
+	}
+}
+
 void spoker_state::init_3super8()
 {
 	uint8_t *ROM = memregion("maincpu")->base();
@@ -1082,11 +1111,12 @@ void spoker_state::init_3super8()
 GAME( 1996,  spk306us,   0,        spokeru,  spoker,   spoker_state,  init_spkleftover, ROT0,  "IGS",       "Super Poker (v306US)",     MACHINE_NOT_WORKING | MACHINE_SUPPORTS_SAVE )  // needs proper machine driver
 GAME( 1996,  spk205us,   spk306us, spokeru,  spoker,   spoker_state,  init_spkleftover, ROT0,  "IGS",       "Super Poker (v205US)",     MACHINE_NOT_WORKING | MACHINE_SUPPORTS_SAVE )  // needs proper machine driver
 GAME( 1996,  spk203us,   spk306us, spokeru,  spoker,   spoker_state,  init_spkleftover, ROT0,  "IGS",       "Super Poker (v203US)",     MACHINE_NOT_WORKING | MACHINE_SUPPORTS_SAVE )  // needs proper machine driver
+GAME( 1996,  spk201ua,   spk306us, spokeru,  spoker,   spoker_state,  init_spkleftover, ROT0,  "IGS",       "Super Poker (v201UA)",     MACHINE_NOT_WORKING | MACHINE_SUPPORTS_SAVE )  // needs proper machine driver
 GAME( 1996,  spk200ua,   spk306us, spokeru,  spoker,   spoker_state,  init_spkleftover, ROT0,  "IGS",       "Super Poker (v200UA)",     MACHINE_NOT_WORKING | MACHINE_SUPPORTS_SAVE )  // needs proper machine driver
 GAME( 1993?, spk116it,   spk306us, spoker,   spoker,   spoker_state,  init_spk116it,    ROT0,  "IGS",       "Super Poker (v116IT)",     MACHINE_SUPPORTS_SAVE )
 GAME( 1993?, spk116itmx, spk306us, spoker,   spoker,   spoker_state,  init_spk114it,    ROT0,  "IGS",       "Super Poker (v116IT-MX)",  MACHINE_SUPPORTS_SAVE )
 GAME( 1993?, spk115it,   spk306us, spoker,   spoker,   spoker_state,  init_spk116it,    ROT0,  "IGS",       "Super Poker (v115IT)",     MACHINE_SUPPORTS_SAVE )
 GAME( 1993?, spk114it,   spk306us, spoker,   spk114it, spoker_state,  init_spk114it,    ROT0,  "IGS",       "Super Poker (v114IT)",     MACHINE_SUPPORTS_SAVE )
 GAME( 1996,  spk102ua,   spk306us, spokeru,  spoker,   spoker_state,  init_spkleftover, ROT0,  "IGS",       "Super Poker (v102UA)",     MACHINE_NOT_WORKING | MACHINE_SUPPORTS_SAVE )  // needs proper machine driver
-GAME( 1996,  spk102u,    spk306us, spokeru,  spoker,   spoker_state,  empty_init,       ROT0,  "IGS",       "Super Poker (v102U)",      MACHINE_NOT_WORKING | MACHINE_SUPPORTS_SAVE )  // needs decryption, proper machine driver
+GAME( 1996,  spk100,     spk306us, spoker,   spk114it, spoker_state,  init_spk100,      ROT0,  "IGS",       "Super Poker (v100)",       MACHINE_SUPPORTS_SAVE )
 GAME( 1993?, 3super8,    0,        _3super8, 3super8,  spoker_state,  init_3super8,     ROT0,  "<unknown>", "3 Super 8 (Italy)",        MACHINE_NOT_WORKING | MACHINE_IMPERFECT_GRAPHICS | MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE ) //roms are badly dumped

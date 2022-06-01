@@ -75,8 +75,6 @@ WRITE_LINE_MEMBER(null_modem_device::update_serial)
 	output_dsr(0);
 	output_cts(0);
 
-	m_rts = 0;
-	m_dtr = 0;
 	m_xoff = 0;
 }
 
@@ -86,7 +84,7 @@ void null_modem_device::device_reset()
 	queue();
 }
 
-void null_modem_device::device_timer(emu_timer &timer, device_timer_id id, int param, void *ptr)
+void null_modem_device::device_timer(emu_timer &timer, device_timer_id id, int param)
 {
 	switch (id)
 	{

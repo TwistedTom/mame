@@ -188,6 +188,8 @@ public:
 
 	exidy_state(const machine_config &mconfig, device_type type, const char *tag) :
 		driver_device(mconfig, type, tag),
+		m_dsw(*this, "DSW"),
+		m_in0(*this, "IN0"),
 		m_maincpu(*this, "maincpu"),
 		m_gfxdecode(*this, "gfxdecode"),
 		m_screen(*this, "screen"),
@@ -208,14 +210,18 @@ public:
 	void mtrap(machine_config &config);
 	void pepper2(machine_config &config);
 
+	DECLARE_CUSTOM_INPUT_MEMBER(intsource_coins_r);
+
 protected:
+	required_ioport m_dsw;
+	required_ioport m_in0;
 	required_device<cpu_device> m_maincpu;
 	required_device<gfxdecode_device> m_gfxdecode;
 	required_device<screen_device> m_screen;
 	required_device<palette_device> m_palette;
 	required_shared_ptr<uint8_t> m_color_latch;
 
-	virtual void device_timer(emu_timer &timer, device_timer_id id, int param, void *ptr) override;
+	virtual void device_timer(emu_timer &timer, device_timer_id id, int param) override;
 	virtual void video_start() override;
 
 	void base(machine_config &config);
@@ -236,10 +242,10 @@ private:
 	required_shared_ptr<uint8_t> m_sprite_enable;
 	optional_shared_ptr<uint8_t> m_characterram;
 
-	uint8_t m_collision_mask;
-	uint8_t m_collision_invert;
-	int m_is_2bpp;
-	uint8_t m_int_condition;
+	uint8_t m_collision_mask = 0;
+	uint8_t m_collision_invert = 0;
+	int m_is_2bpp = 0;
+	uint8_t m_int_condition = 0;
 	bitmap_ind16 m_background_bitmap;
 	bitmap_ind16 m_motion_object_1_vid;
 	bitmap_ind16 m_motion_object_2_vid;
@@ -280,6 +286,9 @@ public:
 	void rallys(machine_config &config);
 	void phantoma(machine_config &config);
 
+	DECLARE_CUSTOM_INPUT_MEMBER(spectar_coins_r);
+	DECLARE_CUSTOM_INPUT_MEMBER(rallys_coin1_r);
+
 	void init_sidetrac();
 	void init_spectar();
 
@@ -300,10 +309,10 @@ private:
 	required_device<samples_device> m_samples;
 
 	// Targ and Spectar samples
-	int m_max_freq;
-	uint8_t m_port_1_last;
-	uint8_t m_tone_freq;
-	uint8_t m_tone_active;
+	int m_max_freq = 0;
+	uint8_t m_port_1_last = 0;
+	uint8_t m_tone_freq = 0;
+	uint8_t m_tone_active = 0;
 
 	void sidetrac_map(address_map &map);
 	void spectar_map(address_map &map);
@@ -334,8 +343,8 @@ protected:
 private:
 	required_region_ptr<uint8_t> m_sound_prom;
 
-	uint8_t m_port_2_last;
-	uint8_t m_tone_pointer;
+	uint8_t m_port_2_last = 0;
+	uint8_t m_tone_pointer = 0;
 
 	void targ_map(address_map &map);
 };
@@ -388,13 +397,32 @@ private:
 
 /*************************************
  *
- *  Special Teeter Torture input
+ *  Special inputs
  *
  *************************************/
 
+CUSTOM_INPUT_MEMBER(exidy_state::intsource_coins_r)
+{
+	uint8_t const dsw = m_dsw->read();
+	uint8_t const in0 = m_in0->read();
+	return (BIT(~in0, 7) << 1) | BIT(dsw, 0);
+}
+
+CUSTOM_INPUT_MEMBER(spectar_state::spectar_coins_r)
+{
+	uint8_t const dsw = m_dsw->read();
+	uint8_t const in0 = m_in0->read();
+	return (BIT(~in0, 7) << 1) | BIT(~dsw, 0);
+}
+
+CUSTOM_INPUT_MEMBER(spectar_state::rallys_coin1_r)
+{
+	return BIT(m_in0->read(), 7);
+}
+
 CUSTOM_INPUT_MEMBER(teetert_state::teetert_input_r)
 {
-	uint8_t dial = m_dial->read();
+	uint8_t const dial = m_dial->read();
 
 	int result = (dial != m_last_dial) << 4;
 	if (result != 0)
@@ -639,8 +667,7 @@ static INPUT_PORTS_START( targ )
 
 	PORT_START("INTSOURCE")
 	PORT_BIT( 0x1f, IP_ACTIVE_HIGH, IPT_CUSTOM )
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_COIN2 )
-	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_COIN1 )
+	PORT_BIT( 0x60, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(spectar_state, spectar_coins_r)
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_VBLANK("screen")
 
 	PORT_START("IN2")
@@ -710,7 +737,7 @@ static INPUT_PORTS_START( rallys )
 	PORT_MODIFY("INTSOURCE")
 	PORT_BIT( 0x1f, IP_ACTIVE_HIGH, IPT_CUSTOM )
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_COIN2 )
-	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_COIN1 )
+	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(spectar_state, rallys_coin1_r)
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( phantoma )
@@ -778,8 +805,7 @@ static INPUT_PORTS_START( mtrap )
 */
 
 	PORT_BIT( 0x1f, IP_ACTIVE_HIGH, IPT_CUSTOM )
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_COIN2 )
-	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_COIN1 )
+	PORT_BIT( 0x60, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(exidy_state, intsource_coins_r)
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_VBLANK("screen")
 
 	PORT_START("IN2")
@@ -840,8 +866,7 @@ static INPUT_PORTS_START( venture )
     PORT_DIPSETTING(    0x08, DEF_STR( Cocktail ) )
 */
 	PORT_BIT( 0x1f, IP_ACTIVE_HIGH, IPT_CUSTOM )
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_COIN2 )
-	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_COIN1 )
+	PORT_BIT( 0x60, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(exidy_state, intsource_coins_r)
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_VBLANK("screen")
 
 	PORT_START("IN2")
@@ -896,8 +921,7 @@ static INPUT_PORTS_START( teetert )
     PORT_DIPSETTING(    0x08, DEF_STR( Cocktail ) )
 */
 	PORT_BIT( 0x1f, IP_ACTIVE_HIGH, IPT_UNKNOWN )
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_COIN2 )
-	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_COIN1 )
+	PORT_BIT( 0x60, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(exidy_state, intsource_coins_r)
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_VBLANK("screen")
 
 	PORT_START("IN2")
@@ -956,8 +980,7 @@ static INPUT_PORTS_START( pepper2 )
     PORT_DIPSETTING(    0x08, DEF_STR( Cocktail ) )
 */
 	PORT_BIT( 0x1f, IP_ACTIVE_HIGH, IPT_CUSTOM )
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_COIN2 )
-	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_COIN1 )
+	PORT_BIT( 0x60, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(exidy_state, intsource_coins_r)
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_VBLANK("screen")
 
 	PORT_START("IN2")
@@ -1008,8 +1031,7 @@ static INPUT_PORTS_START( fax )
     PORT_DIPSETTING(    0x08, DEF_STR( Cocktail ) )
 */
 	PORT_BIT( 0x1f, IP_ACTIVE_HIGH, IPT_CUSTOM )
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_COIN2 )
-	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_COIN1 )
+	PORT_BIT( 0x60, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(exidy_state, intsource_coins_r)
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_VBLANK("screen")
 
 	PORT_START("IN2")
@@ -1297,7 +1319,7 @@ void exidy_state::draw_sprites(bitmap_ind16 &bitmap, const rectangle &cliprect)
 
 ***************************************************************************/
 
-void exidy_state::device_timer(emu_timer &timer, device_timer_id id, int param, void *ptr)
+void exidy_state::device_timer(emu_timer &timer, device_timer_id id, int param)
 {
 	switch (id)
 	{

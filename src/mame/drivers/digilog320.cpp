@@ -41,7 +41,7 @@
     - XTAL 3.6864 MHz
 
     TODO:
-	- Finish floppy hookup
+    - Finish floppy hookup
     - SCC interrupts
     - Unknown DUART inputs/outputs
     - RS232
@@ -57,15 +57,17 @@
 #include "cpu/i86/i186.h"
 #include "cpu/z80/z80.h"
 #include "machine/am9519.h"
-#include "machine/digilog320_kbd.h"
+#include "machine/digilog_kbd.h"
 #include "machine/i8251.h"
 #include "machine/mc68681.h"
+#include "machine/nvram.h"
 #include "machine/wd_fdc.h"
 #include "machine/z80scc.h"
 #include "video/mc6845.h"
 #include "imagedev/floppy.h"
 #include "emupal.h"
 #include "screen.h"
+#include "softlist_dev.h"
 
 
 namespace {
@@ -129,9 +131,9 @@ private:
 	void subcpu_to_maincpu_w(uint8_t data);
 	uint8_t maincpu_status_r();
 
-	uint8_t m_subcpu_to_maincpu;
-	uint8_t m_maincpu_to_subcpu;
-	uint8_t m_maincpu_status;
+	uint8_t m_subcpu_to_maincpu = 0;
+	uint8_t m_maincpu_to_subcpu = 0;
+	uint8_t m_maincpu_status = 0;
 };
 
 
@@ -143,7 +145,7 @@ void digilog320_state::main_mem_map(address_map &map)
 {
 	map(0x00000, 0x1ffff).ram();
 	map(0x80000, 0x83fff).ram().share("vram");
-	map(0x90000, 0x90fff).ram();
+	map(0x90000, 0x91fff).ram().share("nvram");
 	map(0xa0000, 0xfffff).rom().region("maincpu", 0);
 }
 
@@ -249,15 +251,24 @@ void digilog320_state::fdc_w(offs_t offset, uint8_t data)
 
 void digilog320_state::fdc_ctrl_w(uint8_t data)
 {
+	// 7654----  unknown (not used?)
+	// ----3---  unknown (motor on?)
+	// -----2--  side select
+	// ------10  unknown (drive select?)
+
 	logerror("fdc_ctrl_w: %02x\n", data);
 
 	floppy_image_device *floppy = m_floppy->get_device();
 
 	m_fdc->set_floppy(floppy);
 
-	// motor always on for now
 	if (floppy)
+	{
+		floppy->ss_w(BIT(data, 2));
+
+		// motor always on for now
 		floppy->mon_w(0);
+	}
 
 	// set to mfm
 	m_fdc->dden_w(0);
@@ -351,6 +362,8 @@ void digilog320_state::digilog320(machine_config &config)
 	m_subcpu->set_addrmap(AS_IO, &digilog320_state::sub_io_map);
 	m_subcpu->set_irq_acknowledge_callback(m_uic, FUNC(am9519_device::iack_cb));
 
+	NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_0);
+
 	AM9519(config, m_uic, 0);
 	m_uic->out_int_callback().set_inputline(m_subcpu, INPUT_LINE_IRQ0);
 
@@ -369,7 +382,6 @@ void digilog320_state::digilog320(machine_config &config)
 
 	SCN2681(config, m_duart, 3.6864_MHz_XTAL);
 	m_duart->irq_cb().set(m_maincpu, FUNC(i80186_cpu_device::int0_w));
-	m_duart->a_tx_cb().set("kbd", FUNC(digilog320_kbd_hle_device::rx_w));
 	m_duart->outport_cb().set("usart", FUNC(i8251_device::write_txc)).bit(3);
 	m_duart->outport_cb().append("usart", FUNC(i8251_device::write_rxc)).bit(3);
 
@@ -381,10 +393,12 @@ void digilog320_state::digilog320(machine_config &config)
 
 	MB8877(config, m_fdc, 16_MHz_XTAL / 16);
 	m_fdc->intrq_wr_callback().set(m_maincpu, FUNC(i80186_cpu_device::int3_w));
-	//m_fdc->drq_wr_callback()
+	m_fdc->drq_wr_callback().set(m_maincpu, FUNC(i80186_cpu_device::drq1_w));
 	FLOPPY_CONNECTOR(config, "fdc:0", digilog320_floppies, "35dd", floppy_image_device::default_mfm_floppy_formats);
 
-	digilog320_kbd_hle_device &kbd(DIGILOG320_KBD_HLE(config, "kbd"));
+	SOFTWARE_LIST(config, "floppy_list").set_original("digilog320");
+
+	digilog_kbd_device &kbd(DIGILOG_KBD(config, "kbd"));
 	kbd.tx_handler().set(m_duart, FUNC(scn2681_device::rx_a_w));
 }
 

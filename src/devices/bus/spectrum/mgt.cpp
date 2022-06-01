@@ -227,7 +227,7 @@ static void plusd_floppies(device_slot_interface &device)
 }
 
 //-------------------------------------------------
-//  floppy_format_type floppy_formats
+//  floppy_formats
 //-------------------------------------------------
 
 void spectrum_plusd_device::floppy_formats(format_registration &fr)
@@ -716,7 +716,7 @@ void spectrum_disciple_device::mreq_w(offs_t offset, uint8_t data)
 		m_exp->mreq_w(offset, data);
 }
 
-void spectrum_disciple_device::device_timer(emu_timer &timer, device_timer_id id, int param, void *ptr)
+void spectrum_disciple_device::device_timer(emu_timer &timer, device_timer_id id, int param)
 {
 	switch (id)
 	{
