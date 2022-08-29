@@ -72,6 +72,7 @@ public:
 protected:
 	// construction/destruction
 	mcs51_cpu_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock, int program_width, int data_width, uint8_t features = 0);
+	mcs51_cpu_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock, address_map_constructor program_map, address_map_constructor data_map, int program_width, int data_width, uint8_t features = 0);
 
 	// device-level overrides
 	virtual void device_start() override;
@@ -181,7 +182,7 @@ protected:
 	void clear_current_irq();
 	uint8_t r_acc();
 	uint8_t r_psw();
-	offs_t external_ram_iaddr(offs_t offset, offs_t mem_mask);
+	virtual offs_t external_ram_iaddr(offs_t offset, offs_t mem_mask);
 	uint8_t iram_read(size_t offset);
 	void iram_write(size_t offset, uint8_t data);
 	void push_pc();
@@ -595,8 +596,8 @@ public:
 
 	// device_nvram_interface overrides
 	virtual void nvram_default() override;
-	virtual void nvram_read( emu_file &file ) override;
-	virtual void nvram_write( emu_file &file ) override;
+	virtual bool nvram_read( util::read_stream &file ) override;
+	virtual bool nvram_write( util::write_stream &file ) override;
 
 protected:
 	virtual std::unique_ptr<util::disasm_interface> create_disassembler() override;
