@@ -670,11 +670,14 @@ private:
 	// handle updates after a save state load
 	void postload();
 
+	// handle updates before a save state load
+	void presave();
+
 	// re-print the synchronization timer
 	void reprime_sync_timer();
 
 	// timer callback for synchronous streams
-	void sync_update(void *, s32);
+	void sync_update(s32);
 
 	// return a view of 0 data covering the given time period
 	read_stream_view empty_view(attotime start, attotime end);
@@ -692,6 +695,8 @@ private:
 	bool m_synchronous;                            // synchronous stream that runs at the rate of its input
 	bool m_resampling_disabled;                    // is resampling of input streams disabled?
 	emu_timer *m_sync_timer;                       // update timer for synchronous streams
+
+	attotime m_last_update_end_time;               // last end_time() in update
 
 	// input information
 	std::vector<sound_stream_input> m_input;       // list of streams we directly depend upon
@@ -817,7 +822,7 @@ private:
 	stream_buffer::sample_t adjust_toward_compressor_scale(stream_buffer::sample_t curscale, stream_buffer::sample_t prevsample, stream_buffer::sample_t rawsample);
 
 	// periodic sound update, called STREAMS_UPDATE_FREQUENCY per second
-	void update(void *ptr = nullptr, s32 param = 0);
+	void update(s32 param = 0);
 
 	// internal state
 	running_machine &m_machine;           // reference to the running machine
