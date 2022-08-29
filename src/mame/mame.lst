@@ -23171,6 +23171,8 @@ xeye                            // 1993 JVC X'eye (USA)
 dcat16                          //
 gen_nomd                        // 1995 Sega Genesis Nomad (USA)
 megajet                         // 1993 Sega Mega Jet (Japan)
+
+@source:sega/md_112.cpp
 md_112                          // bootleg
 
 @source:sega/megadriv_acbl.cpp
