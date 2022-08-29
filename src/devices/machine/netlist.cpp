@@ -11,14 +11,11 @@
 #include "emu.h"
 #include "netlist.h"
 
-#include "netlist/nl_base.h"
 #include "netlist/nl_setup.h"
 #include "netlist/nl_factory.h"
 #include "netlist/nl_parser.h"
 #include "netlist/nl_interface.h"
 
-#include "netlist/plib/palloc.h"
-#include "netlist/plib/pmempool.h"
 #include "netlist/plib/pdynlib.h"
 #include "netlist/plib/pstonum.h"
 
@@ -343,18 +340,18 @@ void netlist_mame_device::register_memregion_source(netlist::nlparse_t &parser, 
 
 void netlist_mame_analog_input_device::write(const double val)
 {
-	m_value_for_device_timer = val * m_mult + m_offset;
-	if (m_value_for_device_timer != (*m_param)())
+	m_value_to_sync = val * m_mult + m_offset;
+	if (m_value_to_sync != (*m_param)())
 	{
-		synchronize();
+		machine().scheduler().synchronize(timer_expired_delegate(FUNC(netlist_mame_analog_input_device::sync_callback), this));
 	}
 }
 
-void netlist_mame_analog_input_device::device_timer(emu_timer &timer, device_timer_id id, int param)
+TIMER_CALLBACK_MEMBER(netlist_mame_analog_input_device::sync_callback)
 {
 	update_to_current_time();
-	nl_owner().log_csv().log_add(m_param_name, m_value_for_device_timer, true);
-	m_param->set(m_value_for_device_timer);
+	nl_owner().log_csv().log_add(m_param_name, m_value_to_sync, true);
+	m_param->set(m_value_to_sync);
 }
 
 void netlist_mame_int_input_device::write(const uint32_t val)
@@ -363,7 +360,7 @@ void netlist_mame_int_input_device::write(const uint32_t val)
 	if (v != (*m_param)())
 	{
 		LOGDEBUG("write %s\n", this->tag());
-		synchronize(0, v);
+		machine().scheduler().synchronize(timer_expired_delegate(FUNC(netlist_mame_int_input_device::sync_callback), this), v);
 }
 }
 
@@ -373,25 +370,25 @@ void netlist_mame_logic_input_device::write(const uint32_t val)
 	if (v != (*m_param)())
 	{
 		LOGDEBUG("write %s\n", this->tag());
-		synchronize(0, v);
+		machine().scheduler().synchronize(timer_expired_delegate(FUNC(netlist_mame_logic_input_device::sync_callback), this), v);
 	}
 }
 
-void netlist_mame_int_input_device::device_timer(emu_timer &timer, device_timer_id id, int param)
+TIMER_CALLBACK_MEMBER(netlist_mame_int_input_device::sync_callback)
 {
 	update_to_current_time();
 	nl_owner().log_csv().log_add(m_param_name, param, false);
 	m_param->set(param);
 }
 
-void netlist_mame_logic_input_device::device_timer(emu_timer &timer, device_timer_id id, int param)
+TIMER_CALLBACK_MEMBER(netlist_mame_logic_input_device::sync_callback)
 {
 	update_to_current_time();
 	nl_owner().log_csv().log_add(m_param_name, param, false);
 	m_param->set(param);
 }
 
-void netlist_mame_ram_pointer_device::device_timer(emu_timer &timer, device_timer_id id, int param)
+TIMER_CALLBACK_MEMBER(netlist_mame_ram_pointer_device::sync_callback)
 {
 	m_data = (*m_param)();
 }
@@ -432,7 +429,7 @@ netlist_mame_analog_input_device::netlist_mame_analog_input_device(const machine
 	, m_param(nullptr)
 	, m_auto_port(true)
 	, m_param_name(param_name)
-	, m_value_for_device_timer(0)
+	, m_value_to_sync(0)
 {
 }
 
@@ -442,7 +439,7 @@ netlist_mame_analog_input_device::netlist_mame_analog_input_device(const machine
 	, m_param(nullptr)
 	, m_auto_port(true)
 	, m_param_name("")
-	, m_value_for_device_timer(0)
+	, m_value_to_sync(0)
 {
 }
 
@@ -498,7 +495,7 @@ void netlist_mame_analog_output_device::custom_netlist_additions(netlist::nlpars
 	pstring dname = pstring("OUT_") + pin;
 
 	parser.register_dev(dname, dname);
-	parser.register_link(dname + ".IN", pin);
+	parser.register_connection(dname + ".IN", pin);
 }
 
 void netlist_mame_analog_output_device::pre_parse_action(netlist::nlparse_t &parser)
@@ -548,7 +545,7 @@ void netlist_mame_logic_output_device::custom_netlist_additions(netlist::nlparse
 	pstring dname = pstring("OUT_") + pin;
 
 	parser.register_dev(dname, dname);
-	parser.register_link(dname + ".IN", pin);
+	parser.register_connection(dname + ".IN", pin);
 }
 
 void netlist_mame_logic_output_device::pre_parse_action(netlist::nlparse_t &parser)
@@ -852,7 +849,7 @@ void netlist_mame_stream_output_device::custom_netlist_additions(netlist::nlpars
 	pstring dname = plib::pfmt("STREAM_OUT_{1}")(m_channel);
 
 	parser.register_dev(dname, dname);
-	parser.register_link(dname + ".IN", pstring(m_out_name));
+	parser.register_connection(dname + ".IN", pstring(m_out_name));
 }
 
 void netlist_mame_stream_output_device::process(netlist::netlist_time_ext tim, netlist::nl_fptype val)
@@ -1250,6 +1247,16 @@ uint64_t netlist_mame_cpu_device::execute_clocks_to_cycles(uint64_t clocks) cons
 uint64_t netlist_mame_cpu_device::execute_cycles_to_clocks(uint64_t cycles) const noexcept
 {
 	return cycles;
+}
+
+netlist::netlist_time_ext netlist_mame_cpu_device::nltime_ext_from_clocks(unsigned c) const noexcept
+{
+	return (m_div * c).shr(MDIV_SHIFT);
+}
+
+netlist::netlist_time netlist_mame_cpu_device::nltime_from_clocks(unsigned c) const noexcept
+{
+	return static_cast<netlist::netlist_time>((m_div * c).shr(MDIV_SHIFT));
 }
 
 void netlist_mame_cpu_device::execute_run()
