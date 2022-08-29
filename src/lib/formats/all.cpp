@@ -268,6 +268,14 @@
 #include "fl1_dsk.h"
 #endif
 
+#ifdef HAS_FORMATS_CP68_DSK
+#include "cp68_dsk.h"
+#endif
+
+#ifdef HAS_FORMATS_FDOS_DSK
+#include "fdos_dsk.h"
+#endif
+
 #ifdef HAS_FORMATS_FLEX_DSK
 #include "flex_dsk.h"
 #endif
@@ -472,6 +480,10 @@
 #include "fs_oric_jasmin.h"
 #endif
 
+#ifdef HAS_FORMATS_FS_CBMDOS
+#include "fs_cbmdos.h"
+#endif
+
 #ifdef HAS_FORMATS_IBMXDF_DSK
 #include "ibmxdf_dsk.h"
 #endif
@@ -616,6 +628,10 @@
 #include "tiki100_dsk.h"
 #endif
 
+#ifdef HAS_FORMATS_TIM011_DSK
+#include "tim011_dsk.h"
+#endif
+
 #ifdef HAS_FORMATS_TRD_DSK
 #include "trd_dsk.h"
 #endif
@@ -696,6 +712,10 @@
 #include "fs_prodos.h"
 #endif
 
+#ifdef HAS_FORMATS_FS_FAT
+#include "fs_fat.h"
+#endif
+
 void mame_formats_full_list(mame_formats_enumerator &en)
 {
 	en.category("Generic");
@@ -706,6 +726,9 @@ void mame_formats_full_list(mame_formats_enumerator &en)
 #endif
 	en.add(FLOPPY_MFI_FORMAT); // mfi_dsk.h
 	en.add(FLOPPY_DFI_FORMAT); // dfi_dsk.h
+#ifdef HAS_FORMATS_FS_FAT
+	en.add(fs::PC_FAT);
+#endif
 
 	en.category("Container FM/MFM");
 	en.add(FLOPPY_HFE_FORMAT); // hxchfe_dsk.h
@@ -726,7 +749,8 @@ void mame_formats_full_list(mame_formats_enumerator &en)
 	en.add(fs::PRODOS);
 #endif
 #ifdef HAS_FORMATS_AP2_DSK
-	en.add(FLOPPY_A216S_FORMAT); // ap2_dsk.h
+	en.add(FLOPPY_A216S_DOS_FORMAT); // ap2_dsk.h
+	en.add(FLOPPY_A216S_PRODOS_FORMAT); // ap2_dsk.h
 	en.add(FLOPPY_RWTS18_FORMAT); // ap2_dsk.h
 	en.add(FLOPPY_EDD_FORMAT); // ap2_dsk.h
 	en.add(FLOPPY_WOZ_FORMAT); // ap2_dsk.h
@@ -892,6 +916,9 @@ void mame_formats_full_list(mame_formats_enumerator &en)
 #endif
 #ifdef HAS_FORMATS_G64_DSK
 	en.add(FLOPPY_G64_FORMAT); // g64_dsk.h
+#endif
+#ifdef HAS_FORMATS_FS_CBMDOS
+	en.add(fs::CBMDOS); // fs_cbmdos.h
 #endif
 
 	en.category("Camputers");
@@ -1256,6 +1283,11 @@ void mame_formats_full_list(mame_formats_enumerator &en)
 	en.category("Tiki 100");
 #ifdef HAS_FORMATS_TIKI100_DSK
 	en.add(FLOPPY_TIKI100_FORMAT); // tiki100_dsk.h
+#endif
+
+	en.category("TIM 011");
+#ifdef HAS_FORMATS_TIM011_DSK
+	en.add(FLOPPY_TIM011_FORMAT); // tim011_dsk.h
 #endif
 
 	en.category("Videoton");
