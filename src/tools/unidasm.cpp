@@ -66,6 +66,7 @@ using util::BIT;
 #include "cpu/hcd62121/hcd62121d.h"
 #include "cpu/hd61700/hd61700d.h"
 #include "cpu/hmcs40/hmcs40d.h"
+#include "cpu/hp2100/hp2100d.h"
 #include "cpu/hpc/hpcdasm.h"
 #include "cpu/hphybrid/hphybrid_dasm.h"
 #include "cpu/i386/i386dasm.h"
@@ -108,7 +109,7 @@ using util::BIT;
 #include "cpu/mcs40/mcs40dasm.h"
 #include "cpu/mcs48/mcs48dsm.h"
 #include "cpu/mcs51/mcs51dasm.h"
-#include "cpu/mcs51/axc51-core_dasm.h"
+#include "cpu/axc51/axc51dasm.h"
 #include "cpu/mcs96/i8x9xd.h"
 #include "cpu/mcs96/i8xc196d.h"
 #include "cpu/melps4/melps4d.h"
@@ -116,6 +117,7 @@ using util::BIT;
 #include "cpu/mips/mips3dsm.h"
 #include "cpu/mips/mips1dsm.h"
 #include "cpu/mk1/mk1dasm.h"
+#include "cpu/mn1610/mn1610d.h"
 #include "cpu/mn1880/mn1880d.h"
 #include "cpu/mn10200/mn102dis.h"
 #include "cpu/msm65x2/msm65x2d.h"
@@ -139,6 +141,7 @@ using util::BIT;
 #include "cpu/rii/riidasm.h"
 #include "cpu/romp/rompdasm.h"
 #include "cpu/rsp/rsp_dasm.h"
+#include "cpu/rw5000/rw5000d.h"
 #include "cpu/rx01/rx01dasm.h"
 #include "cpu/s2650/2650dasm.h"
 #include "cpu/saturn/saturnds.h"
@@ -185,6 +188,7 @@ using util::BIT;
 #include "cpu/upd78k/upd78k3d.h"
 #include "cpu/upd78k/upd78k4d.h"
 #include "cpu/v60/v60d.h"
+#include "cpu/v620/v620dasm.h"
 #include "cpu/v810/v810dasm.h"
 #include "cpu/v850/v850dasm.h"
 #include "cpu/vax/vaxdasm.h"
@@ -197,10 +201,12 @@ using util::BIT;
 #include "cpu/z80/z80dasm.h"
 #include "cpu/z8000/8000dasm.h"
 
-#include "corefile.h"
 #include "corestr.h"
 #include "eminline.h"
 #include "endianness.h"
+#include "ioprocs.h"
+#include "osdfile.h"
+#include "strformat.h"
 
 #include <algorithm>
 #include <cctype>
@@ -212,6 +218,7 @@ using util::BIT;
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #ifdef _WIN32
@@ -359,7 +366,6 @@ struct options
 	uint8_t                 lower;
 	uint8_t                 upper;
 	uint8_t                 flipped;
-	int                     mode;
 	const dasm_table_entry *dasm;
 	uint32_t                skip;
 	uint32_t                count;
@@ -375,6 +381,8 @@ static const dasm_table_entry dasm_table[] =
 	{ "alpha_unix",      le,  0, []() -> util::disasm_interface * { return new alpha_disassembler(alpha_disassembler::TYPE_UNIX); } },
 	{ "alpha_vms",       le,  0, []() -> util::disasm_interface * { return new alpha_disassembler(alpha_disassembler::TYPE_VMS); } },
 	{ "alto2",           be, -2, []() -> util::disasm_interface * { return new alto2_disassembler; } },
+	{ "a5000",           le,  0, []() -> util::disasm_interface * { return new a5000_disassembler; } },
+	{ "a5500",           le,  0, []() -> util::disasm_interface * { return new a5500_disassembler; } },
 	{ "am29000",         be,  0, []() -> util::disasm_interface * { return new am29000_disassembler; } },
 	{ "amis2000",        le,  0, []() -> util::disasm_interface * { return new amis2000_disassembler; } },
 	{ "apexc",           be,  0, []() -> util::disasm_interface * { return new apexc_disassembler; } },
@@ -390,6 +398,10 @@ static const dasm_table_entry dasm_table[] =
 	{ "avr8",            le,  0, []() -> util::disasm_interface * { return new avr8_disassembler; } },
 	{ "axc51core",       le,  0, []() -> util::disasm_interface * { return new axc51core_disassembler; } },
 	{ "axc208",          le,  0, []() -> util::disasm_interface * { return new ax208_disassembler; } },
+	{ "b5000",           le,  0, []() -> util::disasm_interface * { return new b5000_disassembler; } },
+	{ "b5500",           le,  0, []() -> util::disasm_interface * { return new b5500_disassembler; } },
+	{ "b6000",           le,  0, []() -> util::disasm_interface * { return new b6000_disassembler; } },
+	{ "b6100",           le,  0, []() -> util::disasm_interface * { return new b6100_disassembler; } },
 	{ "capricorn",       le,  0, []() -> util::disasm_interface * { return new capricorn_disassembler; } },
 	{ "ccpu",            le,  0, []() -> util::disasm_interface * { return new ccpu_disassembler; } },
 	{ "cdp1801",         le,  0, []() -> util::disasm_interface * { return new cosmac_disassembler(cosmac_disassembler::TYPE_1801); } },
@@ -441,6 +453,8 @@ static const dasm_table_entry dasm_table[] =
 	{ "hd6309",          be,  0, []() -> util::disasm_interface * { return new hd6309_disassembler; } },
 	{ "hd63701",         be,  0, []() -> util::disasm_interface * { return new m680x_disassembler(63701); } },
 	{ "hmcs40",          le, -1, []() -> util::disasm_interface * { return new hmcs40_disassembler; } },
+	{ "hp2100",          be, -1, []() -> util::disasm_interface * { return new hp2100_disassembler; } },
+	{ "hp21mx",          be, -1, []() -> util::disasm_interface * { return new hp21mx_disassembler; } },
 	{ "hp_5061_3001",    be, -1, []() -> util::disasm_interface * { return new hp_5061_3001_disassembler; } },
 	{ "hp_5061_3011",    be, -1, []() -> util::disasm_interface * { return new hp_5061_3011_disassembler; } },
 	{ "hp_09825_67907",  be, -1, []() -> util::disasm_interface * { return new hp_09825_67907_disassembler; } },
@@ -514,6 +528,8 @@ static const dasm_table_entry dasm_table[] =
 	{ "mm76",            le,  0, []() -> util::disasm_interface * { return new mm76_disassembler; } },
 	{ "mm78",            le,  0, []() -> util::disasm_interface * { return new mm78_disassembler; } },
 	{ "mn10200",         le,  0, []() -> util::disasm_interface * { return new mn10200_disassembler; } },
+	{ "mn1610",          be, -1, []() -> util::disasm_interface * { return new mn1610_disassembler; } },
+	{ "mn1613",          be, -1, []() -> util::disasm_interface * { return new mn1613_disassembler; } },
 	{ "mn1860",          be,  0, []() -> util::disasm_interface * { return new mn1860_disassembler; } },
 	{ "mn1870",          be,  0, []() -> util::disasm_interface * { return new mn1870_disassembler; } },
 	{ "mn1880",          be,  0, []() -> util::disasm_interface * { return new mn1880_disassembler; } },
@@ -585,6 +601,9 @@ static const dasm_table_entry dasm_table[] =
 	{ "tms0980",         be,  0, []() -> util::disasm_interface * { return new tms0980_disassembler; } },
 	{ "tms1000",         le,  0, []() -> util::disasm_interface * { return new tms1000_disassembler; } },
 	{ "tms1100",         le,  0, []() -> util::disasm_interface * { return new tms1100_disassembler; } },
+	{ "tms1400",         le,  0, []() -> util::disasm_interface * { return new tms1400_disassembler; } },
+	{ "tms2100",         le,  0, []() -> util::disasm_interface * { return new tms2100_disassembler; } },
+	{ "tms2400",         le,  0, []() -> util::disasm_interface * { return new tms2400_disassembler; } },
 	{ "tms32010",        be, -1, []() -> util::disasm_interface * { return new tms32010_disassembler; } },
 	{ "tms32025",        be, -1, []() -> util::disasm_interface * { return new tms32025_disassembler; } },
 	{ "tms32031",        le, -2, []() -> util::disasm_interface * { return new tms32031_disassembler; } },
@@ -648,6 +667,8 @@ static const dasm_table_entry dasm_table[] =
 	{ "upd78k0kx2",      le,  0, []() -> util::disasm_interface * { return new upd78k0kx2_disassembler; } },
 	{ "upi41",           le,  0, []() -> util::disasm_interface * { return new mcs48_disassembler(true, false); } },
 	{ "v60",             le,  0, []() -> util::disasm_interface * { return new v60_disassembler; } },
+	{ "v620",            be, -1, []() -> util::disasm_interface * { return new v620_disassembler; } },
+	{ "v75",             be, -1, []() -> util::disasm_interface * { return new v75_disassembler; } },
 	{ "v810",            le,  0, []() -> util::disasm_interface * { return new v810_disassembler; } },
 	{ "v850",            le,  0, []() -> util::disasm_interface * { return new v850_disassembler; } },
 	{ "v850es",          le,  0, []() -> util::disasm_interface * { return new v850es_disassembler; } },
@@ -673,7 +694,7 @@ class unidasm_data_buffer : public util::disasm_interface::data_buffer
 {
 public:
 	std::vector<u8> data;
-	offs_t base_pc;
+	offs_t base_pc = 0;
 	u32 size;
 
 	unidasm_data_buffer(util::disasm_interface *disasm, const dasm_table_entry *entry);
@@ -1096,7 +1117,6 @@ static int parse_options(int argc, char *argv[], options *opts)
 {
 	bool pending_base = false;
 	bool pending_arch = false;
-	bool pending_mode = false;
 	bool pending_skip = false;
 	bool pending_count = false;
 
@@ -1108,7 +1128,7 @@ static int parse_options(int argc, char *argv[], options *opts)
 
 		// is it a switch?
 		if(curarg[0] == '-' && curarg[1] != '\0') {
-			if(pending_base || pending_arch || pending_mode || pending_skip || pending_count)
+			if(pending_base || pending_arch || pending_skip || pending_count)
 				goto usage;
 
 			if(tolower((uint8_t)curarg[1]) == 'a')
@@ -1119,8 +1139,6 @@ static int parse_options(int argc, char *argv[], options *opts)
 				opts->flipped = true;
 			else if(tolower((uint8_t)curarg[1]) == 'l')
 				opts->lower = true;
-			else if(tolower((uint8_t)curarg[1]) == 'm')
-				pending_mode = true;
 			else if(tolower((uint8_t)curarg[1]) == 's')
 				pending_skip = true;
 			else if(tolower((uint8_t)curarg[1]) == 'c')
@@ -1139,8 +1157,14 @@ static int parse_options(int argc, char *argv[], options *opts)
 		} else if(pending_base) {
 		// base PC
 			int result;
-			if(curarg[0] == '0' && curarg[1] == 'x')
-				result = sscanf(&curarg[2], "%x", &opts->basepc);
+			if(curarg[0] == '0') {
+				if(tolower((uint8_t)curarg[1]) == 'x')
+					result = sscanf(&curarg[2], "%x", &opts->basepc);
+				else if(tolower((uint8_t)curarg[1]) == 'o')
+					result = sscanf(&curarg[2], "%o", &opts->basepc);
+				else
+					result = sscanf(&curarg[1], "%o", &opts->basepc);
+			}
 			else if(curarg[0] == '$')
 				result = sscanf(&curarg[1], "%x", &opts->basepc);
 			else
@@ -1148,12 +1172,6 @@ static int parse_options(int argc, char *argv[], options *opts)
 			if(result != 1)
 				goto usage;
 			pending_base = false;
-
-		} else if(pending_mode) {
-			// mode
-			if(sscanf(curarg, "%d", &opts->mode) != 1)
-				goto usage;
-			pending_mode = false;
 
 		} else if(pending_arch) {
 			// architecture
@@ -1169,8 +1187,16 @@ static int parse_options(int argc, char *argv[], options *opts)
 		} else if(pending_skip) {
 			// skip bytes
 			int result;
-			if(curarg[0] == '0' && curarg[1] == 'x')
-				result = sscanf(&curarg[2], "%x", &opts->skip);
+			if(curarg[0] == '0') {
+				if(tolower((uint8_t)curarg[1]) == 'x')
+					result = sscanf(&curarg[2], "%x", &opts->skip);
+				else if(tolower((uint8_t)curarg[1]) == 'o')
+					result = sscanf(&curarg[2], "%o", &opts->skip);
+				else
+					result = sscanf(&curarg[1], "%o", &opts->skip);
+			}
+			else if(curarg[0] == '$')
+				result = sscanf(&curarg[1], "%x", &opts->skip);
 			else
 				result = sscanf(curarg, "%d", &opts->skip);
 			if(result != 1)
@@ -1194,7 +1220,7 @@ static int parse_options(int argc, char *argv[], options *opts)
 	}
 
 	// if we have a dangling option, error
-	if(pending_base || pending_arch || pending_mode || pending_skip || pending_count)
+	if(pending_base || pending_arch || pending_skip || pending_count)
 		goto usage;
 
 	// if no file or no architecture, fail
@@ -1205,7 +1231,7 @@ static int parse_options(int argc, char *argv[], options *opts)
 
 usage:
 	printf("Usage: %s <filename> -arch <architecture> [-basepc <pc>] \n", argv[0]);
-	printf("   [-mode <n>] [-norawbytes] [-xchbytes] [-flipped] [-upper] [-lower]\n");
+	printf("   [-norawbytes] [-xchbytes] [-flipped] [-upper] [-lower]\n");
 	printf("   [-skip <n>] [-count <n>] [-octal]\n");
 	printf("\n");
 	printf("Supported architectures:");
@@ -1225,51 +1251,11 @@ usage:
 };
 
 
-int main(int argc, char *argv[])
+int disasm_file(util::random_read &file, u64 length, options &opts)
 {
-	// Parse options first
-	options opts;
-	if(parse_options(argc, argv, &opts))
+	if(opts.skip >= length) {
+		std::fprintf(stderr, "File '%s' is too short (only %llu bytes found)\n", opts.filename, (unsigned long long)length);
 		return 1;
-
-	// Load the file
-	void *data = nullptr;
-	u32 length = 0;
-	if(std::strcmp(opts.filename, "-") != 0) {
-		std::error_condition filerr = util::core_file::load(opts.filename, &data, length);
-		if(filerr) {
-			std::fprintf(stderr, "Error opening file '%s' (%s)\n", opts.filename, filerr.message().c_str());
-			return 1;
-		}
-	}
-	else
-	{
-#ifdef _WIN32
-		if (_setmode(_fileno(stdin), _O_BINARY) == -1) {
-#else
-		if (!std::freopen(nullptr, "rb", stdin)) {
-#endif
-			std::fprintf(stderr, "Error reopening stdin in binary mode\n");
-			return 1;
-		}
-		std::size_t allocated = 0x1000;
-		data = std::malloc(allocated);
-		while(!std::ferror(stdin) && !std::feof(stdin)) {
-			if(length == allocated) {
-				allocated <<= 1;
-				data = std::realloc(data, allocated);
-			}
-			if(!data) {
-				std::fprintf(stderr, "Error allocating buffer\n");
-				return 1;
-			}
-
-			length += std::fread((u8 *)data + length, 1, allocated - length, stdin);
-		}
-		if(!length || (std::ferror(stdin) && !std::feof(stdin))) {
-			std::fprintf(stderr, "Error reading from stdin\n");
-			return 1;
-		}
 	}
 
 	// Build the disasm object
@@ -1281,18 +1267,20 @@ int main(int argc, char *argv[])
 
 	// Build the base buffer and fill it (with a margin)
 	unidasm_data_buffer base_buffer(disasm.get(), opts.dasm);
-	u32 rounded_size = (((length - opts.skip) | (granularity - 1)) & ~(granularity - 1));
+	u32 rounded_size = (((length - opts.skip) + (granularity - 1)) & ~(granularity - 1));
 	base_buffer.data.resize(rounded_size + 8, 0x00);
 	base_buffer.size = length;
 	base_buffer.base_pc = opts.basepc;
-	if(opts.xchbytes) {
-		for(uint32_t offset = opts.skip; offset < length - 1; offset += 2) {
-			base_buffer.data[offset - opts.skip] = ((const u8 *)data)[offset + 1];
-			base_buffer.data[offset - opts.skip + 1] = ((const u8 *)data)[offset];
-		}
+	std::size_t actual;
+	std::error_condition filerr = file.read_at(opts.skip, &base_buffer.data[0], length - opts.skip, actual);
+	if(filerr) {
+		std::fprintf(stderr, "Error reading from file '%s' (%s)\n", opts.filename, filerr.message().c_str());
+		return 1;
 	}
-	else
-		memcpy(&base_buffer.data[0], (const u8 *)data + opts.skip, length - opts.skip);
+	if(opts.xchbytes) {
+		for(u64 offset = 0; offset < (length - opts.skip) - 1; offset += 2)
+			std::swap(base_buffer.data[offset], base_buffer.data[offset + 1]);
+	}
 
 	// Build the decryption buffers if needed
 	unidasm_data_buffer opcodes_buffer(disasm.get(), opts.dasm), params_buffer(disasm.get(), opts.dasm);
@@ -1306,18 +1294,12 @@ int main(int argc, char *argv[])
 	unidasm_data_buffer *popcodes = opcodes_buffer.data.empty() ? &base_buffer : &opcodes_buffer;
 	unidasm_data_buffer *pparams  = params_buffer.data.empty() ? popcodes : &params_buffer;
 
-	// Compute the pc warparound
+	// Compute the pc wraparound
 	offs_t pclength = opts.dasm->pcshift < 0 ? rounded_size >> -opts.dasm->pcshift : rounded_size << opts.dasm->pcshift;
 	offs_t limit = opts.basepc + pclength;
-	offs_t pc_mask;
-	if(!limit)
-		pc_mask = 0xffffffff;
-	else {
-		for(pc_mask = 2; pc_mask && pc_mask < limit; pc_mask *= 2);
-		pc_mask--;
-	}
+	offs_t pc_mask = limit ? util::make_bitmask<offs_t>(32 - count_leading_zeros_32(limit - 1)) : 0xffffffff;
 
-	// Compute the page warparound
+	// Compute the page wraparound
 	offs_t page_mask = flags & util::disasm_interface::PAGED ? (1 << disasm->page_address_bits()) - 1 : 0;
 
 	// Next pc computation lambdas
@@ -1628,7 +1610,75 @@ int main(int argc, char *argv[])
 				util::stream_format(std::cout, "%s: %-*s  %s\n", tf(pc_to_string(l.pc)), max_len, tf(dump_raw_bytes(l.pc, l.size >> granularity_shift)), tf(l.dasm));
 	}
 
-	free(data);
-
 	return 0;
+}
+
+
+int main(int argc, char *argv[])
+{
+	// Parse options first
+	options opts;
+	if(parse_options(argc, argv, &opts))
+		return 1;
+
+	// Load the file
+	void *data = nullptr;
+	util::random_read::ptr file;
+	u64 length = 0;
+	if(std::strcmp(opts.filename, "-") != 0) {
+		osd_file::ptr f;
+		std::error_condition filerr = osd_file::open(std::string(opts.filename), OPEN_FLAG_READ, f, length);
+		if(filerr) {
+			std::fprintf(stderr, "Error opening file '%s' (%s)\n", opts.filename, filerr.message().c_str());
+			return 1;
+		}
+		file = util::osd_file_read(std::move(f));
+		if(!file) {
+			std::fprintf(stderr, "Error when opening file '%s'\n", opts.filename);
+			return 1;
+		}
+	}
+	else
+	{
+#ifdef _WIN32
+		if (_setmode(_fileno(stdin), _O_BINARY) == -1) {
+#else
+		if (!std::freopen(nullptr, "rb", stdin)) {
+#endif
+			std::fprintf(stderr, "Error reopening stdin in binary mode\n");
+			return 1;
+		}
+		std::size_t allocated = 0x1000;
+		data = std::malloc(allocated);
+		while(!std::ferror(stdin) && !std::feof(stdin)) {
+			if(length == allocated) {
+				allocated <<= 1;
+				data = std::realloc(data, allocated);
+			}
+			if(!data) {
+				std::fprintf(stderr, "Error allocating buffer\n");
+				return 1;
+			}
+
+			length += std::fread((u8 *)data + length, 1, allocated - length, stdin);
+		}
+		if(!length || (std::ferror(stdin) && !std::feof(stdin))) {
+			std::fprintf(stderr, "Error reading from stdin\n");
+			std::free(data);
+			return 1;
+		}
+		file = util::ram_read(data, length);
+		if(!file) {
+			std::fprintf(stderr, "Error opening stdin as file\n");
+			std::free(data);
+			return 1;
+		}
+	}
+
+	int result = disasm_file(*file, length, opts);
+
+	file.reset();
+	std::free(data);
+
+	return result;
 }

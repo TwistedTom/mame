@@ -16,7 +16,6 @@
 #include "tms34010.h"
 #include "34010dsm.h"
 
-#include "debugger.h"
 #include "screen.h"
 
 #define LOG_GENERAL      (1U << 0)
@@ -741,7 +740,7 @@ void tms340x0_device::device_start()
 	}
 
 	/* allocate a scanline timer and set it to go off at the start */
-	m_scantimer = machine().scheduler().timer_alloc(timer_expired_delegate(FUNC(tms340x0_device::scanline_callback), this));
+	m_scantimer = timer_alloc(FUNC(tms340x0_device::scanline_callback), this);
 	m_scantimer->adjust(attotime::zero);
 
 	save_item(NAME(m_pc));
@@ -1023,7 +1022,7 @@ TIMER_CALLBACK_MEMBER( tms340x0_device::scanline_callback )
 	if (enabled && vcount == SMART_IOREG(DPYINT))
 	{
 		/* generate the display interrupt signal */
-		internal_interrupt_callback(nullptr, TMS34010_DI);
+		internal_interrupt_callback(TMS34010_DI);
 	}
 
 	/* at the start of VBLANK, load the starting display address */

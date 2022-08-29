@@ -325,23 +325,23 @@ void reel_device::advance_phase()
 		break;
 
 		case MPU3_48STEP_REEL :
-		/* The MPU3 interface is actually the same as the MPU4 setup, but with two active lines instead of four
+		/* The MPU3 harness is actually the same as the MPU4 setup, but with two active lines instead of four, and a slight change to the windings.
 		   Inverters are used so if a pin is low, the higher bit of the pair is activated, and if high the lower bit is activated.
-		   TODO:Check this, 2 and 1 could be switched over.
-		 */
+		   The stepper driven MPU2 should use this hardware as well.
+		*/
 		switch (m_pattern)
 		{
-		//             Yellow(2)   Brown(1)  Orange(!2) Black(!1)
-			case 0x00 :// 0          0          1         1
+		//             Grey(1)    Yellow(2)   Grey (2) Yellow (2)
+			case 0x02 :// 0          1          0         1
 			m_phase = 6;
 			break;
-			case 0x01 :// 0          1          1         0
+			case 0x03 :// 0          1          1         0
 			m_phase = 4;
 			break;
-			case 0x03 :// 1          1          0         0
+			case 0x01 :// 1          0          1         0
 			m_phase = 2;
 			break;
-			case 0x02 :// 1          0          0         1
+			case 0x00 :// 1          0          0         1
 			m_phase = 0;
 			break;
 		}
@@ -400,6 +400,38 @@ void reel_device::advance_phase()
 					m_phase = 1;
 				}
 			}
+			break;
+		}
+		break;
+
+		case SRU_200STEP_REEL :
+		//Standard drive table is 2,3,1,9,8,c,4,6
+		//Starpoint mechanism, custom for JPM?
+		switch (m_pattern)
+		{
+			case 0x02:
+			m_phase = 7;
+			break;
+			case 0x03:
+			m_phase = 6;
+			break;
+			case 0x01:
+			m_phase = 5;
+			break;
+			case 0x09:
+			m_phase = 4;
+			break;
+			case 0x08:
+			m_phase = 3;
+			break;
+			case 0x0c:
+			m_phase = 2;
+			break;
+			case 0x04:
+			m_phase = 1;
+			break;
+			case 0x06:
+			m_phase = 0;
 			break;
 		}
 		break;
