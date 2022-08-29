@@ -12,8 +12,6 @@
  TYPE DEFINITIONS
  ***************************************************************************/
 
-#define A78SLOT_ROM_REGION_TAG ":cart:rom"
-
 /* PCB */
 enum
 {
@@ -58,7 +56,7 @@ public:
 	virtual void write_30xx(offs_t offset, uint8_t data) {}
 	virtual void write_40xx(offs_t offset, uint8_t data) {}
 
-	void rom_alloc(uint32_t size, const char *tag);
+	void rom_alloc(uint32_t size);
 	void ram_alloc(uint32_t size);
 	void nvram_alloc(uint32_t size);
 	uint8_t* get_rom_base() { return m_rom; }
@@ -114,7 +112,7 @@ public:
 	// slot interface overrides
 	virtual std::string get_default_card_software(get_default_card_software_hook &hook) const override;
 
-	int get_cart_type() { return m_type; };
+	int get_cart_type() { return m_type; }
 	bool has_cart() { return m_cart != nullptr; }
 
 	// reading and writing

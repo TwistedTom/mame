@@ -131,7 +131,6 @@
  */
 
 #include "emu.h"
-#include "debugger.h"
 #include "mcs51.h"
 #include "mcs51dasm.h"
 
@@ -268,10 +267,10 @@ void mcs51_cpu_device::data_internal(address_map &map)
 
 
 
-mcs51_cpu_device::mcs51_cpu_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock, int program_width, int data_width, uint8_t features)
+mcs51_cpu_device::mcs51_cpu_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock, address_map_constructor program_map, address_map_constructor data_map, int program_width, int data_width, uint8_t features)
 	: cpu_device(mconfig, type, tag, owner, clock)
-	, m_program_config("program", ENDIANNESS_LITTLE, 8, 16, 0, address_map_constructor(FUNC(mcs51_cpu_device::program_internal), this))
-	, m_data_config("data", ENDIANNESS_LITTLE, 8, 9, 0, address_map_constructor(FUNC(mcs51_cpu_device::data_internal), this))
+	, m_program_config("program", ENDIANNESS_LITTLE, 8, 16, 0, program_map)
+	, m_data_config("data", ENDIANNESS_LITTLE, 8, 9, 0, data_map)
 	, m_io_config("io", ENDIANNESS_LITTLE, 8, (features & FEATURE_DS5002FP) ? 17 : 16, 0)
 	, m_pc(0)
 	, m_features(features)
@@ -293,6 +292,12 @@ mcs51_cpu_device::mcs51_cpu_device(const machine_config &mconfig, device_type ty
 	/* default to standard cmos interfacing */
 	for (auto & elem : m_forced_inputs)
 		elem = 0;
+}
+
+
+mcs51_cpu_device::mcs51_cpu_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock, int program_width, int data_width, uint8_t features)
+	: mcs51_cpu_device(mconfig, type, tag, owner, clock, address_map_constructor(FUNC(mcs51_cpu_device::program_internal), this), address_map_constructor(FUNC(mcs51_cpu_device::data_internal), this), program_width, data_width, features)
+{
 }
 
 
@@ -2551,16 +2556,24 @@ void ds5002fp_device::nvram_default()
 	}
 }
 
-void ds5002fp_device::nvram_read( emu_file &file )
+bool ds5002fp_device::nvram_read( util::read_stream &file )
 {
-	file.read( m_scratchpad, 0x80 );
-	file.read( m_sfr_ram, 0x80 );
+	size_t actual;
+	if (file.read( m_scratchpad, 0x80, actual ) || actual != 0x80)
+		return false;
+	if (file.read( m_sfr_ram, 0x80, actual ) || actual != 0x80)
+		return false;
+	return true;
 }
 
-void ds5002fp_device::nvram_write( emu_file &file )
+bool ds5002fp_device::nvram_write( util::write_stream &file )
 {
-	file.write( m_scratchpad, 0x80 );
-	file.write( m_sfr_ram, 0x80 );
+	size_t actual;
+	if (file.write( m_scratchpad, 0x80, actual ) || actual != 0x80)
+		return false;
+	if (file.write( m_sfr_ram, 0x80, actual ) || actual != 0x80)
+		return false;
+	return true;
 }
 
 std::unique_ptr<util::disasm_interface> mcs51_cpu_device::create_disassembler()

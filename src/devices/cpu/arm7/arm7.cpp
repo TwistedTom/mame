@@ -300,6 +300,7 @@ void arm7_cpu_device::update_reg_ptr()
 void arm7_cpu_device::set_cpsr(uint32_t val)
 {
 	uint8_t old_mode = GET_CPSR & MODE_FLAG;
+	bool call_hook = false;
 	if (m_archFlags & ARCHFLAG_MODE26)
 	{
 		if ((val & 0x10) != (m_r[eCPSR] & 0x10))
@@ -315,6 +316,7 @@ void arm7_cpu_device::set_cpsr(uint32_t val)
 				// 32 -> 26
 				m_r[eR15] = (m_r[eR15] & 0x03FFFFFC) /* PC */ | (val & 0xF0000000) /* N Z C V */ | ((val & 0x000000C0) << (26 - 6)) /* I F */ | (val & 0x00000003) /* M1 M0 */;
 			}
+			call_hook = true;
 		}
 		else
 		{
@@ -329,11 +331,17 @@ void arm7_cpu_device::set_cpsr(uint32_t val)
 	{
 		val |= 0x10; // force valid mode
 	}
+	if ((val & T_MASK) != (m_r[eCPSR] & T_MASK))
+		call_hook = true;
 	m_r[eCPSR] = val;
 	if ((GET_CPSR & MODE_FLAG) != old_mode)
 	{
+		if ((GET_CPSR & MODE_FLAG) == eARM7_MODE_USER || old_mode == eARM7_MODE_USER)
+			call_hook = true;
 		update_reg_ptr();
 	}
+	if (call_hook)
+		debugger_privilege_hook();
 }
 
 
@@ -854,17 +862,17 @@ bool arm7_cpu_device::translate_vaddr_to_paddr(offs_t &vaddr, const int flags)
 	}
 }
 
-void arm7_cpu_device::translate_insn_command(const std::vector<std::string> &params)
+void arm7_cpu_device::translate_insn_command(const std::vector<std::string_view> &params)
 {
 	translate_command(params, TRANSLATE_FETCH);
 }
 
-void arm7_cpu_device::translate_data_command(const std::vector<std::string> &params)
+void arm7_cpu_device::translate_data_command(const std::vector<std::string_view> &params)
 {
 	translate_command(params, TRANSLATE_READ);
 }
 
-void arm7_cpu_device::translate_command(const std::vector<std::string> &params, int intention)
+void arm7_cpu_device::translate_command(const std::vector<std::string_view> &params, int intention)
 {
 	uint64_t vaddr;
 
