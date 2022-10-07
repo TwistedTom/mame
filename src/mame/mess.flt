@@ -708,6 +708,7 @@ saturn/st17xx.cpp
 sega/dccons.cpp
 sega/mdconsole.cpp
 sega/md_112.cpp
+sega/md_fcart.cpp
 sega/megadriv_rad.cpp
 sega/megadriv_sunplus_hybrid.cpp
 sega/megadriv_vt_hybrid.cpp

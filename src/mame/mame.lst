@@ -23213,6 +23213,14 @@ megajet                         // 1993 Sega Mega Jet (Japan)
 @source:sega/md_112.cpp
 md_112                          // bootleg
 
+@source:sega/md_fcart.cpp
+md_fcart                        // bootleg
+md_fcartu                       // bootleg
+md_fcartj                       // bootleg
+md_fcart_ssf2                   // bootleg
+md_fcart_ssf2u                  // bootleg
+md_fcart_ssf2j                  // bootleg
+
 @source:sega/megadriv_acbl.cpp
 aladmdb                         // MegaDrive-based hack
 barekch                         // MegaDrive-based hack
