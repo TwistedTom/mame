@@ -3540,6 +3540,8 @@ if (BUSES["SMS_CTRL"]~=null) then
 		MAME_DIR .. "src/devices/bus/sms_ctrl/paddle.h",
 		MAME_DIR .. "src/devices/bus/sms_ctrl/rfu.cpp",
 		MAME_DIR .. "src/devices/bus/sms_ctrl/rfu.h",
+		MAME_DIR .. "src/devices/bus/sms_ctrl/rs232adapt.cpp",
+		MAME_DIR .. "src/devices/bus/sms_ctrl/rs232adapt.h",
 		MAME_DIR .. "src/devices/bus/sms_ctrl/smsctrl.cpp",
 		MAME_DIR .. "src/devices/bus/sms_ctrl/smsctrl.h",
 		MAME_DIR .. "src/devices/bus/sms_ctrl/sports.cpp",
@@ -5018,6 +5020,8 @@ if (BUSES["THOMSON"]~=null) then
 	files {
 		MAME_DIR .. "src/devices/bus/thomson/extension.cpp",
 		MAME_DIR .. "src/devices/bus/thomson/extension.h",
+		MAME_DIR .. "src/devices/bus/thomson/cc90_232.cpp",
+		MAME_DIR .. "src/devices/bus/thomson/cc90_232.h",
 		MAME_DIR .. "src/devices/bus/thomson/cd90_015.cpp",
 		MAME_DIR .. "src/devices/bus/thomson/cd90_015.h",
 		MAME_DIR .. "src/devices/bus/thomson/cq90_028.cpp",
@@ -5026,8 +5030,16 @@ if (BUSES["THOMSON"]~=null) then
 		MAME_DIR .. "src/devices/bus/thomson/cd90_351.h",
 		MAME_DIR .. "src/devices/bus/thomson/cd90_640.cpp",
 		MAME_DIR .. "src/devices/bus/thomson/cd90_640.h",
+		MAME_DIR .. "src/devices/bus/thomson/md90_120.cpp",
+		MAME_DIR .. "src/devices/bus/thomson/md90_120.h",
+		MAME_DIR .. "src/devices/bus/thomson/midipak.cpp",
+		MAME_DIR .. "src/devices/bus/thomson/midipak.h",
 		MAME_DIR .. "src/devices/bus/thomson/nanoreseau.cpp",
 		MAME_DIR .. "src/devices/bus/thomson/nanoreseau.h",
+		MAME_DIR .. "src/devices/bus/thomson/rf57_932.cpp",
+		MAME_DIR .. "src/devices/bus/thomson/rf57_932.h",
+		MAME_DIR .. "src/devices/bus/thomson/speech.cpp",
+		MAME_DIR .. "src/devices/bus/thomson/speech.h",
 	}
 end
 
