@@ -39590,6 +39590,9 @@ trvhanga                        // (c) 1984 SMS MFG CORP
 snes                            // Nintendo Super Nintendo NTSC
 snespal                         // Nintendo Super Nintendo PAL
 
+@source:nintendo/snes_fcart.cpp
+snes_fcart                      // bootleg
+
 @source:nintendo/snesb.cpp
 denseib                         // bootleg
 denseib2                        // bootleg

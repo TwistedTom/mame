@@ -566,6 +566,7 @@ nintendo/nes_vt32.cpp
 nintendo/nes_vt369_vtunknown.cpp
 nintendo/pokemini.cpp
 nintendo/snes.cpp
+nintendo/snes_fcart.cpp
 nintendo/vboy.cpp
 nintendo/vt1682.cpp
 nintendo/vt_unknown.cpp
