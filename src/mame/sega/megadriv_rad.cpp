@@ -20,7 +20,99 @@
 */
 
 #include "emu.h"
-#include "megadriv_rad.h"
+#include "megadriv.h"
+
+
+namespace {
+
+class megadriv_radica_state_base : public md_ctrl_state
+{
+public:
+	megadriv_radica_state_base(const machine_config &mconfig, device_type type, const char *tag) :
+		md_ctrl_state(mconfig, type, tag),
+		m_bank(0),
+		m_romsize(0x400000),
+		m_rom(*this, "maincpu")
+	{ }
+
+protected:
+	uint16_t read(offs_t offset);
+	uint16_t read_a13(offs_t offset);
+
+	void megadriv_radica_map(address_map &map);
+
+	void radica_base_map(address_map &map);
+
+	int m_bank;
+	int m_romsize;
+
+private:
+	required_region_ptr<uint16_t> m_rom;
+};
+
+
+class megadriv_radica_state : public megadriv_radica_state_base
+{
+public:
+	megadriv_radica_state(const machine_config& mconfig, device_type type, const char* tag) :
+		megadriv_radica_state_base(mconfig, type, tag)
+	{ }
+
+	void megadriv_radica_3button_ntsc(machine_config &config);
+	void megadriv_radica_3button_pal(machine_config &config);
+
+	void megadriv_radica_6button_ntsc(machine_config &config);
+	void megadriv_radica_6button_pal(machine_config &config);
+
+protected:
+	virtual void machine_start() override;
+	virtual void machine_reset() override;
+};
+
+
+class megadriv_dgunl_state : public megadriv_radica_state
+{
+public:
+	megadriv_dgunl_state(const machine_config& mconfig, device_type type, const char* tag) :
+		megadriv_radica_state(mconfig, type, tag)
+	{ }
+
+	void megadriv_dgunl_ntsc(machine_config &config);
+
+	void init_dgunl3227();
+
+protected:
+	virtual void machine_start() override;
+
+	uint16_t m_a1630a = 0;
+
+private:
+	uint16_t read_a16300(offs_t offset, uint16_t mem_mask);
+	uint16_t read_a16302(offs_t offset, uint16_t mem_mask);
+	virtual void write_a1630a(offs_t offset, uint16_t data, uint16_t mem_mask);
+
+	void megadriv_dgunl_map(address_map &map);
+};
+
+
+class megadriv_ra145_state : public megadriv_dgunl_state
+{
+public:
+	megadriv_ra145_state(const machine_config& mconfig, device_type type, const char* tag) :
+		megadriv_dgunl_state(mconfig, type, tag)
+	{ }
+
+	void megadriv_ra145_ntsc(machine_config &config);
+
+	void init_ra145();
+
+protected:
+	virtual void machine_reset() override;
+
+private:
+	virtual void write_a1630a(offs_t offset, uint16_t data, uint16_t mem_mask) override;
+};
+
 
 
 void megadriv_radica_state_base::radica_base_map(address_map &map)
@@ -274,68 +366,57 @@ uint16_t megadriv_radica_state_base::read_a13(offs_t offset)
 static INPUT_PORTS_START( radica_3button )
 	PORT_INCLUDE( md_common )
 
-	PORT_MODIFY("PAD1")
-	PORT_BIT( 0x0010, IP_ACTIVE_LOW, IPT_BUTTON2 ) PORT_PLAYER(1)
-	PORT_BIT( 0x0020, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_PLAYER(1)
-	PORT_BIT( 0x0040, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_PLAYER(1)
-	PORT_BIT( 0x0080, IP_ACTIVE_LOW, IPT_START1 )
-
-	PORT_MODIFY("PAD2")
-	PORT_BIT( 0x0010, IP_ACTIVE_LOW, IPT_BUTTON2 ) PORT_PLAYER(2)
-	PORT_BIT( 0x0020, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_PLAYER(2)
-	PORT_BIT( 0x0040, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_PLAYER(2)
-	PORT_BIT( 0x0080, IP_ACTIVE_LOW, IPT_START2 )
+	// TODO: how do the MENU buttons on the two controllers work?
 INPUT_PORTS_END
 
 // the 6-in-1 and Sonic Gold units really only have a single wired controller, and no way to connect a 2nd one, despite having some 2 player games!
 static INPUT_PORTS_START( radica_3button_1player )
-	PORT_INCLUDE( radica_3button )
+	PORT_INCLUDE( md_common )
 
 	PORT_MODIFY("PAD2")
-	PORT_BIT( 0x00ff, IP_ACTIVE_LOW, IPT_UNUSED )
+	PORT_BIT( 0x0fff, IP_ACTIVE_LOW, IPT_UNUSED )
+
+	// TODO: how does the MENU button on the controller work?
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( radica_6button )
-	PORT_INCLUDE( radica_3button )
+	PORT_INCLUDE( md_common )
 
-	PORT_START("EXTRA1")    /* Extra buttons for Joypad 1 (6 button + start + mode) NOT READ DIRECTLY */
-	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_BUTTON6 ) PORT_PLAYER(1)
-	PORT_BIT( 0x0002, IP_ACTIVE_LOW, IPT_BUTTON5 ) PORT_PLAYER(1)
-	PORT_BIT( 0x0004, IP_ACTIVE_LOW, IPT_BUTTON4 ) PORT_PLAYER(1)
-	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_UNUSED )
+	PORT_MODIFY("PAD1") // Extra buttons for Joypad 1 (6 button + start + mode)
+	PORT_BIT( 0x0100, IP_ACTIVE_LOW, IPT_BUTTON6 ) PORT_PLAYER(1) PORT_NAME("%p Z")
+	PORT_BIT( 0x0200, IP_ACTIVE_LOW, IPT_BUTTON5 ) PORT_PLAYER(1) PORT_NAME("%p Y")
+	PORT_BIT( 0x0400, IP_ACTIVE_LOW, IPT_BUTTON4 ) PORT_PLAYER(1) PORT_NAME("%p X")
+	PORT_BIT( 0x0800, IP_ACTIVE_LOW, IPT_SELECT )  PORT_PLAYER(1) PORT_NAME("%p Mode")
 
-	PORT_START("EXTRA2")    /* Extra buttons for Joypad 2 (6 button + start + mode) NOT READ DIRECTLY */
-	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_BUTTON6 ) PORT_PLAYER(2)
-	PORT_BIT( 0x0002, IP_ACTIVE_LOW, IPT_BUTTON5 ) PORT_PLAYER(2)
-	PORT_BIT( 0x0004, IP_ACTIVE_LOW, IPT_BUTTON4 ) PORT_PLAYER(2)
-	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_UNUSED )
+	PORT_MODIFY("PAD2") // Extra buttons for Joypad 2 (6 button + start + mode)
+	PORT_BIT( 0x0100, IP_ACTIVE_LOW, IPT_BUTTON6 ) PORT_PLAYER(2) PORT_NAME("%p Z")
+	PORT_BIT( 0x0200, IP_ACTIVE_LOW, IPT_BUTTON5 ) PORT_PLAYER(2) PORT_NAME("%p Y")
+	PORT_BIT( 0x0400, IP_ACTIVE_LOW, IPT_BUTTON4 ) PORT_PLAYER(2) PORT_NAME("%p X")
+	PORT_BIT( 0x0800, IP_ACTIVE_LOW, IPT_SELECT )  PORT_PLAYER(2) PORT_NAME("%p Mode")
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( msi_6button )
-	PORT_INCLUDE( radica_3button )
+	PORT_INCLUDE( radica_6button )
 
 	PORT_MODIFY("PAD2") // no 2nd pad
-	PORT_BIT( 0x00ff, IP_ACTIVE_LOW, IPT_UNUSED )
+	PORT_BIT( 0x0fff, IP_ACTIVE_LOW, IPT_UNUSED )
 
-	PORT_START("EXTRA1")    /* Extra buttons for Joypad 1 (6 button + start + mode) NOT READ DIRECTLY */
-	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_BUTTON6 ) PORT_PLAYER(1)
-	PORT_BIT( 0x0002, IP_ACTIVE_LOW, IPT_BUTTON5 ) PORT_PLAYER(1)
-	PORT_BIT( 0x0004, IP_ACTIVE_LOW, IPT_BUTTON4 ) PORT_PLAYER(1)
-	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_UNUSED )
-
-	PORT_START("EXTRA2") // no 2nd pad
-	PORT_BIT( 0x000f, IP_ACTIVE_LOW, IPT_UNUSED )
+	PORT_START("RESET") // RESET button on controller to the left of START
+	PORT_BIT( 0x0001, IP_ACTIVE_HIGH, IPT_SELECT ) PORT_PLAYER(1) PORT_NAME("Reset")
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( dgunl_1player )
-	PORT_INCLUDE( radica_3button )
+	PORT_INCLUDE( md_common )
 
 	PORT_MODIFY("PAD1")
-	PORT_BIT( 0x0020, IP_ACTIVE_LOW, IPT_UNUSED  )                PORT_CONDITION("DEBUG", 0x01, EQUALS, 0x00)
-	PORT_BIT( 0x0020, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_PLAYER(1) PORT_CONDITION("DEBUG", 0x01, EQUALS, 0x01)
+	PORT_BIT( 0x0020, IP_ACTIVE_LOW, IPT_UNUSED  )                                  PORT_CONDITION("DEBUG", 0x01, EQUALS, 0x00)
+	PORT_BIT( 0x0020, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_PLAYER(1) PORT_NAME("%p C") PORT_CONDITION("DEBUG", 0x01, EQUALS, 0x01)
 
-	PORT_MODIFY("PAD2")
-	PORT_BIT( 0x00ff, IP_ACTIVE_LOW, IPT_UNUSED )
+	PORT_MODIFY("PAD2") // no 2nd pad
+	PORT_BIT( 0x0fff, IP_ACTIVE_LOW, IPT_UNUSED )
+
+	PORT_START("RESET") // RESET button to the left of START
+	PORT_BIT( 0x0001, IP_ACTIVE_HIGH, IPT_SELECT ) PORT_PLAYER(1) PORT_NAME("Reset")
 
 	// the unit only has 2 buttons, A and B, strings are changed to remove references to C, even if behavior in Pac-Mania still exists and differs between them
 	// however, Pac-Man still has a test mode which requires holding A+C on startup
@@ -368,13 +449,13 @@ void megadriv_dgunl_state::machine_start()
 void megadriv_ra145_state::machine_reset()
 {
 	m_bank = 4;
-	md_base_state::machine_reset();
+	megadriv_radica_state_base::machine_reset();
 }
 
 void megadriv_radica_state::machine_reset()
 {
 	m_bank = 0;
-	md_base_state::machine_reset();
+	megadriv_radica_state_base::machine_reset();
 }
 
 
@@ -382,41 +463,44 @@ void megadriv_radica_state::megadriv_radica_3button_ntsc(machine_config &config)
 {
 	md_ntsc(config);
 
-	m_maincpu->set_addrmap(AS_PROGRAM, &megadriv_radica_state_base::megadriv_radica_map);
+	ctrl1_3button(config);
+	ctrl2_3button(config);
+
+	m_maincpu->set_addrmap(AS_PROGRAM, &megadriv_radica_state::megadriv_radica_map);
 }
 
 void megadriv_radica_state::megadriv_radica_3button_pal(machine_config &config)
 {
 	md_pal(config);
 
-	m_maincpu->set_addrmap(AS_PROGRAM, &megadriv_radica_state_base::megadriv_radica_map);
+	ctrl1_3button(config);
+	ctrl2_3button(config);
+
+	m_maincpu->set_addrmap(AS_PROGRAM, &megadriv_radica_state::megadriv_radica_map);
 }
 
 void megadriv_radica_state::megadriv_radica_6button_pal(machine_config &config)
 {
 	megadriv_radica_3button_pal(config);
 
-	m_ioports[0]->set_in_handler(FUNC(megadriv_radica_state::ioport_in_6button<0>));
-	m_ioports[0]->set_out_handler(FUNC(megadriv_radica_state::ioport_out_6button<0>));
-
-	m_ioports[1]->set_in_handler(FUNC(megadriv_radica_state::ioport_in_6button<1>));
-	m_ioports[1]->set_out_handler(FUNC(megadriv_radica_state::ioport_out_6button<1>));
+	ctrl1_6button(config);
+	ctrl2_6button(config);
 }
 
 void megadriv_radica_state::megadriv_radica_6button_ntsc(machine_config &config)
 {
 	megadriv_radica_3button_ntsc(config);
 
-	m_ioports[0]->set_in_handler(FUNC(megadriv_radica_state::ioport_in_6button<0>));
-	m_ioports[0]->set_out_handler(FUNC(megadriv_radica_state::ioport_out_6button<0>));
-
-	m_ioports[1]->set_in_handler(FUNC(megadriv_radica_state::ioport_in_6button<1>));
-	m_ioports[1]->set_out_handler(FUNC(megadriv_radica_state::ioport_out_6button<1>));
+	ctrl1_6button(config);
+	ctrl2_6button(config);
 }
 
 void megadriv_dgunl_state::megadriv_dgunl_ntsc(machine_config &config)
 {
 	md_ntsc(config);
+
+	ctrl1_3button(config);
+	ctrl2_3button(config);
 
 	m_maincpu->set_addrmap(AS_PROGRAM, &megadriv_dgunl_state::megadriv_dgunl_map);
 }
@@ -425,11 +509,8 @@ void megadriv_ra145_state::megadriv_ra145_ntsc(machine_config &config)
 {
 	megadriv_dgunl_ntsc(config);
 
-	m_ioports[0]->set_in_handler(FUNC(megadriv_ra145_state::ioport_in_6button<0>));
-	m_ioports[0]->set_out_handler(FUNC(megadriv_ra145_state::ioport_out_6button<0>));
-
-	m_ioports[1]->set_in_handler(FUNC(megadriv_ra145_state::ioport_in_6button<1>));
-	m_ioports[1]->set_out_handler(FUNC(megadriv_ra145_state::ioport_out_6button<1>));
+	ctrl1_6button(config);
+	ctrl2_6button(config);
 }
 
 
@@ -612,6 +693,9 @@ void megadriv_ra145_state::init_ra145()
 	init_megadriv();
 }
 
+} // anonymous namespace
+
+
 // US versions show 'Genesis' on the menu,    show a www.radicagames.com splash screen, and use NTSC versions of the ROMs, sometimes region locked
 // EU versions show 'Mega Drive' on the menu, show a www.radicagames.com splash screen, and use PAL versions of the ROMs, sometimes region locked
 // UK versions show "Mega Drive' on the menu, show a www.radicauk.com splash screen,    and use PAL versions of the ROMs, sometimes region locked
@@ -657,4 +741,3 @@ CONS( 2018, msi_sf2,   0,        0, megadriv_radica_6button_ntsc, msi_6button,  
 CONS( 2018, dgunl3227, 0,        0, megadriv_dgunl_ntsc, dgunl_1player,         megadriv_dgunl_state, init_dgunl3227,    "dreamGEAR",            "My Arcade Pac-Man Pocket Player (DGUNL-3227)", 0 )
 
 CONS( 2018, ra145,     0,        0, megadriv_ra145_ntsc, msi_6button,           megadriv_ra145_state, init_ra145,        "<unknown>",            "Retro Arcade 16 Bits Classic Edition Mini TV Game Console - 145 Classic Games - TV Arcade Plug and Play (Mega Drive bootlegs)", MACHINE_NOT_WORKING )
-

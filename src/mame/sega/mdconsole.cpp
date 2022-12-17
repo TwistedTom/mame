@@ -36,8 +36,10 @@ void md_cons_state::md_ctrl_ports(machine_config &config)
 
 	m_ioports[1]->set_in_handler(m_ctrl_ports[1], FUNC(sms_control_port_device::in_r));
 	m_ioports[1]->set_out_handler(m_ctrl_ports[1], FUNC(sms_control_port_device::out_w));
+}
 
-	// TODO: Mega Drive II, Mega Jet and Nomad lack EXP port
+void md_cons_state::md_exp_port(machine_config &config)
+{
 	SMS_CONTROL_PORT(config, m_ctrl_ports[2], sms_control_port_devices, nullptr);
 	m_ctrl_ports[2]->th_handler().set(m_ioports[2], FUNC(megadrive_io_port_device::th_w));
 	m_ctrl_ports[2]->set_screen(m_screen);
@@ -55,23 +57,12 @@ void md_cons_state::md_ctrl_ports(machine_config &config)
 
 
 static INPUT_PORTS_START( md )
-	// Unemulated controllers:
-	// Sega Mouse
-	// Sega Menacer
-	// Konami Justifier
-	// Sega Team Player
-	// EA 4-Play
-/* there exists both a 2 buttons version of the Mouse (Jpn ver, to be used with RPGs, it
-    can aslo be used as trackball) and a 3 buttons version (US ver, no trackball feats.) */
-
 	PORT_START("RESET")     // Buttons on Mega Drive console
 	PORT_BIT( 0x0001, IP_ACTIVE_HIGH, IPT_SERVICE1 ) PORT_NAME("Reset Button") PORT_IMPULSE(1) // reset, resets 68k (and..?)
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( gen_nomd )
-	PORT_INCLUDE( md )
-
-	PORT_MODIFY("RESET")     /* No reset button */
+	PORT_START("RESET")     // No reset button
 	PORT_BIT( 0x0001, IP_ACTIVE_HIGH, IPT_UNUSED )
 INPUT_PORTS_END
 
@@ -89,8 +80,7 @@ void md_cons_state::machine_start()
 	if (m_cart)
 		m_cart->save_nvram();
 
-	if (m_z80snd)
-		m_genz80.z80_run_timer = timer_alloc(FUNC(md_base_state::megadriv_z80_run_state), this);
+	m_genz80.z80_run_timer = timer_alloc(FUNC(md_cons_state::megadriv_z80_run_state), this);
 }
 
 void md_cons_state::install_cartslot()
@@ -220,6 +210,7 @@ void md_cons_slot_state::ms_megadriv(machine_config &config)
 	m_screen->screen_vblank().set(FUNC(md_cons_slot_state::screen_vblank_console));
 
 	md_ctrl_ports(config);
+	md_exp_port(config);
 
 	MD_CART_SLOT(config, m_cart, md_cart, nullptr).set_must_be_loaded(true);
 	SOFTWARE_LIST(config, "cart_list").set_original("megadriv");
@@ -232,6 +223,7 @@ void md_cons_slot_state::ms_megadpal(machine_config &config)
 	m_screen->screen_vblank().set(FUNC(md_cons_slot_state::screen_vblank_console));
 
 	md_ctrl_ports(config);
+	md_exp_port(config);
 
 	MD_CART_SLOT(config, m_cart, md_cart, nullptr).set_must_be_loaded(true);
 	SOFTWARE_LIST(config, "cart_list").set_original("megadriv");
@@ -479,6 +471,7 @@ void md_cons_state::genesis_32x(machine_config &config)
 	m_ymsnd->add_route(1, "rspeaker", (0.50)/2);
 
 	md_ctrl_ports(config);
+	md_exp_port(config);
 
 	generic_cartslot_device &cartslot(GENERIC_CARTSLOT(config, "cartslot", generic_plain_slot, "_32x_cart", "32x,bin"));
 	cartslot.set_must_be_loaded(true);
@@ -513,6 +506,7 @@ void md_cons_state::mdj_32x(machine_config &config)
 	m_ymsnd->add_route(1, "rspeaker", (0.50)/2);
 
 	md_ctrl_ports(config);
+	md_exp_port(config);
 
 	generic_cartslot_device &cartslot(GENERIC_CARTSLOT(config, "cartslot", generic_plain_slot, "_32x_cart", "32x,bin"));
 	cartslot.set_must_be_loaded(true);
@@ -547,6 +541,7 @@ void md_cons_state::md_32x(machine_config &config)
 	m_ymsnd->add_route(1, "rspeaker", (0.50)/2);
 
 	md_ctrl_ports(config);
+	md_exp_port(config);
 
 	generic_cartslot_device &cartslot(GENERIC_CARTSLOT(config, "cartslot", generic_plain_slot, "_32x_cart", "32x,bin"));
 	cartslot.set_must_be_loaded(true);
@@ -602,6 +597,7 @@ void md_cons_cd_state::genesis_scd(machine_config &config)
 	config.set_perfect_quantum("segacd:segacd_68k"); // perfect sync to the fastest cpu
 
 	md_ctrl_ports(config);
+	md_exp_port(config);
 
 	CDROM(config, "cdrom").set_interface("scd_cdrom");
 
@@ -642,6 +638,7 @@ void md_cons_cd_state::md_scd(machine_config &config)
 	config.set_perfect_quantum("segacd:segacd_68k"); // perfect sync to the fastest cpu
 
 	md_ctrl_ports(config);
+	md_exp_port(config);
 
 	CDROM(config, "cdrom").set_interface("scd_cdrom");
 
@@ -682,6 +679,7 @@ void md_cons_cd_state::mdj_scd(machine_config &config)
 	config.set_perfect_quantum("segacd:segacd_68k"); // perfect sync to the fastest cpu
 
 	md_ctrl_ports(config);
+	md_exp_port(config);
 
 	CDROM(config, "cdrom").set_interface("scd_cdrom");
 
@@ -1018,7 +1016,7 @@ CONS( 1995, 32x_mcd,      32x_scd,  0,      md_32x_scd,      md,       md_cons_c
 CONS( 1994, 32x_mcdj,     32x_scd,  0,      mdj_32x_scd,     md,       md_cons_cd_state, init_md_jpn,  "Sega",   "Mega-CD with 32X (Japan, NTSC)", MACHINE_NOT_WORKING )
 
 // handheld hardware
-CONS( 1995, gen_nomd,     0,        0,      ms_megadriv2,    gen_nomd, md_cons_slot_state, init_genesis, "Sega",   "Genesis Nomad (USA Genesis handheld)",  MACHINE_SUPPORTS_SAVE )
+CONS( 1995, gen_nomd,     0,        0,      ms_megajet,      gen_nomd, md_cons_slot_state, init_genesis, "Sega",   "Genesis Nomad (USA Genesis handheld)",  MACHINE_SUPPORTS_SAVE )
 
 // handheld without LCD
 CONS( 1993, megajet,      gen_nomd, 0,      ms_megajet,      md,       md_cons_slot_state, init_md_jpn,  "Sega",   "Mega Jet (Japan Mega Drive handheld)",  MACHINE_SUPPORTS_SAVE )
