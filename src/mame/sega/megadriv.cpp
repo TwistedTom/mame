@@ -78,9 +78,6 @@ uint8_t md_base_state::megadriv_68k_YM2612_read(offs_t offset, uint8_t mem_mask)
 		LOG("%s: 68000 attempting to access YM2612 (read) without bus\n", machine().describe_context());
 		return 0;
 	}
-
-	// never executed
-	//return -1;
 }
 
 
@@ -98,7 +95,7 @@ void md_base_state::megadriv_68k_YM2612_write(offs_t offset, uint8_t data, uint8
 }
 
 // this is used by 6 button pads and gets installed in machine_start for drivers requiring it
-TIMER_CALLBACK_MEMBER(md_base_state::ioport_timeout)
+TIMER_CALLBACK_MEMBER(md_ctrl_state::ioport_timeout)
 {
 	m_ioport_phase[param] = 0;
 }
@@ -144,25 +141,27 @@ TIMER_CALLBACK_MEMBER(md_base_state::ioport_timeout)
 */
 
 INPUT_PORTS_START( md_common )
-	PORT_START("PAD1")      // Joypad 1 (3 button + start) NOT READ DIRECTLY
-	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_JOYSTICK_UP ) PORT_8WAY PORT_PLAYER(1)
-	PORT_BIT( 0x0002, IP_ACTIVE_LOW, IPT_JOYSTICK_DOWN ) PORT_8WAY PORT_PLAYER(1)
-	PORT_BIT( 0x0004, IP_ACTIVE_LOW, IPT_JOYSTICK_LEFT ) PORT_8WAY PORT_PLAYER(1)
+	PORT_START("PAD1")      // Joypad 1 (3 button + start)
+	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_JOYSTICK_UP )    PORT_8WAY PORT_PLAYER(1)
+	PORT_BIT( 0x0002, IP_ACTIVE_LOW, IPT_JOYSTICK_DOWN )  PORT_8WAY PORT_PLAYER(1)
+	PORT_BIT( 0x0004, IP_ACTIVE_LOW, IPT_JOYSTICK_LEFT )  PORT_8WAY PORT_PLAYER(1)
 	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_JOYSTICK_RIGHT ) PORT_8WAY PORT_PLAYER(1)
 	PORT_BIT( 0x0010, IP_ACTIVE_LOW, IPT_BUTTON2 ) PORT_PLAYER(1) PORT_NAME("%p B")
 	PORT_BIT( 0x0020, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_PLAYER(1) PORT_NAME("%p C")
 	PORT_BIT( 0x0040, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_PLAYER(1) PORT_NAME("%p A")
-	PORT_BIT( 0x0080, IP_ACTIVE_LOW, IPT_START ) PORT_PLAYER(1)
+	PORT_BIT( 0x0080, IP_ACTIVE_LOW, IPT_START )   PORT_PLAYER(1)
+	PORT_BIT( 0x0f00, IP_ACTIVE_LOW, IPT_UNUSED ) // extra buttons on 6-button pad
 
-	PORT_START("PAD2")      // Joypad 2 (3 button + start) NOT READ DIRECTLY
-	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_JOYSTICK_UP ) PORT_8WAY PORT_PLAYER(2)
-	PORT_BIT( 0x0002, IP_ACTIVE_LOW, IPT_JOYSTICK_DOWN ) PORT_8WAY PORT_PLAYER(2)
-	PORT_BIT( 0x0004, IP_ACTIVE_LOW, IPT_JOYSTICK_LEFT ) PORT_8WAY PORT_PLAYER(2)
+	PORT_START("PAD2")      // Joypad 2 (3 button + start)
+	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_JOYSTICK_UP )    PORT_8WAY PORT_PLAYER(2)
+	PORT_BIT( 0x0002, IP_ACTIVE_LOW, IPT_JOYSTICK_DOWN )  PORT_8WAY PORT_PLAYER(2)
+	PORT_BIT( 0x0004, IP_ACTIVE_LOW, IPT_JOYSTICK_LEFT )  PORT_8WAY PORT_PLAYER(2)
 	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_JOYSTICK_RIGHT ) PORT_8WAY PORT_PLAYER(2)
 	PORT_BIT( 0x0010, IP_ACTIVE_LOW, IPT_BUTTON2 ) PORT_PLAYER(2) PORT_NAME("%p B")
 	PORT_BIT( 0x0020, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_PLAYER(2) PORT_NAME("%p C")
 	PORT_BIT( 0x0040, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_PLAYER(2) PORT_NAME("%p A")
-	PORT_BIT( 0x0080, IP_ACTIVE_LOW, IPT_START ) PORT_PLAYER(2)
+	PORT_BIT( 0x0080, IP_ACTIVE_LOW, IPT_START )   PORT_PLAYER(2)
+	PORT_BIT( 0x0f00, IP_ACTIVE_LOW, IPT_UNUSED ) // extra buttons on 6-button pad
 INPUT_PORTS_END
 
 
@@ -175,7 +174,7 @@ INPUT_PORTS_END
 
 
 template <unsigned N>
-uint8_t md_base_state::ioport_in_3button()
+uint8_t md_ctrl_state::ioport_in_3button()
 {
 	ioport_value const pad = m_io_pad[N]->read();
 	if (m_ioport_th[N])
@@ -185,7 +184,7 @@ uint8_t md_base_state::ioport_in_3button()
 }
 
 template <unsigned N>
-uint8_t md_base_state::ioport_in_6button()
+uint8_t md_ctrl_state::ioport_in_6button()
 {
 	ioport_value const pad = m_io_pad[N]->read();
 	switch (m_ioport_phase[N])
@@ -204,20 +203,20 @@ uint8_t md_base_state::ioport_in_6button()
 			return BIT(pad, 6, 2) << 4;
 	case 3:
 		if (m_ioport_th[N])
-			return (BIT(pad, 4, 2) << 4) | BIT(m_io_extra[N]->read(), 0, 4);
+			return (BIT(pad, 4, 2) << 4) | BIT(pad, 8, 4);
 		else
 			return (BIT(pad, 6, 2) << 4) | 0x0f;
 	}
 }
 
 template <unsigned N>
-void md_base_state::ioport_out_3button(uint8_t data, uint8_t mem_mask)
+void md_ctrl_state::ioport_out_3button(uint8_t data, uint8_t mem_mask)
 {
 	m_ioport_th[N] = BIT(data, 6);
 }
 
 template <unsigned N>
-void md_base_state::ioport_out_6button(uint8_t data, uint8_t mem_mask)
+void md_ctrl_state::ioport_out_6button(uint8_t data, uint8_t mem_mask)
 {
 	uint8_t const th = BIT(data, 6);
 	if (!th)
@@ -231,15 +230,6 @@ void md_base_state::ioport_out_6button(uint8_t data, uint8_t mem_mask)
 	}
 	m_ioport_th[N] = th;
 }
-
-template uint8_t md_base_state::ioport_in_3button<0>();
-template uint8_t md_base_state::ioport_in_3button<1>();
-template uint8_t md_base_state::ioport_in_6button<0>();
-template uint8_t md_base_state::ioport_in_6button<1>();
-template void md_base_state::ioport_out_3button<0>(uint8_t, uint8_t);
-template void md_base_state::ioport_out_3button<1>(uint8_t, uint8_t);
-template void md_base_state::ioport_out_6button<0>(uint8_t, uint8_t);
-template void md_base_state::ioport_out_6button<1>(uint8_t, uint8_t);
 
 
 uint16_t md_base_state::m68k_version_read()
@@ -648,9 +638,9 @@ void md_base_state::megadriv_z80_io_map(address_map &map)
 	map(0x00, 0xff).noprw();
 }
 
-uint32_t md_base_state::screen_update_megadriv(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect)
+uint32_t md_core_state::screen_update_megadriv(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect)
 {
-	/* Copy our screen buffer here */
+	// Copy our screen buffer here
 	for (int y = cliprect.min_y; y <= cliprect.max_y; y++)
 	{
 		uint32_t *const desty = &bitmap.pix(y, 0);
@@ -674,46 +664,57 @@ uint32_t md_base_state::screen_update_megadriv(screen_device &screen, bitmap_rgb
 
 /*****************************************************************************************/
 
-void md_base_state::machine_start()
+void md_core_state::machine_reset()
 {
-	m_ioport_idle[0] = timer_alloc(FUNC(md_base_state::ioport_timeout), this);
-	m_ioport_idle[1] = timer_alloc(FUNC(md_base_state::ioport_timeout), this);
-
-	std::fill(std::begin(m_ioport_th), std::end(m_ioport_th), 1);
-	std::fill(std::begin(m_ioport_phase), std::end(m_ioport_phase), 0);
-
-	save_item(NAME(m_ioport_th));
-	save_item(NAME(m_ioport_phase));
-
-	if (m_z80snd)
-		m_genz80.z80_run_timer = timer_alloc(FUNC(md_base_state::megadriv_z80_run_state), this);
-}
-
-void md_base_state::machine_reset()
-{
-	/* default state of z80 = reset, with bus */
-	osd_printf_debug("Resetting Megadrive / Genesis\n");
-
-	if (m_z80snd)
-	{
-		m_genz80.z80_is_reset = 1;
-		m_genz80.z80_has_bus = 1;
-		m_genz80.z80_bank_addr = 0;
-		m_vdp->set_scanline_counter(-1);
-		m_genz80.z80_run_timer->adjust(attotime::zero);
-	}
-
 	if (!m_vdp->m_use_alt_timing)
 	{
 		m_vdp->m_megadriv_scanline_timer = m_scan_timer;
 		m_vdp->m_megadriv_scanline_timer->adjust(attotime::zero);
 	}
 
-	if (m_megadrive_ram)
-		memset(m_megadrive_ram, 0x00, 0x10000);
-
 	m_vdp->device_reset_old();
 }
+
+
+void md_base_state::machine_start()
+{
+	md_core_state::machine_start();
+
+	m_genz80.z80_run_timer = timer_alloc(FUNC(md_base_state::megadriv_z80_run_state), this);
+}
+
+void md_base_state::machine_reset()
+{
+	md_core_state::machine_reset();
+
+	// default state of z80 = reset, with bus
+	osd_printf_debug("Resetting Megadrive / Genesis\n");
+
+	m_genz80.z80_is_reset = 1;
+	m_genz80.z80_has_bus = 1;
+	m_genz80.z80_bank_addr = 0;
+	m_vdp->set_scanline_counter(-1);
+	m_genz80.z80_run_timer->adjust(attotime::zero);
+
+	if (m_megadrive_ram)
+		memset(m_megadrive_ram, 0x00, 0x10000);
+}
+
+
+void md_ctrl_state::machine_start()
+{
+	md_base_state::machine_start();
+
+	m_ioport_idle[0] = timer_alloc(FUNC(md_ctrl_state::ioport_timeout), this);
+	m_ioport_idle[1] = timer_alloc(FUNC(md_ctrl_state::ioport_timeout), this);
+
+	std::fill(std::begin(m_ioport_th), std::end(m_ioport_th), 1);
+	std::fill(std::begin(m_ioport_phase), std::end(m_ioport_phase), 0);
+
+	save_item(NAME(m_ioport_th));
+	save_item(NAME(m_ioport_phase));
+}
+
 
 void md_base_state::megadriv_stop_scanline_timer()
 {
@@ -726,22 +727,19 @@ void md_base_state::megadriv_stop_scanline_timer()
 // this comes from the VDP on lines 240 (on) 241 (off) and is connected to the z80 irq 0
 WRITE_LINE_MEMBER(md_base_state::vdp_sndirqline_callback_genesis_z80)
 {
-	if (m_z80snd)
+	if (state == ASSERT_LINE)
 	{
-		if (state == ASSERT_LINE)
-		{
-			if ((m_genz80.z80_has_bus == 1) && (m_genz80.z80_is_reset == 0))
-				m_z80snd->set_input_line(0, HOLD_LINE);
-		}
-		else if (state == CLEAR_LINE)
-		{
-			m_z80snd->set_input_line(0, CLEAR_LINE);
-		}
+		if ((m_genz80.z80_has_bus == 1) && (m_genz80.z80_is_reset == 0))
+			m_z80snd->set_input_line(0, HOLD_LINE);
+	}
+	else if (state == CLEAR_LINE)
+	{
+		m_z80snd->set_input_line(0, CLEAR_LINE);
 	}
 }
 
 // this comes from the vdp, and is connected to 68k irq level 6 (main vbl interrupt)
-WRITE_LINE_MEMBER(md_base_state::vdp_lv6irqline_callback_genesis_68k)
+WRITE_LINE_MEMBER(md_core_state::vdp_lv6irqline_callback_genesis_68k)
 {
 	if (state == ASSERT_LINE)
 		m_maincpu->set_input_line(6, HOLD_LINE);
@@ -750,7 +748,7 @@ WRITE_LINE_MEMBER(md_base_state::vdp_lv6irqline_callback_genesis_68k)
 }
 
 // this comes from the vdp, and is connected to 68k irq level 4 (raster interrupt)
-WRITE_LINE_MEMBER(md_base_state::vdp_lv4irqline_callback_genesis_68k)
+WRITE_LINE_MEMBER(md_core_state::vdp_lv4irqline_callback_genesis_68k)
 {
 	if (state == ASSERT_LINE)
 		m_maincpu->set_input_line(4, HOLD_LINE);
@@ -759,7 +757,7 @@ WRITE_LINE_MEMBER(md_base_state::vdp_lv4irqline_callback_genesis_68k)
 }
 
 /* Callback when the 68k takes an IRQ */
-IRQ_CALLBACK_MEMBER(md_base_state::genesis_int_callback)
+IRQ_CALLBACK_MEMBER(md_core_state::genesis_int_callback)
 {
 	if (irqline==4)
 	{
@@ -775,10 +773,59 @@ IRQ_CALLBACK_MEMBER(md_base_state::genesis_int_callback)
 }
 
 
-void md_base_state::megadriv_timers(machine_config &config)
+void md_core_state::megadriv_timers(machine_config &config)
 {
-	TIMER(config, m_scan_timer).configure_generic("gen_vdp", FUNC(sega315_5313_device::megadriv_scanline_timer_callback));
+	TIMER(config, m_scan_timer).configure_generic(m_vdp, FUNC(sega315_5313_device::megadriv_scanline_timer_callback));
 }
+
+void md_core_state::md_core_ntsc(machine_config &config)
+{
+	M68000(config, m_maincpu, MASTER_CLOCK_NTSC / 7); // 7.67 MHz
+	m_maincpu->set_irq_acknowledge_callback(FUNC(md_core_state::genesis_int_callback));
+	// IRQs are handled via the timers
+
+	megadriv_timers(config);
+
+	SEGA315_5313(config, m_vdp, MASTER_CLOCK_NTSC, m_maincpu);
+	m_vdp->set_is_pal(false);
+	m_vdp->lv6_irq().set(FUNC(md_core_state::vdp_lv6irqline_callback_genesis_68k));
+	m_vdp->lv4_irq().set(FUNC(md_core_state::vdp_lv4irqline_callback_genesis_68k));
+	m_vdp->set_screen("megadriv");
+
+	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	m_screen->set_refresh_hz(MASTER_CLOCK_NTSC / 10 / 262 / 342); // same as SMS?
+//  m_screen->set_refresh_hz(double(MASTER_CLOCK_NTSC) / 8 / 262 / 427); // or 427 Htotal?
+	m_screen->set_vblank_time(ATTOSECONDS_IN_USEC(0)); // Vblank handled manually.
+	m_screen->set_size(64*8, 620);
+	m_screen->set_visarea(0, 32*8-1, 0, 28*8-1);
+	m_screen->set_screen_update(FUNC(md_core_state::screen_update_megadriv)); /* Copies a bitmap */
+	m_screen->screen_vblank().set(FUNC(md_core_state::screen_vblank_megadriv)); /* Used to Sync the timing */
+}
+
+void md_core_state::md_core_pal(machine_config &config)
+{
+	M68000(config, m_maincpu, MASTER_CLOCK_PAL / 7); // 7.67 MHz
+	m_maincpu->set_irq_acknowledge_callback(FUNC(md_core_state::genesis_int_callback));
+	// IRQs are handled via the timers
+
+	megadriv_timers(config);
+
+	SEGA315_5313(config, m_vdp, MASTER_CLOCK_PAL, m_maincpu);
+	m_vdp->set_is_pal(true);
+	m_vdp->lv6_irq().set(FUNC(md_core_state::vdp_lv6irqline_callback_genesis_68k));
+	m_vdp->lv4_irq().set(FUNC(md_core_state::vdp_lv4irqline_callback_genesis_68k));
+	m_vdp->set_screen("megadriv");
+
+	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	m_screen->set_refresh_hz(MASTER_CLOCK_PAL / 10 / 313 / 342); // same as SMS?
+//  m_screen->set_refresh_hz(MASTER_CLOCK_PAL / 8 / 313 / 423); // or 423 Htotal?
+	m_screen->set_vblank_time(ATTOSECONDS_IN_USEC(0)); // Vblank handled manually.
+	m_screen->set_size(64*8, 620);
+	m_screen->set_visarea(0, 32*8-1, 0, 28*8-1);
+	m_screen->set_screen_update(FUNC(md_core_state::screen_update_megadriv)); /* Copies a bitmap */
+	m_screen->screen_vblank().set(FUNC(md_core_state::screen_vblank_megadriv)); /* Used to Sync the timing */
+}
+
 
 void md_base_state::megadriv_ioports(machine_config &config)
 {
@@ -787,13 +834,9 @@ void md_base_state::megadriv_ioports(machine_config &config)
 	hl.output_handler().set_inputline(m_maincpu, 2);
 
 	MEGADRIVE_IO_PORT(config, m_ioports[0], 0);
-	m_ioports[0]->set_in_handler(FUNC(md_base_state::ioport_in_3button<0>));
-	m_ioports[0]->set_out_handler(FUNC(md_base_state::ioport_out_3button<0>));
 	m_ioports[0]->hl_handler().set("hl", FUNC(input_merger_device::in_w<0>));
 
 	MEGADRIVE_IO_PORT(config, m_ioports[1], 0);
-	m_ioports[1]->set_in_handler(FUNC(md_base_state::ioport_in_3button<1>));
-	m_ioports[1]->set_out_handler(FUNC(md_base_state::ioport_out_3button<1>));
 	m_ioports[1]->hl_handler().set("hl", FUNC(input_merger_device::in_w<1>));
 
 	MEGADRIVE_IO_PORT(config, m_ioports[2], 0);
@@ -801,47 +844,54 @@ void md_base_state::megadriv_ioports(machine_config &config)
 }
 
 
+void md_ctrl_state::ctrl1_3button(machine_config &config)
+{
+	m_ioports[0]->set_in_handler(FUNC(md_ctrl_state::ioport_in_3button<0>));
+	m_ioports[0]->set_out_handler(FUNC(md_ctrl_state::ioport_out_3button<0>));
+}
+
+void md_ctrl_state::ctrl2_3button(machine_config &config)
+{
+	m_ioports[1]->set_in_handler(FUNC(md_ctrl_state::ioport_in_3button<1>));
+	m_ioports[1]->set_out_handler(FUNC(md_ctrl_state::ioport_out_3button<1>));
+}
+
+void md_ctrl_state::ctrl1_6button(machine_config &config)
+{
+	m_ioports[0]->set_in_handler(FUNC(md_ctrl_state::ioport_in_6button<0>));
+	m_ioports[0]->set_out_handler(FUNC(md_ctrl_state::ioport_out_6button<0>));
+}
+
+void md_ctrl_state::ctrl2_6button(machine_config &config)
+{
+	m_ioports[1]->set_in_handler(FUNC(md_ctrl_state::ioport_in_6button<1>));
+	m_ioports[1]->set_out_handler(FUNC(md_ctrl_state::ioport_out_6button<1>));
+}
+
+
 void md_base_state::md_ntsc(machine_config &config)
 {
-	M68000(config, m_maincpu, MASTER_CLOCK_NTSC / 7); /* 7.67 MHz */
+	md_core_ntsc(config);
+
 	m_maincpu->set_addrmap(AS_PROGRAM, &md_base_state::megadriv_68k_map);
-	m_maincpu->set_irq_acknowledge_callback(FUNC(md_base_state::genesis_int_callback));
 
-	/* IRQs are handled via the timers */
-
-	Z80(config, m_z80snd, MASTER_CLOCK_NTSC / 15); /* 3.58 MHz */
+	Z80(config, m_z80snd, MASTER_CLOCK_NTSC / 15); // 3.58 MHz
 	m_z80snd->set_addrmap(AS_PROGRAM, &md_base_state::megadriv_z80_map);
 	m_z80snd->set_addrmap(AS_IO, &md_base_state::megadriv_z80_io_map);
-	/* IRQ handled via the timers */
+	// IRQ handled via the timers
 
-	megadriv_timers(config);
-
-	/* I/O port controllers */
+	// I/O port controllers
 	megadriv_ioports(config);
 
-	SEGA315_5313(config, m_vdp, MASTER_CLOCK_NTSC, m_maincpu);
-	m_vdp->set_is_pal(false);
 	m_vdp->snd_irq().set(FUNC(md_base_state::vdp_sndirqline_callback_genesis_z80));
-	m_vdp->lv6_irq().set(FUNC(md_base_state::vdp_lv6irqline_callback_genesis_68k));
-	m_vdp->lv4_irq().set(FUNC(md_base_state::vdp_lv4irqline_callback_genesis_68k));
-	m_vdp->set_screen("megadriv");
 	m_vdp->add_route(ALL_OUTPUTS, "lspeaker", 0.50);
 	m_vdp->add_route(ALL_OUTPUTS, "rspeaker", 0.50);
 
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
-	m_screen->set_refresh_hz(double(MASTER_CLOCK_NTSC) / 10.0 / 262.0 / 342.0); // same as SMS?
-//  m_screen->set_refresh_hz(double(MASTER_CLOCK_NTSC) / 8.0 / 262.0 / 427.0); // or 427 Htotal?
-	m_screen->set_vblank_time(ATTOSECONDS_IN_USEC(0)); // Vblank handled manually.
-	m_screen->set_size(64*8, 620);
-	m_screen->set_visarea(0, 32*8-1, 0, 28*8-1);
-	m_screen->set_screen_update(FUNC(md_base_state::screen_update_megadriv)); /* Copies a bitmap */
-	m_screen->screen_vblank().set(FUNC(md_base_state::screen_vblank_megadriv)); /* Used to Sync the timing */
-
-	/* sound hardware */
+	// sound hardware
 	SPEAKER(config, "lspeaker").front_left();
 	SPEAKER(config, "rspeaker").front_right();
 
-	YM2612(config, m_ymsnd, MASTER_CLOCK_NTSC/7); /* 7.67 MHz */
+	YM2612(config, m_ymsnd, MASTER_CLOCK_NTSC / 7); // 7.67 MHz
 	m_ymsnd->add_route(0, "lspeaker", 0.50);
 	m_ymsnd->add_route(1, "rspeaker", 0.50);
 }
@@ -851,7 +901,7 @@ void md_base_state::md2_ntsc(machine_config &config)
 	md_ntsc(config);
 
 	// Internalized YM3438 in VDP ASIC
-	YM3438(config.replace(), m_ymsnd, MASTER_CLOCK_NTSC/7); /* 7.67 MHz */
+	YM3438(config.replace(), m_ymsnd, MASTER_CLOCK_NTSC / 7); // 7.67 MHz
 	m_ymsnd->add_route(0, "lspeaker", 0.50);
 	m_ymsnd->add_route(1, "rspeaker", 0.50);
 }
@@ -860,44 +910,27 @@ void md_base_state::md2_ntsc(machine_config &config)
 
 void md_base_state::md_pal(machine_config &config)
 {
-	M68000(config, m_maincpu, MASTER_CLOCK_PAL / 7); /* 7.67 MHz */
-	m_maincpu->set_addrmap(AS_PROGRAM, &md_base_state::megadriv_68k_map);
-	m_maincpu->set_irq_acknowledge_callback(FUNC(md_base_state::genesis_int_callback));
-	/* IRQs are handled via the timers */
+	md_core_pal(config);
 
-	Z80(config, m_z80snd, MASTER_CLOCK_PAL / 15); /* 3.58 MHz */
+	m_maincpu->set_addrmap(AS_PROGRAM, &md_base_state::megadriv_68k_map);
+
+	Z80(config, m_z80snd, MASTER_CLOCK_PAL / 15); // 3.58 MHz
 	m_z80snd->set_addrmap(AS_PROGRAM, &md_base_state::megadriv_z80_map);
 	m_z80snd->set_addrmap(AS_IO, &md_base_state::megadriv_z80_io_map);
-	/* IRQ handled via the timers */
+	// IRQ handled via the timers
 
-	megadriv_timers(config);
-
-	/* I/O port controllers */
+	// I/O port controllers
 	megadriv_ioports(config);
 
-	SEGA315_5313(config, m_vdp, MASTER_CLOCK_PAL, m_maincpu);
-	m_vdp->set_is_pal(true);
 	m_vdp->snd_irq().set(FUNC(md_base_state::vdp_sndirqline_callback_genesis_z80));
-	m_vdp->lv6_irq().set(FUNC(md_base_state::vdp_lv6irqline_callback_genesis_68k));
-	m_vdp->lv4_irq().set(FUNC(md_base_state::vdp_lv4irqline_callback_genesis_68k));
-	m_vdp->set_screen("megadriv");
 	m_vdp->add_route(ALL_OUTPUTS, "lspeaker", 0.50);
 	m_vdp->add_route(ALL_OUTPUTS, "rspeaker", 0.50);
 
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
-	m_screen->set_refresh_hz(double(MASTER_CLOCK_PAL) / 10.0 / 313.0 / 342.0); // same as SMS?
-//  m_screen->set_refresh_hz(double(MASTER_CLOCK_PAL) / 8.0 / 313.0 / 423.0); // or 423 Htotal?
-	m_screen->set_vblank_time(ATTOSECONDS_IN_USEC(0)); // Vblank handled manually.
-	m_screen->set_size(64*8, 620);
-	m_screen->set_visarea(0, 32*8-1, 0, 28*8-1);
-	m_screen->set_screen_update(FUNC(md_base_state::screen_update_megadriv)); /* Copies a bitmap */
-	m_screen->screen_vblank().set(FUNC(md_base_state::screen_vblank_megadriv)); /* Used to Sync the timing */
-
-	/* sound hardware */
+	// sound hardware
 	SPEAKER(config, "lspeaker").front_left();
 	SPEAKER(config, "rspeaker").front_right();
 
-	YM2612(config, m_ymsnd, MASTER_CLOCK_PAL / 7); /* 7.67 MHz */
+	YM2612(config, m_ymsnd, MASTER_CLOCK_PAL / 7); // 7.67 MHz
 	m_ymsnd->add_route(0, "lspeaker", 0.50);
 	m_ymsnd->add_route(1, "rspeaker", 0.50);
 }
@@ -913,23 +946,20 @@ void md_base_state::md2_pal(machine_config &config)
 }
 
 
-void md_base_state::megadriv_tas_callback(offs_t offset, uint8_t data)
+void md_core_state::megadriv_tas_callback(offs_t offset, uint8_t data)
 {
 	// writeback not allowed
 }
 
 void md_base_state::megadriv_init_common()
 {
-	/* Look to see if this system has the standard Sound Z80 */
-	if (m_z80snd)
-	{
-		m_genz80.z80_prgram = std::make_unique<uint8_t[]>(0x2000);
-		membank("bank1")->set_base(m_genz80.z80_prgram.get());
-		save_item(NAME(m_genz80.z80_is_reset));
-		save_item(NAME(m_genz80.z80_has_bus));
-		save_item(NAME(m_genz80.z80_bank_addr));
-		save_pointer(NAME(m_genz80.z80_prgram), 0x2000);
-	}
+	// This system has the standard Sound Z80
+	m_genz80.z80_prgram = std::make_unique<uint8_t[]>(0x2000);
+	membank("bank1")->set_base(m_genz80.z80_prgram.get());
+	save_item(NAME(m_genz80.z80_is_reset));
+	save_item(NAME(m_genz80.z80_has_bus));
+	save_item(NAME(m_genz80.z80_bank_addr));
+	save_pointer(NAME(m_genz80.z80_prgram), 0x2000);
 
 	m_maincpu->set_tas_write_callback(*this, FUNC(md_base_state::megadriv_tas_callback));
 }
@@ -938,7 +968,7 @@ void md_base_state::init_megadriv()
 {
 	megadriv_init_common();
 
-	// todo: move this to the device interface?
+	// TODO: move this to the device interface?
 	m_vdp->set_use_cram(1);
 	m_vdp->set_vdp_pal(false);
 	m_vdp->set_framerate(60);
@@ -951,7 +981,7 @@ void md_base_state::init_megadrij()
 {
 	megadriv_init_common();
 
-	// todo: move this to the device interface?
+	// TODO: move this to the device interface?
 	m_vdp->set_use_cram(1);
 	m_vdp->set_vdp_pal(false);
 	m_vdp->set_framerate(60);
@@ -964,7 +994,7 @@ void md_base_state::init_megadrie()
 {
 	megadriv_init_common();
 
-	// todo: move this to the device interface?
+	// TODO: move this to the device interface?
 	m_vdp->set_use_cram(1);
 	m_vdp->set_vdp_pal(true);
 	m_vdp->set_framerate(50);
@@ -973,7 +1003,7 @@ void md_base_state::init_megadrie()
 	m_version_hi_nibble = 0xe0; // Export PAL no-SCD
 }
 
-WRITE_LINE_MEMBER(md_base_state::screen_vblank_megadriv)
+WRITE_LINE_MEMBER(md_core_state::screen_vblank_megadriv)
 {
 	if (m_io_reset.read_safe(0) & 0x01)
 		m_maincpu->pulse_input_line(INPUT_LINE_RESET, attotime::zero);
