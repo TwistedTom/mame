@@ -38,8 +38,6 @@ help with figuring out the encryption on the coin-op parts of the program.
 
 
 #include "emu.h"
-
-#include "megadriv.h"
 #include "megadriv_acbl.h"
 
 #include "cpu/m68000/m68000.h"
@@ -64,7 +62,7 @@ public:
 };
 
 
-static INPUT_PORTS_START( hshavoc )
+INPUT_PORTS_START( hshavoc )
 	PORT_START("IN0")   // 16 bit
 	PORT_DIPNAME( 0x0001, 0x0000, DEF_STR( Unknown ) )
 	PORT_DIPSETTING(      0x0001, DEF_STR( Off ) )
