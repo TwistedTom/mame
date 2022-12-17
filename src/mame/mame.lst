@@ -23358,12 +23358,10 @@ barek3mb                        // MegaDrive-based hack
 bk3ssrmb                        // MegaDrive-based hack
 jparkmb                         // MegaDrive-based hack
 mk3mdb                          // MegaDrive-based hack
-sbubsm                          // (c) 1996 Sun Mixing
 sonic2mb                        // MegaDrive-based hack
 sonic3mb                        // MegaDrive-based hack
 srmdb                           // MegaDrive-based hack
 ssf2mdb                         // MegaDrive-based hack
-topshoot                        // (c) 1995 Sun Mixing
 twinktmb                        // MegaDrive-based hack
 
 @source:sega/megadriv_rad.cpp
@@ -23380,6 +23378,10 @@ rad_orun
 msi_sf2
 dgunl3227
 ra145
+
+@source:sega/megadriv_sunmix.cpp
+sbubsm                          // (c) 1996 Sun Mixing
+topshoot                        // (c) 1995 Sun Mixing
 
 @source:sega/megadriv_sunplus_hybrid.cpp
 reactmd
@@ -24196,6 +24198,9 @@ mindset                         // (c) 1984
 @source:skeleton/mini2440.cpp
 mini2440                        //
 
+@source:homebrew/minib.cpp
+minib                           //
+
 @source:misc/miniboy7.cpp
 bejpoker                        // (c) 1992?, Bonanza Enterprises
 miniboy7                        // (c) 1983, Bonanza Enterprises
@@ -24327,6 +24332,7 @@ mk1forth                        // (c) 2003 Andrew Holme
 
 @source:trainer/mk14.cpp
 mk14                            //
+mk14vdu                         //
 
 @source:ussr/mk85.cpp
 mk85                            //
@@ -39581,6 +39587,10 @@ sm7238                          //
 @source:sony/smc777.cpp
 smc777                          //
 
+@source:misc/smd2144c.cpp
+thecastle                       //
+therock                         //
+
 @source:sega/sms.cpp
 gamegeaj                        // Sega GameGear (Japan)
 gamegear                        // Sega GameGear
@@ -42563,6 +42573,12 @@ vs4jc                           // 2004.09 Virtua Striker 4 (Japan) (Rev C)
 @source:atari/triplhnt.cpp
 triplhnt                        // 008422-008791    1977/04 [6800]
 
+@source:misc/triton.cpp
+triton41                        // 1978 Transam Triton L4.1
+triton51                        // 1979 Transam Triton L5.1
+triton52                        // 1979 Transam Triton L5.2
+triton72                        // 1980 Transam Triton L7.2
+
 @source:misc/triviaquiz.cpp
 triviaqz                        // 1985 Intermatic Manufacturing
 triviaqz2                       // 1985 Intermatic Manufacturing
@@ -44501,6 +44517,7 @@ epo_esdx                        //
 epo_guru                        //
 evio                            //
 gcslottv                        //
+gungunad                        //
 has_wamg                        //
 jarajal                         //
 jpopira                         //
@@ -45140,4 +45157,4 @@ mtu130
 vl1
 
 @source:ddr/sprachmg.cpp
-sprachmg						// 1985 Institut für Kosmosforschung
+sprachmg                        // 1985 Institut für Kosmosforschung
