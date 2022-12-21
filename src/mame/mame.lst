@@ -10986,6 +10986,7 @@ dynwarj                         // 4/1989 (c) 1989 (Japan)
 dynwarjr                        // 4/1989 (c) 1989 (Japan)
 ffight                          // 12/1989 (c) 1989 (World)
 ffighta                         // 12/1989 (c) 1989 (World)
+ffightae
 ffightj                         // 12/1989 (c) 1989 (Japan)
 ffightj1                        // 12/01/1990 (c) 1989 (Japan)
 ffightj2                        // 05/03/1990 (c) 1989 (Japan)
@@ -16413,10 +16414,11 @@ gunpey                          // (c) 2000 Banpresto
 gunsmoke                        // 11/1985 (c) 1985 (World)
 gunsmokeb                       //
 gunsmokej                       // 11/1985 (c) 1985 (Japan)
-gunsmokeu                       // 11/1985 (c) 1985 + Romstar (US)
-gunsmokeua                      // 11/1985 (c) 1985 (US)
-gunsmokeub                      // 11/1985 (c) 1985 (US)
-gunsmokeg                       //
+gunsmokeu                       // 04/1986 (c) 1986 + Romstar (US)
+gunsmokeua                      // 01/1986 (c) 1985 + Romstar (US)
+gunsmokeub                      // 11/1985 (c) 1985 + Romstar (US)
+gunsmokeuc                      // 11/1985 (c) 1985 + Romstar (US)
+gunsmokeg                       // 11/1985 (c) 1985 (Germany)
 
 @source:konami/gyruss.cpp
 gyruss                          // GX347 (c) 1983
@@ -43086,8 +43088,8 @@ pk6128c                         //
 vec1200                         //
 vector06                        //
 
-@source:skeleton/vector4.cpp
-vector4                         //
+@source:skeleton/vector3.cpp
+vector3                         //
 
 @source:miltonbradley/vectrex.cpp
 raaspec                         // (c) Roy Abel & Associates 1984
@@ -44351,7 +44353,7 @@ ww_l4                           //
 ww_l5                           //
 ww_lh5                          //
 ww_lh6                          //
-ww_p1                           //
+ww_p6                           //
 ww_p8                           //
 
 @source:pinball/wpc_s.cpp
