@@ -39604,6 +39604,7 @@ snespal                         // Nintendo Super Nintendo PAL
 
 @source:nintendo/snes_fcart.cpp
 snes_fcart                      // bootleg
+snes_fcart_pal                  // bootleg
 
 @source:nintendo/snesb.cpp
 denseib                         // bootleg
