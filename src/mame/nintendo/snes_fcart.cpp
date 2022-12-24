@@ -240,11 +240,11 @@ inline uint8_t snes_fcart_state::snes_fcart_rom_access_lo(uint32_t offset)
 	addr_m = (offset & 0x30000);  // snes a[17:16]  a[15] not used
 	switch (m_size_reg & 0xf)
 	{
-		case 3:  // 4mbit 512KB 80000
+		case 3:  // 4mbit 512KB 80000  loads...
 			addr_m += offset & 0xc0000;  // snes {4'd0, a[19:18]}
 			break;
 			
-		case 4:  // 8mbit 1MB 100000
+		case 4:  // 8mbit 1MB 100000  loads...
 			addr_m += offset & 0x1c0000;  // snes {3'd0, a[20:18]}
 			break;
 			
@@ -258,11 +258,21 @@ inline uint8_t snes_fcart_state::snes_fcart_rom_access_lo(uint32_t offset)
 			addr_m += (offset & 0x200000) ? 0 : (offset & 0x100000);  // snes a[20]
 			break;
 			
-		case 7:  // 16mbit 2MB 200000
+		case 7:  // 16mbit 2MB 200000  loads...
 			addr_m += offset & 0x3c0000;  // snes {2'd0, a[21:18]}
 			break;
 			
-		// case 10:  // 32mbit 4MB 400000
+		case 8:  // 20mbit 2.5MB 280000  smas+w
+			addr_m += offset & 0x4c0000;                               // snes a[22], a[19:18]
+			addr_m += (offset & 0x400000) ? 0 : (offset & 0x300000);  // snes a[21:20]
+			break;
+			
+		case 9:  // 24mbit 3MB 300000  nbajamte, metroid
+			addr_m += offset & 0x5c0000;                               // snes a[22], a[20:18]
+			addr_m += (offset & 0x400000) ? 0 : (offset & 0x200000);  // snes a[21]
+			break;
+			
+		// case 10:  // 32mbit 4MB 400000  ?
 			// addr_m += offset & 0x7c0000;  // snes {1'd0, a[22:18]}
 			// break;
 			
@@ -289,17 +299,25 @@ inline uint8_t snes_fcart_state::snes_fcart_rom_access_hi(uint32_t offset)
 	addr_l = (offset & 0x18000);  // snes a[16:15]
 	switch (m_size_reg & 0xf)
 	{
-		// case 3:  // 4mbit 512KB 80000
-			// addr_l += offset & 0x60000;  // snes {4'd0, a[18:17]}
+		case 3:  // 4mbit 512KB 80000  sbomberman, zoop
+			addr_l += offset & 0x60000;  // snes {4'd0, a[18:17]}
+			break;
+			
+		case 4:  // 8mbit 1MB 100000  claymates, sbomberman2, nhl95
+			addr_l += offset & 0xe0000;  // snes {3'd0, a[19:17]}
+			break;
+			
+		// case 5:  // 10mbit 1.25MB 140000  ?
 			// break;
 			
-		// case 4:  // 8mbit 1MB 100000
-			// addr_l += offset & 0xe0000;  // snes {3'd0, a[19:17]}
-			// break;
+		case 6:  // 12mbit 1.5MB 180000  actraiser2, chaoseng, nhl96
+			addr_l += offset & 0x160000;                              // snes a[20], a[18:17]
+			addr_l += (offset & 0x100000) ? 0 : (offset & 0x80000);  // snes a[19]
+			break;
 			
-		// case 7:  // 16mbit 2MB 200000
-			// addr_l += offset & 0x1e0000;  // snes {2'd0, a[20:17]}
-			// break;
+		case 7:  // 16mbit 2MB 200000  megaman7, secomana
+			addr_l += offset & 0x1e0000;  // snes {2'd0, a[20:17]}
+			break;
 			
 		case 8:  // 20mbit 2.5MB 280000  sf2t
 			addr_l += offset & 0x260000;                               // snes a[21], a[18:17]
@@ -311,7 +329,7 @@ inline uint8_t snes_fcart_state::snes_fcart_rom_access_hi(uint32_t offset)
 			addr_l += (offset & 0x200000) ? 0 : (offset & 0x100000);  // snes a[20]
 			break;
 			
-		case 10:  // 32mbit 4MB 400000
+		case 10:  // 32mbit 4MB 400000  dkc/2/3  all 32mbit?
 			addr_l += offset & 0x3e0000;  // snes {1'd0, a[21:17]}
 			break;
 			
@@ -359,15 +377,15 @@ inline uint8_t snes_fcart_state::snes_fcart_ram_r(uint32_t offset)
 		case 2:  // 64kbit 8KB 2000
 			addr_l += offset & 0x1800;  // snes {4'd0, a[12:11]}
 			break;
-		// case 3:  // 256kbit 32KB 8000
-			// if (m_mode_reg & 1)  // hi
-			// {
-				// addr_l += offset & 0x1800;  // snes {2'd0, a[17:16], a[12:11]}
-				// addr_l += (offset & 0x3000) >> 3;
-			// }
-			// else  // lo
-				// addr_l += offset & 0x7800;  // snes {2'd0, a[14:11]}
-			// break;
+		case 3:  // 256kbit 32KB 8000
+			if (m_mode_reg & 1)  // hi  simcity2k
+			{
+				addr_l += offset & 0x1800;  // snes {2'd0, a[17:16], a[12:11]}
+				addr_l += (offset & 0x3000) >> 3;
+			}
+			else  // lo  simcity
+				addr_l += offset & 0x7800;  // snes {2'd0, a[14:11]}
+			break;
 	}
 	
 	value = m_ram[addr_h | addr_l];
@@ -390,15 +408,15 @@ inline void snes_fcart_state::snes_fcart_ram_w(uint32_t offset, uint8_t data)
 		case 2:  // 64kbit 8KB 2000
 			addr_l += offset & 0x1800;  // snes {4'd0, a[12:11]}
 			break;
-		// case 3:  // 256kbit 32KB 8000
-			// if (m_mode_reg & 1)  // hi
-			// {
-				// addr_l += offset & 0x1800;  // snes {2'd0, a[17:16], a[12:11]}
-				// addr_l += (offset & 0x3000) >> 3;
-			// }
-			// else  // lo
-				// addr_l += offset & 0x7800;  // snes {2'd0, a[14:11]}
-			// break;
+		case 3:  // 256kbit 32KB 8000
+			if (m_mode_reg & 1)  // hi  simcity2k
+			{
+				addr_l += offset & 0x1800;  // snes {2'd0, a[17:16], a[12:11]}
+				addr_l += (offset & 0x3000) >> 3;
+			}
+			else  // lo  simcity
+				addr_l += offset & 0x7800;  // snes {2'd0, a[14:11]}
+			break;
 	}
 	
 	m_ram[addr_h | addr_l] = data;
@@ -425,9 +443,9 @@ uint8_t snes_fcart_state::snes_fcart_r_bank1(offs_t offset)
 			}
 			else  // < 8000
 			{
-				// if ((m_size_reg & 0xf0) && (offset >= 0x200000) && (address >= 0x6000) && (m_mode_reg & 1))  // hi ram 20-3f,a0-bf:6000-7fff
-					// value = snes_fcart_ram_r(offset);
-				// else
+				if ((m_size_reg & 0xf0) && (offset >= 0x200000) && (address >= 0x6000) && (m_mode_reg & 1))  // hi ram 20-3f,a0-bf:6000-7fff
+					value = snes_fcart_ram_r(offset);
+				else
 					value = snes_open_bus_r();
 			}
 		}
@@ -478,9 +496,9 @@ void snes_fcart_state::snes_fcart_w_bank1(address_space &space, offs_t offset, u
 			}
 			else  // < 8000
 			{
-				// if ((m_size_reg & 0xf0) && (offset >= 0x200000) && (address >= 0x6000) && (m_mode_reg & 1))  // hi ram 20-3f,a0-bf:6000-7fff
-					// snes_fcart_ram_w(offset, data);
-				// else
+				if ((m_size_reg & 0xf0) && (offset >= 0x200000) && (address >= 0x6000) && (m_mode_reg & 1))  // hi ram 20-3f:6000-7fff
+					snes_fcart_ram_w(offset, data);
+				else
 					logerror("unknown wr 00-3f:5000-7fff: %06x %02x\n", offset, data);
 			}
 		}
@@ -491,7 +509,7 @@ void snes_fcart_state::snes_fcart_w_bank1(address_space &space, offs_t offset, u
 	}
 	else  // < 0x7e0000 rom
 	{
-		if ((m_size_reg & 0xf0) && (offset >= 0x700000) && (address < 0x8000) && !(m_mode_reg & 1))  // lo ram 70-7d,f0-ff:0000-7fff
+		if ((m_size_reg & 0xf0) && (offset >= 0x700000) && (address < 0x8000) && !(m_mode_reg & 1))  // lo ram 70-7d:0000-7fff
 			snes_fcart_ram_w(offset, data);
 		else
 			logerror("unknown wr 40-7d:0000-ffff: %06x %02x\n", offset, data);
@@ -517,9 +535,9 @@ void snes_fcart_state::snes_fcart_w_bank2(address_space &space, offs_t offset, u
 			}
 			else  // < 8000
 			{
-				// if ((m_size_reg & 0xf0) && (offset >= 0x200000) && (address >= 0x6000) && (m_mode_reg & 1))  // hi ram 20-3f,a0-bf:6000-7fff
-					// snes_fcart_ram_w(offset, data);
-				// else
+				if ((m_size_reg & 0xf0) && (offset >= 0x200000) && (address >= 0x6000) && (m_mode_reg & 1))  // hi ram a0-bf:6000-7fff
+					snes_fcart_ram_w(offset, data);
+				else
 					logerror("unknown wr 80-bf:5000-7fff: %06x %02x\n", offset, data);
 			}
 		}
@@ -530,7 +548,7 @@ void snes_fcart_state::snes_fcart_w_bank2(address_space &space, offs_t offset, u
 	}
 	else  // < 0x7e0000 rom
 	{
-		if ((m_size_reg & 0xf0) && (offset >= 0x700000) && (address < 0x8000) && !(m_mode_reg & 1))  // lo ram 70-7d,f0-ff:0000-7fff
+		if ((m_size_reg & 0xf0) && (offset >= 0x700000) && (address < 0x8000) && !(m_mode_reg & 1))  // lo ram f0-ff:0000-7fff
 			snes_fcart_ram_w(offset, data);
 		else
 			logerror("unknown wr c0-ff:0000-ffff: %06x %02x\n", offset, data);
