@@ -381,7 +381,7 @@ inline uint8_t snes_fcart_state::snes_fcart_ram_r(uint32_t offset)
 			if (m_mode_reg & 1)  // hi  simcity2k
 			{
 				addr_l += offset & 0x1800;  // snes {2'd0, a[17:16], a[12:11]}
-				addr_l += (offset & 0x3000) >> 3;
+				addr_l += (offset & 0x30000) >> 3;
 			}
 			else  // lo  simcity
 				addr_l += offset & 0x7800;  // snes {2'd0, a[14:11]}
@@ -412,7 +412,7 @@ inline void snes_fcart_state::snes_fcart_ram_w(uint32_t offset, uint8_t data)
 			if (m_mode_reg & 1)  // hi  simcity2k
 			{
 				addr_l += offset & 0x1800;  // snes {2'd0, a[17:16], a[12:11]}
-				addr_l += (offset & 0x3000) >> 3;
+				addr_l += (offset & 0x30000) >> 3;
 			}
 			else  // lo  simcity
 				addr_l += offset & 0x7800;  // snes {2'd0, a[14:11]}
