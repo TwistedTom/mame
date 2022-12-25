@@ -39,7 +39,7 @@ private:
 	required_device<snes_control_port_device> m_ctrl1;
 	required_device<snes_control_port_device> m_ctrl2;
 	required_device<nvram_device> m_nvram;
-	
+
 	void snes_fcart_map(address_map &map);
 	void spc_map(address_map &map);
 
@@ -48,7 +48,7 @@ private:
 	inline uint8_t snes_fcart_rom_access_hi(uint32_t offset);
 	inline uint8_t snes_fcart_ram_r(uint32_t offset);
 	inline void snes_fcart_ram_w(uint32_t offset, uint8_t data);
-	
+
 	uint8_t snes_fcart_r_bank1(offs_t offset);
 	uint8_t snes_fcart_r_bank2(offs_t offset);
 	void snes_fcart_w_bank1(address_space &space, offs_t offset, uint8_t data);
@@ -108,7 +108,7 @@ void snes_fcart_state::snes_fcart(machine_config &config)
 	m_s_dsp->set_addrmap(0, &snes_fcart_state::spc_map);
 	m_s_dsp->add_route(0, "lspeaker", 1.00);
 	m_s_dsp->add_route(1, "rspeaker", 1.00);
-	
+
 	NVRAM(config, m_nvram, nvram_device::DEFAULT_ALL_1);
 }
 
@@ -125,7 +125,7 @@ void snes_fcart_state::snes_fcart_pal(machine_config &config)
 void snes_fcart_state::init_snes_fcart()
 {
 	m_rom = memregion("rom")->base();
-	
+
 	// menu -> reset -> resets in emu mode, nmi is triggered every other time !?
 	// emu mode nmi vector is fffa-b, this is ffff in rom
 	m_rom[0x7fff] = 0x40;  // rti
@@ -199,21 +199,27 @@ void snes_fcart_state::wrio_write(uint8_t data)
 void snes_fcart_state::machine_start()
 {
 	snes_state::machine_start();
-	
+
 	m_nvram->set_base(m_ram.data(), m_ram.size());
+
+	save_item(NAME(m_ram));
+	save_item(NAME(m_rom_reg));
+	save_item(NAME(m_ram_reg));
+	save_item(NAME(m_size_reg));
+	save_item(NAME(m_mode_reg));
 }
 
 void snes_fcart_state::machine_reset()
 {
 	m_maincpu->set_input_line(INPUT_LINE_RESET, ASSERT_LINE);
-	
+
 	snes_state::machine_reset();
-	
+
 	m_rom_reg = 0;
 	m_ram_reg = 0;
 	m_size_reg = 0;
 	m_mode_reg = 0;
-	
+
 	m_maincpu->set_input_line(INPUT_LINE_RESET, CLEAR_LINE);
 }
 
@@ -236,56 +242,56 @@ inline uint8_t snes_fcart_state::snes_fcart_rom_access_lo(uint32_t offset)
 	uint32_t addr_h, addr_m, addr_l;
 
 	addr_h = m_rom_reg << 17;     // rom a[24:17]
-	
+
 	addr_m = (offset & 0x30000);  // snes a[17:16]  a[15] not used
 	switch (m_size_reg & 0xf)
 	{
 		case 3:  // 4mbit 512KB 80000  loads...
 			addr_m += offset & 0xc0000;  // snes {4'd0, a[19:18]}
 			break;
-			
+
 		case 4:  // 8mbit 1MB 100000  loads...
 			addr_m += offset & 0x1c0000;  // snes {3'd0, a[20:18]}
 			break;
-			
+
 		case 5:  // 10mbit 1.25MB 140000  ffight2
 			addr_m += offset & 0x240000;                               // snes a[21], a[18]
 			addr_m += (offset & 0x200000) ? 0 : (offset & 0x180000);  // snes a[20:19]
 			break;
-			
+
 		case 6:  // 12mbit 1.5MB 180000  fatfury
 			addr_m += offset & 0x2c0000;                               // snes a[21], a[19:18]
 			addr_m += (offset & 0x200000) ? 0 : (offset & 0x100000);  // snes a[20]
 			break;
-			
+
 		case 7:  // 16mbit 2MB 200000  loads...
 			addr_m += offset & 0x3c0000;  // snes {2'd0, a[21:18]}
 			break;
-			
+
 		case 8:  // 20mbit 2.5MB 280000  smas+w
 			addr_m += offset & 0x4c0000;                               // snes a[22], a[19:18]
 			addr_m += (offset & 0x400000) ? 0 : (offset & 0x300000);  // snes a[21:20]
 			break;
-			
+
 		case 9:  // 24mbit 3MB 300000  nbajamte, metroid
 			addr_m += offset & 0x5c0000;                               // snes a[22], a[20:18]
 			addr_m += (offset & 0x400000) ? 0 : (offset & 0x200000);  // snes a[21]
 			break;
-			
+
 		// case 10:  // 32mbit 4MB 400000  ?
 			// addr_m += offset & 0x7c0000;  // snes {1'd0, a[22:18]}
 			// break;
-			
+
 		default:
 			addr_m = 0;  // menu
 			break;
 	}
 	addr_m >>= 1;  // snes -> rom
-	
+
 	addr_l = (offset & 0x7fff);   // snes a[14:0] == rom a[14:0]
 
 	value = m_rom[addr_h | (addr_m + addr_l)];
-	
+
 	return value;
 }
 
@@ -295,44 +301,44 @@ inline uint8_t snes_fcart_state::snes_fcart_rom_access_hi(uint32_t offset)
 	uint32_t addr_h, addr_l;
 
 	addr_h = m_rom_reg << 17;     // rom a[24:17]
-	
+
 	addr_l = (offset & 0x18000);  // snes a[16:15]
 	switch (m_size_reg & 0xf)
 	{
 		case 3:  // 4mbit 512KB 80000  sbomberman, zoop
 			addr_l += offset & 0x60000;  // snes {4'd0, a[18:17]}
 			break;
-			
+
 		case 4:  // 8mbit 1MB 100000  claymates, sbomberman2, nhl95
 			addr_l += offset & 0xe0000;  // snes {3'd0, a[19:17]}
 			break;
-			
+
 		// case 5:  // 10mbit 1.25MB 140000  ?
 			// break;
-			
+
 		case 6:  // 12mbit 1.5MB 180000  actraiser2, chaoseng, nhl96
 			addr_l += offset & 0x160000;                              // snes a[20], a[18:17]
 			addr_l += (offset & 0x100000) ? 0 : (offset & 0x80000);  // snes a[19]
 			break;
-			
+
 		case 7:  // 16mbit 2MB 200000  megaman7, secomana
 			addr_l += offset & 0x1e0000;  // snes {2'd0, a[20:17]}
 			break;
-			
+
 		case 8:  // 20mbit 2.5MB 280000  sf2t
 			addr_l += offset & 0x260000;                               // snes a[21], a[18:17]
 			addr_l += (offset & 0x200000) ? 0 : (offset & 0x180000);  // snes a[20:19]
 			break;
-			
+
 		case 9:  // 24mbit 3MB 300000  ffight3
 			addr_l += offset & 0x2e0000;                               // snes a[21], a[19:17]
 			addr_l += (offset & 0x200000) ? 0 : (offset & 0x100000);  // snes a[20]
 			break;
-			
+
 		case 10:  // 32mbit 4MB 400000  dkc/2/3  all 32mbit?
 			addr_l += offset & 0x3e0000;  // snes {1'd0, a[21:17]}
 			break;
-			
+
 		default:
 			addr_l = 0;
 			break;
@@ -340,14 +346,14 @@ inline uint8_t snes_fcart_state::snes_fcart_rom_access_hi(uint32_t offset)
 	addr_l += (offset & 0x7fff);   // snes a[14:0] == rom a[14:0]
 
 	value = m_rom[addr_h | addr_l];
-	
+
 	return value;
 }
 
 inline uint8_t snes_fcart_state::snes_fcart_rom_access(uint32_t offset)
 {
 	uint8_t value = 0xff;
-	
+
 	if (m_mode_reg & 1)  // hi
 	{
 		value = snes_fcart_rom_access_hi(offset);
@@ -356,7 +362,7 @@ inline uint8_t snes_fcart_state::snes_fcart_rom_access(uint32_t offset)
 	{
 		value = snes_fcart_rom_access_lo(offset);
 	}
-	
+
 	return value;
 }
 
@@ -368,7 +374,7 @@ inline uint8_t snes_fcart_state::snes_fcart_ram_r(uint32_t offset)
 
 	addr_h = m_ram_reg << 11;  // ram a[16:11]
 	addr_l = offset & 0x7ff;   // snes a[10:0]
-	
+
 	switch ((m_size_reg & 0xf0) >> 4)
 	{
 		case 1:  // 16kbit 2KB 800
@@ -387,9 +393,9 @@ inline uint8_t snes_fcart_state::snes_fcart_ram_r(uint32_t offset)
 				addr_l += offset & 0x7800;  // snes {2'd0, a[14:11]}
 			break;
 	}
-	
+
 	value = m_ram[addr_h | addr_l];
-	
+
 	return value;
 }
 
@@ -399,7 +405,7 @@ inline void snes_fcart_state::snes_fcart_ram_w(uint32_t offset, uint8_t data)
 
 	addr_h = m_ram_reg << 11;  // ram a[16:11]
 	addr_l = offset & 0x7ff;   // snes a[10:0]
-	
+
 	switch ((m_size_reg & 0xf0) >> 4)
 	{
 		case 1:  // 16kbit 2KB 800
@@ -418,7 +424,7 @@ inline void snes_fcart_state::snes_fcart_ram_w(uint32_t offset, uint8_t data)
 				addr_l += offset & 0x7800;  // snes {2'd0, a[14:11]}
 			break;
 	}
-	
+
 	m_ram[addr_h | addr_l] = data;
 }
 
@@ -588,5 +594,5 @@ ROM_END
 
 //   YEAR,   NAME,         PARENT, COMPAT, MACHINE,        INPUT,       CLASS,            INIT,            COMPANY,    FULLNAME,            FLAGS
 
-CONS( 2022, snes_fcart,     0,          0, snes_fcart,     snes_fcart, snes_fcart_state, init_snes_fcart, "bootleg", "SNES Flash Cart (ntsc)", 0 )
-CONS( 2022, snes_fcart_pal, snes_fcart, 0, snes_fcart_pal, snes_fcart, snes_fcart_state, init_snes_fcart, "bootleg", "SNES Flash Cart (pal)", 0 )
+CONS( 2022, snes_fcart,     0,          0, snes_fcart,     snes_fcart, snes_fcart_state, init_snes_fcart, "bootleg", "SNES Flash Cart (ntsc)", MACHINE_SUPPORTS_SAVE )
+CONS( 2022, snes_fcart_pal, snes_fcart, 0, snes_fcart_pal, snes_fcart, snes_fcart_state, init_snes_fcart, "bootleg", "SNES Flash Cart (pal)", MACHINE_SUPPORTS_SAVE )
