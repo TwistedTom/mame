@@ -113,6 +113,7 @@ public:
 		, m_ctrl1(*this, "ctrl1")
 		, m_ctrl2(*this, "ctrl2")
 		, m_fdc(*this, "fdc")
+		, m_floppy(*this, "fdc:0")
 		, m_dram(0x400000)
 		, m_sram(0x40000)
 	{ }
@@ -134,6 +135,7 @@ private:
 	required_device<snes_control_port_device> m_ctrl1;
 	required_device<snes_control_port_device> m_ctrl2;
 	required_device<mcs3201_device> m_fdc;
+	required_device<floppy_connector> m_floppy;
 
 	void snes_swc_map(address_map &map);
 	void spc_map(address_map &map);
@@ -146,7 +148,11 @@ private:
 	void snes_swc_io_w(uint16_t address, uint8_t data);
 	void snes_swc_misc_w(uint16_t address, uint8_t data);
 	
+	static void floppy_formats(format_registration &fr);
 	uint8_t fdc_input_r();
+	void fdc_drive_select_cb_w(uint8_t data);
+	//DECLARE_WRITE_LINE_MEMBER( fdc_index_cb_w );
+	void fdc_index_cb_w(int state);
 
 	uint8_t *m_bios;
 	uint8_t *m_cart;
@@ -160,15 +166,15 @@ private:
 };
 
 
-static void swc_floppy_formats(format_registration &fr)
-{
-	fr.add_pc_formats();
-}
-
-static void fdd(device_slot_interface &device)
+static void swc_floppies(device_slot_interface &device)
 {
 	device.option_add("35hd", FLOPPY_35_HD);
 	device.option_add("35dd", FLOPPY_35_DD);
+}
+
+void snes_swc_state::floppy_formats(format_registration &fr)
+{
+	fr.add_pc_formats();
 }
 
 uint8_t snes_swc_state::fdc_input_r()
@@ -179,13 +185,28 @@ uint8_t snes_swc_state::fdc_input_r()
 	if (m_fdc->get_irq())
 		data |= 0x80;		// polarity?
 	
-	//if ( index? )
-		//data |= 0x40;
+	int idx = m_floppy->get_device()->idx_r();
+	//logerror("fdd idx: %d\n", idx);
+	if (idx == 0)
+		data |= 0x40;
 	
 	if (busy)
 		data |= 0x20;		// parallel port transfer started?
 	
 	return data;
+}
+
+void snes_swc_state::fdc_drive_select_cb_w(uint8_t data)
+{
+	logerror("fdc drive select callback wr: %d\n", data);
+	
+	m_fdc->set_floppy(m_floppy->get_device());
+}
+
+//WRITE_LINE_MEMBER( snes_swc_state::fdc_index_cb_w )
+void snes_swc_state::fdc_index_cb_w(int state)
+{
+	logerror("fdc index callback wr: %d\n", state);
 }
 
 void snes_swc_state::snes_swc(machine_config &config)
@@ -231,10 +252,12 @@ void snes_swc_state::snes_swc(machine_config &config)
 	m_s_dsp->add_route(0, "lspeaker", 1.00);
 	m_s_dsp->add_route(1, "rspeaker", 1.00);
 	
-	/* swc floppy drive */
+	/* swc floppy drive (drive #1) */
 	MCS3201(config, m_fdc, 24_MHz_XTAL);
 	m_fdc->input_handler().set(FUNC(snes_swc_state::fdc_input_r));
-	FLOPPY_CONNECTOR(config, "fdc:0", fdd, "35hd", swc_floppy_formats);
+	m_fdc->us_wr_callback().set(FUNC(snes_swc_state::fdc_drive_select_cb_w));
+	m_fdc->idx_wr_callback().set(FUNC(snes_swc_state::fdc_index_cb_w));
+	FLOPPY_CONNECTOR(config, "fdc:0", swc_floppies, "35hd", snes_swc_state::floppy_formats).enable_sound(true);
 }
 
 void snes_swc_state::snes_swc_pal(machine_config &config)
