@@ -95,7 +95,6 @@
 */
 
 // make SOURCES=src/mame/nintendo/snes.cpp,src/mame/nintendo/snes_swc.cpp REGENIE=0 -j5
-// edcc e0ef
 
 #include "emu.h"
 #include "snes.h"
@@ -153,9 +152,6 @@ private:
 
 	static void swc_floppy_formats(format_registration &fr);
 	uint8_t fdc_input_r();
-	//void fdc_drive_select_cb_w(uint8_t data);
-	//DECLARE_WRITE_LINE_MEMBER( fdc_index_cb_w );
-	//void fdc_index_cb_w(int state);
 
 	uint8_t *m_bios;
 	uint8_t *m_cart;
@@ -174,12 +170,10 @@ private:
 static void swc_fdd_options(device_slot_interface &device)
 {
 	device.option_add("35hd", FLOPPY_35_HD);
-	//device.option_add("35dd", FLOPPY_35_DD);
 }
 
 void snes_swc_state::swc_floppy_formats(format_registration &fr)
 {
-	//fr.add_pc_formats();
 	fr.add(FLOPPY_SWC_FORMAT);
 }
 
@@ -200,21 +194,6 @@ uint8_t snes_swc_state::fdc_input_r()
 
 	return data;
 }
-
-/* void snes_swc_state::fdc_drive_select_cb_w(uint8_t data)
-{
-	if (SWC_DEBUG)
-		logerror("fdc drive select callback wr: %d\n", data);
-
-	//m_fdc->set_floppy(m_floppy->get_device());
-}
-
-//WRITE_LINE_MEMBER( snes_swc_state::fdc_index_cb_w )
-void snes_swc_state::fdc_index_cb_w(int state)
-{
-	if (SWC_DEBUG)
-		logerror("fdc index callback wr: %d\n", state);
-} */
 
 void snes_swc_state::snes_swc(machine_config &config)
 {
@@ -262,8 +241,6 @@ void snes_swc_state::snes_swc(machine_config &config)
 	/* swc floppy drive (drive #1) */
 	MCS3201(config, m_fdc, 24_MHz_XTAL);
 	m_fdc->input_handler().set(FUNC(snes_swc_state::fdc_input_r));
-	//m_fdc->us_wr_callback().set(FUNC(snes_swc_state::fdc_drive_select_cb_w));
-	//m_fdc->idx_wr_callback().set(FUNC(snes_swc_state::fdc_index_cb_w));
 	FLOPPY_CONNECTOR(config, "fdd", swc_fdd_options, "35hd", snes_swc_state::swc_floppy_formats, true).enable_sound(true);
 }
 

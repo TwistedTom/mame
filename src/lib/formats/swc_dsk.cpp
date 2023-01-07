@@ -41,7 +41,7 @@ const swc_format::format swc_format::formats[] = {
 	},
 	{   /*  800K 3 1/2 inch double density - gaps unverified */
 		floppy_image::FF_35,  floppy_image::DSDD, floppy_image::MFM,
-		2000, 10, 80, 2, 512, {}, 1, {}, 80, 50, 22, 80
+		2000, 10, 80, 2, 512, {}, 1, {}, 80, 50, 22, 36  // 46
 	},
 	{   /* 1440K 3 1/2 inch high density */
 		floppy_image::FF_35,  floppy_image::DSHD, floppy_image::MFM,
@@ -49,7 +49,7 @@ const swc_format::format swc_format::formats[] = {
 	},
 	{   /* 1600K 3 1/2 inch high density - gaps unverified */
 		floppy_image::FF_35,  floppy_image::DSHD, floppy_image::MFM,
-		1000, 20, 80, 2, 512, {}, 1, {}, 80, 50, 22, 108
+		1000, 20, 80, 2, 512, {}, 1, {}, 80, 50, 22, 42
 	},
 	{}
 };
