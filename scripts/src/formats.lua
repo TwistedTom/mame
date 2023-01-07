@@ -1838,6 +1838,18 @@ end
 
 --------------------------------------------------
 --
+--@src/lib/formats/swc_dsk.h,FORMATS["SWC_DSK"] = true
+--------------------------------------------------
+
+if opt_tool(FORMATS, "SWC_DSK") then
+	files {
+		MAME_DIR.. "src/lib/formats/swc_dsk.cpp",
+		MAME_DIR.. "src/lib/formats/swc_dsk.h",
+	}
+end
+
+--------------------------------------------------
+--
 --@src/lib/formats/swd_dsk.h,FORMATS["SWD_DSK"] = true
 --------------------------------------------------
 

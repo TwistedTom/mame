@@ -608,6 +608,10 @@
 #include "svi_dsk.h"
 #endif
 
+#ifdef HAS_FORMATS_SWC_DSK
+#include "swc_dsk.h"
+#endif
+
 #ifdef HAS_FORMATS_SWD_DSK
 #include "swd_dsk.h"
 #endif
@@ -1046,6 +1050,9 @@ void mame_formats_full_list(mame_formats_enumerator &en)
 #endif
 #ifdef HAS_FORMATS_OPD_DSK
 	en.add(FLOPPY_OPD_FORMAT); // opd_dsk.h
+#endif
+#ifdef HAS_FORMATS_SWC_DSK
+	en.add(FLOPPY_SWC_FORMAT); // swc_dsk.h
 #endif
 #ifdef HAS_FORMATS_SWD_DSK
 	en.add(FLOPPY_SWD_FORMAT); // swd_dsk.h
