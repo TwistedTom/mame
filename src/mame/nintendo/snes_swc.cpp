@@ -117,10 +117,8 @@ public:
 		, m_ctrl1(*this, "ctrl1")
 		, m_ctrl2(*this, "ctrl2")
 		, m_fdc(*this, "fdc")
-		, m_floppy(*this, "fdd")
-		, m_cart(*this, "cartslot")
-		, m_dram(0x400000)
-		, m_sram(0x8000)
+		, m_fdd(*this, "fdd")
+		, m_cartslot(*this, "cartslot")
 	{ }
 
 	void snes_swc(machine_config &config);
@@ -140,8 +138,8 @@ private:
 	required_device<snes_control_port_device> m_ctrl1;
 	required_device<snes_control_port_device> m_ctrl2;
 	required_device<mcs3201_device> m_fdc;
-	required_device<floppy_connector> m_floppy;
-	required_device<generic_slot_device> m_cart;
+	required_device<floppy_connector> m_fdd;
+	required_device<generic_slot_device> m_cartslot;
 
 	void snes_swc_map(address_map &map);
 	void spc_map(address_map &map);
@@ -165,25 +163,31 @@ private:
 
 	static void swc_floppy_formats(format_registration &fr);
 	uint8_t fdc_input_r();
-	
-	image_init_result load_cart(device_image_interface &image, generic_slot_device *slot);
-	DECLARE_DEVICE_IMAGE_LOAD_MEMBER(cart_load);
+
+	//DECLARE_DEVICE_IMAGE_LOAD_MEMBER(cart_load);
+	image_init_result cart_load(device_image_interface &image);
+	void snes_swc_find_cart_type();
 
 	uint8_t *m_bios;
-	std::vector<uint8_t> m_dram;
-	std::vector<uint8_t> m_sram;
-	int rom_map = 0;
+	uint8_t m_dram[0x400000];
+	uint8_t m_sram[0x8000];
+	int dram_map = 0;
 	int sram_map = 0;
 	int page_select = 0;
 	int mode_select = 0;
 	int dram_type = 0;
 	int sram_or_cart_map = 0;
 	int busy = 0;
+
+	int cart_type = 1;
+	uint32_t cart_size = 0;
+	uint8_t *m_cart;
 };
 
-DEVICE_IMAGE_LOAD_MEMBER(snes_swc_state::cart_load)
+//DEVICE_IMAGE_LOAD_MEMBER(snes_swc_state::cart_load)
+image_init_result snes_swc_state::cart_load(device_image_interface &image)
 {
-	uint32_t size = m_cart->common_get_size("rom");
+	uint32_t size = m_cartslot->common_get_size("rom");
 
 	if (size > 0x400000)
 	{
@@ -191,10 +195,66 @@ DEVICE_IMAGE_LOAD_MEMBER(snes_swc_state::cart_load)
 		return image_init_result::FAIL;
 	}
 
-	m_cart->rom_alloc(size, GENERIC_ROM8_WIDTH, ENDIANNESS_LITTLE);
-	m_cart->common_load_rom(m_cart->get_rom_base(), size, "rom");
+	m_cartslot->rom_alloc(size, GENERIC_ROM8_WIDTH, ENDIANNESS_LITTLE);
+	m_cartslot->common_load_rom(m_cartslot->get_rom_base(), size, "rom");
+
+	cart_size = m_cartslot->get_rom_size();
+	m_cart = m_cartslot->get_rom_base();
+
+	snes_swc_find_cart_type();
 
 	return image_init_result::PASS;
+}
+
+void snes_swc_state::snes_swc_find_cart_type()
+{
+	int fail = 0;
+
+	for (int i = 0x7fc0; i < (0x7fc0 + 21); i++ )
+	{
+		uint8_t ch = m_cart[i];
+		if (!(ch >= ' ' && ch <= '~'))
+		{
+			fail = 1;
+			break;
+		}
+	}
+
+	if ((m_cart[0x7fd5] & 0xef) != 0x20)  // 20 or 30
+		fail = 1;
+
+	if (!fail)
+	{
+		cart_type = 0;
+		logerror("cart is lorom\n");
+		return;
+	}
+
+
+	fail = 0;
+
+	for (int i = 0xffc0; i < (0xffc0 + 21); i++ )
+	{
+		uint8_t ch = m_cart[i];
+		if (!(ch >= ' ' && ch <= '~'))
+		{
+			fail = 1;
+			break;
+		}
+	}
+
+	if ((m_cart[0xffd5] & 0xef) != 0x21)  // 21 or 31
+		fail = 1;
+
+	if (!fail)
+	{
+		cart_type = 1;
+		logerror("cart is hirom\n");
+		return;
+	}
+
+
+	logerror("unknown cart\n");
 }
 
 static void swc_fdd_options(device_slot_interface &device)
@@ -215,7 +275,7 @@ uint8_t snes_swc_state::fdc_input_r()
 	if (m_fdc->get_irq())
 		data |= 0x80;
 
-	int idx = m_floppy->get_device()->idx_r();
+	int idx = m_fdd->get_device()->idx_r();
 	if (!idx)
 		data |= 0x40;
 
@@ -271,11 +331,11 @@ void snes_swc_state::snes_swc(machine_config &config)
 	/* swc floppy drive (drive #1) */
 	MCS3201(config, m_fdc, 24_MHz_XTAL);
 	m_fdc->input_handler().set(FUNC(snes_swc_state::fdc_input_r));
-	FLOPPY_CONNECTOR(config, "fdd", swc_fdd_options, "35hd", snes_swc_state::swc_floppy_formats, true).enable_sound(true);
-	
+	FLOPPY_CONNECTOR(config, m_fdd, swc_fdd_options, "35hd", snes_swc_state::swc_floppy_formats, true).enable_sound(true);
+
 	/* cart slot */
-	GENERIC_CARTSLOT(config, m_cart, generic_plain_slot, "snes_swc_cart", "sfc,bin,rom");
-	m_cart->set_device_load(FUNC(snes_swc_state::cart_load));
+	GENERIC_CARTSLOT(config, m_cartslot, generic_plain_slot, "snes_swc_cart", "sfc,bin,rom");
+	m_cartslot->set_device_load(FUNC(snes_swc_state::cart_load));
 }
 
 void snes_swc_state::snes_swc_pal(machine_config &config)
@@ -362,13 +422,16 @@ void snes_swc_state::machine_start()
 
 	save_item(NAME(m_dram));
 	save_item(NAME(m_sram));
-	save_item(NAME(rom_map));
+	save_item(NAME(dram_map));
 	save_item(NAME(sram_map));
 	save_item(NAME(page_select));
 	save_item(NAME(mode_select));
 	save_item(NAME(dram_type));
 	save_item(NAME(sram_or_cart_map));
 	save_item(NAME(busy));
+	save_item(NAME(cart_type));
+	save_item(NAME(cart_size));
+	//save_item(NAME(m_cart));
 }
 
 void snes_swc_state::machine_reset()
@@ -393,7 +456,7 @@ void snes_swc_state::spc_map(address_map &map)
 uint8_t snes_swc_state::snes_swc_r_bank1(offs_t offset)
 {
 	uint8_t value = 0xff;
-	
+
 	switch (mode_select)
 	{
 		case 0:  // bios
@@ -403,13 +466,13 @@ uint8_t snes_swc_state::snes_swc_r_bank1(offs_t offset)
 			value = snes_swc_mode_1_r(offset);
 			break;
 		case 2:  // dram with mode select registers available
-			
+
 			break;
 		case 3:  // dram
-			
+
 			break;
 	}
-	
+
 	return value;
 }
 
@@ -417,7 +480,7 @@ uint8_t snes_swc_state::snes_swc_r_bank1(offs_t offset)
 uint8_t snes_swc_state::snes_swc_r_bank2(offs_t offset)
 {
 	uint8_t value = 0xff;
-	
+
 	switch (mode_select)
 	{
 		case 0:  // bios
@@ -427,13 +490,13 @@ uint8_t snes_swc_state::snes_swc_r_bank2(offs_t offset)
 			value = snes_swc_mode_1_r(offset);
 			break;
 		case 2:  // dram with mode select registers available
-			
+
 			break;
 		case 3:  // dram
-			
+
 			break;
 	}
-	
+
 	return value;
 }
 
@@ -736,8 +799,8 @@ void snes_swc_state::snes_swc_io_w(uint16_t address, uint8_t data)
 			m_fdc->dor_w(data);
 			if (SWC_DEBUG)
 				logerror(" fdc digital output reg wr: %04x %02x\n", address, data);
-			m_fdc->set_floppy((data & 0x20) ? m_floppy->get_device() : nullptr);
-			m_floppy->get_device()->mon_w((data & 0x20) ? 0 : 1);
+			m_fdc->set_floppy((data & 0x20) ? m_fdd->get_device() : nullptr);
+			m_fdd->get_device()->mon_w((data & 0x20) ? 0 : 1);
 			break;
 
 		case 5:  // fdc  data
@@ -754,14 +817,14 @@ void snes_swc_state::snes_swc_io_w(uint16_t address, uint8_t data)
 
 		case 8:  // parallel out & dram/sram mapping
 
-			rom_map = data & 1;
+			dram_map = data & 1;
 			sram_map = data & 2;
 
 			if (SWC_DEBUG)
 			{
 				logerror(" parallel data / map mode wr: %04x %02x\n", address, data);
 
-				if (rom_map)
+				if (dram_map)
 					logerror("  dram mapping set to mode 21 (hi)\n");
 				else
 					logerror("  dram mapping set to mode 20 (lo)\n");
@@ -877,11 +940,22 @@ inline uint8_t snes_swc_state::snes_swc_sram_r(uint16_t address)
 inline uint8_t snes_swc_state::snes_swc_cart_r(offs_t offset)
 {
 	uint8_t data = 0xff;
-	
-	if (m_cart && m_cart->exists())
+
+	if (m_cartslot && m_cartslot->exists())
 	{
-		uint32_t address = (offset & 0x1fff) | (page_select << 13) | ((offset & 0xff0000) >> 1);
-		data = m_cart->get_rom_base()[address & (m_cart->get_rom_size() - 1)];
+		uint32_t address = page_select << 13;
+
+		if (!cart_type)  // lo
+		{
+			address |= (offset & 0x1fff) | ((offset & 0xff0000) >> 1);
+		}
+		else  // hi
+		{
+			address |= (offset & 0xff9fff);
+		}
+
+		data = m_cart[address & (cart_size - 1)];
+
 		if (!machine().side_effects_disabled() && SWC_DEBUG)
 			logerror("cart rd: %06x %02x\n", address, data);
 	}
@@ -889,21 +963,32 @@ inline uint8_t snes_swc_state::snes_swc_cart_r(offs_t offset)
 	{
 		logerror("cart rd: no cart!\n");
 	}
-	
+
 	return data;
 }
 
 
 inline uint8_t snes_swc_state::snes_swc_mode_1_rom_access(offs_t offset)
 {
-	uint32_t address;
-	
-	if (!rom_map)  // lo
-		address = (offset & 0x7fff) | ((offset & 0xff0000) >> 1);
-	else  // hi
-		address = offset;
-		
-	return m_cart->get_rom_base()[address & (m_cart->get_rom_size() - 1)];  // TODO: 10mbit, 12mbit etc.
+	uint8_t data = 0xff;
+
+	if (m_cartslot && m_cartslot->exists())
+	{
+		uint32_t address;
+
+		if (!cart_type)  // lo
+		{
+			address = (offset & 0x7fff) | ((offset & 0xff0000) >> 1);
+		}
+		else  // hi
+		{
+			address = offset;
+		}
+
+		data = m_cart[address & (cart_size - 1)];  // TODO: 10mbit, 12mbit etc.
+	}
+
+	return data;
 }
 
 uint8_t snes_swc_state::snes_swc_mode_1_r(offs_t offset)
