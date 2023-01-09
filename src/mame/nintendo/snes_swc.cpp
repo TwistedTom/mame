@@ -167,6 +167,8 @@ private:
 	//DECLARE_DEVICE_IMAGE_LOAD_MEMBER(cart_load);
 	image_init_result cart_load(device_image_interface &image);
 	void snes_swc_find_cart_type();
+	void snes_swc_set_cart_size_mask();
+	inline uint32_t snes_swc_clamp_rom_size(uint32_t address);
 
 	uint8_t *m_bios;
 	uint8_t m_dram[0x400000];
@@ -179,8 +181,9 @@ private:
 	int sram_or_cart_map = 0;
 	int busy = 0;
 
-	int cart_type = 1;
+	int cart_type = 0;
 	uint32_t cart_size = 0;
+	uint32_t cart_size_mask = 0;
 	uint8_t *m_cart;
 };
 
@@ -200,7 +203,7 @@ image_init_result snes_swc_state::cart_load(device_image_interface &image)
 
 	cart_size = m_cartslot->get_rom_size();
 	m_cart = m_cartslot->get_rom_base();
-
+	snes_swc_set_cart_size_mask();
 	snes_swc_find_cart_type();
 
 	return image_init_result::PASS;
@@ -255,6 +258,25 @@ void snes_swc_state::snes_swc_find_cart_type()
 
 
 	logerror("unknown cart\n");
+}
+
+void snes_swc_state::snes_swc_set_cart_size_mask()
+{
+	uint32_t sz = cart_size;
+
+	if ((sz & (sz - 1)) && (sz != 0))  // not power of 2 (more than 1 bit set)
+	{
+		// get top bit
+		int i = 0;
+		for (; sz > 1; sz >>= 1)
+			i++;
+		sz = 1 << i;
+	}
+
+	cart_size_mask = sz;
+	
+	logerror("cart size is %d bytes (0x%06x)\n", cart_size, cart_size);
+	logerror("cart size mask is %d bytes (0x%06x)\n", cart_size_mask, cart_size_mask);
 }
 
 static void swc_fdd_options(device_slot_interface &device)
@@ -431,6 +453,7 @@ void snes_swc_state::machine_start()
 	save_item(NAME(busy));
 	save_item(NAME(cart_type));
 	save_item(NAME(cart_size));
+	save_item(NAME(cart_size_mask));
 	//save_item(NAME(m_cart));
 }
 
@@ -954,14 +977,15 @@ inline uint8_t snes_swc_state::snes_swc_cart_r(offs_t offset)
 			address |= (offset & 0xff9fff);
 		}
 
-		data = m_cart[address & (cart_size - 1)];
+		data = m_cart[snes_swc_clamp_rom_size(address)];
 
 		if (!machine().side_effects_disabled() && SWC_DEBUG)
 			logerror("cart rd: %06x %02x\n", address, data);
 	}
 	else
 	{
-		logerror("cart rd: no cart!\n");
+		if (!machine().side_effects_disabled() && SWC_DEBUG)
+			logerror("cart rd: no cart!\n");
 	}
 
 	return data;
@@ -985,7 +1009,7 @@ inline uint8_t snes_swc_state::snes_swc_mode_1_rom_access(offs_t offset)
 			address = offset;
 		}
 
-		data = m_cart[address & (cart_size - 1)];  // TODO: 10mbit, 12mbit etc.
+		data = m_cart[snes_swc_clamp_rom_size(address)];
 	}
 
 	return data;
@@ -1020,6 +1044,22 @@ uint8_t snes_swc_state::snes_swc_mode_1_r(offs_t offset)
 	}
 
 	return value;
+}
+
+
+inline uint32_t snes_swc_state::snes_swc_clamp_rom_size(uint32_t address)
+{
+	if (cart_size != cart_size_mask)
+	{
+		if (!(address & cart_size_mask))
+			address &= cart_size_mask - 1;
+		else
+			address &= cart_size - 1;
+	}
+	else
+		address &= cart_size - 1;
+
+	return address;
 }
 
 
