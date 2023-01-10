@@ -1,6 +1,7 @@
 //
 // Super Wild Card
 //
+
 /*
    1) Registers
 
@@ -16,11 +17,12 @@
 
       [parallel i/o]
       c008  r : bit 0-7 : parallel data input (reading clears the busy flag)
-      c008  w : bit 0-3 : parallel data output
+      c008  w : bit 0-3 : parallel data output                                   PC side: S3-6  err, sel, pout, ack  pins 15,13,12,10  lsb?
                 bit 0   : 0=mode 20, 1=mode 21 (dram mapping)
                 bit 1   : 0=mode 1, 1=mode 2 (sram mapping)
+				bit 4   : busy?                                                  PC side: S7 /busy  pin 11
       c009  r : busy flag, bit 7 (ep1810 version)
-      c000  r : busy flag, bit 5 (fc9203 version)
+      c000  r : busy flag, bit 5 (fc9203 version)  <-- wrong? strobe?            PC side: C0 /str  pin 1
 
       c00a-c00f unused (mirrors c008-c009)
       c010-dfff unused (mirrors c000-c00f)
@@ -42,8 +44,8 @@
       e009  w : 441000 dram type (for 8,16,24,32 mega byte dram card)
 
       e00c  w : enable cartridge page mapping at 2000-3fff & a000-bfff (sys mode 0)
-                disable cartridge mapping at bank 20-5f, a0-df         (sys mode 2,3)
-      e00d  w : enable sram page mapping at 2000-3fff & a000-bfff      (sys mode 0)
+                disable cartridge mapping at bank 20-5f, a0-df         (sys mode 2,3)   <-- what is this for?
+      e00d  w : enable sram page mapping at 2000-3fff & a000-bfff      (sys mode 0)          (not dsp range)
                 enable cartridge mapping at bank 20-5f, a0-df          (sys mode 2,3)
 
       * the bank address of the above registers is 00-7d, 80-ff
@@ -73,8 +75,8 @@
       [system mode 2]
       bb:0000 - bb:7fff  r : dram mapping, bb=40-70, c0-e0 (mode 21)
       bb:8000 - bb:ffff  r : dram mapping, bb=00-70, 80-e0 (mode 20,21)
-      70:8000 - 70:ffff rw : sram mode 1 mapping
-      30:6000 - 30:7fff rw : sram mode 2 mapping, page 0
+      70:8000 - 70:ffff rw : sram mode 1 mapping                               <-- wrong?
+      30:6000 - 30:7fff rw : sram mode 2 mapping, page 0                            lo sram is 0000-7fff
       31:6000 - 31:7fff rw : sram mode 2 mapping, page 1
       32:6000 - 32:7fff rw : sram mode 2 mapping, page 2
       33:6000 - 33:7fff rw : sram mode 2 mapping, page 3
@@ -92,6 +94,91 @@
       * mode 21
         even dram bank is mapped to bb:0000-bb:7fff
         odd  dram bank is mapped to bb:8000-bb:ffff
+
+
+   ------------------------------------------------------------------------------------
+   file header - 512 bytes
+   ------------------------------------------------------------------------------------
+   #1 - from "SUPER WILDCARD DX- USERS GUIDE"
+   ------------------------------------------------------------------------------------
+
+   file format of the wild card program:
+   the wild card consists of a 512 byte header and program blocks, one block is 8kbytes
+   the program block is loaded into main memory from low address to high address sequentally
+   the recommended file name is .smc or .swc
+
+   content of file header:
+
+   byte 0 - numbers of block (low byte)
+   byte 1 - numbers of block (high byte)   total numbers of blocks = (byte 1 * 256) + byte 0
+
+   byte 2 - program execution mode
+            bit: 7 6 5 4 3 2 1 0
+                 x               : 0 reserved
+                   x             : 0=last/only file, 1=search for next file
+                     x           : sram memory mapping: 0=mode 20, 1=mode 21
+                       x         : program memory mapping: 0=mode 20, 1=mode 21
+                         x x     : sram size: 00=256k, 01=64k, 10=16k, 11=off
+                             x x : 00 reserved
+
+   byte 3-7 - 0 reserved
+   byte 8   - aa, file id
+   byte 9   - bb, file id
+   byte 10  - file type:
+               04=program
+               05=battery backup data
+               08=real-time save data
+   byte 11-511 -  reserved
+
+   ------------------------------------------------------------------------------------
+   #2 - Various other old sources
+   ------------------------------------------------------------------------------------
+
+   byte
+    0   - low byte of 8k-bytes page counts
+    1   - high byte of 8k-bytes page counts
+    2   - emulation mode select
+          bit 7 6 5 4 3 2 1 0
+              x               : 1=run in mode 0 (jump $8000)
+                x             : 0=last file of the game (multi-file loading)
+                  x           : 0=mode 1, 1=mode 2 (sram mapping)
+                    x         : 0=mode 20, 1=mode 21 (dram mapping)
+                      x x     : 0=sram off, 1=sram 16k, 2=sram 64k, 3=sram 256k (sram size)
+                          x   : 0=run in mode 3, 1=run in mode 2 (jmp reset)
+                            x : 0=disable, 1=enable (external cart at bank 20-5f,a0-df for system modes 2,3)
+    3-7 - reserved (should be '00')
+    8   - file id code 1 (should be 'aa')
+    9   - file id code 2 (should be 'bb')
+    10  - check this byte if id 1 & 2 match
+          02 : magic griffin game file (pc engine)
+          03 : magic griffin sram data file
+          04 : swc & smc game file (snes, SUPER MAGICOM)
+          05 : swc & smc password, sram data, saver data file.
+          06 : smd game file (megadrive)
+          07 : smd sram data file
+    37  - reserved (should be 00)
+    11-511 - reserved (should be 00)
+
+   ------------------------------------------------------------------------------------
+   notes:
+
+   super wild card SMS3201 with 2.8cc seems to use #1
+   is #2 for older harware and/or firmware?
+   sram size bits reversed
+   old super soccer file (possibly recorded with old f/w) emu byte is 2d, 2.8cc is 21
+
+   ------------------------------------------------------------------------------------
+
+   top cart slot:
+   asic has control of a13, a14, /cart, d0-7, everything else is straight through
+
+   bios:
+   27c128 16KB, a13 pin is connected to a16
+
+   unknown writes:
+   0c -> c009       could be for ep1810 version?
+   10 -> c008       bit 4 ?
+
 */
 
 // make SOURCES=src/mame/nintendo/snes.cpp,src/mame/nintendo/snes_swc.cpp REGENIE=0 -j5
@@ -159,6 +246,7 @@ private:
 	inline void snes_swc_sram_w(uint16_t address, uint8_t data);
 	inline uint8_t snes_swc_sram_r(uint16_t address);
 	inline uint8_t snes_swc_cart_r(offs_t offset);
+	inline void snes_swc_cart_w(uint16_t address, uint8_t data);
 	inline uint8_t snes_swc_mode_1_r(offs_t offset);
 	inline void snes_swc_mode_1_w(address_space &space, offs_t offset, uint8_t data);
 	inline uint8_t snes_swc_mode_1_rom_access(offs_t offset);
@@ -190,6 +278,9 @@ private:
 	uint8_t *m_cart;
 	uint32_t cart_sram_size = 0;
 	std::vector<uint8_t> cart_sram;
+
+	uint8_t par_debug_str = 0;
+	uint8_t par_debug_data = 0;
 };
 
 //DEVICE_IMAGE_LOAD_MEMBER(snes_swc_state::cart_load)
@@ -509,6 +600,8 @@ void snes_swc_state::machine_start()
 	save_item(NAME(cart_size_mask));
 	save_item(NAME(cart_sram_size));
 	save_item(NAME(cart_sram));
+	save_item(NAME(par_debug_str));
+	save_item(NAME(par_debug_data));
 	//save_item(NAME(m_cart));
 }
 
@@ -653,7 +746,7 @@ inline uint8_t snes_swc_state::snes_swc_mode_0_r_bank2(offs_t offset)
 		else if (address < 0xa000)  // dram  8000-9fff
 		{
 			if (!machine().side_effects_disabled() && SWC_DEBUG)
-				logerror("dram rd: %06x page %d\n", offset, page_select);
+				logerror("8000-9fff dram rd: %04x page %d\n", (address & 0x1fff), page_select);
 			value = snes_swc_dram_r(offset);
 		}
 		else if (address < 0xc000)  // sram or cart  a000-bfff
@@ -661,9 +754,9 @@ inline uint8_t snes_swc_state::snes_swc_mode_0_r_bank2(offs_t offset)
 			if (!machine().side_effects_disabled() && SWC_DEBUG)
 			{
 				if (sram_or_cart_map)
-					logerror("sram rd: %06x page %d\n", offset, page_select);
+					logerror("a000-bfff sram rd: %04x page %d\n", (address & 0x1fff), page_select);
 				else
-					logerror("cart rd: %06x page %d\n", offset, page_select);
+					logerror("a000-bfff cart rd: %04x page %d\n", (address & 0x1fff), page_select);
 			}
 			if (sram_or_cart_map)
 				value = snes_swc_sram_r(address);
@@ -672,8 +765,8 @@ inline uint8_t snes_swc_state::snes_swc_mode_0_r_bank2(offs_t offset)
 		}
 		else if (address < 0xe000)  // i/o regs  c000-dfff
 		{
-			//if (!machine().side_effects_disabled() && SWC_DEBUG)
-				//logerror("swc i/o regs rd: %06x\n", offset);
+			if (!machine().side_effects_disabled() && SWC_DEBUG)
+				logerror("swc i/o regs rd: %06x\n", offset);
 			value = snes_swc_io_r(address);
 		}
 		else                        // ?  e000-ffff  (bios in rom banks 00-01 only)
@@ -696,9 +789,9 @@ inline uint8_t snes_swc_state::snes_swc_mode_0_r_bank2(offs_t offset)
 			if (!machine().side_effects_disabled() && SWC_DEBUG)
 			{
 				if (sram_or_cart_map)
-					logerror("sram rd: %06x page %d\n", offset, page_select);
+					logerror("2000-3fff sram rd: %04x page %d\n", (address & 0x1fff), page_select);
 				else
-					logerror("cart rd: %06x page %d\n", offset, page_select);
+					logerror("2000-3fff cart rd: %04x page %d\n", (address & 0x1fff), page_select);
 			}
 			if (sram_or_cart_map)
 				value = snes_swc_sram_r(address);
@@ -722,9 +815,9 @@ inline uint8_t snes_swc_state::snes_swc_mode_0_r_bank2(offs_t offset)
 			if (!machine().side_effects_disabled() && SWC_DEBUG)
 			{
 				if (sram_or_cart_map)
-					logerror("sram rd: %06x page %d\n", offset, page_select);
+					logerror("a000-bfff sram rd: %04x page %d\n", (address & 0x1fff), page_select);
 				else
-					logerror("cart rd: %06x page %d\n", offset, page_select);
+					logerror("a000-bfff cart rd: %04x page %d\n", (address & 0x1fff), page_select);
 			}
 			if (sram_or_cart_map)
 				value = snes_swc_sram_r(address);
@@ -733,8 +826,8 @@ inline uint8_t snes_swc_state::snes_swc_mode_0_r_bank2(offs_t offset)
 		}
 		else if (address < 0xe000)  // i/o regs  c000-dfff
 		{
-			//if (!machine().side_effects_disabled() && SWC_DEBUG)
-				//logerror("swc i/o regs rd: %06x\n", offset);
+			if (!machine().side_effects_disabled() && SWC_DEBUG)
+				logerror("swc i/o regs rd: %06x\n", offset);
 			value = snes_swc_io_r(address);
 		}
 		else                         // ?  e000-ffff  (bios in rom banks 00-01 only)
@@ -765,7 +858,7 @@ inline void snes_swc_state::snes_swc_mode_0_w(address_space &space, offs_t offse
 		else if (address < 0xa000)  // dram  8000-9fff
 		{
 			if (SWC_DEBUG)
-				logerror("dram wr: %06x page %d %02x\n", offset, page_select, data);
+				logerror("8000-9fff dram wr: %04x page %d %02x\n", (address & 0x1fff), page_select, data);
 			snes_swc_dram_w(offset, data);
 		}
 		else if (address < 0xc000)  // sram or cart  a000-bfff
@@ -773,23 +866,25 @@ inline void snes_swc_state::snes_swc_mode_0_w(address_space &space, offs_t offse
 			if (SWC_DEBUG)
 			{
 				if (sram_or_cart_map)
-					logerror("sram wr: %06x page %d %02x\n", offset, page_select, data);
+					logerror("a000-bfff sram wr: %04x page %d %02x\n", (address & 0x1fff), page_select, data);
 				else
-					logerror("cart wr: %06x page %d %02x\n", offset, page_select, data);
+					logerror("a000-bfff cart wr: %04x page %d %02x\n", (address & 0x1fff), page_select, data);
 			}
 			if (sram_or_cart_map)
 				snes_swc_sram_w(address, data);
+			else
+				snes_swc_cart_w(address, data);
 		}
 		else if (address < 0xe000)  // i/o regs  c000-dfff
 		{
-			//if (SWC_DEBUG)
-				//logerror("swc i/o regs wr: %06x %02x\n", offset, data);
+			if (SWC_DEBUG)
+				logerror("swc i/o regs wr: %06x %02x\n", offset, data);
 			snes_swc_io_w(address, data);
 		}
 		else                         // page select, mode select, others  e000-ffff
 		{
-			//if (SWC_DEBUG)
-				//logerror("swc misc regs wr: %06x %02x\n", offset, data);
+			if (SWC_DEBUG)
+				logerror("swc misc regs wr: %06x %02x\n", offset, data);
 			snes_swc_misc_w(address, data);
 		}
 	}
@@ -805,12 +900,14 @@ inline void snes_swc_state::snes_swc_mode_0_w(address_space &space, offs_t offse
 			if (SWC_DEBUG)
 			{
 				if (sram_or_cart_map)
-					logerror("sram wr: %06x page %d %02x\n", offset, page_select, data);
+					logerror("2000-3fff sram wr: %04x page %d %02x\n", (address & 0x1fff), page_select, data);
 				else
-					logerror("cart wr: %06x page %d %02x\n", offset, page_select, data);
+					logerror("2000-3fff cart wr: %04x page %d %02x\n", (address & 0x1fff), page_select, data);
 			}
 			if (sram_or_cart_map)
 				snes_swc_sram_w(address, data);
+			else
+				snes_swc_cart_w(address, data);
 		}
 		else if (address < 0x8000)  // ?  4000-7fff
 		{
@@ -828,23 +925,25 @@ inline void snes_swc_state::snes_swc_mode_0_w(address_space &space, offs_t offse
 			if (SWC_DEBUG)
 			{
 				if (sram_or_cart_map)
-					logerror("sram wr: %06x page %d %02x\n", offset, page_select, data);
+					logerror("a000-bfff sram wr: %04x page %d %02x\n", (address & 0x1fff), page_select, data);
 				else
-					logerror("cart wr: %06x page %d %02x\n", offset, page_select, data);
+					logerror("a000-bfff cart wr: %04x page %d %02x\n", (address & 0x1fff), page_select, data);
 			}
 			if (sram_or_cart_map)
 				snes_swc_sram_w(address, data);
+			else
+				snes_swc_cart_w(address, data);
 		}
 		else if (address < 0xe000)  // i/o regs  c000-dfff
 		{
-			//if (SWC_DEBUG)
-				//logerror("swc i/o regs wr: %06x %02x\n", offset, data);
+			if (SWC_DEBUG)
+				logerror("swc i/o regs wr: %06x %02x\n", offset, data);
 			snes_swc_io_w(address, data);
 		}
 		else                        // page select, mode select, others  e000-ffff
 		{
-			//if (SWC_DEBUG)
-				//logerror("swc misc regs wr: %06x %02x\n", offset, data);
+			if (SWC_DEBUG)
+				logerror("swc misc regs wr: %06x %02x\n", offset, data);
 			snes_swc_misc_w(address, data);
 		}
 	}
@@ -860,8 +959,9 @@ inline uint8_t snes_swc_state::snes_swc_io_r(uint16_t address)
 	{
 		case 0:  // fdc  input  5: busy flag (FC9203 ver) 6: index, 7: irq
 			data = m_fdc->input_r();
-			//if (!machine().side_effects_disabled() && SWC_DEBUG)
-				//logerror(" fdc input reg rd: %04x %02x\n", address, data);
+			if (!machine().side_effects_disabled() && SWC_DEBUG)
+				logerror(" fdc input reg rd: %04x %02x\n", address, data);
+			data |= par_debug_str;
 			break;
 
 		case 4:  // fdc  main status
@@ -884,8 +984,10 @@ inline uint8_t snes_swc_state::snes_swc_io_r(uint16_t address)
 
 		case 8:  // parallel in
 			busy = 0;
+			// read parallel port
 			if (!machine().side_effects_disabled() && SWC_DEBUG)
 				logerror(" parallel data rd: %04x\n", address);
+			data = par_debug_data;
 			break;
 
 		case 9:  // busy flag (EP1810 ver)
@@ -946,6 +1048,8 @@ inline void snes_swc_state::snes_swc_io_w(uint16_t address, uint8_t data)
 				else
 					logerror("  sram mapping set to mode 1 (lo)\n");
 			}
+
+			// write parallel port
 			break;
 
 		default:
@@ -1015,18 +1119,20 @@ inline void snes_swc_state::snes_swc_misc_w(uint16_t address, uint8_t data)
 
 inline void snes_swc_state::snes_swc_dram_w(offs_t offset, uint8_t data)
 {
+	// TODO: fix
 	uint32_t address = (offset & 0x1fff) | (page_select << 13) | ((offset & 0xff0000) >> 1);
 	m_dram[address] = data;
 	if (SWC_DEBUG)
-		logerror("dram wr: %06x %02x\n", address, data);
+		logerror(" dram wr: %06x %02x\n", address, data);
 }
 
 inline uint8_t snes_swc_state::snes_swc_dram_r(offs_t offset)
 {
+	// TODO: fix
 	uint32_t address = (offset & 0x1fff) | (page_select << 13) | ((offset & 0xff0000) >> 1);
 	uint8_t data = m_dram[address];
 	if (!machine().side_effects_disabled() && SWC_DEBUG)
-		logerror("dram rd: %06x %02x\n", address, data);
+		logerror(" dram rd: %06x %02x\n", address, data);
 	return data;
 }
 
@@ -1036,7 +1142,7 @@ inline void snes_swc_state::snes_swc_sram_w(uint16_t address, uint8_t data)
 	address = (address & 0x1fff) | (page_select << 13);
 	m_sram[address] = data;
 	if (SWC_DEBUG)
-		logerror("sram wr: %06x %02x\n", address, data);
+		logerror(" sram wr: %04x %02x\n", address, data);
 }
 
 inline uint8_t snes_swc_state::snes_swc_sram_r(uint16_t address)
@@ -1044,7 +1150,7 @@ inline uint8_t snes_swc_state::snes_swc_sram_r(uint16_t address)
 	address = (address & 0x1fff) | (page_select << 13);
 	uint8_t data = m_sram[address];
 	if (!machine().side_effects_disabled() && SWC_DEBUG)
-		logerror("sram rd: %06x %02x\n", address, data);
+		logerror(" sram rd: %04x %02x\n", address, data);
 	return data;
 }
 
@@ -1055,29 +1161,68 @@ inline uint8_t snes_swc_state::snes_swc_cart_r(offs_t offset)
 
 	if (m_cartslot && m_cartslot->exists())
 	{
-		uint32_t address = page_select << 13;
+		uint32_t address = (page_select << 13) | (offset & 0xff9fff);
 
-		if (!cart_type)  // lo
+		if (!cart_type && cart_sram_size && (address >= 0x700000))  // lo cart sram  70-7d,f0-ff:0000-7fff
 		{
-			address |= (offset & 0x1fff) | ((offset & 0xff0000) >> 1);
+			// why reading lo sram at 708000 not 700000?
+			// it assumes no rom > 600000 (24mbit) for lorom?
+			data = cart_sram[address & (cart_sram_size - 1)];  // largest lo sram is 8000 anyway
+
+			if (!machine().side_effects_disabled() && SWC_DEBUG)
+				logerror(" lo cart sram rd: %06x %02x\n", address, data);
 		}
-		else  // hi
+		else if (cart_type && cart_sram_size && (address >= 0x200000) && (address < 0x400000) && ((address & 0xffff) >= 0x6000) && ((address & 0xffff) < 0x8000))  // hi cart sram  20-3f,a0-bf:6000-7fff
 		{
-			address |= (offset & 0xff9fff);
+			// might need to be strict 30-3f
+			// TODO: 32 & 128KB
+			data = cart_sram[address & (cart_sram_size - 1)];
+
+			if (!machine().side_effects_disabled() && SWC_DEBUG)
+				logerror(" hi cart sram rd: %06x %02x\n", address, data);
 		}
+		else
+		{
+			if (!cart_type)  // lo
+			{
+				address = (page_select << 13) | (offset & 0x1fff) | ((offset & 0xff0000) >> 1);
+			}
 
-		data = m_cart[snes_swc_clamp_rom_size(address)];
+			data = m_cart[snes_swc_clamp_rom_size(address)];
 
-		if (!machine().side_effects_disabled() && SWC_DEBUG)
-			logerror("cart rd: %06x %02x\n", address, data);
+			if (!machine().side_effects_disabled() && SWC_DEBUG)
+				logerror(" cart rd: %06x %02x\n", address, data);  // address not clamped to rom size
+		}
 	}
 	else
 	{
 		if (!machine().side_effects_disabled() && SWC_DEBUG)
-			logerror("cart rd: no cart!\n");
+			logerror(" cart rd: no cart!\n");
 	}
 
 	return data;
+}
+
+inline void snes_swc_state::snes_swc_cart_w(uint16_t address, uint8_t data)
+{
+	if (m_cartslot && m_cartslot->exists())
+	{
+		if (cart_sram_size)
+		{
+			address = (address & 0x1fff) | (page_select << 13);
+			cart_sram[address & (cart_sram_size - 1)] = data;
+			if (SWC_DEBUG)
+				logerror(" cart wr: %04x %02x\n", address, data);
+		}
+		else
+		{
+			logerror(" cart wr to cart with no sram!\n");
+		}
+	}
+	else
+	{
+		logerror(" cart wr: no cart!\n");
+	}
 }
 
 
