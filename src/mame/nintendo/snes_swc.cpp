@@ -765,7 +765,7 @@ inline uint8_t snes_swc_state::snes_swc_mode_0_r_bank2(offs_t offset)
 		}
 		else if (address < 0x8000)  // hi sram  6000-7fff   what banks?  2.8cc uses 30 for the check
 		{
-			if (cart_type && m_cartslot && m_cartslot->exists())
+			if (cart_type && cart_sram_size && m_cartslot && m_cartslot->exists())
 			{
 				address &= cart_sram_size - 1;
 				value = cart_sram[address];
@@ -887,7 +887,7 @@ inline void snes_swc_state::snes_swc_mode_0_w(address_space &space, offs_t offse
 		}
 		else if (address < 0x8000)  // hi sram  6000-7fff   what banks?  2.8cc uses 30 for the check
 		{
-			if (cart_type && m_cartslot && m_cartslot->exists())
+			if (cart_type && cart_sram_size && m_cartslot && m_cartslot->exists())
 			{
 				address &= cart_sram_size - 1;
 				cart_sram[address] = data;
