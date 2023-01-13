@@ -3,6 +3,125 @@
 //
 
 /*
+   Super Wild Card SMS3201
+   -----------------------
+   pcb: "Super Magicom Plus"
+        "Front Fareast Co."
+
+   FC9203 100-pin qfp asic   HG62E22S26FS (c)1992 FRONT
+   27c128 16KB rom
+   62256  32KB ram w/ nicd battery backup
+   8/16/24/32mbit dram on plug-in daughter board
+   unpopulated locations for 16mbit on-board dram (ever used? not seen any examples...)
+   2x peel 18CV8
+   MCCS3201FN fdc w/ 24MHz xtal
+   internal 3.5" dd/hd fdd
+   unpopulated location (db25) for external fdd (ever used? not seen any examples...)
+   db25 parallel port (for pc comms)
+   snes cart slot
+   16-pin dip socket for CIC chip or jumpers to use cart instead
+
+   dram config:
+   8mbit is 2x generic 1Mx4 dram chips (814400, 514400, 44c1000 etc.)
+   factory 16 and 24 mbit configs exist
+
+   32mbit support requires:
+     adding 2 (or more) dram chips
+     hardware mod (track cutting, wires added etc.)
+     different peels
+     firmware upgrade (2.8cc?)
+
+   FFE released instructions, firmware and peel jed files for suppliers/resellers to upgrade stock
+   does factory 32mbit version exist?
+
+
+   earlier hardware...
+
+
+   Super Magicom MS-3201
+   ---------------------
+   older model
+   no pcb numbers/markings?
+   8/16mbit dram (upgradeable? same daughter board...)
+   EP1810 cpld, no asic, no pals/peels
+   external fdd only (2nd db25 is populated)
+   suppied with "magic" 3.5" disk drive (generic 3.5" fdd in stand-alone case)
+   fdd power supplied via db25 cable
+   unpopulated location (34-pin dil) for internal fdd, but no 4-pin power header?
+   unpopulated location for 16-pin dip CIC chip, no jumpers to use cart instead?
+   extra 74xx174 ttl
+   unknown firmware
+
+   Supercom Pro.1 SP-3200 - clone?
+
+
+   later hardware...
+
+
+   Super Wild Card SMS3201 "goldstar" variant
+   ------------------------------------------
+   externally looks same, pcb differences:
+   no pcb numbers/markings?
+   GM82C765B fdc
+   extra 74xx129, 74xx125 ttl
+   unpopulated locations for power socket and regulator (and power switch?)
+   no provision for on-board dram (daughter board only)
+   extra jumpers JP3-8, function unknown
+   same asic and peels
+   same firmware
+   same hardware mod required for 32mbit
+
+
+   Super Wild Card DX
+   ------------------
+   externally very similar, black case, pcb differences:
+   no pcb numbers/markings?
+   based on goldstar variant plus:
+   32mbit dram
+   new daughter board with 2x 4Mx4 44c4000 chips (2 more unpopulated locations, 64mbit is supported?)
+   power socket and regulator populated
+   larger rom (32-pin)
+   gal20v8 gal (in addition to 2x peels)
+   93c46 eeprom
+   extra unknown function jumpers JP2-12
+   same asic
+   2x peels are the same?
+   exclusive firmware  x.x_101494(undumped)?, x.x_110394, 1.122_111494, x.x_010496
+
+
+   Super Wild Card DX2     *** TODO ***
+   -------------------
+   new case, black, more rounded design
+   64mbit dram support
+   external CDROM/HDD/Zip support
+   exclusive firmware  1.106
+   asic?
+   pals/peels?
+
+   optional "diskdual" - external case for a cdrom and/or hdd
+   
+   what else...?
+
+
+   known firmware:
+   1.6
+   1.8
+   2.0xl
+   2.1b
+   2.1c
+   2.2c
+   2.6    official or only hacks?
+   2.6c
+   2.6f
+   2.6fx
+   2.7cc
+   2.8cc_080694
+   2.8cc_280694
+
+   all super wild card or some are super magicom?
+*/
+
+/*
    1) Registers
 
       [floppy drive i/o]
@@ -200,6 +319,7 @@
    TODO:
    parallel port
    other bioses?
+   selectable dram/sram installed?
    save states?  if playing cart pointer to m_cart is lost?
 */
 
@@ -1552,12 +1672,17 @@ inline void snes_swc_state::snes_swc_mode_3_w(address_space &space, offs_t offse
 
 ROM_START( snes_swc )
 	ROM_REGION( 0x4000, "bios", 0 )
-	ROM_LOAD( "swc_28cc_280694.bin", 0x0000, 0x4000, CRC(6e14fce2) SHA1(05b69eb087531e488e8a7ece9437982b4e335e18) )
+
+	ROM_SYSTEM_BIOS( 0, "28cc", "2.8cc 280694" )
+	ROMX_LOAD( "swc_28cc_280694.bin", 0x0000, 0x4000, CRC(6e14fce2) SHA1(05b69eb087531e488e8a7ece9437982b4e335e18), ROM_BIOS(0))
+
+	ROM_SYSTEM_BIOS( 1, "28ccb", "2.8cc 080694" )
+	ROMX_LOAD( "swc_28cc_080694.bin", 0x0000, 0x4000, CRC(feddeabc) SHA1(b857c1427dfdd6877d3e989f0513445027db66f5), ROM_BIOS(1))
 ROM_END
 
 #define rom_snes_swc_pal rom_snes_swc
 
 //   YEAR,   NAME,      PARENT, COMPAT, MACHINE,      INPUT,     CLASS,          INIT,          COMPANY,         FULLNAME,              FLAGS
 
-CONS( 2022, snes_swc,     0,        0, snes_swc,     snes_swc, snes_swc_state, init_snes_swc, "Front Fareast", "Super Wild Card (ntsc)", 0 )
-CONS( 2022, snes_swc_pal, snes_swc, 0, snes_swc_pal, snes_swc, snes_swc_state, init_snes_swc, "Front Fareast", "Super Wild Card (pal)",  0 )
+CONS( 2022, snes_swc,     0,        0, snes_swc,     snes_swc, snes_swc_state, init_snes_swc, "Front Fareast", "Super Wild Card SMS3201 (ntsc)", 0 )
+CONS( 2022, snes_swc_pal, snes_swc, 0, snes_swc_pal, snes_swc, snes_swc_state, init_snes_swc, "Front Fareast", "Super Wild Card SMS3201 (pal)",  0 )
