@@ -1451,6 +1451,7 @@ inline uint8_t snes_swc_state::snes_swc_mode_1_r(offs_t offset)
 		{
 			if (m_cart_type && m_cart_sram_size && (offset >= 0x300000) && (offset < 0x340000))  // hi cart sram  30-33,b0-b3:6000-7fff
 			{
+				address &= 0x1fff;
 				address |= (offset & 0x30000) >> 3;  // no point doing 128KB...?
 				address &= m_cart_sram_size - 1;
 				if (!machine().side_effects_disabled() && SWC_DEBUG)
@@ -1497,6 +1498,7 @@ inline void snes_swc_state::snes_swc_mode_1_w(address_space &space, offs_t offse
 		{
 			if (m_cart_type && m_cart_sram_size && (offset >= 0x300000) && (offset < 0x340000) && (address < 0x8000))  // hi cart sram  30-33,b0-b3:6000-7fff
 			{
+				address &= 0x1fff;
 				address |= (offset & 0x30000) >> 3;  // no point doing 128KB...?
 				address &= m_cart_sram_size - 1;
 				if (SWC_DEBUG)
@@ -1562,8 +1564,8 @@ inline uint8_t snes_swc_state::snes_swc_mode_2_r(offs_t offset)
 		{
 			if ((m_map_mode == HI_SRAM) && (offset >= 0x300000) && (offset < 0x340000))  // hi cart sram  30-33,b0-b3:6000-7fff
 			{
-				address |= (offset & 0x30000) >> 3;  // can't do 128KB !
-				address &= 0x8000 - 1;               // swc has 32KB
+				address &= 0x1fff;
+				address |= (offset & 0x30000) >> 3;  // swc has 32KB, can't do 128KB !
 				if (!machine().side_effects_disabled() && SWC_DEBUG)
 					logerror("hi swc sram rd: %04x %02x\n", address, data);
 				data = m_sram[address];
@@ -1659,8 +1661,8 @@ inline void snes_swc_state::snes_swc_mode_3_w(address_space &space, offs_t offse
 		{
 			if ((m_map_mode == HI_SRAM) && (offset >= 0x300000) && (offset < 0x340000) && (address < 0x8000))  // hi cart sram  30-33,b0-b3:6000-7fff
 			{
-				address |= (offset & 0x30000) >> 3;  // can't do 128KB !
-				address &= 0x8000 - 1;               // swc has 32KB
+				address &= 0x1fff;
+				address |= (offset & 0x30000) >> 3;  // swc has 32KB, can't do 128KB !
 				if (SWC_DEBUG)
 					logerror("hi swc sram wr: %04x %02x\n", address, data);
 				m_sram[address] = data;
