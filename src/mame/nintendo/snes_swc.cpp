@@ -50,7 +50,7 @@
    unpopulated location (34-pin dil) for internal fdd, but no 4-pin power header?
    unpopulated location for 16-pin dip CIC chip, no jumpers to use cart instead?
    extra 74xx174 ttl
-   unknown firmware
+   unknown firmware  v31
 
    Supercom Pro.1 SP-3200 - clone?
 
@@ -94,31 +94,41 @@
    new case, black, more rounded design
    64mbit dram support
    external CDROM/HDD/Zip support
-   exclusive firmware  1.106
+   exclusive firmware  1.106  6/8/96 youtube
    asic?
    pals/peels?
 
    optional "diskdual" - external case for a cdrom and/or hdd
-   
+
    what else...?
 
 
    known firmware:
-   1.6
-   1.8
-   2.0xl
-   2.1b
-   2.1c
-   2.2c
-   2.6    official or only hacks?
-   2.6c
-   2.6f
-   2.6fx
-   2.7cc
-   2.8cc_080694
-   2.8cc_280694
-
-   all super wild card or some are super magicom?
+   * 1.6c
+     1.6xc     NO DUMP     http://www.videogameobsession.com/videogame/hk/swc.htm
+   * 1.8
+     2.0xl     "adj" hack, just name changed?
+     2.0xl     hack "fairlight trading", just name changed
+     2.1b      "adj" hack, just name changed?
+     2.1c      "adj" hack, just name changed?
+   * 2.2cc     NO DUMP     https://www.youtube.com/watch?v=62ZlDgp3FyI , gYNHoFc7cVs
+     2.2cc     hack "cyrus consoles", just name changed?
+   * 2.6cc     dumped
+     2.6cc-s   NO DUMP, spanish, hack?     https://www.youtube.com/watch?v=UUkRfpY9uck
+     2.6f      "adj" hack, just name changed?
+     2.6f      "adj" hack, alt?
+     2.6?      "roc" hack, date removed, different colour scheme
+     2.6?      "tris" hack, as above + name changed, "loading" string changed to "alligator"
+   * 2.7cc
+     2.7c      "adj" hack, just name changed
+     2.7bc     NO DUMP, brazil hack?     https://www.youtube.com/watch?v=dfvmXv7naBA
+   * 2.8cc     940608 dumped
+     2.8cc     940608 "sprint elec" hack, just name changed
+     2.8cc     940608 alt or hack?  has "Super Wild Card 2.8cc" string @ 1fc0
+   * 2.8cc     940628 rts fix
+   
+   * = official ver
+   need 2.0, 2.1, 2.2cc official
 */
 
 /*
@@ -1673,11 +1683,68 @@ inline void snes_swc_state::snes_swc_mode_3_w(address_space &space, offs_t offse
 ROM_START( snes_swc )
 	ROM_REGION( 0x4000, "bios", 0 )
 
-	ROM_SYSTEM_BIOS( 0, "28cc", "2.8cc 280694" )
-	ROMX_LOAD( "swc_28cc_280694.bin", 0x0000, 0x4000, CRC(6e14fce2) SHA1(05b69eb087531e488e8a7ece9437982b4e335e18), ROM_BIOS(0))
+	// 2.8
+	ROM_SYSTEM_BIOS( 0, "28a", "v2.8cc 94-06-28" )  // 1994 JSI FRONT FAREAST CO. VER 2.8CC
+	ROMX_LOAD( "swc_28cc_940628.bin", 0x0000, 0x4000, CRC(6e14fce2) SHA1(05b69eb087531e488e8a7ece9437982b4e335e18), ROM_BIOS(0))  // Super Wild Card V2.8CC 06-28-94 BIOS [!].smc
 
-	ROM_SYSTEM_BIOS( 1, "28ccb", "2.8cc 080694" )
-	ROMX_LOAD( "swc_28cc_080694.bin", 0x0000, 0x4000, CRC(feddeabc) SHA1(b857c1427dfdd6877d3e989f0513445027db66f5), ROM_BIOS(1))
+	ROM_SYSTEM_BIOS( 1, "28b", "v2.8cc 94-06-08" )  // 1994 JSI FRONT FAREAST CO. VER 2.8CC
+	ROMX_LOAD( "swc_28cc_940608.bin", 0x0000, 0x4000, CRC(feddeabc) SHA1(b857c1427dfdd6877d3e989f0513445027db66f5), ROM_BIOS(1))  // Super Wild Card V2.8CC 06-08-94 BIOS [!].smc
+
+	ROM_SYSTEM_BIOS( 2, "28c", "v2.8cc 94-06-08 alt" )  // 1994 JSI FRONT FAREAST CO. VER 2.8CC
+	ROMX_LOAD( "swc_28cc_940608_a.bin", 0x0000, 0x4000, CRC(1086cb9d) SHA1(6fc8ca97b624bd0df3450724fd7828943c263251), ROM_BIOS(2))  // Super Wild Card V2.8CC 06-08-94 BIOS [h1].smc
+
+	ROM_SYSTEM_BIOS( 3, "28d", "v2.8cc 94-06-08 hack" )  // 1994 FFE SPRINT ELEC 1994. VER 2.8CC
+	ROMX_LOAD( "swc_28cc_940608_h.bin", 0x0000, 0x4000, CRC(7dba7a90) SHA1(80f7d879123d157986c80ed5159c0c203c421d78), ROM_BIOS(3))  // Super Wild Card V2.8CC 06-08-94 BIOS [h2].smc
+
+	// 2.7
+	ROM_SYSTEM_BIOS( 4, "27a", "v2.7cc 93-12-07" )  // 1993 JSI FRONT FAREAST CO. VER 2.7CC
+	ROMX_LOAD( "swc_27cc_931207.bin", 0x0000, 0x4000, CRC(164c9643) SHA1(1e11bd728fb7bb9458f9215b3dd2bdc2eda0ab56), ROM_BIOS(4))  // swc2.7.bin
+	
+	ROM_SYSTEM_BIOS( 5, "27b", "v2.7c 93-12-07 hack" )  // 1993 JSI FRONT FAREAST CO. V2.7C/ADJ
+	ROMX_LOAD( "swc_27c_931207_h.bin", 0x0000, 0x4000, CRC(da06c27b) SHA1(af9179205cc233ad2e390e9b5a6fcf29c0564648), ROM_BIOS(5))  // Super Wild Card V2.7CC BIOS.smc
+
+	// 2.6
+	ROM_SYSTEM_BIOS( 6, "26a", "v2.6cc 93-07-17" )  // 1993 JSI FRONT FAREAST CO. VER 2.6CC
+	ROMX_LOAD( "swc_26cc_930717.bin", 0x0000, 0x4000, CRC(b5875ac1) SHA1(051396e8d5b30d3aed765170c6146df957fcc886), ROM_BIOS(6))  // Super Wild Card V2.6C BIOS.smc
+
+	ROM_SYSTEM_BIOS( 7, "26b", "v2.6f 93-07-17 hack 1" )  // 7-93 JSI FRONT FAREAST CO. V2.6F ADJ
+	ROMX_LOAD( "swc_26f_930717_h1.bin", 0x0000, 0x4000, CRC(f2339837) SHA1(c3f4fe9ce3d78d199227f38339101727371cedfa), ROM_BIOS(7))  // Super Wild Card V2.6F BIOS.smc
+
+	ROM_SYSTEM_BIOS( 8, "26c", "v2.6f 93-07-17 hack 2" )  // 7-93 JSI FRONT FAREAST CO. V2.6F ADJ
+	ROMX_LOAD( "swc_26f_930717_h2.bin", 0x0000, 0x4000, CRC(71db04ce) SHA1(0f1918d0f210e61fe9050472d627af3a30a14b43), ROM_BIOS(8))  // Super Wild Card V2.6FX BIOS.smc
+
+	ROM_SYSTEM_BIOS( 9, "26d", "v2.6 hack 1" )  // 94 TRSI
+	ROMX_LOAD( "swc_26_h1.bin", 0x0000, 0x4000, CRC(9ff3d39c) SHA1(dfd3c04d1689bb71f288ffd5097c92fb4be0887b), ROM_BIOS(9))  // Super Wild Card V2.6 BIOS (TRSI Hack).smc
+
+	ROM_SYSTEM_BIOS( 10, "26e", "v2.6 hack 2" )  // 1994 ROC
+	ROMX_LOAD( "swc_26_h2.bin", 0x0000, 0x4000, CRC(e2d3093c) SHA1(784dc127563c0dd8517d2150fbbaaaa39e273498), ROM_BIOS(10))  // Super Wild Card V2.6 BIOS [h1].smc
+
+	// 2.2
+	ROM_SYSTEM_BIOS( 11, "22a", "v2.2cc 93-05-03 hack" )  // 1993 JSI CYRUS CONSOLES 93 VER 2.2CC
+	ROMX_LOAD( "swc_22cc_930503_h.bin", 0x0000, 0x4000, CRC(3f1a6265) SHA1(2defacf474e0ece35e041612ebe9068f198fc567), ROM_BIOS(11))  // Super Wild Card V2.2C BIOS.smc
+
+	// 2.1
+	ROM_SYSTEM_BIOS( 12, "21a", "v2.1c 93-04-28 hack" )  // 1993 JSI FRONT FAREAST CO. V2.1C ADJ
+	ROMX_LOAD( "swc_21c_930428_h.bin", 0x0000, 0x4000, CRC(4e3e713a) SHA1(547118a6bc065922211bf8b04ab56c5cb23bc178), ROM_BIOS(12))  // Super Wild Card V2.1C BIOS.smc
+
+	ROM_SYSTEM_BIOS( 13, "21b", "v2.1b 93-04-28 hack" )  // 1993 JSI FRONT FAREAST CO. V2.1B ADJ
+	ROMX_LOAD( "swc_21b_930428_h.bin", 0x0000, 0x4000, CRC(38c44f50) SHA1(dc1bcae475080f99bc42fd722bd961e3bf3d6a40), ROM_BIOS(13))  // Super Wild Card V2.1B BIOS.smc
+
+	// 2.0
+	ROM_SYSTEM_BIOS( 14, "20a", "v2.0xl 93-04-12 hack 1" )  // 4-93 JSI FRONT FAREAST CO. VER 2.0.. VER2.0XL *ADJ*
+	ROMX_LOAD( "swc_20xl_930412_h1.bin", 0x0000, 0x4000, CRC(d39ddb2e) SHA1(22a19d25edf1bdc5aee9c0109e5020e1de0872ec), ROM_BIOS(14))  // Super Wild Card V2.0XL BIOS.smc
+
+	ROM_SYSTEM_BIOS( 15, "20b", "v2.0xl 93-04-12 hack 2" )  // 4-93 JSI FAIRLIGHT TRADING VER 2.0 VER2.0XL *ADJ*
+	ROMX_LOAD( "swc_20xl_930412_h2.bin", 0x0000, 0x4000, CRC(8ca0c1cf) SHA1(efece5761bc416cbe31e4acd3d9f789b2a252bcb), ROM_BIOS(15))  // Super Wild Card V2.0XL BIOS [h1].smc
+
+	// 1.8
+	ROM_SYSTEM_BIOS( 16, "18a", "v1.8 93-02-19" )  // 1993 JSI FRONT FAREAST CO. VER 1.8
+	ROMX_LOAD( "swc_18_930219.bin", 0x0000, 0x4000, CRC(84ed2837) SHA1(9584a011561a7c0b8b0ef5190b841ec46d0cae64), ROM_BIOS(16))  // Super Wild Card V1.8 BIOS.smc
+
+	// 1.6
+	ROM_SYSTEM_BIOS( 17, "16a", "v1.6c 93-01-29" )  // 1993 JSI FRONT FAREAST CO. VER 1.6C
+	ROMX_LOAD( "swc_16a_930129.bin", 0x0000, 0x4000, CRC(add03d8f) SHA1(41ae4a37518e4daa8a56c38659ba33c3e6199c88), ROM_BIOS(17))  // Super Wild Card V1.6 BIOS.smc
+
 ROM_END
 
 #define rom_snes_swc_pal rom_snes_swc
