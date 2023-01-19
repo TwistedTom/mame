@@ -126,7 +126,7 @@
      2.8cc     940608 "sprint elec" hack, just name changed
      2.8cc     940608 alt or hack?  has "Super Wild Card 2.8cc" string @ 1fc0
    * 2.8cc     940628 rts fix
-   
+
    * = official ver
    need 2.0, 2.1, 2.2cc official
 */
@@ -328,8 +328,6 @@
 
    TODO:
    parallel port
-   other bioses?
-   selectable dram/sram installed?
    save states?  if playing cart pointer to m_cart is lost?
 */
 
@@ -360,11 +358,14 @@ public:
 		, m_fdd(*this, "fdd")
 		, m_cartslot(*this, "cartslot")
 		, m_nvram(*this, "nvram")
+		, m_dram_opt(*this, "DRAM")
 	{ }
 
 	void snes_swc(machine_config &config);
 	void snes_swc_pal(machine_config &config);
 	void init_snes_swc();
+
+	DECLARE_INPUT_CHANGED_MEMBER(snes_swc_dram_changed);
 
 private:
 	virtual void io_read() override;
@@ -382,6 +383,7 @@ private:
 	required_device<floppy_connector> m_fdd;
 	required_device<generic_slot_device> m_cartslot;
 	required_device<nvram_device> m_nvram;
+	required_ioport m_dram_opt;
 
 	void snes_swc_map(address_map &map);
 	void spc_map(address_map &map);
@@ -424,6 +426,7 @@ private:
 
 	uint8_t *m_bios;
 	uint8_t m_dram[0x400000];
+	uint32_t m_dram_size;
 	uint8_t m_sram[0x8000];
 
 	enum
@@ -451,6 +454,11 @@ private:
 	uint8_t par_debug_str = 0;
 	uint8_t par_debug_data = 0;
 };
+
+INPUT_CHANGED_MEMBER(snes_swc_state::snes_swc_dram_changed)
+{
+	m_dram_size = 0x100000 + (m_dram_opt->read() * 0x100000);
+}
 
 //DEVICE_IMAGE_LOAD_MEMBER(snes_swc_state::cart_load)
 image_init_result snes_swc_state::cart_load(device_image_interface &image)
@@ -704,6 +712,12 @@ void snes_swc_state::init_snes_swc()
 }
 
 static INPUT_PORTS_START( snes_swc )
+	PORT_START("DRAM")
+	PORT_CONFNAME( 0x03, 0x03, "DRAM size") PORT_CHANGED_MEMBER(DEVICE_SELF, snes_swc_state, snes_swc_dram_changed, 0)
+	PORT_CONFSETTING(    0x00, "8 mbit" )
+	PORT_CONFSETTING(    0x01, "16 mbit" )
+	PORT_CONFSETTING(    0x02, "24 mbit" )
+	PORT_CONFSETTING(    0x03, "32 mbit" )
 INPUT_PORTS_END
 
 void snes_swc_state::io_read()
@@ -775,6 +789,7 @@ void snes_swc_state::machine_start()
 	m_nvram->set_base(&m_sram[0], 0x8000);
 
 	save_item(NAME(m_dram));
+	save_item(NAME(m_dram_size));
 	save_item(NAME(m_sram));
 	save_item(NAME(m_map_mode));
 	save_item(NAME(m_page));
@@ -797,6 +812,8 @@ void snes_swc_state::machine_reset()
 
 	// don't reset asic registers
 	// when playing dram or cart, the reset button resets the game, doesn't return to swc bios
+
+	m_dram_size = 0x100000 + (m_dram_opt->read() * 0x100000);
 }
 
 void snes_swc_state::snes_swc_map(address_map &map)
@@ -1332,7 +1349,7 @@ inline void snes_swc_state::snes_swc_dram_w(offs_t offset, uint8_t data)
 	else
 		address |= (offset & 0xff9fff);  // 0x008000 == 1
 
-	m_dram[address] = data;
+	m_dram[address] = (address < m_dram_size) ? data : 0;
 	if (SWC_DEBUG)
 		logerror(" dram wr: %06x %02x\n", address, data);
 }
@@ -1346,7 +1363,7 @@ inline uint8_t snes_swc_state::snes_swc_dram_r(offs_t offset)
 	else
 		address |= (offset & 0xff9fff);  // 0x008000 == 1
 
-	uint8_t data = m_dram[address];
+	uint8_t data = (address < m_dram_size) ? m_dram[address] : 0;
 	if (!machine().side_effects_disabled() && SWC_DEBUG)
 		logerror(" dram rd: %06x %02x\n", address, data);
 	return data;
@@ -1635,7 +1652,7 @@ inline uint8_t snes_swc_state::snes_swc_mode_2_rom_access(offs_t offset)
 		address = offset;
 	}
 
-	data = m_dram[address & (0x400000 - 1)];
+	data = ((address & (0x400000 - 1)) < m_dram_size) ? m_dram[address & (0x400000 - 1)] : 0;
 
 	return data;
 }
@@ -1701,7 +1718,7 @@ ROM_START( snes_swc )
 	// 2.7
 	ROM_SYSTEM_BIOS( 4, "27a", "v2.7cc 93-12-07" )  // 1993 JSI FRONT FAREAST CO. VER 2.7CC
 	ROMX_LOAD( "swc_27cc_931207.bin", 0x0000, 0x4000, CRC(164c9643) SHA1(1e11bd728fb7bb9458f9215b3dd2bdc2eda0ab56), ROM_BIOS(4))  // swc2.7.bin
-	
+
 	ROM_SYSTEM_BIOS( 5, "27b", "v2.7c 93-12-07 hack" )  // 1993 JSI FRONT FAREAST CO. V2.7C/ADJ
 	ROMX_LOAD( "swc_27c_931207_h.bin", 0x0000, 0x4000, CRC(da06c27b) SHA1(af9179205cc233ad2e390e9b5a6fcf29c0564648), ROM_BIOS(5))  // Super Wild Card V2.7CC BIOS.smc
 
@@ -1733,7 +1750,7 @@ ROM_START( snes_swc )
 	ROMX_LOAD( "swc_21b_930428_h.bin", 0x0000, 0x4000, CRC(38c44f50) SHA1(dc1bcae475080f99bc42fd722bd961e3bf3d6a40), ROM_BIOS(13))  // Super Wild Card V2.1B BIOS.smc
 
 	// 2.0
-	ROM_SYSTEM_BIOS( 14, "20a", "v2.0xl 93-04-12 hack 1" )  // 4-93 JSI FRONT FAREAST CO. VER 2.0.. VER2.0XL *ADJ*
+	ROM_SYSTEM_BIOS( 14, "20a", "v2.0xl 93-04-12 hack 1" )  // 4-93 JSI FRONT FAREAST CO. VER 2.0 VER2.0XL *ADJ*
 	ROMX_LOAD( "swc_20xl_930412_h1.bin", 0x0000, 0x4000, CRC(d39ddb2e) SHA1(22a19d25edf1bdc5aee9c0109e5020e1de0872ec), ROM_BIOS(14))  // Super Wild Card V2.0XL BIOS.smc
 
 	ROM_SYSTEM_BIOS( 15, "20b", "v2.0xl 93-04-12 hack 2" )  // 4-93 JSI FAIRLIGHT TRADING VER 2.0 VER2.0XL *ADJ*
