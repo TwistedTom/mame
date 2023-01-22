@@ -145,14 +145,14 @@
       c007  w : diskette control register
 
       [parallel i/o]
-      c008  r : bit 0-7 : parallel data input (reading clears the busy flag)
-      c008  w : bit 0-3 : parallel data output                                   PC side: S3-6  err, sel, pout, ack  pins 15,13,12,10  lsb?
+      c008  r : bit 0-7 : parallel data input (reading reverses the busy flag)
+      c008  w : bit 0-3 : parallel data output                                   PC side: S3-6  err, sel, pout, ack  pins 15,13,12,10
                 bit 0   : 0=mode 20, 1=mode 21 (dram mapping)
                 bit 1   : 0=mode 1, 1=mode 2 (sram mapping)
-				bit 4   : busy?                                                  PC side: S7 /busy  pin 11
-      c009  r : busy flag, bit 7 (ep1810 version)
-      c000  r : busy flag, bit 5 (fc9203 version)  <-- wrong? strobe?            PC side: C0 /str  pin 1
-
+				bit 4   : ?
+      c009  r : busy flag, bit 7 (ep1810 version)                                   
+      c000  r : busy flag, bit 5 (fc9203 version)                                PC side: C0 /str  pin 1
+                                                                          also   PC side: S7 /busy  pin 11  ??
       c00a-c00f unused (mirrors c008-c009)
       c010-dfff unused (mirrors c000-c00f)
 
@@ -305,8 +305,9 @@
    27c128 16KB, a13 pin is connected to a16
 
    unknown writes:
-   0c -> c009       could be for ep1810 version?
-   10 -> c008       bit 4 ?
+   0c -> c009       bits 7-6 ?
+   10 -> c008       bit 4 ?     these could be for ep1810 version?
+   
    00 -> c009       when starting game after "play game" or "backup test" mode 2 or 3
    are these just 2nd part of a 16-bit write (2 byte writes) ?
 
@@ -327,7 +328,7 @@
    hi+s   1  1   3
 
    TODO:
-   parallel port
+   parallel port  how are /str (pc->swc) and /bsy (swc->pc) related?
    save states?  if playing cart pointer to m_cart is lost?
 */
 
@@ -344,7 +345,7 @@
 #include "bus/generic/carts.h"
 #include "machine/nvram.h"
 
-#define SWC_DEBUG 1
+#define SWC_DEBUG 0
 
 
 class snes_swc_state : public snes_state
@@ -452,7 +453,8 @@ private:
 	std::vector<uint8_t> m_cart_sram;
 
 	uint8_t par_debug_str = 0;
-	uint8_t par_debug_data = 0;
+	uint8_t par_debug_data_in = 0;
+	uint8_t par_debug_data_out = 0;
 };
 
 INPUT_CHANGED_MEMBER(snes_swc_state::snes_swc_dram_changed)
@@ -624,7 +626,7 @@ void snes_swc_state::swc_floppy_formats(format_registration &fr)
 
 uint8_t snes_swc_state::fdc_input_r()
 {
-	// 5: busy flag (FC9203 ver) 6: index, 7: irq
+	// 6: index, 7: irq
 	uint8_t data = 0;
 
 	if (m_fdc->get_irq())
@@ -633,9 +635,6 @@ uint8_t snes_swc_state::fdc_input_r()
 	int idx = m_fdd->get_device()->idx_r();
 	if (!idx)
 		data |= 0x40;
-
-	if (m_busy)
-		data |= 0x20;		// parallel port transfer started?
 
 	return data;
 }
@@ -803,7 +802,8 @@ void snes_swc_state::machine_start()
 	save_item(NAME(m_cart_sram_size));
 	save_item(NAME(m_cart_sram));
 	save_item(NAME(par_debug_str));
-	save_item(NAME(par_debug_data));
+	save_item(NAME(par_debug_data_in));
+	save_item(NAME(par_debug_data_out));
 }
 
 void snes_swc_state::machine_reset()
@@ -1183,11 +1183,12 @@ inline uint8_t snes_swc_state::snes_swc_io_r(uint16_t address)
 
 	switch (address & 0xf)
 	{
-		case 0:  // fdc  input  5: busy flag (FC9203 ver) 6: index, 7: irq
+		case 0:  // fdc  input  6: index, 7: irq
 			data = m_fdc->input_r();
-			if (!machine().side_effects_disabled() && SWC_DEBUG)
+			if (!machine().side_effects_disabled())// && SWC_DEBUG)
 				logerror(" fdc input reg rd: %04x %02x\n", address, data);
-			data |= par_debug_str;
+			// 5: parallel strobe
+			data |= par_debug_str & 0x20;
 			break;
 
 		case 4:  // fdc  main status
@@ -1209,11 +1210,10 @@ inline uint8_t snes_swc_state::snes_swc_io_r(uint16_t address)
 			break;
 
 		case 8:  // parallel in
-			m_busy = 0;
-			// read parallel port
-			if (!machine().side_effects_disabled() && SWC_DEBUG)
+			data = par_debug_data_in;
+			m_busy ^= 1;
+			if (!machine().side_effects_disabled())// && SWC_DEBUG)
 				logerror(" parallel data rd: %04x\n", address);
-			data = par_debug_data;
 			break;
 
 		case 9:  // busy flag (EP1810 ver)
@@ -1259,7 +1259,7 @@ inline void snes_swc_state::snes_swc_io_w(uint16_t address, uint8_t data)
 
 			m_map_mode = data & 3;
 
-			if (SWC_DEBUG)
+			//if (SWC_DEBUG)
 			{
 				logerror(" parallel data / map mode wr: %04x %02x\n", address, data);
 				switch (m_map_mode)
@@ -1272,6 +1272,8 @@ inline void snes_swc_state::snes_swc_io_w(uint16_t address, uint8_t data)
 			}
 
 			// write parallel port
+			par_debug_data_out = data & 0xf;
+			//m_busy = (data >> 4) & 1;
 			break;
 
 		default:
