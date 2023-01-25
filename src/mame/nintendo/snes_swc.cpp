@@ -41,16 +41,18 @@
    Super Magicom MS-3201
    ---------------------
    older model
-   no pcb numbers/markings?
-   8/16mbit dram (upgradeable? same daughter board...)
+   no pcb numbers/markings
+   8/16mbit dram
+   no provision for on-board dram (daughter board only)
+   supports only lorom games
    EP1810 cpld, no asic, no pals/peels
    external fdd only (2nd db25 is populated)
-   suppied with "magic" 3.5" disk drive (generic 3.5" fdd in stand-alone case)
-   fdd power supplied via db25 cable
-   unpopulated location (34-pin dil) for internal fdd, but no 4-pin power header?
-   unpopulated location for 16-pin dip CIC chip, no jumpers to use cart instead?
+   suppied with "magic" 3.5" disk drive (generic 3.5" fdd in stand-alone case w/ psu)
+   unpopulated location (34-pin dil) for internal fdd (but no 4-pin power header)
+   unpopulated location for 16-pin dip CIC chip, jumpers on solder-side to select chip or cart
    extra 74xx174 ttl
-   unknown firmware  v31
+   known firmware: official v31, various hacks
+   can be modded to play hirom games (unofficial mod), was there a factoy modded version released?
 
    Supercom Pro.1 SP-3200 - clone?
 
@@ -150,7 +152,7 @@
                 bit 0   : 0=mode 20, 1=mode 21 (dram mapping)
                 bit 1   : 0=mode 1, 1=mode 2 (sram mapping)
 				bit 4   : ?
-      c009  r : busy flag, bit 7 (ep1810 version)                                   
+      c009  r : busy flag, bit 7 (ep1810 version)
       c000  r : busy flag, bit 5 (fc9203 version)                                PC side: C0 /str  pin 1
                                                                           also   PC side: S7 /busy  pin 11  ??
       c00a-c00f unused (mirrors c008-c009)
@@ -291,10 +293,28 @@
    ------------------------------------------------------------------------------------
    notes:
 
-   super wild card SMS3201 with 2.8cc seems to use #1
-   is #2 for older harware and/or firmware?
-   sram size bits reversed
-   old super soccer file (possibly recorded with old f/w) emu byte is 2d, 2.8cc is 21
+   for emu mode byte, neither of these exactly match what is produced by saving a cart to floppy:
+
+             2.8cc 28/08     2.7cc/2.6cc          ucon64 --swc
+   ssoccer   2d  0010 1101   21  0010 0001        0c  0000 1100
+   smw       00  0000 0000   00  0000 0000        08  0000 1000
+   sbombmn   1c  0001 1100   10  0001 0000        3c  0011 1100
+   nhl95     31  0011 0001   31  0011 0001        34  0011 0100
+
+   ucon64 seems to use doc #1
+   most games with headers added by ucon64 work ok, but some don't:
+   ffight2 (10mbit lo) needs emu byte 0c changing to 2c or doesn't run on real h/w
+   ffight3 (24mbit hi) needs emu byte 3c changing to 1c or doesn't run on real h/w
+   is it because they're odd sized roms?
+
+   looks like the only bits that matter are 4 and 5:
+   00 lo w/ sram
+   01 hi
+   10 lo
+   11 hi w/ sram
+
+   sram size probably not needed, except perhaps hi w/ 32KB (simcity 2k)
+   what is bit 0 ?
 
    ------------------------------------------------------------------------------------
 
@@ -307,7 +327,7 @@
    unknown writes:
    0c -> c009       bits 7-6 ?
    10 -> c008       bit 4 ?     these could be for ep1810 version?
-   
+
    00 -> c009       when starting game after "play game" or "backup test" mode 2 or 3
    are these just 2nd part of a 16-bit write (2 byte writes) ?
 
@@ -330,6 +350,8 @@
    TODO:
    parallel port  how are /str (pc->swc) and /bsy (swc->pc) related?
    save states?  if playing cart pointer to m_cart is lost?
+   super magicom bioses
+   dx/dx2 bioses
 */
 
 // make SOURCES=src/mame/nintendo/snes.cpp,src/mame/nintendo/snes_swc.cpp REGENIE=0 -j5
