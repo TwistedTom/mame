@@ -1,30 +1,32 @@
 // license:BSD-3-Clause
 // copyright-holders:Ryan Holtz
-#pragma once
+#ifndef MAME_RENDER_DRAWBGFX_H
+#define MAME_RENDER_DRAWBGFX_H
 
-#ifndef RENDER_BGFX
-#define RENDER_BGFX
+#pragma once
 
 #include <bgfx/bgfx.h>
 
-#include <map>
-#include <vector>
-
 #include "binpacker.h"
-#include "bgfx/vertex.h"
 #include "bgfx/chain.h"
 #include "bgfx/chainmanager.h"
+#include "bgfx/vertex.h"
 #include "sliderdirtynotifier.h"
+
+#include "modules/osdwindow.h"
+
+#include <map>
+#include <memory>
+#include <vector>
+
 
 class texture_manager;
 class target_manager;
 class shader_manager;
 class effect_manager;
-class chain_manager;
 class bgfx_texture;
 class bgfx_effect;
 class bgfx_target;
-class bgfx_chain;
 class bgfx_view;
 class osd_options;
 class avi_write;
@@ -62,6 +64,15 @@ public:
 	static char const *const WINDOW_PREFIX;
 
 private:
+	enum buffer_status
+	{
+		BUFFER_PRE_FLUSH,
+		BUFFER_FLUSH,
+		BUFFER_SCREEN,
+		BUFFER_EMPTY,
+		BUFFER_DONE
+	};
+
 	void init_bgfx_library();
 
 	void vertex(ScreenVertex* vertex, float x, float y, float z, uint32_t rgba, float u, float v);
@@ -73,18 +84,10 @@ private:
 	void setup_ortho_view();
 
 	void allocate_buffer(render_primitive *prim, uint32_t blend, bgfx::TransientVertexBuffer *buffer);
-	enum buffer_status
-	{
-		BUFFER_PRE_FLUSH,
-		BUFFER_FLUSH,
-		BUFFER_SCREEN,
-		BUFFER_EMPTY,
-		BUFFER_DONE
-	};
-	buffer_status buffer_primitives(bool atlas_valid, render_primitive** prim, bgfx::TransientVertexBuffer* buffer, int32_t screen);
+	buffer_status buffer_primitives(bool atlas_valid, render_primitive** prim, bgfx::TransientVertexBuffer* buffer, int32_t screen, int window_index);
 
-	void render_textured_quad(render_primitive* prim, bgfx::TransientVertexBuffer* buffer);
-	void render_post_screen_quad(int view, render_primitive* prim, bgfx::TransientVertexBuffer* buffer, int32_t screen);
+	void render_textured_quad(render_primitive* prim, bgfx::TransientVertexBuffer* buffer, int window_index);
+	void render_post_screen_quad(int view, render_primitive* prim, bgfx::TransientVertexBuffer* buffer, int32_t screen, int window_index);
 
 	void put_packed_quad(render_primitive *prim, uint32_t hash, ScreenVertex* vertex);
 	void put_packed_line(render_primitive *prim, ScreenVertex* vertex);
@@ -99,6 +102,9 @@ private:
 	bool update_atlas();
 	void process_atlas_packs(std::vector<std::vector<rectangle_packer::packed_rectangle>>& packed);
 	uint32_t get_texture_hash(render_primitive *prim);
+
+	void load_config(config_type cfg_type, config_level cfg_level, util::xml::data_node const *parentnode);
+	void save_config(config_type cfg_type, util::xml::data_node *parentnode);
 
 	osd_options& m_options;
 	bgfx::PlatformData m_platform_data;
@@ -126,6 +132,8 @@ private:
 	uint32_t m_white[16*16];
 	bgfx_view *m_ortho_view;
 	uint32_t m_max_view;
+	uint16_t m_view_width;
+	uint16_t m_view_height;
 
 	bgfx_view *m_avi_view;
 	avi_write *m_avi_writer;
@@ -133,6 +141,7 @@ private:
 	bgfx::TextureHandle m_avi_texture;
 	bitmap_rgb32 m_avi_bitmap;
 	uint8_t *m_avi_data;
+	std::unique_ptr<util::xml::file> m_config;
 
 	static const uint16_t CACHE_SIZE;
 	static const uint32_t PACKABLE_SIZE;
@@ -142,6 +151,7 @@ private:
 	static bool s_bgfx_library_initialized;
 	static uint32_t s_width[16];
 	static uint32_t s_height[16];
+	static uint32_t s_max_texture_size;
 };
 
-#endif // RENDER_BGFX
+#endif // MAME_RENDER_DRAWBGFX_H
