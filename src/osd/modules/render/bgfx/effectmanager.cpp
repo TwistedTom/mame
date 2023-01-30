@@ -39,13 +39,14 @@ static bool prepare_effect_document(std::string &name, osd_options &options, rap
 	bx::FileReader reader;
 	if (!bx::open(&reader, path.c_str()))
 	{
-		osd_printf_error("Unable to open effect file %s\n", path.c_str());
+		osd_printf_error("Unable to open effect file %s\n", path);
 		return false;
 	}
 
+	bx::ErrorAssert err;
 	int32_t size (bx::getSize(&reader));
 	char* data = new char[size + 1];
-	bx::read(&reader, reinterpret_cast<void*>(data), size);
+	bx::read(&reader, reinterpret_cast<void*>(data), size, &err);
 	bx::close(&reader);
 	data[size] = 0;
 
@@ -56,8 +57,8 @@ static bool prepare_effect_document(std::string &name, osd_options &options, rap
 	if (document.HasParseError())
 	{
 		std::string error(rapidjson::GetParseError_En(document.GetParseError()));
-		osd_printf_error("Unable to parse effect %s. Errors returned:\n", path.c_str());
-		osd_printf_error("%s\n", error.c_str());
+		osd_printf_error("Unable to parse effect %s. Errors returned:\n", path);
+		osd_printf_error("%s\n", error);
 		return false;
 	}
 
@@ -92,11 +93,11 @@ bgfx_effect* effect_manager::load_effect(osd_options &options, std::string name)
 		return nullptr;
 	}
 
-	bgfx_effect* effect = effect_reader::read_from_value(document, "Effect '" + name + "': ", options, m_shaders);
+	bgfx_effect* effect = effect_reader::read_from_value(name, document, "Effect '" + name + "': ", options, m_shaders);
 
 	if (effect == nullptr)
 	{
-		osd_printf_error("Unable to load effect %s\n", name.c_str());
+		osd_printf_error("Unable to load effect %s\n", name);
 		return nullptr;
 	}
 
