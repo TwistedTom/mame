@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE softwarelist SYSTEM "softwarelist.dtd">
 <!--
-license:CC0
+license:CC0-1.0
 -->
 <softwarelist name="nes" description="Nintendo Entertainment System cartridges">
 
@@ -3734,7 +3734,8 @@ license:CC0
 		</part>
 	</software>
 
-	<software name="btoadsj" cloneof="btoads">
+<!-- Same issue as US release -->
+	<software name="btoadsj" cloneof="btoads" supported="no">
 		<description>Battletoads (Japan)</description>
 		<year>1991</year>
 		<publisher>Masaya</publisher>
@@ -3754,7 +3755,8 @@ license:CC0
 		</part>
 	</software>
 
-	<software name="btoadsu" cloneof="btoads">
+<!-- Game hangs at start of level 3 (turbo tunnel). Sprite 0 hit issue? -->
+	<software name="btoadsu" cloneof="btoads" supported="no">
 		<description>Battletoads (USA)</description>
 		<year>1991</year>
 		<publisher>Tradewest</publisher>
@@ -3779,8 +3781,9 @@ license:CC0
 		</part>
 	</software>
 
+<!-- Same issue as US release -->
 <!-- glitches on NTSC -->
-	<software name="btoads" supported="partial">
+	<software name="btoads" supported="no">
 		<description>Battletoads (Europe)</description>
 		<year>1993</year>
 		<publisher>Tradewest</publisher>
@@ -24806,6 +24809,94 @@ license:CC0
 		</part>
 	</software>
 
+<!-- These five prototypes were development builds found in zip files -->
+	<software name="mickmack">
+		<!-- Build date: 9 July 1993 11:32:06 -->
+		<description>Mick &amp; Mack as the Global Gladiators (prototype, 19930709)</description>
+		<year>1993</year>
+		<publisher>Virgin Games</publisher>
+		<part name="cart" interface="nes_cart">
+			<feature name="slot" value="txrom" />
+			<dataarea name="prg" size="0x20000">
+				<rom name="global.bin" size="0x20000" crc="38960ce6" sha1="973ecc6714098115719235e68f4bd5d49710f7d6" />
+				<!-- "Fixed" ROM had this change. Changes an IRQ disable to a bank select. Needed? -->
+				<!-- <rom value="0x80" size="1" offset="0x1e028" loadflag="fill" /> -->
+			</dataarea>
+			<dataarea name="chr" size="0x20000">
+				<rom name="char.bin" size="0x1e400" crc="e708cfcf" sha1="4267be581c9aa147024eea020736aa0435df9e5f" />
+				<rom value="0x00" size="0x1c00" offset="0x1e400" loadflag="fill" />
+			</dataarea>
+		</part>
+	</software>
+
+	<software name="mickmack1" cloneof="mickmack">
+		<!-- Build date: 30 June 1993 14:11:52 -->
+		<description>Mick &amp; Mack as the Global Gladiators (prototype, 19930630)</description>
+		<year>1993</year>
+		<publisher>Virgin Games</publisher>
+		<part name="cart" interface="nes_cart">
+			<feature name="slot" value="txrom" />
+			<dataarea name="prg" size="0x20000">
+				<rom name="global.bin" size="0x20000" crc="38593a7d" sha1="9f0dde1399073f4d66496308bfa32c2193cce138" />
+			</dataarea>
+			<dataarea name="chr" size="0x20000">
+				<rom name="char.bin" size="0x1e400" crc="e708cfcf" sha1="4267be581c9aa147024eea020736aa0435df9e5f" />
+				<rom value="0x00" size="0x1c00" offset="0x1e400" loadflag="fill" />
+			</dataarea>
+		</part>
+	</software>
+
+	<software name="mickmack2" cloneof="mickmack">
+		<!-- Build date: 16 June 1993 16:27:08 -->
+		<description>Mick &amp; Mack as the Global Gladiators (prototype, 19930616)</description>
+		<year>1993</year>
+		<publisher>Virgin Games</publisher>
+		<part name="cart" interface="nes_cart">
+			<feature name="slot" value="txrom" />
+			<dataarea name="prg" size="0x20000">
+				<rom name="global.bin" size="0x20000" crc="363cf68f" sha1="0b6a02662893618197f14ed97660074073915363" />
+			</dataarea>
+			<dataarea name="chr" size="0x20000">
+				<rom name="char.bin" size="0x16400" crc="0f6b18b5" sha1="a41ae5747c149e91b92889f7f3338eef07a6d7bb" />
+				<rom value="0x00" size="0x9c00" offset="0x16400" loadflag="fill" />
+			</dataarea>
+		</part>
+	</software>
+
+	<software name="mickmack3" cloneof="mickmack">
+		<!-- Build date: 28 May 1993 18:16:30 -->
+		<description>Mick &amp; Mack as the Global Gladiators (prototype, 19930528)</description>
+		<year>1993</year>
+		<publisher>Virgin Games</publisher>
+		<part name="cart" interface="nes_cart">
+			<feature name="slot" value="txrom" />
+			<dataarea name="prg" size="0x20000">
+				<rom name="global.bin" size="0x20000" crc="dd4ca37f" sha1="ad6c20f26781a5d804a82b8b19eef5c2f5feba0f" />
+			</dataarea>
+			<dataarea name="chr" size="0x20000">
+				<rom name="char.bin" size="0x15800" crc="5df34bc5" sha1="a7fb017a86143aaabb9e8162f0d3d4406fdee7a4" />
+				<rom value="0x00" size="0xa800" offset="0x15800" loadflag="fill" />
+			</dataarea>
+		</part>
+	</software>
+
+	<software name="mickmack4" cloneof="mickmack">
+		<!-- Build date: 28 May 1993 19:18:24 -->
+		<description>Mick &amp; Mack as the Global Gladiators (prototype, 19930528, alt)</description>
+		<year>1993</year>
+		<publisher>Virgin Games</publisher>
+		<part name="cart" interface="nes_cart">
+			<feature name="slot" value="txrom" />
+			<dataarea name="prg" size="0x20000">
+				<rom name="global.bin" size="0x20000" crc="251b679f" sha1="6354c17c54e76daee57748a325650e0439fb4ca7" />
+			</dataarea>
+			<dataarea name="chr" size="0x20000">
+				<rom name="char.bin" size="0x15800" crc="5df34bc5" sha1="a7fb017a86143aaabb9e8162f0d3d4406fdee7a4" />
+				<rom value="0x00" size="0xa800" offset="0x15800" loadflag="fill" />
+			</dataarea>
+		</part>
+	</software>
+
 	<software name="mickey3" cloneof="kidklown">
 		<description>Mickey Mouse III - Yume Fuusen (Japan)</description>
 		<year>1992</year>
@@ -44838,12 +44929,13 @@ Also notice that VRAM, WRAM & mirror are probably incorrect for some of these se
 		<info name="alt_title" value="アバドックス"/>
 		<part name="cart" interface="nes_cart">
 			<feature name="slot" value="sxrom" />
-			<feature name="pcb" value="NES-SLROM" />
+			<feature name="pcb_model" value="HVC-SLROM-03" />
+			<feature name="mmc1_type" value="MMC1B2" />
 			<dataarea name="chr" size="131072">
-				<rom name="abadox (japan).chr" size="131072" crc="f1569df0" sha1="623c95592c972c3c569f8195951684c904aa5c6c" offset="00000" />
+				<rom name="nat-a3-0 chr" size="131072" crc="f1569df0" sha1="623c95592c972c3c569f8195951684c904aa5c6c" />
 			</dataarea>
 			<dataarea name="prg" size="131072">
-				<rom name="abadox (japan).prg" size="131072" crc="e675ba2a" sha1="566a4484df0dd2a0a19553d93d24c29f26113942" offset="00000" />
+				<rom name="nat-a3-0 prg" size="131072" crc="e675ba2a" sha1="566a4484df0dd2a0a19553d93d24c29f26113942" />
 			</dataarea>
 		</part>
 	</software>
@@ -47620,12 +47712,13 @@ preliminary proto for the PAL version, still running on NTSC systems) or the gfx
 		<info name="alt_title" value="ゴッドスレイヤー はるか天空のソナタ"/>
 		<part name="cart" interface="nes_cart">
 			<feature name="slot" value="txrom" />
-			<feature name="pcb" value="NES-TLROM" />
+			<feature name="pcb_model" value="HVC-TKROM-02" />
+			<feature name="mmc3_type" value="MMC3B" />
 			<dataarea name="chr" size="131072">
-				<rom name="god slayer - haruka tenkuu no sonata (japan).chr" size="131072" crc="da0003d7" sha1="01d49e3450077acfa29c21679951e13d93577344" offset="00000" />
+				<rom name="sfx-g0-0 chr" size="131072" crc="da0003d7" sha1="01d49e3450077acfa29c21679951e13d93577344" />
 			</dataarea>
 			<dataarea name="prg" size="262144">
-				<rom name="god slayer - haruka tenkuu no sonata (japan).prg" size="262144" crc="c17ae2dc" sha1="3da15f3afe11a5266708d60a589b791ae2884e61" offset="00000" />
+				<rom name="sfx-g0-0 prg" size="262144" crc="c17ae2dc" sha1="3da15f3afe11a5266708d60a589b791ae2884e61" />
 			</dataarea>
 			<!-- 8k WRAM on cartridge, battery backed up -->
 			<dataarea name="bwram" size="8192">
@@ -48879,10 +48972,10 @@ preliminary proto for the PAL version, still running on NTSC systems) or the gfx
 		<info name="alt_title" value="グナム危機一髪危機一発 エンパイアシティ1931"/>
 		<part name="cart" interface="nes_cart">
 			<feature name="slot" value="uxrom" />
-			<feature name="pcb" value="NES-UNROM" />
+			<feature name="pcb_model" value="HVC-UNROM-03" />
 			<feature name="mirroring" value="vertical" />
 			<dataarea name="prg" size="131072">
-				<rom name="magnum kiki ippatsu - empire city - 1931 (japan).prg" size="131072" crc="8e7abdfc" sha1="c8d644b58d442651748ad81b5552c5e890c10a58" offset="00000" />
+				<rom name="tfs-mg-0 prg" size="131072" crc="8e7abdfc" sha1="c8d644b58d442651748ad81b5552c5e890c10a58" />
 			</dataarea>
 			<!-- 8k VRAM on cartridge -->
 			<dataarea name="vram" size="8192">
