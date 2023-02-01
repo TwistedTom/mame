@@ -1802,22 +1802,30 @@ ROM_START( snes_swc )
 	ROM_SYSTEM_BIOS( 20, "smcc", "Supercom Pro.2 92-06-21" )  // SUPERCOM PRO.2   1992 CCL   FRONT FAREAST COCCL H.K.   *** SUPERCOM PRO.2 *** COPYRIGHT 1992 BY JSI, CCL H.K. ALL RIGHTS RESERVED 6/21/92
 	ROMX_LOAD( "smc_spcom2.bin", 0x0000, 0x2000, CRC(63199502) SHA1(2fa73958bceee5096e943262b854a3ea433bd16e), ROM_BIOS(20))  // spcom2.bin, SPCROM2.BIN
 
-	// these don't work - different ports
-
-	// SMCROM V3.1, fixed for the 'Fighter pro only' games Done by Carnivore/BeerMacht on 24-Jan-93 using BeerMon V0.44
-	ROM_SYSTEM_BIOS( 21, "smcd", "v31 Carnivore/BeerMacht 93-01-24" )  // HYPER MAGICOM V31   1992 JSI   CARNIVORE 24-JAN-93   *** SUPER MAGICOM V3 *** COPYRIGHT 1992 BY JSI, FRONT FAREAST CO. ALL RIGHTS RES
-	ROMX_LOAD( "smchirom.bin", 0x0000, 0x2000, CRC(e5090801) SHA1(af3683c182ea9ae924c5528c3ee6315bc53f6e4d), ROM_BIOS(21))  // SMChiROM.BIN
-
-	// above, reversed back to source
-	ROM_SYSTEM_BIOS( 22, "smce", "v31 xx-xx-xx" )  // HYPER MAGICOM V31   1992 JSI   FRONT FAREAST COCCL H.K.   *** SUPER MAGICOM V3 *** COPYRIGHT 1992 BY JSI, FRONT FAREAST CO. ALL RIGHTS RES
-	ROMX_LOAD( "smchirom_unmod.bin", 0x0000, 0x2000, CRC(8c5f29c4) SHA1(244a6e38ce43da459b3fa83780521b6cea607cb3), ROM_BIOS(22))  // SMChiROM_unmod.BIN
-
-	// SUPER MAGICOM DRIVEROM V3.1, fixed for the 'Fighter pro only' games Done by SDI on 31-Jan-93 using BeerMon V0.44
-	ROM_SYSTEM_BIOS( 23, "smcf", "v31 SDI 93-01-31" )  // HIGHROM DOS FIX BY   TMS/SDI   *** SUPER MAGICOM V3 *** COPYRIGHT 1992 BY TMS, FRONT FAREAST CO. ALL RIGHTS RES
-	ROMX_LOAD( "rom-smc_hir.bin", 0x0000, 0x2000, CRC(467f317a) SHA1(7d0bdf28db2d5a2cc5a168c53afad32f9bf3747e), ROM_BIOS(23))  // ROM-SMC.HIR
+	// micro genius future supercom pro 9
+	ROM_SYSTEM_BIOS( 21, "smcd", "microgenius" )  // 1992/09/01   FUTURE PRO.9   -- MICRO GENIUS --1993-
+	ROMX_LOAD( "microgenius.bin", 0x0000, 0x2000, CRC(bbda5744) SHA1(fa9ea5d80317089f318e0b930b2af4435edbc838), ROM_BIOS(21))  // MICROGENIUS_CLEAN.smc
 
 	// soft upgrades
-	// HighRom.Dos                  works                                                                 HIGHROM DOS FIX BY ARAGORN
+	// HighRom.Dos     HIGHROM DOS FIX BY ARAGORN
+	// MMLOADER.SMC    Mystic_Merlin FIG Loader v1  (for "Twin Supercom TS32 Pro.5"(NO DUMP) or "Micro Genius Future Supercom Pro.9")
+
+
+	// these don't work - different ports  TODO...
+
+	// SMCROM V3.1, fixed for the 'Fighter pro only' games Done by Carnivore/BeerMacht on 24-Jan-93 using BeerMon V0.44
+	ROM_SYSTEM_BIOS( 22, "smce", "v31 Carnivore/BeerMacht 93-01-24" )  // HYPER MAGICOM V31   1992 JSI   CARNIVORE 24-JAN-93   *** SUPER MAGICOM V3 *** COPYRIGHT 1992 BY JSI, FRONT FAREAST CO. ALL RIGHTS RES
+	ROMX_LOAD( "smchirom.bin", 0x0000, 0x2000, CRC(e5090801) SHA1(af3683c182ea9ae924c5528c3ee6315bc53f6e4d), ROM_BIOS(22))  // SMChiROM.BIN
+
+	// above, reversed back to source
+	ROM_SYSTEM_BIOS( 23, "smcf", "v31 xx-xx-xx" )  // HYPER MAGICOM V31   1992 JSI   FRONT FAREAST COCCL H.K.   *** SUPER MAGICOM V3 *** COPYRIGHT 1992 BY JSI, FRONT FAREAST CO. ALL RIGHTS RES
+	ROMX_LOAD( "smchirom_unmod.bin", 0x0000, 0x2000, CRC(8c5f29c4) SHA1(244a6e38ce43da459b3fa83780521b6cea607cb3), ROM_BIOS(23))  // SMChiROM_unmod.BIN
+
+	// SUPER MAGICOM DRIVEROM V3.1, fixed for the 'Fighter pro only' games Done by SDI on 31-Jan-93 using BeerMon V0.44
+	ROM_SYSTEM_BIOS( 24, "smcg", "v31 SDI 93-01-31" )  // HIGHROM DOS FIX BY   TMS/SDI   *** SUPER MAGICOM V3 *** COPYRIGHT 1992 BY TMS, FRONT FAREAST CO. ALL RIGHTS RES
+	ROMX_LOAD( "rom-smc_hir.bin", 0x0000, 0x2000, CRC(467f317a) SHA1(7d0bdf28db2d5a2cc5a168c53afad32f9bf3747e), ROM_BIOS(24))  // ROM-SMC.HIR
+
+	// soft upgrades
 	// Super Magicom V3 BIOS.bin    (add header from HighRom.Dos)  doesn't work - different ports         SUPER MAGICOM V3  ©92 TLPI!
 	// Super Magicom V3H BIOS.bin   (add header from HighRom.Dos)  works                                  SUPER MAGICOM V3H ©92 TLPI!
 
