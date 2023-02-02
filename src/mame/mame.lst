@@ -33947,6 +33947,8 @@ snes_fcart_pal                  // bootleg
 @source:nintendo/snes_swc.cpp
 snes_swc                        // Front Fareast
 snes_swc_pal                    // Front Fareast
+snes_smc                        // Front Fareast
+snes_smc_pal                    // Front Fareast
 
 @source:nintendo/snesb.cpp
 denseib                         // bootleg

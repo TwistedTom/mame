@@ -971,15 +971,19 @@ inline uint8_t snes_swc_state::snes_swc_mode_0_r_bank2(offs_t offset)
 		{
 			data = snes_r_io(address);
 		}
-		else if (address < 0x8000)  // hi cart sram  6000-7fff   what banks?  2.8cc uses 30 for the check
+		else if (address < 0x8000)  // hi cart sram  6000-7fff   2.8cc uses bank 30 for the check
 		{
-			if (m_cart_type && m_cart_sram_size && m_cartslot && m_cartslot->exists())
+			if ((offset >= 0x300000) && (offset < 0x340000) && m_cart_type && m_cart_sram_size && m_cartslot && m_cartslot->exists())
 			{
+				address &= 0x1fff;
+				address |= (offset & 0x30000) >> 3;  // Kaite Tsukutte Asoberu Dezaemon (Japan) has 128KB/1mbit sram (banks 30-3f)
 				address &= m_cart_sram_size - 1;
 				data = m_cart_sram[address];
 				if (!machine().side_effects_disabled() && SWC_DEBUG)
 					logerror("hi cart sram rd: %04x %02x\n", address, data);
 			}
+			else
+				data = snes_open_bus_r();
 		}
 		else if (address < 0xa000)  // dram  8000-9fff
 		{
@@ -1011,7 +1015,7 @@ inline uint8_t snes_swc_state::snes_swc_mode_0_r_bank2(offs_t offset)
 		{
 			if (!machine().side_effects_disabled() && SWC_DEBUG)
 				logerror("? rd: %06x\n", offset);
-			data = snes_open_bus_r();
+			data = snes_open_bus_r();  // or cart if present?
 		}
 	}
 	else  // < 0x7e0000                bank 40-7d
@@ -1072,7 +1076,7 @@ inline uint8_t snes_swc_state::snes_swc_mode_0_r_bank2(offs_t offset)
 		{
 			if (!machine().side_effects_disabled() && SWC_DEBUG)
 				logerror("? rd: %06x\n", offset);
-			data = snes_open_bus_r();
+			data = snes_open_bus_r();  // or cart if present?
 		}
 	}
 
@@ -1093,14 +1097,16 @@ inline void snes_swc_state::snes_swc_mode_0_w(address_space &space, offs_t offse
 		{
 			snes_w_io(space, address, data);
 		}
-		else if (address < 0x8000)  // hi cart sram  6000-7fff   what banks?  2.8cc uses 30 for the check
+		else if (address < 0x8000)  // hi cart sram  6000-7fff   2.8cc uses bank 30 for the check
 		{
-			if (m_cart_type && m_cart_sram_size && m_cartslot && m_cartslot->exists())
+			if ((offset >= 0x300000) && (offset < 0x340000) && m_cart_type && m_cart_sram_size && m_cartslot && m_cartslot->exists())
 			{
+				address &= 0x1fff;
+				address |= (offset & 0x30000) >> 3;  // Kaite Tsukutte Asoberu Dezaemon (Japan) has 128KB/1mbit sram (banks 30-3f)
 				address &= m_cart_sram_size - 1;
-				m_cart_sram[address] = data;
-				if (!machine().side_effects_disabled() && SWC_DEBUG)
+				if (SWC_DEBUG)
 					logerror("hi cart sram wr: %04x %02x\n", address, data);
+				m_cart_sram[address] = data;
 			}
 		}
 		else if (address < 0xa000)  // dram  8000-9fff
@@ -1493,12 +1499,14 @@ inline uint8_t snes_swc_state::snes_swc_mode_1_r(offs_t offset)
 			if (m_cart_type && m_cart_sram_size && (offset >= 0x300000) && (offset < 0x340000))  // hi cart sram  30-33,b0-b3:6000-7fff
 			{
 				address &= 0x1fff;
-				address |= (offset & 0x30000) >> 3;  // no point doing 128KB...?
+				address |= (offset & 0x30000) >> 3;  // Kaite Tsukutte Asoberu Dezaemon (Japan) has 128KB/1mbit sram (banks 30-3f)
 				address &= m_cart_sram_size - 1;
+				data = m_cart_sram[address];
 				if (!machine().side_effects_disabled() && SWC_DEBUG)
 					logerror("hi cart sram rd: %04x %02x\n", address, data);
-				data = m_cart_sram[address];
 			}
+			else
+				data = snes_open_bus_r();
 		}
 		else                        // 8000-ffff
 		{
@@ -1510,9 +1518,9 @@ inline uint8_t snes_swc_state::snes_swc_mode_1_r(offs_t offset)
 		if (!m_cart_type && m_cart_sram_size && (offset >= 0x700000) && (address < 0x8000))  // lo cart sram  70-7d,f0-ff:0000-7fff
 		{
 			address &= m_cart_sram_size - 1;
+			data = m_cart_sram[address];
 			if (!machine().side_effects_disabled() && SWC_DEBUG)
 				logerror("lo cart sram rd: %04x %02x\n", address, data);
-			data = m_cart_sram[address];
 		}
 		else
 			data = snes_swc_mode_1_rom_access(offset);
@@ -1540,7 +1548,7 @@ inline void snes_swc_state::snes_swc_mode_1_w(address_space &space, offs_t offse
 			if (m_cart_type && m_cart_sram_size && (offset >= 0x300000) && (offset < 0x340000) && (address < 0x8000))  // hi cart sram  30-33,b0-b3:6000-7fff
 			{
 				address &= 0x1fff;
-				address |= (offset & 0x30000) >> 3;  // no point doing 128KB...?
+				address |= (offset & 0x30000) >> 3;  // Kaite Tsukutte Asoberu Dezaemon (Japan) has 128KB/1mbit sram (banks 30-3f)
 				address &= m_cart_sram_size - 1;
 				if (SWC_DEBUG)
 					logerror("hi cart sram wr: %04x %02x\n", address, data);
@@ -1607,10 +1615,12 @@ inline uint8_t snes_swc_state::snes_swc_mode_2_r(offs_t offset)
 			{
 				address &= 0x1fff;
 				address |= (offset & 0x30000) >> 3;  // swc has 32KB, can't do 128KB !
+				data = m_sram[address];
 				if (!machine().side_effects_disabled() && SWC_DEBUG)
 					logerror("hi swc sram rd: %04x %02x\n", address, data);
-				data = m_sram[address];
 			}
+			else
+				data = snes_open_bus_r();
 		}
 		else                        // 8000-ffff
 		{
@@ -1622,9 +1632,9 @@ inline uint8_t snes_swc_state::snes_swc_mode_2_r(offs_t offset)
 		if ((m_map_mode == LO_SRAM) && (offset >= 0x700000) && (address < 0x8000))  // lo cart sram  70-7d,f0-ff:0000-7fff
 		{
 			address &= 0x8000 - 1;  // swc has 32KB
+			data = m_sram[address];
 			if (!machine().side_effects_disabled() && SWC_DEBUG)
 				logerror("lo swc sram rd: %04x %02x\n", address, data);
-			data = m_sram[address];
 		}
 		else
 			data = snes_swc_mode_2_rom_access(offset);
@@ -1788,23 +1798,28 @@ ROM_START( snes_swc )
 	ROM_SYSTEM_BIOS( 17, "16a", "v1.6c 93-01-29" )  // 1993 JSI FRONT FAREAST CO. VER 1.6C
 	ROMX_LOAD( "swc_16a_930129.bin", 0x0000, 0x4000, CRC(add03d8f) SHA1(41ae4a37518e4daa8a56c38659ba33c3e6199c88), ROM_BIOS(17))  // Super Wild Card V1.6 BIOS.smc
 
-	// Super Magicom
+ROM_END
+
+#define rom_snes_swc_pal rom_snes_swc
+
+ROM_START( snes_smc )
+	ROM_REGION( 0x2000, "bios", 0 )
 
 	// v31
-	ROM_SYSTEM_BIOS( 18, "smca", "v31 92-xx-xx" )  // SUPER MAGICOM V31   1992 JSI   FRONT FAREAST COCCL H.K.   *** SUPER MAGICOM V3 *** COPYRIGHT 1992 BY JSI, FRONT FAREAST CO. ALL RIGHTS RES
-	ROMX_LOAD( "smc_31.bin", 0x0000, 0x2000, CRC(a0fa40d3) SHA1(2570d247af30606e9a8b4c241b147859f5f79c90), ROM_BIOS(18))  // smc.bin, Super_Magicom_V31_ROM.bin, Super Magicom V31 BIOS.smc
+	ROM_SYSTEM_BIOS( 0, "smca", "v31 92-xx-xx" )  // SUPER MAGICOM V31   1992 JSI   FRONT FAREAST COCCL H.K.   *** SUPER MAGICOM V3 *** COPYRIGHT 1992 BY JSI, FRONT FAREAST CO. ALL RIGHTS RES
+	ROMX_LOAD( "smc_31.bin", 0x0000, 0x2000, CRC(a0fa40d3) SHA1(2570d247af30606e9a8b4c241b147859f5f79c90), ROM_BIOS(0))  // smc.bin, Super_Magicom_V31_ROM.bin, Super Magicom V31 BIOS.smc
 
 	// v1h
-	ROM_SYSTEM_BIOS( 19, "smcb", "v1h 91-12-23" )  // SUPER MAGICOM V1H   1991 JSI FRONT FAREAST CO. CCL H.K.   FRONT FAREAST COCCL H.K.   *** SUPER MAGICOM V-1T *** COPYRIGHT 1991 BY JSI, FRONT FAREAST CO. ALL RIGHTS RESERVED 10/20/91,12/23/91
-	ROMX_LOAD( "smc_1h.bin", 0x0000, 0x2000, CRC(c7763b63) SHA1(03257beedc96e909813a03a687929e2f927bf64e), ROM_BIOS(19))  // Super Magicom V1H BIOS.smc
+	ROM_SYSTEM_BIOS( 1, "smcb", "v1h 91-12-23" )  // SUPER MAGICOM V1H   1991 JSI FRONT FAREAST CO. CCL H.K.   FRONT FAREAST COCCL H.K.   *** SUPER MAGICOM V-1T *** COPYRIGHT 1991 BY JSI, FRONT FAREAST CO. ALL RIGHTS RESERVED 10/20/91,12/23/91
+	ROMX_LOAD( "smc_1h.bin", 0x0000, 0x2000, CRC(c7763b63) SHA1(03257beedc96e909813a03a687929e2f927bf64e), ROM_BIOS(1))  // Super Magicom V1H BIOS.smc
 
 	// spcom2
-	ROM_SYSTEM_BIOS( 20, "smcc", "Supercom Pro.2 92-06-21" )  // SUPERCOM PRO.2   1992 CCL   FRONT FAREAST COCCL H.K.   *** SUPERCOM PRO.2 *** COPYRIGHT 1992 BY JSI, CCL H.K. ALL RIGHTS RESERVED 6/21/92
-	ROMX_LOAD( "smc_spcom2.bin", 0x0000, 0x2000, CRC(63199502) SHA1(2fa73958bceee5096e943262b854a3ea433bd16e), ROM_BIOS(20))  // spcom2.bin, SPCROM2.BIN
+	ROM_SYSTEM_BIOS( 2, "smcc", "Supercom Pro.2 92-06-21" )  // SUPERCOM PRO.2   1992 CCL   FRONT FAREAST COCCL H.K.   *** SUPERCOM PRO.2 *** COPYRIGHT 1992 BY JSI, CCL H.K. ALL RIGHTS RESERVED 6/21/92
+	ROMX_LOAD( "smc_spcom2.bin", 0x0000, 0x2000, CRC(63199502) SHA1(2fa73958bceee5096e943262b854a3ea433bd16e), ROM_BIOS(2))  // spcom2.bin, SPCROM2.BIN
 
 	// micro genius future supercom pro 9
-	ROM_SYSTEM_BIOS( 21, "smcd", "microgenius" )  // 1992/09/01   FUTURE PRO.9   -- MICRO GENIUS --1993-
-	ROMX_LOAD( "microgenius.bin", 0x0000, 0x2000, CRC(bbda5744) SHA1(fa9ea5d80317089f318e0b930b2af4435edbc838), ROM_BIOS(21))  // MICROGENIUS_CLEAN.smc
+	ROM_SYSTEM_BIOS( 3, "smcd", "microgenius" )  // 1992/09/01   FUTURE PRO.9   -- MICRO GENIUS --1993-
+	ROMX_LOAD( "microgenius.bin", 0x0000, 0x2000, CRC(bbda5744) SHA1(fa9ea5d80317089f318e0b930b2af4435edbc838), ROM_BIOS(3))  // MICROGENIUS_CLEAN.smc
 
 	// soft upgrades
 	// HighRom.Dos     HIGHROM DOS FIX BY ARAGORN
@@ -1814,16 +1829,16 @@ ROM_START( snes_swc )
 	// these don't work - different ports  TODO...
 
 	// SMCROM V3.1, fixed for the 'Fighter pro only' games Done by Carnivore/BeerMacht on 24-Jan-93 using BeerMon V0.44
-	ROM_SYSTEM_BIOS( 22, "smce", "v31 Carnivore/BeerMacht 93-01-24" )  // HYPER MAGICOM V31   1992 JSI   CARNIVORE 24-JAN-93   *** SUPER MAGICOM V3 *** COPYRIGHT 1992 BY JSI, FRONT FAREAST CO. ALL RIGHTS RES
-	ROMX_LOAD( "smchirom.bin", 0x0000, 0x2000, CRC(e5090801) SHA1(af3683c182ea9ae924c5528c3ee6315bc53f6e4d), ROM_BIOS(22))  // SMChiROM.BIN
+	ROM_SYSTEM_BIOS( 4, "smce", "v31 Carnivore/BeerMacht 93-01-24" )  // HYPER MAGICOM V31   1992 JSI   CARNIVORE 24-JAN-93   *** SUPER MAGICOM V3 *** COPYRIGHT 1992 BY JSI, FRONT FAREAST CO. ALL RIGHTS RES
+	ROMX_LOAD( "smchirom.bin", 0x0000, 0x2000, CRC(e5090801) SHA1(af3683c182ea9ae924c5528c3ee6315bc53f6e4d), ROM_BIOS(4))  // SMChiROM.BIN
 
 	// above, reversed back to source
-	ROM_SYSTEM_BIOS( 23, "smcf", "v31 xx-xx-xx" )  // HYPER MAGICOM V31   1992 JSI   FRONT FAREAST COCCL H.K.   *** SUPER MAGICOM V3 *** COPYRIGHT 1992 BY JSI, FRONT FAREAST CO. ALL RIGHTS RES
-	ROMX_LOAD( "smchirom_unmod.bin", 0x0000, 0x2000, CRC(8c5f29c4) SHA1(244a6e38ce43da459b3fa83780521b6cea607cb3), ROM_BIOS(23))  // SMChiROM_unmod.BIN
+	ROM_SYSTEM_BIOS( 5, "smcf", "v31 xx-xx-xx" )  // HYPER MAGICOM V31   1992 JSI   FRONT FAREAST COCCL H.K.   *** SUPER MAGICOM V3 *** COPYRIGHT 1992 BY JSI, FRONT FAREAST CO. ALL RIGHTS RES
+	ROMX_LOAD( "smchirom_unmod.bin", 0x0000, 0x2000, CRC(8c5f29c4) SHA1(244a6e38ce43da459b3fa83780521b6cea607cb3), ROM_BIOS(5))  // SMChiROM_unmod.BIN
 
 	// SUPER MAGICOM DRIVEROM V3.1, fixed for the 'Fighter pro only' games Done by SDI on 31-Jan-93 using BeerMon V0.44
-	ROM_SYSTEM_BIOS( 24, "smcg", "v31 SDI 93-01-31" )  // HIGHROM DOS FIX BY   TMS/SDI   *** SUPER MAGICOM V3 *** COPYRIGHT 1992 BY TMS, FRONT FAREAST CO. ALL RIGHTS RES
-	ROMX_LOAD( "rom-smc_hir.bin", 0x0000, 0x2000, CRC(467f317a) SHA1(7d0bdf28db2d5a2cc5a168c53afad32f9bf3747e), ROM_BIOS(24))  // ROM-SMC.HIR
+	ROM_SYSTEM_BIOS( 6, "smcg", "v31 SDI 93-01-31" )  // HIGHROM DOS FIX BY   TMS/SDI   *** SUPER MAGICOM V3 *** COPYRIGHT 1992 BY TMS, FRONT FAREAST CO. ALL RIGHTS RES
+	ROMX_LOAD( "rom-smc_hir.bin", 0x0000, 0x2000, CRC(467f317a) SHA1(7d0bdf28db2d5a2cc5a168c53afad32f9bf3747e), ROM_BIOS(6))  // ROM-SMC.HIR
 
 	// soft upgrades
 	// Super Magicom V3 BIOS.bin    (add header from HighRom.Dos)  doesn't work - different ports         SUPER MAGICOM V3  ©92 TLPI!
@@ -1831,9 +1846,12 @@ ROM_START( snes_swc )
 
 ROM_END
 
-#define rom_snes_swc_pal rom_snes_swc
+#define rom_snes_smc_pal rom_snes_smc
 
 //   YEAR,   NAME,      PARENT, COMPAT, MACHINE,      INPUT,     CLASS,          INIT,          COMPANY,         FULLNAME,              FLAGS
 
-CONS( 2022, snes_swc,     0,        0, snes_swc,     snes_swc, snes_swc_state, init_snes_swc, "Front Fareast", "Super Wild Card SMS3201 (ntsc)", 0 )
-CONS( 2022, snes_swc_pal, snes_swc, 0, snes_swc_pal, snes_swc, snes_swc_state, init_snes_swc, "Front Fareast", "Super Wild Card SMS3201 (pal)",  0 )
+CONS( 1993, snes_swc,     0,        0, snes_swc,     snes_swc, snes_swc_state, init_snes_swc, "Front Fareast", "Super Wild Card SMS3201 (ntsc)", 0 )
+CONS( 1993, snes_swc_pal, snes_swc, 0, snes_swc_pal, snes_swc, snes_swc_state, init_snes_swc, "Front Fareast", "Super Wild Card SMS3201 (pal)",  0 )
+
+CONS( 1991, snes_smc,     0,        0, snes_swc,     snes_swc, snes_swc_state, init_snes_swc, "Front Fareast", "Super Magicom MS-3201 (ntsc)", 0 )
+CONS( 1991, snes_smc_pal, snes_smc, 0, snes_swc_pal, snes_swc, snes_swc_state, init_snes_swc, "Front Fareast", "Super Magicom MS-3201 (pal)",  0 )
