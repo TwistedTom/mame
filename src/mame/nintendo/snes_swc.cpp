@@ -1,5 +1,6 @@
 //
-// Super Wild Card
+// Super Wild Card / Super Magicom
+// SNES backup copiers
 //
 
 /*
@@ -44,7 +45,6 @@
    no pcb numbers/markings
    8/16mbit dram
    no provision for on-board dram (daughter board only)
-   supports only lorom games
    EP1810 cpld, no asic, no pals/peels
    external fdd only (2nd db25 is populated)
    suppied with "magic" 3.5" disk drive (generic 3.5" fdd in stand-alone case w/ psu)
@@ -52,9 +52,21 @@
    unpopulated location for 16-pin dip CIC chip, jumpers on solder-side to select chip or cart
    extra 74xx174 ttl
    known firmware: official v31, various hacks
+   supports only lorom games
+   doesn't support games that have sram presence protection checks (doesn't disable it's sram)
    can be modded to play hirom games (unofficial mod), was there a factoy modded version released?
 
-   Supercom Pro.1 SP-3200 - clone?
+   odd versions:
+   24mbit model: identical case, pcb is very similar to wild card "Super Magicom Plus"
+   ??? model: smaller cart slot (46-pin), clone or early version? no pcb pic
+
+   clones:
+   Supercom Pro.1/2 SP-3200
+   Micro Genius Future Supercom Pro.9
+   Twin Supercom Pro.5 TS32  (NO DUMP)
+   ...
+   some clone bioses use different ports, what h/w are they for?
+   UFO Super Drive Pro?  lots gals, no cpld
 
 
    later hardware...
@@ -151,7 +163,7 @@
       c008  w : bit 0-3 : parallel data output                                   PC side: S3-6  err, sel, pout, ack  pins 15,13,12,10
                 bit 0   : 0=mode 20, 1=mode 21 (dram mapping)
                 bit 1   : 0=mode 1, 1=mode 2 (sram mapping)
-				bit 4   : ?
+                bit 4   : ?
       c009  r : busy flag, bit 7 (ep1810 version)
       c000  r : busy flag, bit 5 (fc9203 version)                                PC side: C0 /str  pin 1
                                                                           also   PC side: S7 /busy  pin 11  ??
@@ -293,28 +305,38 @@
    ------------------------------------------------------------------------------------
    notes:
 
-   for emu mode byte, neither of these exactly match what is produced by saving a cart to floppy:
+   neither of these exactly match what is produced by saving a cart to floppy:
 
-             2.8cc 28/08     2.7cc/2.6cc          ucon64 --swc
-   ssoccer   2d  0010 1101   21  0010 0001        0c  0000 1100
-   smw       00  0000 0000   00  0000 0000        08  0000 1000
-   sbombmn   1c  0001 1100   10  0001 0000        3c  0011 1100
-   nhl95     31  0011 0001   31  0011 0001        34  0011 0100
+             2.8cc 28/08     2.7cc/2.6cc     2.2cc/1.8/1.6c       ucon64 --swc
+   ssoccer   2d  0010 1101   21  0010 0001   21  0010 0001        0c  0000 1100
+   smw       00  0000 0000   00  0000 0000   00  0000 0000        08  0000 1000
+   sbombmn   1c  0001 1100   10  0001 0000   30  0011 0000        3c  0011 1100
+   nhl95     31  0011 0001   31  0011 0001   30  0011 0000        34  0011 0100
 
-   ucon64 seems to use doc #1
-   most games with headers added by ucon64 work ok, but some don't:
-   ffight2 (10mbit lo) needs emu byte 0c changing to 2c or doesn't run on real h/w
-   ffight3 (24mbit hi) needs emu byte 3c changing to 1c or doesn't run on real h/w
-   is it because they're odd sized roms?
+   looks like the important bits are 4 and 5:
+   00  lo w/ sram
+   01  hi
+   10  lo
+   11  hi w/ sram
 
-   looks like the only bits that matter are 4 and 5:
-   00 lo w/ sram
-   01 hi
-   10 lo
-   11 hi w/ sram
-
-   sram size probably not needed, except perhaps hi w/ 32KB (simcity 2k)
    what is bit 0 ?
+   what are bits 2 and 3?  used only by 2.8cc, don't seem to be sram size...
+
+   ucon64 seems to use doc #1, which seems to be for >=DX models?
+   most games with headers added by ucon64 work ok, but some don't:
+
+   need correct emu byte to pass sram presence protection check:
+     ffight2, demcrest, ffight3(TBC), samsho(TBC), ...
+
+   still don't work with correct emu byte (see below):
+     smas, ...
+
+   sram size doesn't seem to be set/used, and probably isn't needed by the h/w, except...
+     perhaps for hi w/32KB sram games (simcity 2k)
+     for sram size protection checks (smas)
+
+   magicom doesn't use emu byte at all (0 or 0x40)
+   can't disable sram so games above don't work
 
    ------------------------------------------------------------------------------------
 
@@ -322,7 +344,8 @@
    asic has control of a13, a14, /cart, d0-7, everything else is straight through
 
    bios:
-   27c128 16KB, a13 pin is connected to a16
+   swc 27c128 16KB, a13 pin is connected to a16
+   smc 27c64 8KB, pin 26 (27c128 a13) goes to 74ls174 so can be latched somehow
 
    unknown writes:
    0c -> c009       bits 7-6 ?
@@ -336,8 +359,8 @@
    checks hi at 306000 directly
 
    dram mapping:
-   make more accurate?
-   suspect hirom should only be available in c0-ff banks (ssf2 protection doesn't trigger)
+   accurate?  a23 not connected on real h/w
+   TODO: compare games with rom size/mapping protection checks with real h/w (ssf2)
 
    dram & sram map mode:
    sram map bit is not hi/lo !
@@ -350,8 +373,8 @@
    TODO:
    parallel port  how are /str (pc->swc) and /bsy (swc->pc) related?
    save states?  if playing cart pointer to m_cart is lost?
-   super magicom bioses
    dx/dx2 bioses
+   seperate magicom?
 */
 
 // make SOURCES=src/mame/nintendo/snes.cpp,src/mame/nintendo/snes_swc.cpp REGENIE=0 -j5
