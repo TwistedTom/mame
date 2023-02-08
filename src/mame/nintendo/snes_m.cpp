@@ -1002,15 +1002,15 @@ void snes_state::snes_init_timers()
 
 void snes_state::snes_init_ram()
 {
-	int i;
+	// int i;
 
-	/* Init work RAM - 0x55 isn't exactly right but it's close */
-	/* make sure it happens to the 65816 (CPU 0) */
-	const size_t size = m_wram.bytes();
-	for (i = 0; i < size; i++)
-	{
-		m_wram[i] = 0x55;
-	}
+	// /* Init work RAM - 0x55 isn't exactly right but it's close */
+	// /* make sure it happens to the 65816 (CPU 0) */
+	// const size_t size = m_wram.bytes();
+	// for (i = 0; i < size; i++)
+	// {
+		// m_wram[i] = 0x55;
+	// }
 
 	/* Inititialize registers/variables */
 	SNES_CPU_REG(JOY1L) = SNES_CPU_REG(JOY1H) = 0;

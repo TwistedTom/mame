@@ -305,38 +305,54 @@
    ------------------------------------------------------------------------------------
    notes:
 
-   neither of these exactly match what is produced by saving a cart to floppy:
+   assume these docs refer to >=DX models
+   ucon64 seems to use doc #1, differs from what bios produces
 
-             2.8cc 28/08     2.7cc/2.6cc     2.2cc/1.8/1.6c       ucon64 --swc
-   ssoccer   2d  0010 1101   21  0010 0001   21  0010 0001        0c  0000 1100
-   smw       00  0000 0000   00  0000 0000   00  0000 0000        08  0000 1000
-   sbombmn   1c  0001 1100   10  0001 0000   30  0011 0000        3c  0011 1100
-   nhl95     31  0011 0001   31  0011 0001   30  0011 0000        34  0011 0100
+   byte 2 "emulation mode" produced by bios (saving a cart to floppy):
 
-   looks like the important bits are 4 and 5:
-   00  lo w/ sram
-   01  hi
-   10  lo
-   11  hi w/ sram
+              rom mbit
+              |   sram kbit
+              |   |    map type
+              |   |    |
+              |   |    |     2.8cc 28/08     2.7cc/2.6cc     2.2cc/1.8/1.6c       ucon64 --swc
+   ssoccer    4   0    lo    2d  0010 1101   21  0010 0001   21  0010 0001        0c  0000 1100
+   smw        4   16   lo    00  0000 0000   00  0000 0000   00  0000 0000        08  0000 1000
+   sbombmn    4   0    hi    1c  0001 1100   10  0001 0000   30  0011 0000        3c  0011 1100
+   nhl95      8   64   hi    31  0011 0001   31  0011 0001   30  0011 0000        34  0011 0100
+   congcap    4   0    lo    2d  0010 1101
+   ffight2    10  0    lo    2c  0010 1100   lo sram check
+   simcity    4   256  lo    00  0000 0000
+   chaoseng   12  0    hi    1c  0001 1100
+   zoop       4   0    hi    1c  0001 1100
+   ssf2       32  0    hi    3c  0011 1100   no sram checks (rom size/mapping check)
+   killinst   32  0    hi    3c  0011 1100   sram check?  probably hi, could be both?
+   samsho     32  0    hi    3c  0011 1100   hi & lo sram checks
+   simcity2k  16  256  hi    30  0011 0000
+   dkc2       32  16   hi    30  0011 0000   sram check?  probably hi, could be both?
+   smas       16  64   lo    00  0000 0000   lo sram size check (2KB/16kbit)
+   demcrest   16  0    lo    2c  0010 1100   lo sram check (and rom size/mapping check)
+   ffight3    24  0    hi    1c  0001 1100   sram check?  probably hi
+   ironcomm   10  0    lo    2c  0010 1100   lo sram check
+   legend     8   0    lo    2d  0010 1101   lo sram check
 
-   what is bit 0 ?
-   what are bits 2 and 3?  used only by 2.8cc, don't seem to be sram size...
+   bit 4 is hi/lo rom select  c008:0  U12 peel pin 1
+   bit 5 is hi/lo sram type select  c008:1  U13 peel pin 1  0= lo enabled / hi disabled  1= lo disabled / hi enabled
+   bit 6 is set if "another file to come" for split-file games  eg. files 1-4: 40 40 40 2c (full emu byte for last file only)
+   bits 3:2 used only by 2.8cc, sram size ?
+   bit 1 sometimes set ?
+   bits 7:6,1 unused ?
 
-   ucon64 seems to use doc #1, which seems to be for >=DX models?
-   most games with headers added by ucon64 work ok, but some don't:
-
-   need correct emu byte to pass sram presence protection check:
-     ffight2, demcrest, ffight3(TBC), samsho(TBC), ...
-
-   still don't work with correct emu byte (see below):
-     smas, ...
-
-   sram size doesn't seem to be set/used, and probably isn't needed by the h/w, except...
-     perhaps for hi w/32KB sram games (simcity 2k)
-     for sram size protection checks (smas)
+   not possible to turn off both sram areas together (or turn on, not that there's a reason to!)
+   can be a problem as some games (samsho) protection check both types
+   for 32mbit hirom games (all 32mbit are hirom?) lo must be disabled (would otherwise conflict with rom - which means hi must be on which can fail protection checks!)
+   bios does this:
+   lo        = 1 = lo dis  hi en   lo games with hi sram check will fail (do any exist?)
+   lo+sram   = 0 = lo en   hi dis  ok
+   hi <32m   = 0 = lo en   hi dis  hi games with lo sram check will fail (samsho does but is 32m)
+   hi =32m   = 1 = lo dis  hi en   32m hi games with hi sram check will fail
+   hi+sram   = 1 = lo dis  hi en   ok  (inc. 32m+sram)
 
    magicom doesn't use emu byte at all (0 or 0x40)
-   can't disable sram so games above don't work
 
    ------------------------------------------------------------------------------------
 
@@ -359,16 +375,11 @@
    checks hi at 306000 directly
 
    dram mapping:
-   accurate?  a23 not connected on real h/w
-   TODO: compare games with rom size/mapping protection checks with real h/w (ssf2)
+   a23 not connected so rom size/mapping protection checks should pass (banks 80-ff == 00-7d)
 
-   dram & sram map mode:
-   sram map bit is not hi/lo !
-          s  d
-   lo+s   0  0   0
-   hi     0  1   1
-   lo     1  0   2
-   hi+s   1  1   3
+   sram mapping:
+   full 32KB/256kbit hi/lo sram mapping supported
+   h/w *could* clamp size to 64kbit (but not 16kbit) for sram size protection checks, but does it? TBC...
 
    TODO:
    parallel port  how are /str (pc->swc) and /bsy (swc->pc) related?
@@ -390,7 +401,7 @@
 #include "bus/generic/carts.h"
 #include "machine/nvram.h"
 
-#define SWC_DEBUG 1
+#define SWC_DEBUG 0
 
 
 class snes_swc_state : public snes_state
@@ -475,15 +486,8 @@ private:
 	uint32_t m_dram_size;
 	uint8_t m_sram[0x8000];
 
-	enum
-	{
-		LO_SRAM = 0,
-		HI,
-		LO,
-		HI_SRAM
-	};
-	int m_map_mode = LO;
-
+	int m_rom_map = 0;           // emu byte bit 4
+	int m_sram_map = 0;          // emu byte bit 5
 	int m_page = 0;
 	int m_sys_mode = 0;
 	int m_dram_type = 0;         // no use for this?
@@ -835,7 +839,8 @@ void snes_swc_state::machine_start()
 	save_item(NAME(m_dram));
 	save_item(NAME(m_dram_size));
 	save_item(NAME(m_sram));
-	save_item(NAME(m_map_mode));
+	save_item(NAME(m_rom_map));
+	save_item(NAME(m_sram_map));
 	save_item(NAME(m_page));
 	save_item(NAME(m_sys_mode));
 	save_item(NAME(m_dram_type));
@@ -1236,7 +1241,7 @@ inline uint8_t snes_swc_state::snes_swc_io_r(uint16_t address)
 	{
 		case 0:  // fdc  input  6: index, 7: irq
 			data = m_fdc->input_r();
-			if (!machine().side_effects_disabled())// && SWC_DEBUG)
+			if (!machine().side_effects_disabled() && SWC_DEBUG)
 				logerror(" fdc input reg rd: %04x %02x\n", address, data);
 			// 5: parallel strobe
 			data |= par_debug_str & 0x20;
@@ -1263,7 +1268,7 @@ inline uint8_t snes_swc_state::snes_swc_io_r(uint16_t address)
 		case 8:  // parallel in
 			data = par_debug_data_in;
 			m_busy ^= 1;
-			if (!machine().side_effects_disabled())// && SWC_DEBUG)
+			if (!machine().side_effects_disabled() && SWC_DEBUG)
 				logerror(" parallel data rd: %04x\n", address);
 			break;
 
@@ -1308,18 +1313,21 @@ inline void snes_swc_state::snes_swc_io_w(uint16_t address, uint8_t data)
 
 		case 8:  // parallel out & dram/sram mapping
 
-			m_map_mode = data & 3;
+			m_rom_map = data & 1;
+			m_sram_map = data & 2;
 
-			//if (SWC_DEBUG)
+			if (SWC_DEBUG)
 			{
 				logerror(" parallel data / map mode wr: %04x %02x\n", address, data);
-				switch (m_map_mode)
-				{
-					case LO_SRAM: logerror("  map mode set to %d: lo with sram\n", m_map_mode); break;
-					case HI:      logerror("  map mode set to %d: hi (no sram)\n", m_map_mode); break;
-					case LO:      logerror("  map mode set to %d: lo (no sram)\n", m_map_mode); break;
-					case HI_SRAM: logerror("  map mode set to %d: hi with sram\n", m_map_mode); break;
-				}
+				if (!m_rom_map)
+					logerror("  lorom map set\n");
+				else
+					logerror("  hirom map set\n");
+
+				if (!m_sram_map)
+					logerror("  lo sram map set\n");
+				else
+					logerror("  hi sram map set\n");
 			}
 
 			// write parallel port
@@ -1397,9 +1405,9 @@ inline void snes_swc_state::snes_swc_dram_w(offs_t offset, uint8_t data)
 	uint32_t address = m_page << 13;
 
 	// needed for mode 2 "memory mode", when it patches hirom
-	if (m_map_mode == LO || m_map_mode == LO_SRAM)
+	if (!m_rom_map)  // lo
 		address |= (offset & 0x1fff) | ((offset & 0xff0000) >> 1);
-	else
+	else  // hi
 		address |= (offset & 0xff9fff);  // 0x008000 == 1
 
 	m_dram[address] = (address < m_dram_size) ? data : 0;
@@ -1411,9 +1419,9 @@ inline uint8_t snes_swc_state::snes_swc_dram_r(offs_t offset)
 {
 	uint32_t address = m_page << 13;
 
-	if (m_map_mode == LO || m_map_mode == LO_SRAM)
+	if (!m_rom_map)  // lo
 		address |= (offset & 0x1fff) | ((offset & 0xff0000) >> 1);
-	else
+	else  // hi
 		address |= (offset & 0xff9fff);  // 0x008000 == 1
 
 	uint8_t data = (address < m_dram_size) ? m_dram[address] : 0;
@@ -1634,7 +1642,7 @@ inline uint8_t snes_swc_state::snes_swc_mode_2_r(offs_t offset)
 		}
 		else if (address < 0x8000)  //     6000-7fff
 		{
-			if ((m_map_mode == HI_SRAM) && (offset >= 0x300000) && (offset < 0x340000))  // hi cart sram  30-33,b0-b3:6000-7fff
+			if (m_sram_map && (offset >= 0x300000) && (offset < 0x340000))  // hi cart sram  30-33,b0-b3:6000-7fff
 			{
 				address &= 0x1fff;
 				address |= (offset & 0x30000) >> 3;  // swc has 32KB, can't do 128KB !
@@ -1652,7 +1660,7 @@ inline uint8_t snes_swc_state::snes_swc_mode_2_r(offs_t offset)
 	}
 	else  // < 0x7e0000                bank 40-7d
 	{
-		if ((m_map_mode == LO_SRAM) && (offset >= 0x700000) && (address < 0x8000))  // lo cart sram  70-7d,f0-ff:0000-7fff
+		if (!m_sram_map && (offset >= 0x700000) && (address < 0x8000))  // lo cart sram  70-7d,f0-ff:0000-7fff
 		{
 			address &= 0x8000 - 1;  // swc has 32KB
 			data = m_sram[address];
@@ -1700,7 +1708,7 @@ inline uint8_t snes_swc_state::snes_swc_mode_2_rom_access(offs_t offset)
 	uint8_t data = 0xff;
 	uint32_t address;
 
-	if (m_map_mode == LO || m_map_mode == LO_SRAM)  // lo
+	if (!m_rom_map)  // lo
 	{
 		address = (offset & 0x7fff) | ((offset & 0xff0000) >> 1);
 	}
@@ -1733,7 +1741,7 @@ inline void snes_swc_state::snes_swc_mode_3_w(address_space &space, offs_t offse
 		}
 		else                        // 6000-ffff
 		{
-			if ((m_map_mode == HI_SRAM) && (offset >= 0x300000) && (offset < 0x340000) && (address < 0x8000))  // hi cart sram  30-33,b0-b3:6000-7fff
+			if (m_sram_map && (offset >= 0x300000) && (offset < 0x340000) && (address < 0x8000))  // hi cart sram  30-33,b0-b3:6000-7fff
 			{
 				address &= 0x1fff;
 				address |= (offset & 0x30000) >> 3;  // swc has 32KB, can't do 128KB !
@@ -1745,7 +1753,7 @@ inline void snes_swc_state::snes_swc_mode_3_w(address_space &space, offs_t offse
 	}
 	else  // < 0x7e0000                bank 40-7d
 	{
-		if ((m_map_mode == LO_SRAM) && (offset >= 0x700000) && (address < 0x8000))  // lo cart sram  70-7d,f0-ff:0000-7fff
+		if (!m_sram_map && (offset >= 0x700000) && (address < 0x8000))  // lo cart sram  70-7d,f0-ff:0000-7fff
 		{
 			address &= 0x8000 - 1;  // swc has 32KB
 			if (SWC_DEBUG)
