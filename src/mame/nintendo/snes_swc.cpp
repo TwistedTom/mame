@@ -183,8 +183,8 @@
       e007  w : system mode 3 (cartridge emulation 2)          "normal mode"
 
       [others]
-      e008  w : 44256 dram type (for 2,4,6,8 mega byte dram card)
-      e009  w : 441000 dram type (for 8,16,24,32 mega byte dram card)
+      e008  w : 44256 dram type (for 2,4,6,8 mega byte dram card)          do these cards exist?
+      e009  w : 441000 dram type (for 8,16,24,32 mega byte dram card)       even earliest magicom uses 441000
 
       e00c  w : enable cartridge page mapping at 2000-3fff & a000-bfff (sys mode 0)
                 disable cartridge mapping at bank 20-5f, a0-df         (sys mode 2,3)   <-- what is this for?
@@ -204,11 +204,11 @@
       bb:c000 - bb:dfff rw : i/o registers                   bb=00-7d,80-ff
       bb:e000 - bb:ffff  r : rom page mapping                bb=00-01
 
-      * 1 page = 8k bytes, 1 bank = 4 pages
-      * bb:00-0f = 4 mega bytes
-      * bb:00-1f = 8 mega bytes
-      * bb:00-2f = 12 mega bytes
-      * bb:00-3f = 16 mega bytes
+      * 1 page = 8KB, 1 bank = 4 pages
+      * bb:00-0f = 512KB  4mbit
+      * bb:00-1f = 1MB    8mbit
+      * bb:00-2f = 1.5MB 12mbit
+      * bb:00-3f = 2MB   16mbit
         ...
 
       [system mode 1]
@@ -216,8 +216,8 @@
       bb:8000 - bb:ffff  r : cartridge mapping, bb=00-7d, 80-ff (mode 20,21)
 
       [system mode 2]
-      bb:0000 - bb:7fff  r : dram mapping, bb=40-70, c0-e0 (mode 21)
-      bb:8000 - bb:ffff  r : dram mapping, bb=00-70, 80-e0 (mode 20,21)
+      bb:0000 - bb:7fff  r : dram mapping, bb=40-6f, c0-df (mode 21)          6f/df must be wrong?  a23 not connected, so mirror would be 5f/df or 6f/ef
+      bb:8000 - bb:ffff  r : dram mapping, bb=00-6f, 80-df (mode 20,21)       32mbit mod allows full map (40-7d,c0-ff:0000-7fff 00-7d,80-ff:8000-ffff)
       70:0000 - 70:7fff rw : sram mode 1 mapping                               <-- corrected
       30:6000 - 30:7fff rw : sram mode 2 mapping, page 0
       31:6000 - 31:7fff rw : sram mode 2 mapping, page 1
@@ -226,13 +226,13 @@
       bb:e004 - bb:e007  w : mode select registers, bb=00-7d, 80-ff
 
       [system mode 3]
-      bb:0000 - bb:7fff  r: dram mapping, bb=40-6f, c0-df (mode 21)
-      bb:8000 - bb:ffff  r: dram mapping, bb=00-6f, 80-df (mode 20,21)
-      70:8000 - 70:ffff rw: sram mode 1 mapping
-      30:6000 - 30:7fff rw: sram mode 2 mapping, page 0
-      31:6000 - 31:7fff rw: sram mode 2 mapping, page 1
-      32:6000 - 32:7fff rw: sram mode 2 mapping, page 2
-      33:6000 - 33:7fff rw: sram mode 2 mapping, page 3
+      bb:0000 - bb:7fff  r : dram mapping, bb=40-6f, c0-df (mode 21)
+      bb:8000 - bb:ffff  r : dram mapping, bb=00-6f, 80-df (mode 20,21)
+      70:0000 - 70:7fff rw : sram mode 1 mapping                               <-- corrected
+      30:6000 - 30:7fff rw : sram mode 2 mapping, page 0
+      31:6000 - 31:7fff rw : sram mode 2 mapping, page 1
+      32:6000 - 32:7fff rw : sram mode 2 mapping, page 2
+      33:6000 - 33:7fff rw : sram mode 2 mapping, page 3
 
       * mode 21
         even dram bank is mapped to bb:0000-bb:7fff
@@ -313,46 +313,69 @@
               rom mbit
               |   sram kbit
               |   |    map type
-              |   |    |
-              |   |    |     2.8cc 28/08     2.7cc/2.6cc     2.2cc/1.8/1.6c       ucon64 --swc
-   ssoccer    4   0    lo    2d  0010 1101   21  0010 0001   21  0010 0001        0c  0000 1100
-   smw        4   16   lo    00  0000 0000   00  0000 0000   00  0000 0000        08  0000 1000
-   sbombmn    4   0    hi    1c  0001 1100   10  0001 0000   30  0011 0000        3c  0011 1100
-   nhl95      8   64   hi    31  0011 0001   31  0011 0001   30  0011 0000        34  0011 0100
-   congcap    4   0    lo    2d  0010 1101
-   ffight2    10  0    lo    2c  0010 1100   lo sram check
-   simcity    4   256  lo    00  0000 0000
-   chaoseng   12  0    hi    1c  0001 1100
-   zoop       4   0    hi    1c  0001 1100
-   ssf2       32  0    hi    3c  0011 1100   no sram checks (rom size/mapping check)
-   killinst   32  0    hi    3c  0011 1100   sram check?  probably hi, could be both?
-   samsho     32  0    hi    3c  0011 1100   hi & lo sram checks
-   simcity2k  16  256  hi    30  0011 0000
-   dkc2       32  16   hi    30  0011 0000   sram check?  probably hi, could be both?
-   smas       16  64   lo    00  0000 0000   lo sram size check (2KB/16kbit)
-   demcrest   16  0    lo    2c  0010 1100   lo sram check (and rom size/mapping check)
-   ffight3    24  0    hi    1c  0001 1100   sram check?  probably hi
-   ironcomm   10  0    lo    2c  0010 1100   lo sram check
-   legend     8   0    lo    2d  0010 1101   lo sram check
+              |   |    |    rom speed
+              |   |    |    |
+              |   |    |    |   2.8cc 28/08     2.7cc/2.6cc     2.2cc/1.8/1.6c       ucon64 --swc
+   ssoccer    4   0    lo   s   2d  0010 1101   21  0010 0001   21  0010 0001        0c  0000 1100
+   smw        4   16   lo   s   00  0000 0000   00  0000 0000   00  0000 0000        08  0000 1000
+   sbombman   4   0    hi   s   1c  0001 1100   10  0001 0000   30  0011 0000        3c  0011 1100
+   nhl95      8   64   hi   f   31  0011 0001   31  0011 0001   30  0011 0000        34  0011 0100
+   congcap    4   0    lo   f   2d  0010 1101
+   ffight2    10  0    lo   f   2c  0010 1100   lo sram check
+   simcity    4   256  lo   s   00  0000 0000
+   chaoseng   12  0    hi   f   1c  0001 1100
+   zoop       4   0    hi   f   1c  0001 1100
+   ssf2       32  0    hi   f   3c  0011 1100   hi sram check (and rom size/mapping check)
+   killinst   32  0    hi   f   3c  0011 1100   no sram checks (lots other copier-detect checks with anti-tamper)
+   samsho     32  0    hi   f   3c  0011 1100   hi & lo sram checks
+   simcity2k  16  256  hi   f   30  0011 0000
+   dkc2       32  16   hi   f   30  0011 0000   hi sram size==0 check (no size>16 check, lots other copier-detect checks with anti-tamper)
+   smas       16  64   lo   s   00  0000 0000   lo sram size>64 check
+   demcrest   16  0    lo   f   2c  0010 1100   lo sram check (and rom size/mapping check)
+   ffight3    24  0    hi   f   1c  0001 1100   hi sram check
+   ironcomm   10  0    lo   f   2c  0010 1100   lo sram check
+   legend     8   0    lo   f   2d  0010 1101   lo sram check
+   dkc        32  16   hi   f   30  0011 0000   hi sram size>16 check
+   dkc3       32  16   hi   f   30  0011 0000   hi sram size==0 check (no size>16 check, lots other copier-detect checks, no anti-tamper?)
+   spnchout   16  64   lo   s   00  0000 0000
+   zelda      8   64   lo   s   00  0000 0000
+   axelay     8   0    lo   s   2d  0010 1101
+   fzero      4   16   lo   s   00  0000 0000
+   fatfury    12  0    lo   s   2c  0010 1100
+   ffight     8   0    lo   s   2d  0010 1101
+   joemac     8   0    lo   s   2d  0010 1101
+   joemac3    8   0    lo   f   2d  0010 1101
+   sgng       8   0    lo   s   2d  0010 1101
+   sprobo     8   0    lo   s   2d  0010 1101
+   tmht4      8   0    lo   s   2d  0010 1101
+   smetroid   24  64   lo   f   00  0000 0000
+   nhl96      12  64   hi   f   30  0011 0000
+   sf2t       20  0    hi   f   1c  0001 1100
+   som        16  64   hi   s   30  0011 0000
+   smas+w     20  64   lo   s   00  0000 0000
 
-   bit 4 is hi/lo rom select  c008:0  U12 peel pin 1
-   bit 5 is hi/lo sram type select  c008:1  U13 peel pin 1  0= lo enabled / hi disabled  1= lo disabled / hi enabled
+   findings from h/w and bios code:
+   bit 7 is set to run in mode 0 (jump $8000)
    bit 6 is set if "another file to come" for split-file games  eg. files 1-4: 40 40 40 2c (full emu byte for last file only)
-   bits 3:2 used only by 2.8cc, sram size ?
-   bit 1 sometimes set ?
-   bits 7:6,1 unused ?
+   bit 5 is hi/lo sram type select  c008:1  U13 peel pin 1  0= lo enabled / hi disabled  1= lo disabled / hi enabled
+   bit 4 is hi/lo rom select  c008:0  U12 peel pin 1
+   bits 3:2 used only by 2.8cc, written to c008 3:2   could be sram size that was never implemented in h/w?
+   bit 1 is system mode 2/3  0=3, 1=2  written to e006 or e007
+   bit 0 is set to enable cart at banks 20-5f,a0-df (for system modes 2,3)  but why?  seems to be set for all 4 and 8mbit lo games
 
    not possible to turn off both sram areas together (or turn on, not that there's a reason to!)
    can be a problem as some games (samsho) protection check both types
-   for 32mbit hirom games (all 32mbit are hirom?) lo must be disabled (would otherwise conflict with rom - which means hi must be on which can fail protection checks!)
+   for 32mbit hirom games (all 32mbit are hirom?) lo must be disabled (would otherwise conflict with rom), which means hi must be on which can fail protection checks!
    bios does this:
    lo        = 1 = lo dis  hi en   lo games with hi sram check will fail (do any exist?)
    lo+sram   = 0 = lo en   hi dis  ok
-   hi <32m   = 0 = lo en   hi dis  hi games with lo sram check will fail (samsho does but is 32m)
+   hi <32m   = 0 = lo en   hi dis  hi games with lo sram check will fail (do any exist? samsho does but is 32m)
    hi =32m   = 1 = lo dis  hi en   32m hi games with hi sram check will fail
    hi+sram   = 1 = lo dis  hi en   ok  (inc. 32m+sram)
 
    magicom doesn't use emu byte at all (0 or 0x40)
+
+   when saving, bios splits into 4mbit chunks, if whole game fits on single disk will give "single or multi file" option
 
    ------------------------------------------------------------------------------------
 
