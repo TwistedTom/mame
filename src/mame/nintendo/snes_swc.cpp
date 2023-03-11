@@ -9,7 +9,7 @@
    pcb: "Super Magicom Plus"
         "Front Fareast Co."
 
-   FC9203 100-pin qfp asic   HG62E22S26FS (c)1992 FRONT
+   FC9203 100-pin qfp asic   HG62E22S26FS (c)1992 FRONT    (Hitachi HG62E series gate array)
    27c128 16KB rom
    62256  32KB ram w/ nicd battery backup
    8/16/24/32mbit dram on plug-in daughter board
@@ -43,6 +43,7 @@
    ---------------------
    older model
    no pcb numbers/markings
+   27c64 8KB rom
    8/16mbit dram
    no provision for on-board dram (daughter board only)
    EP1810 cpld, no asic, no pals/peels
@@ -355,7 +356,7 @@
    smas+w     20  64   lo   s   00  0000 0000
 
    findings from h/w and bios code:
-   bit 7 is set to run in mode 0 (jump $8000)
+   bit 7 is set to run in mode 0 (jump $8000) *
    bit 6 is set if "another file to come" for split-file games  eg. files 1-4: 40 40 40 2c (full emu byte for last file only)
    bit 5 is hi/lo sram type select  c008:1  U13 peel pin 1  0= lo enabled / hi disabled  1= lo disabled / hi enabled
    bit 4 is hi/lo rom select  c008:0  U12 peel pin 1
@@ -372,6 +373,9 @@
    hi <32m   = 0 = lo en   hi dis  hi games with lo sram check will fail (do any exist? samsho does but is 32m)
    hi =32m   = 1 = lo dis  hi en   32m hi games with hi sram check will fail
    hi+sram   = 1 = lo dis  hi en   ok  (inc. 32m+sram)
+   
+   * after load, the normal/memory mode select option is skipped, stays in mode 0 and jumps to 8000
+     (mode 0, so dram is mapped in 8000-9fff) good for homebrew etc.
 
    magicom doesn't use emu byte at all (0 or 0x40)
 
@@ -688,7 +692,9 @@ void snes_swc_state::snes_swc_find_cart_sram()
 
 static void swc_fdd_options(device_slot_interface &device)
 {
-	device.option_add("35hd", FLOPPY_35_HD);
+	//device.option_add("35dd", FLOPPY_35_DD);
+	//device.option_add("35hd", FLOPPY_35_HD);
+	device.option_add("35ed", FLOPPY_35_ED);
 }
 
 void snes_swc_state::swc_floppy_formats(format_registration &fr)
@@ -758,7 +764,7 @@ void snes_swc_state::snes_swc(machine_config &config)
 	/* swc floppy drive (drive #1) */
 	MCS3201(config, m_fdc, 24_MHz_XTAL);
 	m_fdc->input_handler().set(FUNC(snes_swc_state::fdc_input_r));
-	FLOPPY_CONNECTOR(config, m_fdd, swc_fdd_options, "35hd", snes_swc_state::swc_floppy_formats, true).enable_sound(true);
+	FLOPPY_CONNECTOR(config, m_fdd, swc_fdd_options, "35ed", snes_swc_state::swc_floppy_formats, true).enable_sound(true);
 
 	/* cart slot */
 	GENERIC_CARTSLOT(config, m_cartslot, generic_plain_slot, "snes_swc_cart", "sfc,bin,rom");

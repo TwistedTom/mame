@@ -51,7 +51,47 @@ const swc_format::format swc_format::formats[] = {
 		floppy_image::FF_35,  floppy_image::DSHD, floppy_image::MFM,
 		1000, 20, 80, 2, 512, {}, 1, {}, 80, 50, 22, 42
 	},
+	
+	// additional formats working on real hw
+	
+	{   /* 1476K 3 1/2 inch high density - gaps unverified */
+		floppy_image::FF_35,  floppy_image::DSHD, floppy_image::MFM,
+		1000, 18, 82, 2, 512, {}, 1, {}, 80, 50, 22, 108
+	},
+	{   /* 1640K 3 1/2 inch high density - gaps unverified */
+		floppy_image::FF_35,  floppy_image::DSHD, floppy_image::MFM,
+		1000, 20, 82, 2, 512, {}, 1, {}, 80, 50, 22, 42
+	},
+	{   /* 1680K 3 1/2 inch high density - gaps unverified */
+		floppy_image::FF_35,  floppy_image::DSHD, floppy_image::MFM,
+		1000, 21, 80, 2, 512, {}, 1, {}, 80, 50, 22, 14
+	},
+	{   /* 1722K 3 1/2 inch high density - gaps unverified */
+		floppy_image::FF_35,  floppy_image::DSHD, floppy_image::MFM,
+		1000, 21, 82, 2, 512, {}, 1, {}, 80, 50, 22, 14
+	},
+	{   /* 2880K 3 1/2 inch extended density - gaps unverified */
+		floppy_image::FF_35,  floppy_image::DSED, floppy_image::MFM,
+		500, 36, 80, 2, 512, {}, 1, {}, 80, 50, 41, 80
+	},  // not working  read err
 	{}
+	
+	/* some other formats tested on real hw (.hfe only)
+	
+	1743K   HD  21  83   2  512   ok
+	1764K   HD  21  84   2  512   ok
+	1785K   HD  21  85   2  512   ok
+	2500K   DD  10  255  2  512   ng
+	3380K   HD  26  128  2  512   ok
+	4500K   HD  18  255  2  512   ng
+	5350K   HD  21  255  2  512   ng
+	6780K   HD  27  255  2  512   ng
+	
+	swc doesn't seem like 255 track formats...
+	tested with gotek hxc fw ver. 5.1.2.1a
+	TODO: add .hfe support
+	
+	*/
 };
 
 const swc_format FLOPPY_SWC_FORMAT;
