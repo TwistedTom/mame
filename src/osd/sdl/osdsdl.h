@@ -145,12 +145,11 @@ public:
 	// general overridables
 	virtual void init(running_machine &machine) override;
 	virtual void update(bool skip_redraw) override;
-	virtual void input_update() override;
+	virtual void input_update(bool relative_reset) override;
+	virtual void check_osd_inputs() override;
 
 	// input overridables
 	virtual void customize_input_type_list(std::vector<input_type_entry> &typelist) override;
-
-	virtual void video_register() override;
 
 	virtual bool video_init() override;
 	virtual bool window_init() override;
@@ -160,7 +159,6 @@ public:
 
 	// SDL-specific
 	virtual bool has_focus() const override { return bool(m_focus_window); }
-	void poll_inputs();
 	void release_keys();
 	bool should_hide_mouse();
 	void process_events_buf();
@@ -193,13 +191,11 @@ private:
 	void process_window_event(SDL_Event const &event);
 	void process_textinput_event(SDL_Event const &event);
 
-	void check_osd_inputs();
-
 	bool mouse_over_window() const { return m_mouse_over_window > 0; }
 	template <typename T> sdl_window_info *focus_window(T const &event) const;
 
 	sdl_options &m_options;
-	std::shared_ptr<sdl_window_info> m_focus_window;
+	sdl_window_info *m_focus_window;
 	int m_mouse_over_window;
 	uint8_t m_modifier_keys;
 
