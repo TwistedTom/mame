@@ -10,6 +10,7 @@
 
 #include "output_module.h"
 
+#include "modules/lib/osdobj_common.h"
 #include "modules/osdmodule.h"
 
 #include "emu.h"
@@ -24,6 +25,7 @@
 #include <memory>
 #include <set>
 #include <thread>
+
 
 namespace osd {
 
@@ -193,8 +195,7 @@ public:
 	output_network() :
 		osd_module(OSD_OUTPUT_PROVIDER, "network"),
 		output_module(),
-		m_io_context(nullptr),
-		m_server(nullptr)
+		m_machine(nullptr)
 	{
 	}
 
@@ -204,6 +205,7 @@ public:
 
 	virtual int init(osd_interface &osd, const osd_options &options) override
 	{
+		m_machine = &downcast<osd_common_t &>(osd).machine();
 		m_working_thread = std::thread([] (output_network* self) { self->process_output(); }, this);
 		return 0;
 	}
@@ -214,31 +216,34 @@ public:
 		notify("mame_stop", 1);
 		m_io_context->stop();
 		m_working_thread.join();
-		delete m_server;
-		delete m_io_context;
+		m_server.reset();
+		m_io_context.reset();
+		m_machine = nullptr;
 	}
 
 	// output_module
 
 	virtual void notify(const char *outname, int32_t value) override
 	{
-		static char buf[256];
-		sprintf(buf, "%s = %d\r", ((outname==nullptr) ? "none" : outname), value);
-		m_server->deliver_to_all(buf);
+		auto msg = util::string_format("%s = %d\r", ((outname==nullptr) ? "none" : outname), value);
+		m_server->deliver_to_all(msg);
 	}
 
 	// implementation
 	void process_output()
 	{
-		m_io_context = new asio::io_context();
-		m_server = new output_network_server(*m_io_context, 8000, machine());
+		m_io_context.reset(new asio::io_context);
+		m_server.reset(new output_network_server(*m_io_context, 8000, machine()));
 		m_io_context->run();
 	}
 
 private:
+	running_machine &machine() { return *m_machine; }
+
 	std::thread m_working_thread;
-	asio::io_context *m_io_context;
-	output_network_server *m_server;
+	std::unique_ptr<asio::io_context> m_io_context;
+	std::unique_ptr<output_network_server> m_server;
+	running_machine *m_machine;
 };
 
 } // anonymous namespace
