@@ -21,7 +21,7 @@
 #include "strconv.h"
 
 // MAME headers
-#include "emu.h"
+#include "inpttype.h"
 
 #include <algorithm>
 #include <cassert>
@@ -346,6 +346,7 @@ public:
 			// add the item to the device
 			device.add_item(
 					name,
+					util::string_format("SCAN%03d", keynum),
 					itemid,
 					generic_button_get_state<std::uint8_t>,
 					&m_keyboard.state[keynum]);
@@ -366,22 +367,28 @@ class rawinput_mouse_device : public rawinput_device
 public:
 	rawinput_mouse_device(std::string &&name, std::string &&id, input_module &module, HANDLE handle) :
 		rawinput_device(std::move(name), std::move(id), module, handle),
-		m_mouse({0})
+		m_mouse({0}),
+		m_x(0),
+		m_y(0),
+		m_z(0)
 	{
 	}
 
-	virtual void poll() override
+	virtual void poll(bool relative_reset) override
 	{
-		m_mouse.lX = 0;
-		m_mouse.lY = 0;
-		m_mouse.lZ = 0;
-
-		rawinput_device::poll();
+		rawinput_device::poll(relative_reset);
+		if (relative_reset)
+		{
+			m_mouse.lX = std::exchange(m_x, 0);
+			m_mouse.lY = std::exchange(m_y, 0);
+			m_mouse.lZ = std::exchange(m_z, 0);
+		}
 	}
 
 	virtual void reset() override
 	{
 		memset(&m_mouse, 0, sizeof(m_mouse));
+		m_x = m_y = m_z = 0;
 	}
 
 	virtual void configure(input_device &device) override
@@ -391,6 +398,7 @@ public:
 		{
 			device.add_item(
 					default_axis_name[axisnum],
+					std::string_view(),
 					input_item_id(ITEM_ID_XAXIS + axisnum),
 					generic_axis_get_state<LONG>,
 					&m_mouse.lX + axisnum);
@@ -401,6 +409,7 @@ public:
 		{
 			device.add_item(
 					default_button_name(butnum),
+					std::string_view(),
 					input_item_id(ITEM_ID_BUTTON1 + butnum),
 					generic_button_get_state<BYTE>,
 					&m_mouse.rgbButtons[butnum]);
@@ -414,12 +423,12 @@ public:
 		if (rawinput.data.mouse.usFlags == MOUSE_MOVE_RELATIVE)
 		{
 
-			m_mouse.lX += rawinput.data.mouse.lLastX * INPUT_RELATIVE_PER_PIXEL;
-			m_mouse.lY += rawinput.data.mouse.lLastY * INPUT_RELATIVE_PER_PIXEL;
+			m_x += rawinput.data.mouse.lLastX * input_device::RELATIVE_PER_PIXEL;
+			m_y += rawinput.data.mouse.lLastY * input_device::RELATIVE_PER_PIXEL;
 
-			// update zaxis
+			// update Z axis (vertical scroll)
 			if (rawinput.data.mouse.usButtonFlags & RI_MOUSE_WHEEL)
-				m_mouse.lZ += int16_t(rawinput.data.mouse.usButtonData) * INPUT_RELATIVE_PER_PIXEL;
+				m_z += int16_t(rawinput.data.mouse.usButtonData) * input_device::RELATIVE_PER_PIXEL;
 
 			// update the button states; always update the corresponding mouse buttons
 			if (rawinput.data.mouse.usButtonFlags & RI_MOUSE_BUTTON_1_DOWN) m_mouse.rgbButtons[0] = 0x80;
@@ -437,6 +446,7 @@ public:
 
 private:
 	mouse_state m_mouse;
+	LONG m_x, m_y, m_z;
 };
 
 
@@ -449,20 +459,22 @@ class rawinput_lightgun_device : public rawinput_device
 public:
 	rawinput_lightgun_device(std::string &&name, std::string &&id, input_module &module, HANDLE handle) :
 		rawinput_device(std::move(name), std::move(id), module, handle),
-		m_lightgun({0})
+		m_lightgun({0}),
+		m_z(0)
 	{
 	}
 
-	virtual void poll() override
+	virtual void poll(bool relative_reset) override
 	{
-		m_lightgun.lZ = 0;
-
-		rawinput_device::poll();
+		rawinput_device::poll(relative_reset);
+		if (relative_reset)
+			m_lightgun.lZ = std::exchange(m_z, 0);
 	}
 
 	virtual void reset() override
 	{
 		memset(&m_lightgun, 0, sizeof(m_lightgun));
+		m_z = 0;
 	}
 
 	virtual void configure(input_device &device) override
@@ -472,6 +484,7 @@ public:
 		{
 			device.add_item(
 					default_axis_name[axisnum],
+					std::string_view(),
 					input_item_id(ITEM_ID_XAXIS + axisnum),
 					generic_axis_get_state<LONG>,
 					&m_lightgun.lX + axisnum);
@@ -480,6 +493,7 @@ public:
 		// scroll wheel is always relative if present
 		device.add_item(
 				default_axis_name[2],
+				std::string_view(),
 				ITEM_ID_ADD_RELATIVE1,
 				generic_axis_get_state<LONG>,
 				&m_lightgun.lZ);
@@ -489,6 +503,7 @@ public:
 		{
 			device.add_item(
 					default_button_name(butnum),
+					std::string_view(),
 					input_item_id(ITEM_ID_BUTTON1 + butnum),
 					generic_button_get_state<BYTE>,
 					&m_lightgun.rgbButtons[butnum]);
@@ -502,12 +517,12 @@ public:
 		{
 
 			// update the X/Y positions
-			m_lightgun.lX = normalize_absolute_axis(rawinput.data.mouse.lLastX, 0, INPUT_ABSOLUTE_MAX);
-			m_lightgun.lY = normalize_absolute_axis(rawinput.data.mouse.lLastY, 0, INPUT_ABSOLUTE_MAX);
+			m_lightgun.lX = normalize_absolute_axis(rawinput.data.mouse.lLastX, 0, input_device::ABSOLUTE_MAX);
+			m_lightgun.lY = normalize_absolute_axis(rawinput.data.mouse.lLastY, 0, input_device::ABSOLUTE_MAX);
 
 			// update zaxis
 			if (rawinput.data.mouse.usButtonFlags & RI_MOUSE_WHEEL)
-				m_lightgun.lZ += int16_t(rawinput.data.mouse.usButtonData) * INPUT_RELATIVE_PER_PIXEL;
+				m_z += int16_t(rawinput.data.mouse.usButtonData) * input_device::RELATIVE_PER_PIXEL;
 
 			// update the button states; always update the corresponding mouse buttons
 			if (rawinput.data.mouse.usButtonFlags & RI_MOUSE_BUTTON_1_DOWN) m_lightgun.rgbButtons[0] = 0x80;
@@ -525,6 +540,7 @@ public:
 
 private:
 	mouse_state m_lightgun;
+	LONG m_z;
 };
 
 
@@ -595,7 +611,7 @@ public:
 		registration.dwFlags = RIDEV_DEVNOTIFY;
 		if (background_input())
 			registration.dwFlags |= RIDEV_INPUTSINK;
-		registration.hwndTarget = std::static_pointer_cast<win_window_info>(osd_common_t::s_window_list.front())->platform_window();
+		registration.hwndTarget = dynamic_cast<win_window_info &>(*osd_common_t::window_list().front()).platform_window();
 
 		// register the device
 		RegisterRawInputDevices(&registration, 1, sizeof(registration));
