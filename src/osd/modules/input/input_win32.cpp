@@ -18,8 +18,7 @@
 #include "window.h"
 
 // emu
-#include "emu.h"
-#include "inputdev.h"
+#include "inpttype.h"
 
 #include "strconv.h"
 
@@ -67,6 +66,7 @@ public:
 			// add the item to the device
 			device.add_item(
 					name,
+					util::string_format("SCAN%03d", keynum),
 					itemid,
 					generic_button_get_state<std::uint8_t>,
 					&m_keyboard.state[keynum]);
@@ -114,7 +114,7 @@ public:
 					{
 						device.queue_events(args, 1);
 					});
-			return true;
+			return false; // we still want text input events to be generated
 
 		default:
 			return false;
@@ -137,9 +137,12 @@ public:
 	{
 	}
 
-	virtual void poll() override
+	virtual void poll(bool relative_reset) override
 	{
-		event_based_device::poll();
+		event_based_device::poll(relative_reset);
+
+		if (!relative_reset)
+			return;
 
 		CURSORINFO cursor_info = {0};
 		cursor_info.cbSize = sizeof(CURSORINFO);
@@ -150,11 +153,13 @@ public:
 		if (!(cursor_info.flags & CURSOR_SHOWING))
 		{
 			// We measure the position change from the previously set center position
-			m_mouse.lX = (cursor_info.ptScreenPos.x - m_win32_mouse.last_point.x) * INPUT_RELATIVE_PER_PIXEL;
-			m_mouse.lY = (cursor_info.ptScreenPos.y - m_win32_mouse.last_point.y) * INPUT_RELATIVE_PER_PIXEL;
+			m_mouse.lX = (cursor_info.ptScreenPos.x - m_win32_mouse.last_point.x) * input_device::RELATIVE_PER_PIXEL;
+			m_mouse.lY = (cursor_info.ptScreenPos.y - m_win32_mouse.last_point.y) * input_device::RELATIVE_PER_PIXEL;
 
 			RECT window_pos = {0};
-			GetWindowRect(std::static_pointer_cast<win_window_info>(osd_common_t::s_window_list.front())->platform_window(), &window_pos);
+			GetWindowRect(
+					dynamic_cast<win_window_info &>(*osd_common_t::window_list().front()).platform_window(),
+					&window_pos);
 
 			// We reset the cursor position to the middle of the window each frame
 			m_win32_mouse.last_point.x = window_pos.left + (window_pos.right - window_pos.left) / 2;
@@ -171,6 +176,7 @@ public:
 		{
 			device.add_item(
 					default_axis_name[axisnum],
+					std::string_view(),
 					input_item_id(ITEM_ID_XAXIS + axisnum),
 					generic_axis_get_state<LONG>,
 					&m_mouse.lX + axisnum);
@@ -181,6 +187,7 @@ public:
 		{
 			device.add_item(
 					default_button_name(butnum),
+					std::string_view(),
 					input_item_id(ITEM_ID_BUTTON1 + butnum),
 					generic_button_get_state<BYTE>,
 					&m_mouse.rgbButtons[butnum]);
@@ -198,10 +205,6 @@ protected:
 	{
 		// set the button state
 		m_mouse.rgbButtons[args.button] = args.keydown ? 0x80 : 0x00;
-
-		// Make sure we have a fresh mouse position on button down
-		if (args.keydown)
-			module().poll_if_necessary();
 	}
 
 private:
@@ -239,8 +242,7 @@ public:
 
 	virtual bool handle_input_event(input_event eventid, void *eventdata) override
 	{
-		// TODO: remove need for this downcast
-		if (!downcast<::input_manager &>(manager()).device_class(DEVICE_CLASS_MOUSE).enabled() || eventid != INPUT_EVENT_MOUSE_BUTTON)
+		if (!manager().class_enabled(DEVICE_CLASS_MOUSE) || eventid != INPUT_EVENT_MOUSE_BUTTON)
 			return false;
 
 		auto const *const args = static_cast<MouseButtonEventArgs *>(eventdata);
@@ -271,6 +273,7 @@ public:
 		{
 			device.add_item(
 					default_axis_name[axisnum],
+					std::string_view(),
 					input_item_id(ITEM_ID_XAXIS + axisnum),
 					generic_axis_get_state<LONG>,
 					&m_mouse.lX + axisnum);
@@ -281,6 +284,7 @@ public:
 		{
 			device.add_item(
 					default_button_name(butnum),
+					std::string_view(),
 					input_item_id(ITEM_ID_BUTTON1 + butnum),
 					generic_button_get_state<BYTE>,
 					&m_mouse.rgbButtons[butnum]);
@@ -317,19 +321,19 @@ public:
 	{
 	}
 
-	virtual void poll() override
+	virtual void poll(bool relative_reset) override
 	{
-		event_based_device::poll();
+		event_based_device::poll(relative_reset);
 
 		int32_t xpos = 0, ypos = 0;
 
 		// get the cursor position and transform into final results
 		POINT mousepos;
 		GetCursorPos(&mousepos);
-		if (!osd_common_t::s_window_list.empty())
+		if (!osd_common_t::window_list().empty())
 		{
 			// get the position relative to the window
-			HWND const hwnd = std::static_pointer_cast<win_window_info>(osd_common_t::s_window_list.front())->platform_window();
+			HWND const hwnd = dynamic_cast<win_window_info &>(*osd_common_t::window_list().front()).platform_window();
 			RECT client_rect;
 			GetClientRect(hwnd, &client_rect);
 			ScreenToClient(hwnd, &mousepos);
@@ -390,7 +394,7 @@ protected:
 		if (args.keydown)
 		{
 			// get the position relative to the window
-			HWND const hwnd = std::static_pointer_cast<win_window_info>(osd_common_t::s_window_list.front())->platform_window();
+			HWND const hwnd = dynamic_cast<win_window_info &>(*osd_common_t::window_list().front()).platform_window();
 			RECT client_rect;
 			GetClientRect(hwnd, &client_rect);
 
@@ -443,8 +447,7 @@ public:
 
 	virtual bool handle_input_event(input_event eventid, void *eventdata) override
 	{
-		// TODO: remove need for this downcast
-		if (!downcast<::input_manager &>(manager()).device_class(DEVICE_CLASS_LIGHTGUN).enabled() || eventid != INPUT_EVENT_MOUSE_BUTTON)
+		if (!manager().class_enabled(DEVICE_CLASS_LIGHTGUN) || eventid != INPUT_EVENT_MOUSE_BUTTON)
 			return false;
 
 		auto const *const args = static_cast<MouseButtonEventArgs *>(eventdata);
