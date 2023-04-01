@@ -87,7 +87,7 @@ const swc_format::format swc_format::formats[] = {
 	5350K   HD  21  255  2  512   ng
 	6780K   HD  27  255  2  512   ng
 	
-	swc doesn't seem like 255 track formats...
+	swc doesn't seem to like 255 track formats...
 	tested with gotek hxc fw ver. 5.1.2.1a
 	TODO: add .hfe support
 	

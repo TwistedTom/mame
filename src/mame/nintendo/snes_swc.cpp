@@ -326,18 +326,18 @@
    simcity    4   256  lo   s   00  0000 0000
    chaoseng   12  0    hi   f   1c  0001 1100
    zoop       4   0    hi   f   1c  0001 1100
-   ssf2       32  0    hi   f   3c  0011 1100   hi sram check (and rom size/mapping check)
-   killinst   32  0    hi   f   3c  0011 1100   no sram checks (lots other copier-detect checks with anti-tamper)
-   samsho     32  0    hi   f   3c  0011 1100   hi & lo sram checks
+   ssf2       32  0    hi   f   3c  0011 1100   hi sram check (and rom size/mapping check) *
+   killinst   32  0    hi   f   3c  0011 1100   no sram checks (lots other copier-detect checks with anti-tamper) *
+   samsho     32  0    hi   f   3c  0011 1100   hi & lo sram checks *
    simcity2k  16  256  hi   f   30  0011 0000
-   dkc2       32  16   hi   f   30  0011 0000   hi sram size==0 check (no size>16 check, lots other copier-detect checks with anti-tamper)
-   smas       16  64   lo   s   00  0000 0000   lo sram size>64 check
+   dkc2       32  16   hi   f   30  0011 0000   hi sram size==0 check (no size>16 check, lots other copier-detect checks with anti-tamper) *
+   smas       16  64   lo   s   00  0000 0000   lo sram size>64 check *
    demcrest   16  0    lo   f   2c  0010 1100   lo sram check (and rom size/mapping check)
    ffight3    24  0    hi   f   1c  0001 1100   hi sram check
    ironcomm   10  0    lo   f   2c  0010 1100   lo sram check
    legend     8   0    lo   f   2d  0010 1101   lo sram check
-   dkc        32  16   hi   f   30  0011 0000   hi sram size>16 check
-   dkc3       32  16   hi   f   30  0011 0000   hi sram size==0 check (no size>16 check, lots other copier-detect checks, no anti-tamper?)
+   dkc        32  16   hi   f   30  0011 0000   hi sram size>16 check *
+   dkc3       32  16   hi   f   30  0011 0000   hi sram size==0 check (no size>16 check, lots other copier-detect checks, no anti-tamper?) *
    spnchout   16  64   lo   s   00  0000 0000
    zelda      8   64   lo   s   00  0000 0000
    axelay     8   0    lo   s   2d  0010 1101
@@ -349,14 +349,26 @@
    sgng       8   0    lo   s   2d  0010 1101
    sprobo     8   0    lo   s   2d  0010 1101
    tmht4      8   0    lo   s   2d  0010 1101
-   smetroid   24  64   lo   f   00  0000 0000
+   smetroid   24  64   lo   f   00  0000 0000   lo sram size>64 check *
    nhl96      12  64   hi   f   30  0011 0000
    sf2t       20  0    hi   f   1c  0001 1100
    som        16  64   hi   s   30  0011 0000
-   smas+w     20  64   lo   s   00  0000 0000
+   smas+w     20  64   lo   s   00  0000 0000   lo sram size>64 check *
+
+   these need checking fully for smc:
+   sbombliss        4  16   lo   f              lo sram size>16 check *
+   tet2+bbliss      8  16   lo   s
+   tet2+bblissLtd   8  16   lo   f              lo sram size>16 check *
+   tetris3          8  16   lo   f              lo sram size>16 check *
+   tetris+Dr.Mario  8  0    lo   f
+   tetris2          8  0    lo   f
+   tetrisattack     8  0    lo   f              copier-detect checks *
+   tetbtlgaiden     8  0    lo   f
+   yoshicookie      4  0    lo   s
+   yoshisafari      8  0    lo   f
 
    findings from h/w and bios code:
-   bit 7 is set to run in mode 0 (jump $8000) *
+   bit 7 is set to run in mode 0 (jump $8000) ^
    bit 6 is set if "another file to come" for split-file games  eg. files 1-4: 40 40 40 2c (full emu byte for last file only)
    bit 5 is hi/lo sram type select  c008:1  U13 peel pin 1  0= lo enabled / hi disabled  1= lo disabled / hi enabled
    bit 4 is hi/lo rom select  c008:0  U12 peel pin 1
@@ -373,13 +385,23 @@
    hi <32m   = 0 = lo en   hi dis  hi games with lo sram check will fail (do any exist? samsho does but is 32m)
    hi =32m   = 1 = lo dis  hi en   32m hi games with hi sram check will fail
    hi+sram   = 1 = lo dis  hi en   ok  (inc. 32m+sram)
-   
-   * after load, the normal/memory mode select option is skipped, stays in mode 0 and jumps to 8000
+
+   * these games need patching to run on swc
+     all games with any kind of protection will need patching for smc
+
+   ^ after load, the normal/memory mode select option is skipped, stays in mode 0 and jumps to 8000
      (mode 0, so dram is mapped in 8000-9fff) good for homebrew etc.
 
    magicom doesn't use emu byte at all (0 or 0x40)
 
    when saving, bios splits into 4mbit chunks, if whole game fits on single disk will give "single or multi file" option
+   
+   largest file that can be loaded from floppy is officially 1.5MB (12mbit, 192*8KB blocks)
+   bios code reads only low byte of header "8k-bytes page counts" field, stores a counter in $2f with A in 8-bit mode 
+   2MB (16mbit, 256*8KB blocks) files seem to work ok but counter glitches (reads 8k-bytes page counts as 0 and rolls over)
+   
+   2.88MB ED floppy images work ok with gotek floppy emulator (with hxc firmware)
+   unknown if a real ED drive works
 
    ------------------------------------------------------------------------------------
 
@@ -406,7 +428,8 @@
 
    sram mapping:
    full 32KB/256kbit hi/lo sram mapping supported
-   h/w *could* clamp size to 64kbit (but not 16kbit) for sram size protection checks, but does it? TBC...
+   h/w doesn't clamp sram size to pass protection checks, some games need patching
+   latest 2.8cc f/w reads the bits from header, sets c008 3:2, but these go nowhere on h/w, assume on the DX the larger pal handles this
 
    TODO:
    parallel port  how are /str (pc->swc) and /bsy (swc->pc) related?
