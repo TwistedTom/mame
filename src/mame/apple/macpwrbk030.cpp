@@ -219,8 +219,8 @@ private:
 	void mac_via2_out_b(u8 data);
 	void field_interrupts();
 	void mac_via_sync();
-	DECLARE_WRITE_LINE_MEMBER(via_irq_w);
-	DECLARE_WRITE_LINE_MEMBER(via2_irq_w);
+	void via_irq_w(int state);
+	void via2_irq_w(int state);
 	TIMER_CALLBACK_MEMBER(mac_6015_tick);
 	int m_via_interrupt = 0, m_via2_interrupt = 0, m_scc_interrupt = 0, m_asc_interrupt = 0, m_last_taken_interrupt = 0;
 	int m_ca1_data = 0, m_via2_ca1_hack = 0;
@@ -267,7 +267,7 @@ private:
 
 	u32 buserror_r();
 
-	DECLARE_WRITE_LINE_MEMBER(asc_irq_w)
+	void asc_irq_w(int state)
 	{
 		m_asc_interrupt = state;
 		field_interrupts();
@@ -280,8 +280,8 @@ private:
 	void mac_gsc_w(uint8_t data);
 	void macgsc_palette(palette_device &palette) const;
 
-	uint32_t macwd_r(offs_t offset, uint32_t mem_mask = ~0);
-	void macwd_w(offs_t offset, uint32_t data, uint32_t mem_mask = ~0);
+	uint8_t macwd_r(offs_t offset);
+	void macwd_w(offs_t offset, uint8_t data);
 
 	u32 m_colors[3]{}, m_count = 0, m_clutoffs = 0, m_wd_palette[256]{};
 
@@ -504,7 +504,7 @@ u32 macpb030_state::screen_update_macpbwd(screen_device &screen, bitmap_rgb32 &b
 		for (int x = 0; x < 640; x++)
 		{
 			u8 const pixels = vram8[(y * 640) + (BYTE4_XOR_BE(x))];
-			*line++ = m_colors[pixels ^ 0xff];
+			*line++ = m_wd_palette[pixels];
 		}
 	}
 
@@ -568,13 +568,13 @@ void macpb030_state::mac_via2_w(offs_t offset, uint16_t data, uint16_t mem_mask)
 		m_via2->write(offset, (data >> 8) & 0xff);
 }
 
-WRITE_LINE_MEMBER(macpb030_state::via_irq_w)
+void macpb030_state::via_irq_w(int state)
 {
 	m_via_interrupt = state;
 	field_interrupts();
 }
 
-WRITE_LINE_MEMBER(macpb030_state::via2_irq_w)
+void macpb030_state::via2_irq_w(int state)
 {
 	m_via2_interrupt = state;
 	field_interrupts();
@@ -695,57 +695,49 @@ void macpb030_state::mac_gsc_w(uint8_t data)
 {
 }
 
-uint32_t macpb030_state::macwd_r(offs_t offset, uint32_t mem_mask)
+uint8_t macpb030_state::macwd_r(offs_t offset)
 {
 	switch (offset)
 	{
-	case 0xf6:
-		if (m_screen->vblank())
-		{
-			return 0xffffffff;
-		}
-		else
-		{
-			return 0;
-		}
+		case 0x3da: // VGA "Input Status 1"
+			if (m_screen->vblank())
+			{
+				return 0x8;
+			}
+			else
+			{
+				return 0;
+			}
 
-	default:
-		//            printf("macwd_r: @ %x, mask %08x (PC=%x)\n", offset, mem_mask, m_maincpu->pc());
-		break;
+		default:
+			//            printf("macwd_r: @ %x, mask %08x (PC=%x)\n", offset, mem_mask, m_maincpu->pc());
+			break;
 	}
 	return 0;
 }
 
-void macpb030_state::macwd_w(offs_t offset, uint32_t data, uint32_t mem_mask)
+void macpb030_state::macwd_w(offs_t offset, uint8_t data)
 {
 	switch (offset)
 	{
-	case 0xf2:
-		if (mem_mask == 0xff000000) // DAC control
-		{
-			m_clutoffs = (data >> 24);
+		case 0x3c8: // VGA palette address
+			m_clutoffs = data;
 			m_count = 0;
-		}
-		else if (mem_mask == 0x00ff0000) // DAC data
-		{
-			m_colors[m_count++] = ((data >> 16) & 0x3f) << 2;
+			break;
+
+		case 0x3c9: // VGA palette data
+			m_colors[m_count++] = (data & 0x3f) << 2;
 			if (m_count == 3)
 			{
-				//printf("RAMDAC: color %d = %02x %02x %02x\n", m_clutoffs, m_colors[0], m_colors[1], m_colors[2]);
 				m_wd_palette[m_clutoffs] = rgb_t(m_colors[0], m_colors[1], m_colors[2]);
 				m_clutoffs++;
 				m_count = 0;
 			}
-		}
-		else
-		{
-			logerror("macwd: Unknown DAC write, data %08x, mask %08x\n", data, mem_mask);
-		}
-		break;
+			break;
 
-	default:
-		//            printf("macwd_w: %x @ %x, mask %08x (PC=%x)\n", data, offset, mem_mask, m_maincpu->pc());
-		break;
+		default:
+			//printf("macwd_w: %x @ %x (PC=%x)\n", data, offset, m_maincpu->pc());
+			break;
 	}
 }
 
@@ -806,9 +798,8 @@ void macpb030_state::macpb165c_map(address_map &map)
 
 	// on-board color video on 165c/180c
 	map(0xfc000000, 0xfc07ffff).ram().share("vram").mirror(0x00380000); // 512k of VRAM
-	map(0xfc400000, 0xfcefffff).rw(FUNC(macpb030_state::macwd_r), FUNC(macpb030_state::macwd_w));
-	// fc4003c8 = DAC control, fc4003c9 = DAC data
-	// fc4003da bit 3 is VBL
+	map(0xfc400000, 0xfc7fffff).rw(FUNC(macpb030_state::macwd_r), FUNC(macpb030_state::macwd_w));
+	// something else video related? is at fc800000
 	map(0xfcff8000, 0xfcffffff).rom().region("vrom", 0x0000);
 }
 
