@@ -82,15 +82,15 @@ public:
 	const std::vector<const floppy_image_format_t *> &get_formats() const;
 	const std::vector<fs_info> &get_fs() const { return m_fs; }
 	const floppy_image_format_t *get_load_format() const;
-	const floppy_image_format_t *identify(std::string_view filename);
+	std::pair<std::error_condition, const floppy_image_format_t *> identify(std::string_view filename);
 	void set_rpm(float rpm);
 
 	void init_fs(const fs_info *fs, const fs::meta_data &meta);
 
-	// image-level overrides
-	virtual image_init_result call_load() override;
+	// device_image_interface implementation
+	virtual std::pair<std::error_condition, std::string> call_load() override;
 	virtual void call_unload() override;
-	virtual image_init_result call_create(int format_type, util::option_resolution *format_options) override;
+	virtual std::pair<std::error_condition, std::string> call_create(int format_type, util::option_resolution *format_options) override;
 	virtual const char *image_interface() const noexcept override = 0;
 
 	virtual bool is_readable()  const noexcept override { return true; }
@@ -166,7 +166,7 @@ protected:
 
 	floppy_image_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock);
 
-	// device-level overrides
+	// device_t implementation
 	virtual void device_start() override;
 	virtual void device_reset() override;
 	virtual void device_config_complete() override;
@@ -345,6 +345,8 @@ DECLARE_FLOPPY_IMAGE_DEVICE(SONY_OA_D31V,        sony_oa_d31v,        "floppy_3_
 DECLARE_FLOPPY_IMAGE_DEVICE(SONY_OA_D32W,        sony_oa_d32w,        "floppy_3_5")
 DECLARE_FLOPPY_IMAGE_DEVICE(SONY_OA_D32V,        sony_oa_d32v,        "floppy_3_5")
 DECLARE_FLOPPY_IMAGE_DEVICE(TEAC_FD_30A,         teac_fd_30a,         "floppy_3")
+DECLARE_FLOPPY_IMAGE_DEVICE(TEAC_FD_55A,         teac_fd_55a,         "floppy_5_25")
+DECLARE_FLOPPY_IMAGE_DEVICE(TEAC_FD_55B,         teac_fd_55b,         "floppy_5_25")
 DECLARE_FLOPPY_IMAGE_DEVICE(TEAC_FD_55E,         teac_fd_55e,         "floppy_5_25")
 DECLARE_FLOPPY_IMAGE_DEVICE(TEAC_FD_55F,         teac_fd_55f,         "floppy_5_25")
 DECLARE_FLOPPY_IMAGE_DEVICE(TEAC_FD_55G,         teac_fd_55g,         "floppy_5_25")
