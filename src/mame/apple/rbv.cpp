@@ -71,13 +71,13 @@ void rbv_device::device_add_mconfig(machine_config &config)
 //  rbv_device - constructor
 //-------------------------------------------------
 
-rbv_device::rbv_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: device_t(mconfig, RBV, tag, owner, clock),
-	  write_6015(*this),
-	  write_irq(*this),
-	  m_montype(*this, "MONTYPE"),
-	  m_screen(*this, "screen"),
-	  m_palette(*this, "palette")
+rbv_device::rbv_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock) :
+	device_t(mconfig, RBV, tag, owner, clock),
+	write_6015(*this),
+	write_irq(*this),
+	m_montype(*this, "MONTYPE"),
+	m_screen(*this, "screen"),
+	m_palette(*this, "palette")
 {
 }
 
@@ -87,9 +87,6 @@ rbv_device::rbv_device(const machine_config &mconfig, const char *tag, device_t 
 
 void rbv_device::device_start()
 {
-	write_6015.resolve_safe();
-	write_irq.resolve_safe();
-
 	m_6015_timer = timer_alloc(FUNC(rbv_device::mac_6015_tick), this);
 	m_6015_timer->adjust(attotime::never);
 
@@ -119,6 +116,8 @@ void rbv_device::device_reset()
 	m_pseudovia_regs[3] = 0;
 	m_pseudovia_ier = 0;
 	m_pseudovia_ifr = 0;
+
+	m_pseudovia_regs[0x10] = 0x40;  // video off
 }
 
 void rbv_device::set_ram_info(u32 *ram, u32 size)
@@ -133,7 +132,7 @@ TIMER_CALLBACK_MEMBER(rbv_device::mac_6015_tick)
 	write_6015(ASSERT_LINE);
 }
 
-WRITE_LINE_MEMBER(rbv_device::vbl_w)
+void rbv_device::vbl_w(int state)
 {
 	if (!state)
 	{
@@ -147,7 +146,7 @@ WRITE_LINE_MEMBER(rbv_device::vbl_w)
 	pseudovia_recalc_irqs();
 }
 
-WRITE_LINE_MEMBER(rbv_device::slot0_irq_w)
+void rbv_device::slot0_irq_w(int state)
 {
 	if (state)
 	{
@@ -161,7 +160,7 @@ WRITE_LINE_MEMBER(rbv_device::slot0_irq_w)
 	pseudovia_recalc_irqs();
 }
 
-WRITE_LINE_MEMBER(rbv_device::slot1_irq_w)
+void rbv_device::slot1_irq_w(int state)
 {
 	if (state)
 	{
@@ -175,7 +174,7 @@ WRITE_LINE_MEMBER(rbv_device::slot1_irq_w)
 	pseudovia_recalc_irqs();
 }
 
-WRITE_LINE_MEMBER(rbv_device::slot2_irq_w)
+void rbv_device::slot2_irq_w(int state)
 {
 	if (state)
 	{
@@ -189,7 +188,7 @@ WRITE_LINE_MEMBER(rbv_device::slot2_irq_w)
 	pseudovia_recalc_irqs();
 }
 
-WRITE_LINE_MEMBER(rbv_device::asc_irq_w)
+void rbv_device::asc_irq_w(int state)
 {
 	if (state == ASSERT_LINE)
 	{
@@ -282,7 +281,6 @@ void rbv_device::pseudovia_w(offs_t offset, uint8_t data)
 		switch (offset)
 		{
 		case 0x02:
-			printf("PV: %02x to offset 2\n", data);
 			m_pseudovia_regs[offset] |= (data & 0x40);
 			pseudovia_recalc_irqs();
 			break;
@@ -435,6 +433,13 @@ u32 rbv_device::screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const
 		hres = 640;
 		vres = 480;
 		break;
+	}
+
+	// video disabled?
+	if (m_pseudovia_regs[0x10] & 0x40)
+	{
+		bitmap.fill(0, cliprect);
+		return 0;
 	}
 
 	const pen_t *pens = m_palette->pens();
