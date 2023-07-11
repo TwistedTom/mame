@@ -60,7 +60,7 @@ private:
 	uint8_t m_nmi_mask = 0;
 	uint8_t m_nmi_sub_mask = 0;
 
-	DECLARE_WRITE_LINE_MEMBER(nmi_mask_w);
+	void nmi_mask_w(int state);
 	INTERRUPT_GEN_MEMBER(vblank_irq);
 
 	void nmi_sub_mask_w(uint8_t data);
@@ -89,7 +89,7 @@ void akazukin_state::machine_reset()
 	// ...
 }
 
-WRITE_LINE_MEMBER(akazukin_state::nmi_mask_w)
+void akazukin_state::nmi_mask_w(int state)
 {
 	m_nmi_mask = state;
 }
@@ -287,6 +287,7 @@ void akazukin_state::akazukin(machine_config &config)
 	m_vasvid->set_bg0ram_tag("bg0videoram");
 	m_vasvid->set_bg1ram_tag("bg1videoram");
 	m_vasvid->set_fgram_tag("fgvideoram");
+	m_vasvid->set_alt_sprite_flips(true);
 
 	// sound hardware
 	SPEAKER(config, "mono").front_center();
