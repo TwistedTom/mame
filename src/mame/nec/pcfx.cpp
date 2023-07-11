@@ -49,14 +49,14 @@ private:
 	[[maybe_unused]] uint8_t extio_r(offs_t offset);
 	[[maybe_unused]] void extio_w(offs_t offset, uint8_t data);
 
-	[[maybe_unused]] DECLARE_WRITE_LINE_MEMBER( irq8_w );
-	[[maybe_unused]] DECLARE_WRITE_LINE_MEMBER( irq9_w );
-	[[maybe_unused]] DECLARE_WRITE_LINE_MEMBER( irq10_w );
-	[[maybe_unused]] DECLARE_WRITE_LINE_MEMBER( irq11_w );
-	DECLARE_WRITE_LINE_MEMBER( irq12_w );
-	DECLARE_WRITE_LINE_MEMBER( irq13_w );
-	DECLARE_WRITE_LINE_MEMBER( irq14_w );
-	[[maybe_unused]] DECLARE_WRITE_LINE_MEMBER( irq15_w );
+	[[maybe_unused]] void irq8_w(int state);
+	[[maybe_unused]] void irq9_w(int state);
+	[[maybe_unused]] void irq10_w(int state);
+	[[maybe_unused]] void irq11_w(int state);
+	void irq12_w(int state);
+	void irq13_w(int state);
+	void irq14_w(int state);
+	[[maybe_unused]] void irq15_w(int state);
 	template <int Pad> TIMER_CALLBACK_MEMBER(pad_func);
 
 	void pcfx_io(address_map &map);
@@ -186,7 +186,7 @@ void pcfx_state::pcfx_io(address_map &map)
 	map(0x00000300, 0x000003FF).rw(m_huc6261, FUNC(huc6261_device::read), FUNC(huc6261_device::write)).umask32(0x0000ffff);  /* HuC6261 */
 	map(0x00000400, 0x000004FF).rw("huc6270_a", FUNC(huc6270_device::read), FUNC(huc6270_device::write)).umask32(0x0000ffff); /* HuC6270-A */
 	map(0x00000500, 0x000005FF).rw("huc6270_b", FUNC(huc6270_device::read), FUNC(huc6270_device::write)).umask32(0x0000ffff); /* HuC6270-B */
-	map(0x00000600, 0x000006FF).rw("huc6272", FUNC(huc6272_device::read), FUNC(huc6272_device::write));    /* HuC6272 */
+	map(0x00000600, 0x00000607).mirror(0xf8).m("huc6272", FUNC(huc6272_device::amap)); // King
 //  map(0x00000C80, 0x00000C83).noprw(); // backup RAM control
 	map(0x00000E00, 0x00000EFF).rw(FUNC(pcfx_state::irq_read), FUNC(pcfx_state::irq_write)).umask32(0x0000ffff);    /* Interrupt controller */
 //  map(0x00000F00, 0x00000FFF).noprw(); // Timer
@@ -353,42 +353,42 @@ inline void pcfx_state::set_irq_line(int line, int state)
 	check_irqs();
 }
 
-WRITE_LINE_MEMBER( pcfx_state::irq8_w )
+void pcfx_state::irq8_w(int state)
 {
 	set_irq_line(8, state);
 }
 
-WRITE_LINE_MEMBER( pcfx_state::irq9_w )
+void pcfx_state::irq9_w(int state)
 {
 	set_irq_line(9, state);
 }
 
-WRITE_LINE_MEMBER( pcfx_state::irq10_w )
+void pcfx_state::irq10_w(int state)
 {
 	set_irq_line(10, state);
 }
 
-WRITE_LINE_MEMBER( pcfx_state::irq11_w )
+void pcfx_state::irq11_w(int state)
 {
 	set_irq_line(11, state);
 }
 
-WRITE_LINE_MEMBER( pcfx_state::irq12_w )
+void pcfx_state::irq12_w(int state)
 {
 	set_irq_line(12, state);
 }
 
-WRITE_LINE_MEMBER( pcfx_state::irq13_w )
+void pcfx_state::irq13_w(int state)
 {
 	set_irq_line(13, state);
 }
 
-WRITE_LINE_MEMBER( pcfx_state::irq14_w )
+void pcfx_state::irq14_w(int state)
 {
 	set_irq_line(14, state);
 }
 
-WRITE_LINE_MEMBER( pcfx_state::irq15_w )
+void pcfx_state::irq15_w(int state)
 {
 	set_irq_line(15, state);
 }

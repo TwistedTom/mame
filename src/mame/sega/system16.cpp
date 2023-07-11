@@ -394,7 +394,7 @@ void segas1x_bootleg_state::tturfbl_msm5205_data_w(uint8_t data)
 	m_sample_buffer = data;
 }
 
-WRITE_LINE_MEMBER(segas1x_bootleg_state::tturfbl_msm5205_callback)
+void segas1x_bootleg_state::tturfbl_msm5205_callback(int state)
 {
 	m_msm->data_w((m_sample_buffer >> 4) & 0x0f);
 
@@ -474,7 +474,7 @@ void segas1x_bootleg_state::shinobi_datsu_sound_map(address_map &map)
 	map(0xf800, 0xffff).ram();
 }
 
-WRITE_LINE_MEMBER(segas1x_bootleg_state::datsu_msm5205_callback)
+void segas1x_bootleg_state::datsu_msm5205_callback(int state)
 {
 	if (!state)
 		return;
@@ -1209,7 +1209,7 @@ void segas1x_bootleg_state::shdancbl_msm5205_data_w(uint8_t data)
 	m_sample_buffer = data;
 }
 
-WRITE_LINE_MEMBER(segas1x_bootleg_state::shdancbl_msm5205_callback)
+void segas1x_bootleg_state::shdancbl_msm5205_callback(int state)
 {
 	m_msm->data_w(m_sample_buffer & 0x0f);
 
@@ -2084,7 +2084,7 @@ void segas1x_bootleg_state::z80_ym2151(machine_config &config)
 	YM2151(config, "ymsnd", 4000000).add_route(0, "lspeaker", 0.32).add_route(1, "rspeaker", 0.32);
 }
 
-WRITE_LINE_MEMBER(segas1x_bootleg_state::sound_cause_nmi)
+void segas1x_bootleg_state::sound_cause_nmi(int state)
 {
 	if (state)
 		m_soundcpu->pulse_input_line(INPUT_LINE_NMI, attotime::zero);
@@ -3745,7 +3745,7 @@ ROM_START( bloxeedbl )
 	ROM_LOAD( "21.ic2", 0x00000, 0x20000, CRC(daf5bb20) SHA1(99e04672a9785a143b0d472e276673b6d323fd2b) ) // ds40986 (27c010)
 	ROM_LOAD( "22.ic3", 0x20000, 0x20000, CRC(16f5668e) SHA1(adb2c3a5ae40627e6110db531427a4f15211ab9b) ) // ds40986 (27c010)
 	ROM_LOAD( "23.ic4", 0x40000, 0x20000, CRC(2b2c3d8b) SHA1(543f622e7139c22bc491583cbb276acfc827b5d0) ) // ds40986 (27c010)
-	ROM_LOAD(" 24.ic5", 0x60000, 0x20000, CRC(107b141b) SHA1(e3fe19b4c7ba8ff60638df17dc4ae50f42a6b024) ) // ds40986 (27c010)
+	ROM_LOAD( "24.ic5", 0x60000, 0x20000, CRC(107b141b) SHA1(e3fe19b4c7ba8ff60638df17dc4ae50f42a6b024) ) // ds40986 (27c010)
 
 	ROM_REGION( 0x100000, "proms", 0 )
 	ROM_LOAD( "82s129.ic32", 0x000, 0x0100, CRC(b921d13f) SHA1(d9d8a1571d974fd512e66097d5d83dd69035cbcb) )
