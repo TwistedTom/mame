@@ -227,10 +227,12 @@ const double XTAL::known_xtals[] = {
 	 13'516'800, /* 13.5168_MHz_XTAL       Kontron KDT6 */
 	 13'608'000, /* 13.608_MHz_XTAL        TeleVideo 910 & 925 */
 	 13'824'000, /* 13.824_MHz_XTAL        Robotron PC-1715 display circuit */
+	 13'977'600, /* 13.9776_MHz_XTAL       Kaypro II dot clock */
 	 14'000'000, /* 14_MHz_XTAL            - */
 	 14'112'000, /* 14.112_MHz_XTAL        Timex/Sinclair TS2068 */
 	 14'192'640, /* 14.19264_MHz_XTAL      Central Data 2650 */
 	 14'218'000, /* 14.218_MHz_XTAL        Dragon */
+	 14'250'450, /* 14.25045_MHz_XTAL      Apple II Europlus */
 	 14'300'000, /* 14.3_MHz_XTAL          Agat-7 */
 	 14'314'000, /* 14.314_MHz_XTAL        Taito TTL Board  */
 	 14'318'181, /* 14.318181_MHz_XTAL     Extremely common, used on 100's of PCBs (4x NTSC subcarrier) */
@@ -241,6 +243,7 @@ const double XTAL::known_xtals[] = {
 	 14'742'800, /* 14.7428_MHz_XTAL       ADM 23 */
 	 14'745'000, /* 14.745_MHz_XTAL        Synertek KTM-3 */
 	 14'745'600, /* 14.7456_MHz_XTAL       Namco System 12 & System Super 22/23 for JVS */
+	 14'746'000, /* 14.746_MHz_XTAL        Namco System 10 MGEXIO */
 	 14'784'000, /* 14.784_MHz_XTAL        Zenith Z-29 */
 	 14'916'000, /* 14.916_MHz_XTAL        ADDS Viewpoint 122 */
 	 14'976'000, /* 14.976_MHz_XTAL        CIT-101 80-column display clock */
@@ -253,6 +256,7 @@ const double XTAL::known_xtals[] = {
 	 15'400'000, /* 15.4_MHz_XTAL          DVK KSM */
 	 15'468'480, /* 15.46848_MHz_XTAL      Bank Panic h/w, Sega G80 */
 	 15'582'000, /* 15.582_MHz_XTAL        Zentec Zephyr */
+	 15'625'000, /* 15.625_MHz_XTAL        Zaccaria The Invaders */
 	 15'667'200, /* 15.6672_MHz_XTAL       Apple Macintosh */
 	 15'700'000, /* 15.7_MHz_XTAL          Motogonki */
 	 15'741'000, /* 15.741_MHz_XTAL        DECmate II 80-column display clock */
@@ -344,6 +348,7 @@ const double XTAL::known_xtals[] = {
 	 23'961'600, /* 23.9616_MHz_XTAL       Osborne 4 (Vixen) */
 	 24'000'000, /* 24_MHz_XTAL            Mario, 80's Data East games, 80's Konami games */
 	 24'073'400, /* 24.0734_MHz_XTAL       DEC Rainbow 100 */
+	 24'167'829, /* 24.167829_MHz_XTAL     Neo Geo AES rev. 3-3 and later (~1536x NTSC line rate) */
 	 24'270'000, /* 24.27_MHz_XTAL         CIT-101XL */
 	 24'300'000, /* 24.3_MHz_XTAL          ADM 36 132-column display clock */
 	 24'576'000, /* 24.576_MHz_XTAL        Pole Position h/w, Model 3 CPU board */
