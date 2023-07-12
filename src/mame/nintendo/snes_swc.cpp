@@ -523,7 +523,8 @@ private:
 	uint8_t fdc_input_r();
 
 	//DECLARE_DEVICE_IMAGE_LOAD_MEMBER(cart_load);
-	image_init_result cart_load(device_image_interface &image);
+	//image_init_result cart_load(device_image_interface &image);
+	std::pair<std::error_condition, std::string> cart_load(device_image_interface &image);
 	//DECLARE_DEVICE_IMAGE_UNLOAD_MEMBER(cart_unload)
 	void cart_unload(device_image_interface &image);
 	void snes_swc_find_cart_type();
@@ -562,14 +563,16 @@ INPUT_CHANGED_MEMBER(snes_swc_state::snes_swc_dram_changed)
 }
 
 //DEVICE_IMAGE_LOAD_MEMBER(snes_swc_state::cart_load)
-image_init_result snes_swc_state::cart_load(device_image_interface &image)
+//image_init_result snes_swc_state::cart_load(device_image_interface &image)
+std::pair<std::error_condition, std::string> snes_swc_state::cart_load(device_image_interface &image)
 {
 	uint32_t size = m_cartslot->common_get_size("rom");
 
 	if (size > 0x400000)
 	{
-		image.seterror(image_error::INVALIDIMAGE, "Unsupported cartridge size");
-		return image_init_result::FAIL;
+		//image.seterror(image_error::INVALIDIMAGE, "Unsupported cartridge size");
+		//return image_init_result::FAIL;
+		return std::make_pair(image_error::INVALIDIMAGE, "Unsupported cartridge size");
 	}
 
 	m_cartslot->rom_alloc(size, GENERIC_ROM8_WIDTH, ENDIANNESS_LITTLE);
@@ -581,7 +584,8 @@ image_init_result snes_swc_state::cart_load(device_image_interface &image)
 	snes_swc_find_cart_type();
 	snes_swc_find_cart_sram();
 
-	return image_init_result::PASS;
+	//return image_init_result::PASS;
+	return std::make_pair(std::error_condition(), std::string());
 }
 
 //DECLARE_DEVICE_IMAGE_UNLOAD_MEMBER(snes_swc_state::cart_unload)
