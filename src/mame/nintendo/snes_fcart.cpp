@@ -65,8 +65,10 @@ private:
 
 	uint8_t *m_rom;
 	std::vector<uint8_t> m_ram;
-	
+
 	uint8_t m_rom_shift = 17;
+	uint8_t m_cart_ver = 1;
+	uint8_t m_lock = 0;
 };
 
 
@@ -139,6 +141,7 @@ void snes_fcart_state::init_snes_fcart2()
 {
 	init_snes_fcart();
 	m_rom_shift = 18;
+	m_cart_ver = 2;
 }
 
 static INPUT_PORTS_START( snes_fcart )
@@ -231,6 +234,7 @@ void snes_fcart_state::machine_reset()
 	m_ram_reg = 0;
 	m_size_reg = 0;
 	m_mode_reg = 0;
+	m_lock = 0;
 
 	m_maincpu->set_input_line(INPUT_LINE_RESET, CLEAR_LINE);
 }
@@ -454,6 +458,9 @@ void snes_fcart_state::snes_fcart_w_bank2(address_space &space, offs_t offset, u
 
 void snes_fcart_state::snes_fcart_menu_wr(uint16_t address, uint8_t data)
 {
+	if ((m_cart_ver == 2) && m_lock)
+		return;
+
 	switch (address & 0xc00)
 	{
 	case 0:     // mode
@@ -469,6 +476,7 @@ void snes_fcart_state::snes_fcart_menu_wr(uint16_t address, uint8_t data)
 		break;
 	case 0xc00: // rom
 		m_rom_reg = data;
+		m_lock = 1;
 		break;
 	}
 
@@ -551,5 +559,5 @@ ROM_END
 CONS( 2022, snes_fcart,      0,           0, snes_fcart,     snes_fcart, snes_fcart_state, init_snes_fcart,  "bootleg", "SNES Flash Cart (ntsc)",    MACHINE_SUPPORTS_SAVE )
 CONS( 2022, snes_fcart_pal,  snes_fcart,  0, snes_fcart_pal, snes_fcart, snes_fcart_state, init_snes_fcart,  "bootleg", "SNES Flash Cart (pal)",     MACHINE_SUPPORTS_SAVE )
 
-CONS( 2022, snes_fcart2,     0,           0, snes_fcart,     snes_fcart, snes_fcart_state, init_snes_fcart2, "bootleg", "SNES Flash Cart v2 (ntsc)", MACHINE_SUPPORTS_SAVE )
-CONS( 2022, snes_fcart2_pal, snes_fcart2, 0, snes_fcart_pal, snes_fcart, snes_fcart_state, init_snes_fcart2, "bootleg", "SNES Flash Cart v2 (pal)",  MACHINE_SUPPORTS_SAVE )
+CONS( 2023, snes_fcart2,     0,           0, snes_fcart,     snes_fcart, snes_fcart_state, init_snes_fcart2, "bootleg", "SNES Flash Cart v2 (ntsc)", MACHINE_SUPPORTS_SAVE )
+CONS( 2023, snes_fcart2_pal, snes_fcart2, 0, snes_fcart_pal, snes_fcart, snes_fcart_state, init_snes_fcart2, "bootleg", "SNES Flash Cart v2 (pal)",  MACHINE_SUPPORTS_SAVE )
