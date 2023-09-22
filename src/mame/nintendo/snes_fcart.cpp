@@ -481,7 +481,7 @@ inline void snes_fcart_state::snes_fcart_setup_rom_map()
 
 	switch (m_size_reg & 0xf)
 	{
-		case 1: ROM_MBIT(1); break;
+		case 1: ROM_MBIT(1); break;  // v1 only
 		case 2: ROM_MBIT(2); break;
 		case 3: ROM_MBIT(4); break;
 		case 4: ROM_MBIT(8); break;
@@ -538,15 +538,18 @@ ROM_END
 
 ROM_START( snes_fcart2 )
 	ROM_REGION( 0x4000000, "rom", 0 )
-	ROM_LOAD( "rom.bin", 0x0000000, 0x4000000, CRC(bccd4d79) SHA1(302bfd7ed7dd96495d758bd2e35b3d3aa0db3876) )
+	ROM_LOAD( "rom.bin", 0x0000000, 0x4000000, CRC(2e60fd01) SHA1(a2e6c76fc29ed4a4e58d4bd2243852ace9fee095) )
 ROM_END
 
-#define rom_snes_fcart2_pal rom_snes_fcart2
+ROM_START( snes_fcart2_pal )
+	ROM_REGION( 0x4000000, "rom", 0 )
+	ROM_LOAD( "rom_p.bin", 0x0000000, 0x4000000, CRC(193b8637) SHA1(0f695d31340c83398ea8f69d701506494836eb46) )
+ROM_END
 
-//   YEAR,   NAME,         PARENT, COMPAT, MACHINE,        INPUT,       CLASS,            INIT,            COMPANY,    FULLNAME,            FLAGS
+//   YEAR,   NAME,           PARENT,  COMPAT, MACHINE,        INPUT,       CLASS,            INIT,             COMPANY,     FULLNAME,                 FLAGS
 
-CONS( 2022, snes_fcart,     0,          0, snes_fcart,     snes_fcart, snes_fcart_state, init_snes_fcart, "bootleg", "SNES Flash Cart (ntsc)", MACHINE_SUPPORTS_SAVE )
-CONS( 2022, snes_fcart_pal, snes_fcart, 0, snes_fcart_pal, snes_fcart, snes_fcart_state, init_snes_fcart, "bootleg", "SNES Flash Cart (pal)", MACHINE_SUPPORTS_SAVE )
+CONS( 2022, snes_fcart,      0,           0, snes_fcart,     snes_fcart, snes_fcart_state, init_snes_fcart,  "bootleg", "SNES Flash Cart (ntsc)",    MACHINE_SUPPORTS_SAVE )
+CONS( 2022, snes_fcart_pal,  snes_fcart,  0, snes_fcart_pal, snes_fcart, snes_fcart_state, init_snes_fcart,  "bootleg", "SNES Flash Cart (pal)",     MACHINE_SUPPORTS_SAVE )
 
 CONS( 2022, snes_fcart2,     0,           0, snes_fcart,     snes_fcart, snes_fcart_state, init_snes_fcart2, "bootleg", "SNES Flash Cart v2 (ntsc)", MACHINE_SUPPORTS_SAVE )
-CONS( 2022, snes_fcart2_pal, snes_fcart2, 0, snes_fcart_pal, snes_fcart, snes_fcart_state, init_snes_fcart2, "bootleg", "SNES Flash Cart v2 (pal)", MACHINE_SUPPORTS_SAVE )
+CONS( 2022, snes_fcart2_pal, snes_fcart2, 0, snes_fcart_pal, snes_fcart, snes_fcart_state, init_snes_fcart2, "bootleg", "SNES Flash Cart v2 (pal)",  MACHINE_SUPPORTS_SAVE )
