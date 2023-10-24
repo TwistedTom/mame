@@ -1040,10 +1040,11 @@ license:CC0-1.0
 		<description>Gobbler</description>
 		<year>1981</year>
 		<publisher>On-Line Systems</publisher>
+		<info name="programmer" value="Olaf Lubeck" />
 		<info name="usage" value="Runs on any Apple II with 48K." />
 		<sharedfeat name="compatibility" value="A2,A2P,A2E,A2EE,A2C,A2GS" />
 		<!-- Dump released: 2018-12-25 -->
-
+		<!--action game-->
 		<part name="flop1" interface="floppy_5_25">
 			<dataarea name="flop" size="253442">
 				<rom name="gobbler.woz" size="253442" crc="f9a9a3ed" sha1="8cb6dfa9db96d1270ae0ace9a1dd9ac7438c7fbb" />
@@ -2210,14 +2211,15 @@ license:CC0-1.0
 		</part>
 	</software>
 
-	<software name="rendrama">
+	<software name="rendramatr">
 		<description>Rendezvous with Rama</description>
 		<year>1984</year>
 		<publisher>Trillium</publisher>
-		<info name="usage" value="Requires a 64K Apple II+ or later." />
+		<info name="programmer" value="Lee Jacknow, Ronald Martinez, Robert Strong, Lebbeus Woods, Michael P. Meyer, Andre Garneau, David M. Harris, Isaac V. Kerlow, and Jeffrey Schneider" />
+		<info name="usage" value="Runs on any Apple ][+ or later with 64K." />
 		<sharedfeat name="compatibility" value="A2P,A2E,A2EE,A2C,A2GS" />
 		<!-- Dump released: 2019-02-01 -->
-
+		<!--adventure game-->
 		<part name="flop1" interface="floppy_5_25">
 			<feature name="part_id" value="Disk 1 Side A" />
 			<dataarea name="flop" size="233443">
@@ -4318,14 +4320,16 @@ license:CC0-1.0
 		<description>Wizardry III: Legacy of Llylgamyn (Version 4, 20-Aug-1983 update)</description>
 		<year>1983</year>
 		<publisher>Sir-Tech Software</publisher>
+		<info name="programmer" value="Andrew Greenberg and Robert Woodhead" />
 		<info name="usage" value="Requires a 64K Apple II+ or later." />
+		<info name="version" value="Version 4, 20-Aug-1983 update" />
 		<sharedfeat name="compatibility" value="A2,A2P,A2E,A2EE,A2C,A2GS" />
-		<!-- Dump released: 2019-04-08 -->
-
+		<!--Dump released: 2019-04-08. Redumped: 2023-09-12-->
+		<!--roleplaying game-->
 		<part name="flop1" interface="floppy_5_25">
 			<feature name="part_id" value="Side A - Master Scenario disk" />
 			<dataarea name="flop" size="234882">
-				<rom name="wizardry iii side a - master scenario disk.woz" size="234882" crc="b8f3c442" sha1="b41cf001e4c9aa74426ecf71809d1fe5ea50f256" />
+				<rom name="wizardry iii side a - master scenario disk.woz" size="234882" crc="57366656" sha1="9d59da2fca6c3c42c89ff2e8988d4d66dd1e0143" />
 			</dataarea>
 		</part>
 		<part name="flop2" interface="floppy_5_25">
@@ -15007,10 +15011,11 @@ license:CC0-1.0
 		<description>The Time Tunnel: American History Series</description>
 		<year>1984</year>
 		<publisher>Focus Media</publisher>
+		<info name="programmer" value="Fred Burggraf and James Gray" />
 		<info name="usage" value="Requires a 48K Apple II+ or later." />
 		<sharedfeat name="compatibility" value="A2P,A2E,A2EE,A2C,A2GS" />
 		<!-- Dump released: 2020-10-08 -->
-
+		<!--educational game-->
 		<part name="flop1" interface="floppy_5_25">
 			<dataarea name="flop" size="241504">
 				<rom name="the time tunnel- american history series.woz" size="241504" crc="f8108dc8" sha1="e65d7b54cc7397d988ea11533b77244778577854" />
@@ -15022,10 +15027,11 @@ license:CC0-1.0
 		<description>The Time Tunnel: A Nation Emerges</description>
 		<year>1984</year>
 		<publisher>Focus Media</publisher>
+		<info name="programmer" value="Fred Burggraf, Rebecca Benton, Linda Pratt, and Jerry Camilleri" />
 		<info name="usage" value="Requires a 48K Apple II+ or later." />
 		<sharedfeat name="compatibility" value="A2P,A2E,A2EE,A2C,A2GS" />
 		<!-- Dump released: 2020-10-09 -->
-
+		<!--educational game-->
 		<part name="flop1" interface="floppy_5_25">
 			<dataarea name="flop" size="234872">
 				<rom name="the time tunnel- a nation emerges.woz" size="234872" crc="34abd88d" sha1="21163d163b379f9198aae8a6792a46a2004a553a" />
@@ -24830,10 +24836,11 @@ license:CC0-1.0
 		<description>Destiny</description>
 		<year>1985</year>
 		<publisher>Destiny Software</publisher>
+		<info name="programmer" value="Jeff Pierce" />
 		<info name="usage" value="Requires a 48K Apple ][+ or later." />
 		<sharedfeat name="compatibility" value="A2P,A2E,A2EE,A2C,A2GS" />
 		<!-- Dump released: 2022-09-24 -->
-		<!--"Destiny" is a 1985 adventure game developed by Jeff Pierce and distributed by Destiny Software.-->
+		<!--adventure game-->
 		<part name="flop1" interface="floppy_5_25">
 			<feature name="part_id" value="Side A" />
 			<dataarea name="flop" size="234785">
@@ -27084,7 +27091,7 @@ license:CC0-1.0
 	</software>
 
 	<software name="sorcererr18k">
-		<description>Sorcerer (Release 18-860904-K)</description>
+		<description>Sorcerer (Release 18 / 860904-K)</description>
 		<year>1986</year>
 		<publisher>Infocom</publisher>
 		<info name="usage" value="Runs on any Apple II with 48K." />
@@ -30160,7 +30167,140 @@ license:CC0-1.0
 		</part>
 	</software>
 
+	<software name="dungdoom">
+		<description>Dungeon of Doom</description>
+		<year>1980</year>
+		<publisher>Argon Games</publisher>
+		<info name="developer" value="Argon Games" />
+		<info name="programmer" value="Stephen G. Walburn and Robert J. McCredie" />
+		<info name="usage" value="Requires a 13-sector drive, integer basic, and runs on an Apple II." />
+		<sharedfeat name="compatibility" value="A2" />
+		<!--Dump released: 2023-02-26 by DefaultGen-->
+		<!--roleplaying game-->
+		<part name="flop1" interface="floppy_5_25">
+			<dataarea name="flop" size="234496">
+				<rom name="dungdoom.woz" size="234496" crc="4f5a7f61" sha1="4df3288877e8de350e8c7f54f41ef4507131b6a1" />
+			</dataarea>
+		</part>
+	</software>
+
+	<software name="zenith">
+		<description>Zenith</description>
+		<year>1982</year>
+		<publisher>Gebelli Software</publisher>
+		<info name="programmer" value="Nasir Gebelli" />
+		<info name="usage" value="Runs on a 48K Apple ][, ][+, or unenhanced //e. Due to aggressive copy protection, it will not run on later systems." />
+		<sharedfeat name="compatibility" value="A2,A2P,A2E" />
+		<!--Dump released: 2023-07-26-->
+		<!--action game-->
+		<part name="flop1" interface="floppy_5_25">
+			<dataarea name="flop" size="361742">
+				<rom name="zenith.woz" size="361742" crc="b6f71e0d" sha1="cbac6dbfcc85d407282ee18e8fb02ecc870feba2" />
+			</dataarea>
+		</part>
+	</software>
+
+	<software name="spaceark">
+		<description>The Space Ark</description>
+		<year>1983</year>
+		<publisher>Datamost</publisher>
+		<info name="programmer" value="Bob Flanagan and Art Huff" />
+		<info name="usage" value="Runs on any Apple ][ with 48K." />
+		<sharedfeat name="compatibility" value="A2,A2P,A2E,A2EE,A2C,A2GS" />
+		<!--Dump released: 2023-07-27-->
+		<!--action game-->
+		<part name="flop1" interface="floppy_5_25">
+			<feature name="part_id" value="Disk 1 program" />
+			<dataarea name="flop" size="241466">
+				<rom name="the space ark disk 1 - program.woz" size="241466" crc="f06d0291" sha1="b6120380d14d27173829e8bf6f373fd4546a5a39" />
+			</dataarea>
+		</part>
+		<part name="flop2" interface="floppy_5_25">
+			<feature name="part_id" value="Disk 2 scenario" />
+			<dataarea name="flop" size="241467">
+				<rom name="the space ark disk 2 - scenario.woz" size="241467" crc="e71ac6a4" sha1="378102a4c172d168c05b50f290e073d7504b52ad" />
+			</dataarea>
+		</part>
+	</software>
+
+	<software name="cavecr">
+		<description>Cavern Creatures</description>
+		<year>1983</year>
+		<publisher>Datamost</publisher>
+		<info name="programmer" value="Paul Lowrance and Art Huff" />
+		<info name="usage" value="Requires a 48K Apple ][+ or later." />
+		<sharedfeat name="compatibility" value="A2P,A2E,A2EE,A2C,A2GS" />
+		<!--Dump released: 2023-07-27-->
+		<!--action game-->
+		<part name="flop1" interface="floppy_5_25">
+			<dataarea name="flop" size="234788">
+				<rom name="cavern creatures.woz" size="234788" crc="cfad20b4" sha1="29aca73d6cdd7403712e471027d8d680a51ffe01" />
+			</dataarea>
+		</part>
+	</software>
+
+	<software name="argos">
+		<description>Argos</description>
+		<year>1983</year>
+		<publisher>Datamost</publisher>
+		<info name="programmer" value="Ron Lowrance" />
+		<info name="usage" value="Runs on any Apple ][ with 48K." />
+		<sharedfeat name="compatibility" value="A2,A2P,A2E,A2EE,A2C,A2GS" />
+		<!--Dump released: 2023-07-27-->
+		<!--action game-->
+		<part name="flop1" interface="floppy_5_25">
+			<dataarea name="flop" size="234768">
+				<rom name="argos.woz" size="234768" crc="f07fdc4c" sha1="221c3a3711e0ca4f20d56f45e78f1fe5ea0ea732" />
+			</dataarea>
+		</part>
+	</software>
+
+	<software name="cribsol">
+		<description>Cribbage/Solitaire</description>
+		<year>1982</year>
+		<publisher>Datamost</publisher>
+		<info name="programmer" value="Art Carpet" />
+		<info name="usage" value="Requires a 48K Apple ][+ or later." />
+		<sharedfeat name="compatibility" value="A2P,A2E,A2EE,A2C,A2GS" />
+		<!--Dump released: 2023-07-27-->
+		<!--action game-->
+		<part name="flop1" interface="floppy_5_25">
+			<dataarea name="flop" size="241431">
+				<rom name="cribbage-solitaire.woz" size="241431" crc="91f3b311" sha1="32d7713d8d451398b685b507a3cf66d22011588b" />
+			</dataarea>
+		</part>
+	</software>
+
+	<software name="cyclotron">
+		<description>Cyclotron</description>
+		<year>1982</year>
+		<publisher>Sensible Software</publisher>
+		<info name="programmer" value="Marv Long" />
+		<info name="usage" value="Requires a 48K Apple ][, ][+, or unenhanced //e. Due to aggressive copy protection, it will not run on later systems." />
+		<sharedfeat name="compatibility" value="A2,A2P,A2E" />
+		<!--Dump released: 2023-07-27-->
+		<!--action game-->
+		<part name="flop1" interface="floppy_5_25">
+			<dataarea name="flop" size="174870">
+				<rom name="cyclotron.woz" size="174870" crc="bae28b68" sha1="2cded44e7647dc325b1a7fc6d39d130a823db676" />
+			</dataarea>
+		</part>
+	</software>
+
+	<software name="wingsshad">
+		<description>Wings Out of Shadow</description>
+		<year>1983</year>
+		<publisher>Berserker Works</publisher>
+		<info name="programmer" value="Scott V. Walker, Joan Saberhagen, Dennis L. Martinez, Mary Martinez, Michael L. Carpenter, Eddie Goldberger, and Bryan Bingham" />
+		<info name="usage" value="Requires a 48K Apple ][+ or later." />
+		<sharedfeat name="compatibility" value="A2P,A2E,A2EE,A2C,A2GS" />
+		<!--Dump released: 2023-07-27-->
+		<!--strategy game-->
+		<part name="flop1" interface="floppy_5_25">
+			<dataarea name="flop" size="234892">
+				<rom name="wings out of shadow.woz" size="234892" crc="3dd30c72" sha1="22ac1989ce534d437c29e35f061b89b5a7f8266a" />
+			</dataarea>
+		</part>
+	</software>
+
 </softwarelist>
-
-
-
