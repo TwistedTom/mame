@@ -15,6 +15,7 @@
 #include "chd.h"
 #include "flac.h"
 #include "hashing.h"
+#include "multibyte.h"
 
 #include "lzma/C/LzmaDec.h"
 #include "lzma/C/LzmaEnc.h"
@@ -343,10 +344,10 @@ public:
 			throw std::error_condition(chd_file::error::COMPRESSION_ERROR);
 
 		// write compressed length
-		dest[ecc_bytes + 0] = complen >> ((complen_bytes - 1) * 8);
-		dest[ecc_bytes + 1] = complen >> ((complen_bytes - 2) * 8);
 		if (complen_bytes > 2)
-			dest[ecc_bytes + 2] = complen >> ((complen_bytes - 3) * 8);
+			put_u24be(&dest[ecc_bytes], complen);
+		else
+			put_u16be(&dest[ecc_bytes], complen);
 
 		// encode the subcode
 		return header_bytes + complen + m_subcode_compressor.compress(&m_buffer[frames * cdrom_file::MAX_SECTOR_DATA], frames * cdrom_file::MAX_SUBCODE_DATA, &dest[header_bytes + complen]);
@@ -388,9 +389,7 @@ public:
 		uint32_t header_bytes = ecc_bytes + complen_bytes;
 
 		// extract compressed length of base
-		uint32_t complen_base = (src[ecc_bytes + 0] << 8) | src[ecc_bytes + 1];
-		if (complen_bytes > 2)
-			complen_base = (complen_base << 8) | src[ecc_bytes + 2];
+		uint32_t complen_base = (complen_bytes > 2) ? get_u24be(&src[ecc_bytes]) : get_u16be(&src[ecc_bytes]);
 
 		// reset and decode
 		m_base_decompressor.decompress(&src[header_bytes], complen_base, &m_buffer[0], frames * cdrom_file::MAX_SECTOR_DATA);
@@ -513,7 +512,7 @@ const codec_entry f_codec_list[] =
 //  instance of the given type
 //-------------------------------------------------
 
-const codec_entry *find_in_list(chd_codec_type type)
+const codec_entry *find_in_list(chd_codec_type type) noexcept
 {
 	// find in the list and construct the class
 	for (auto & elem : f_codec_list)
@@ -628,7 +627,7 @@ chd_decompressor::ptr chd_codec_list::new_decompressor(chd_codec_type type, chd_
 //  corresponds to a supported codec
 //-------------------------------------------------
 
-bool chd_codec_list::codec_exists(chd_codec_type type)
+bool chd_codec_list::codec_exists(chd_codec_type type) noexcept
 {
 	// find in the list and construct the class
 	return bool(find_in_list(type));
@@ -640,7 +639,7 @@ bool chd_codec_list::codec_exists(chd_codec_type type)
 //  codec
 //-------------------------------------------------
 
-const char *chd_codec_list::codec_name(chd_codec_type type)
+const char *chd_codec_list::codec_name(chd_codec_type type) noexcept
 {
 	// find in the list and construct the class
 	const codec_entry *entry = find_in_list(type);

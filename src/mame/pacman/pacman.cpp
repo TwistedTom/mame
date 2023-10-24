@@ -8270,7 +8270,7 @@ GAME( 1981, piranhao, puckman,  piranha,  mspacman, pacman_state,  init_eyes,   
 GAME( 1981, mspacmab3,puckman,  piranha,  mspacman, pacman_state,  init_eyes,     ROT90,  "bootleg",                           "Ms. Pac-Man (bootleg, set 3)",                             MACHINE_SUPPORTS_SAVE )
 GAME( 1981, abscam,   puckman,  piranha,  mspacman, pacman_state,  init_eyes,     ROT90,  "GL (US Billiards license)",         "Abscam",                                                   MACHINE_SUPPORTS_SAVE )
 GAME( 1981, piranhah, puckman,  pacman,   mspacman, pacman_state,  empty_init,    ROT90,  "hack",                              "Piranha (hack)",                                           MACHINE_SUPPORTS_SAVE )
-GAME( 1981, titanpac, puckman,  piranha,  mspacman, pacman_state,  init_eyes,     ROT90,  "hack (NSM)",                        "Titan (Pac-Man hack)",                                     MACHINE_SUPPORTS_SAVE )
+GAME( 1981, titanpac, puckman,  piranha,  mspacman, pacman_state,  init_eyes,     ROT90,  "hack (NSM)",                        "Titan (hack of Pac-Man)",                                  MACHINE_SUPPORTS_SAVE )
 GAME( 1980, pacmanfm, puckman,  pacman,   pacman,   pacman_state,  empty_init,    ROT90,  "bootleg (FAMARE S.A.)",             "Pac Man (FAMARE S.A. bootleg of Puck Man)",                MACHINE_SUPPORTS_SAVE )
 GAME( 1980, pacmanug, puckman,  pacman,   pacman,   pacman_state,  empty_init,    ROT90,  "bootleg (U.Games)",                 "Pac Man (U.Games bootleg of Puck Man)",                    MACHINE_SUPPORTS_SAVE )
 
@@ -8384,7 +8384,7 @@ GAME( 1984, eeekkp,   eeekk,    eeekkp,   eeekkp,   epospm_state,  empty_init,  
 
 GAME( 1984, drivfrcp, 0,        drivfrcp, drivfrcp, pacman_state,  init_drivfrcp, ROT90,  "Shinkai Inc. (Magic Electronics Inc. license)", "Driving Force (Pac-Man conversion)", MACHINE_SUPPORTS_SAVE )
 
-GAME( 1985, 8bpm,     8ballact, _8bpm,    8bpm,     pacman_state,  init_8bpm,     ROT90,  "Seatongrove Ltd (Magic Electronics USA license)", "Eight Ball Action (Pac-Man conversion)", MACHINE_SUPPORTS_SAVE )
+GAME( 1985, 8bpm,     8ballact, _8bpm,    8bpm,     pacman_state,  init_8bpm,     ROT90,  "Seatongrove UK, Ltd. (Magic Electronics USA license)", "Eight Ball Action (Pac-Man conversion)", MACHINE_SUPPORTS_SAVE )
 
 GAME( 1985, porky,    0,        porky,    porky,    pacman_state,  init_porky,    ROT90,  "Shinkai Inc. (Magic Electronics Inc. license)", "Porky", MACHINE_SUPPORTS_SAVE )
 
