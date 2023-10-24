@@ -343,18 +343,6 @@ end
 
 --------------------------------------------------
 --
---@src/devices/video/mga2064w.h,VIDEOS["MGA2064W"] = true
---------------------------------------------------
-
-if (VIDEOS["MGA2064W"]~=null) then
-	files {
-		MAME_DIR .. "src/devices/video/mga2064w.cpp",
-		MAME_DIR .. "src/devices/video/mga2064w.h",
-	}
-end
-
---------------------------------------------------
---
 --@src/devices/video/nt7534.h,VIDEOS["NT7534"] = true
 --------------------------------------------------
 
@@ -703,6 +691,18 @@ end
 
 ---------------------------------------------------
 --
+--@src/devices/video/mb86292.h,VIDEOS["MB86292"] = true
+---------------------------------------------------
+
+if (VIDEOS["MB86292"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/video/mb86292.cpp",
+		MAME_DIR .. "src/devices/video/mb86292.h",
+	}
+end
+
+---------------------------------------------------
+--
 --@src/devices/video/mb88303.h,VIDEOS["MB88303"] = true
 ---------------------------------------------------
 
@@ -919,6 +919,30 @@ end
 
 --------------------------------------------------
 --
+--@src/devices/video/pc_vga_matrox.h,VIDEOS["PC_VGA_MATROX"] = true
+--------------------------------------------------
+
+if (VIDEOS["PC_VGA_MATROX"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/video/pc_vga_matrox.cpp",
+		MAME_DIR .. "src/devices/video/pc_vga_matrox.h",
+	}
+end
+
+--------------------------------------------------
+--
+--@src/devices/video/mga2064w.h,VIDEOS["MGA2064W"] = true
+--------------------------------------------------
+
+if (VIDEOS["MGA2064W"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/video/mga2064w.cpp",
+		MAME_DIR .. "src/devices/video/mga2064w.h",
+	}
+end
+
+--------------------------------------------------
+--
 --@src/devices/video/pc_vga_nvidia.h,VIDEOS["PC_VGA_NVIDIA"] = true
 --------------------------------------------------
 
@@ -938,6 +962,18 @@ if (VIDEOS["PC_VGA_PARADISE"]~=null) then
 	files {
 		MAME_DIR .. "src/devices/video/pc_vga_paradise.cpp",
 		MAME_DIR .. "src/devices/video/pc_vga_paradise.h",
+	}
+end
+
+--------------------------------------------------
+--
+--@src/devices/video/wd90c26.h,VIDEOS["WD90C26"] = true
+--------------------------------------------------
+
+if (VIDEOS["WD90C26"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/video/wd90c26.cpp",
+		MAME_DIR .. "src/devices/video/wd90c26.h",
 	}
 end
 
@@ -1622,17 +1658,6 @@ if (VIDEOS["PS2GS"]~=null) then
 	files {
 		MAME_DIR .. "src/devices/video/ps2gs.cpp",
 		MAME_DIR .. "src/devices/video/ps2gs.h",
-	}
-end
-
---------------------------------------------------
---
---@src/devices/video/decsfb.h,VIDEOS["DECSFB"] = true
---------------------------------------------------
-if (VIDEOS["DECSFB"]~=null) then
-	files {
-		MAME_DIR .. "src/devices/video/decsfb.cpp",
-		MAME_DIR .. "src/devices/video/decsfb.h",
 	}
 end
 
