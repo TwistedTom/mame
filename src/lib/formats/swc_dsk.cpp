@@ -2,7 +2,7 @@
 // copyright-holders:
 /*********************************************************************
 
-    formats/swc_dsk.c
+    formats/swc_dsk.cpp
 
     Super Wild Card disk images
 
@@ -19,17 +19,17 @@ swc_format::swc_format() : upd765_format(formats)
 {
 }
 
-const char *swc_format::name() const
+const char *swc_format::name() const noexcept
 {
 	return "swc";
 }
 
-const char *swc_format::description() const
+const char *swc_format::description() const noexcept
 {
 	return "Super Wild Card floppy disk image";
 }
 
-const char *swc_format::extensions() const
+const char *swc_format::extensions() const noexcept
 {
 	return "img";
 }
