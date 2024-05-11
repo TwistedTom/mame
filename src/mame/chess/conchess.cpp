@@ -112,6 +112,8 @@ private:
 	required_device<beep_device> m_beeper;
 	required_ioport_array<2> m_inputs;
 
+	u8 m_inp_mux = 0;
+
 	// address maps
 	void main_map(address_map &map);
 
@@ -120,8 +122,6 @@ private:
 	u8 input_r();
 	void leds_w(offs_t offset, u8 data);
 	void sound_w(u8 data);
-
-	u8 m_inp_mux = 0;
 };
 
 void conchess_state::machine_start()
@@ -376,14 +376,14 @@ ROM_END
 *******************************************************************************/
 
 //    YEAR  NAME       PARENT    COMPAT  MACHINE   INPUT     CLASS           INIT        COMPANY, FULLNAME, FLAGS
-SYST( 1982, conc,      0,        0,      conc,     conchess, conchess_state, empty_init, "Consumenta Computer / Loproc", "Conchess (standard, set 1)", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1982, conca,     conc,     0,      conc,     conchess, conchess_state, empty_init, "Consumenta Computer / Loproc", "Conchess (standard, set 2)", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+SYST( 1982, conc,      0,        0,      conc,     conchess, conchess_state, empty_init, "Consumenta Computer / Loproc", "Conchess (standard, set 1)", MACHINE_SUPPORTS_SAVE )
+SYST( 1982, conca,     conc,     0,      conc,     conchess, conchess_state, empty_init, "Consumenta Computer / Loproc", "Conchess (standard, set 2)", MACHINE_SUPPORTS_SAVE )
 
-SYST( 1984, concgla,   0,        0,      concgla,  conchess, conchess_state, empty_init, "Systemhuset / Loproc", "Conchess Princhess Glasgow", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1984, concglap,  0,        0,      concgla,  conchess, conchess_state, empty_init, "Systemhuset / Loproc", "Conchess Plymate Glasgow Plus (set 1)", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1984, concglapa, concglap, 0,      concgla,  conchess, conchess_state, empty_init, "Systemhuset / Loproc", "Conchess Plymate Glasgow Plus (set 2)", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+SYST( 1984, concgla,   0,        0,      concgla,  conchess, conchess_state, empty_init, "Systemhuset / Loproc", "Conchess Princhess Glasgow", MACHINE_SUPPORTS_SAVE )
+SYST( 1984, concglap,  0,        0,      concgla,  conchess, conchess_state, empty_init, "Systemhuset / Loproc", "Conchess Plymate Glasgow Plus (set 1)", MACHINE_SUPPORTS_SAVE )
+SYST( 1984, concglapa, concglap, 0,      concgla,  conchess, conchess_state, empty_init, "Systemhuset / Loproc", "Conchess Plymate Glasgow Plus (set 2)", MACHINE_SUPPORTS_SAVE )
 
-SYST( 1985, concams,   0,        0,      concams,  conchess, conchess_state, empty_init, "Systemhuset / Loproc", "Conchess Plymate Amsterdam", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1985, concams5,  concams,  0,      concams5, conchess, conchess_state, empty_init, "Systemhuset / Loproc", "Conchess Plymate Amsterdam 5.5MHz", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+SYST( 1985, concams,   0,        0,      concams,  conchess, conchess_state, empty_init, "Systemhuset / Loproc", "Conchess Plymate Amsterdam", MACHINE_SUPPORTS_SAVE )
+SYST( 1985, concams5,  concams,  0,      concams5, conchess, conchess_state, empty_init, "Systemhuset / Loproc", "Conchess Plymate Amsterdam 5.5MHz", MACHINE_SUPPORTS_SAVE )
 
-SYST( 1990, concvicp,  0,        0,      concvicp, conchess, conchess_state, empty_init, "Systemhuset / Loproc", "Conchess Plymate Victoria (prototype)", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+SYST( 1990, concvicp,  0,        0,      concvicp, conchess, conchess_state, empty_init, "Systemhuset / Loproc", "Conchess Plymate Victoria (prototype)", MACHINE_SUPPORTS_SAVE )
