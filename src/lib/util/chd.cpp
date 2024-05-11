@@ -27,6 +27,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <new>
+#include <tuple>
 
 
 //**************************************************************************
@@ -106,12 +107,12 @@ enum
 // description of where a metadata entry lives within the file
 struct chd_file::metadata_entry
 {
-	uint64_t                  offset;         // offset within the file of the header
-	uint64_t                  next;           // offset within the file of the next header
-	uint64_t                  prev;           // offset within the file of the previous header
-	uint32_t                  length;         // length of the metadata
-	uint32_t                  metatag;        // metadata tag
-	uint8_t                   flags;          // flag bits
+	uint64_t                offset;         // offset within the file of the header
+	uint64_t                next;           // offset within the file of the next header
+	uint64_t                prev;           // offset within the file of the previous header
+	uint32_t                length;         // length of the metadata
+	uint32_t                metatag;        // metadata tag
+	uint8_t                 flags;          // flag bits
 };
 
 
@@ -119,7 +120,7 @@ struct chd_file::metadata_entry
 
 struct chd_file::metadata_hash
 {
-	uint8_t                   tag[4];         // tag of the metadata in big-endian
+	uint8_t                 tag[4];         // tag of the metadata in big-endian
 	util::sha1_t            sha1;           // hash data
 };
 
@@ -134,7 +135,7 @@ struct chd_file::metadata_hash
 //  stream in bigendian order
 //-------------------------------------------------
 
-inline util::sha1_t chd_file::be_read_sha1(const uint8_t *base) const noexcept
+inline util::sha1_t chd_file::be_read_sha1(const uint8_t *base)const
 {
 	util::sha1_t result;
 	memcpy(&result.m_raw[0], base, sizeof(result.m_raw));
@@ -147,7 +148,7 @@ inline util::sha1_t chd_file::be_read_sha1(const uint8_t *base) const noexcept
 //  stream in bigendian order
 //-------------------------------------------------
 
-inline void chd_file::be_write_sha1(uint8_t *base, util::sha1_t value) noexcept
+inline void chd_file::be_write_sha1(uint8_t *base, util::sha1_t value)
 {
 	memcpy(base, &value.m_raw[0], sizeof(value.m_raw));
 }
@@ -165,13 +166,16 @@ inline void chd_file::file_read(uint64_t offset, void *dest, uint32_t length) co
 		throw std::error_condition(error::NOT_OPEN);
 
 	// seek and read
-	m_file->seek(offset, SEEK_SET);
+	std::error_condition err;
+	err = m_file->seek(offset, SEEK_SET);
+	if (err)
+		throw err;
 	size_t count;
-	std::error_condition err = m_file->read(dest, length, count);
+	std::tie(err, count) = read(*m_file, dest, length);
 	if (err)
 		throw err;
 	else if (count != length)
-		throw std::error_condition(std::errc::io_error); // TODO: revisit this error code (happens if file is cut off)
+		throw std::error_condition(std::errc::io_error); // TODO: revisit this error code (happens if file is truncated)
 }
 
 
@@ -187,13 +191,13 @@ inline void chd_file::file_write(uint64_t offset, const void *source, uint32_t l
 		throw std::error_condition(error::NOT_OPEN);
 
 	// seek and write
-	m_file->seek(offset, SEEK_SET);
-	size_t count;
-	std::error_condition err = m_file->write(source, length, count);
+	std::error_condition err;
+	err = m_file->seek(offset, SEEK_SET);
 	if (err)
 		throw err;
-	else if (count != length)
-		throw std::error_condition(std::errc::interrupted); // can theoretically happen if write is inuterrupted by a signal
+	std::tie(err, std::ignore) = write(*m_file, source, length);
+	if (err)
+		throw err;
 }
 
 
@@ -232,7 +236,7 @@ inline uint64_t chd_file::file_append(const void *source, uint32_t length, uint3
 			{
 				uint32_t bytes_to_write = std::min<std::size_t>(sizeof(buffer), delta);
 				size_t count;
-				err = m_file->write(buffer, bytes_to_write, count);
+				std::tie(err, count) = write(*m_file, buffer, bytes_to_write);
 				if (err)
 					throw err;
 				delta -= count;
@@ -245,12 +249,9 @@ inline uint64_t chd_file::file_append(const void *source, uint32_t length, uint3
 	err = m_file->tell(offset);
 	if (err)
 		throw err;
-	size_t count;
-	err = m_file->write(source, length, count);
+	std::tie(err, std::ignore) = write(*m_file, source, length);
 	if (err)
 		throw err;
-	else if (count != length)
-		throw std::error_condition(std::errc::interrupted); // can theoretically happen if write is interrupted by a signal
 	return offset;
 }
 
@@ -338,7 +339,7 @@ bool chd_file::parent_missing() const noexcept
  * @return  A sha1_t.
  */
 
-util::sha1_t chd_file::sha1() const
+util::sha1_t chd_file::sha1()
 {
 	try
 	{
@@ -349,7 +350,7 @@ util::sha1_t chd_file::sha1() const
 	}
 	catch (std::error_condition const &)
 	{
-		// on failure, return null
+		// on failure, return nullptr
 		return util::sha1_t::null;
 	}
 }
@@ -367,7 +368,7 @@ util::sha1_t chd_file::sha1() const
  * @return  A sha1_t.
  */
 
-util::sha1_t chd_file::raw_sha1() const
+util::sha1_t chd_file::raw_sha1()
 {
 	try
 	{
@@ -382,7 +383,7 @@ util::sha1_t chd_file::raw_sha1() const
 	}
 	catch (std::error_condition const &)
 	{
-		// on failure, return null
+		// on failure, return nullptr
 		return util::sha1_t::null;
 	}
 }
@@ -400,7 +401,7 @@ util::sha1_t chd_file::raw_sha1() const
  * @return  A sha1_t.
  */
 
-util::sha1_t chd_file::parent_sha1() const
+util::sha1_t chd_file::parent_sha1()
 {
 	try
 	{
@@ -415,7 +416,7 @@ util::sha1_t chd_file::parent_sha1() const
 	}
 	catch (std::error_condition const &)
 	{
-		// on failure, return null
+		// on failure, return nullptr
 		return util::sha1_t::null;
 	}
 }
@@ -532,45 +533,33 @@ std::error_condition chd_file::hunk_info(uint32_t hunknum, chd_codec_type &compr
 }
 
 /**
- * @fn  std::error_condition chd_file::set_raw_sha1(sha1_t rawdata)
+ * @fn  void chd_file::set_raw_sha1(sha1_t rawdata)
  *
  * @brief   -------------------------------------------------
  *            set_raw_sha1 - set our SHA1 values
  *          -------------------------------------------------.
  *
  * @param   rawdata The rawdata.
- *
- * @return  A std::error_condition.
  */
 
-std::error_condition chd_file::set_raw_sha1(util::sha1_t rawdata)
+void chd_file::set_raw_sha1(util::sha1_t rawdata)
 {
-	// wrap this for clean reporting
-	try
-	{
-		// create a big-endian version
-		uint8_t rawbuf[sizeof(util::sha1_t)];
-		be_write_sha1(rawbuf, rawdata);
+	// create a big-endian version
+	uint8_t rawbuf[sizeof(util::sha1_t)];
+	be_write_sha1(rawbuf, rawdata);
 
-		// write to the header
-		uint64_t offset = (m_rawsha1_offset != 0) ? m_rawsha1_offset : m_sha1_offset;
-		assert(offset != 0);
-		file_write(offset, rawbuf, sizeof(rawbuf));
+	// write to the header
+	uint64_t offset = (m_rawsha1_offset != 0) ? m_rawsha1_offset : m_sha1_offset;
+	assert(offset != 0);
+	file_write(offset, rawbuf, sizeof(rawbuf));
 
-		// if we have a separate rawsha1_offset, update the full sha1 as well
-		if (m_rawsha1_offset != 0)
-			metadata_update_hash();
-		return std::error_condition();
-	}
-	catch (std::error_condition const &err)
-	{
-		// return any errors
-		return err;
-	}
+	// if we have a separate rawsha1_offset, update the full sha1 as well
+	if (m_rawsha1_offset != 0)
+		metadata_update_hash();
 }
 
 /**
- * @fn  std::error_condition chd_file::set_parent_sha1(sha1_t parent)
+ * @fn  void chd_file::set_parent_sha1(sha1_t parent)
  *
  * @brief   -------------------------------------------------
  *            set_parent_sha1 - set the parent SHA1 value
@@ -579,37 +568,25 @@ std::error_condition chd_file::set_raw_sha1(util::sha1_t rawdata)
  * @exception   CHDERR_INVALID_FILE Thrown when a chderr invalid file error condition occurs.
  *
  * @param   parent  The parent.
- *
- * @return  A std::error_condition.
  */
 
-std::error_condition chd_file::set_parent_sha1(util::sha1_t parent)
+void chd_file::set_parent_sha1(util::sha1_t parent)
 {
 	// if no file, fail
 	if (!m_file)
-		return error::INVALID_FILE;
+		throw std::error_condition(error::INVALID_FILE);
 
-	// wrap this for clean reporting
-	try
-	{
-		// create a big-endian version
-		uint8_t rawbuf[sizeof(util::sha1_t)];
-		be_write_sha1(rawbuf, parent);
+	// create a big-endian version
+	uint8_t rawbuf[sizeof(util::sha1_t)];
+	be_write_sha1(rawbuf, parent);
 
-		// write to the header
-		assert(m_parentsha1_offset != 0);
-		file_write(m_parentsha1_offset, rawbuf, sizeof(rawbuf));
-		return std::error_condition();
-	}
-	catch (std::error_condition const &err)
-	{
-		// return any errors
-		return err;
-	}
+	// write to the header
+	assert(m_parentsha1_offset != 0);
+	file_write(m_parentsha1_offset, rawbuf, sizeof(rawbuf));
 }
 
 /**
- * @fn  std::error_condition chd_file::create(util::random_read_write::ptr &&file, uint64_t logicalbytes, uint32_t hunkbytes, uint32_t unitbytes, chd_codec_type compression[4])
+ * @fn  std::error_condition chd_file::create(util::random_read_write::ptr &&file, uint64_t logicalbytes, uint32_t hunkbytes, uint32_t unitbytes, const chd_codec_type (&compression)[4])
  *
  * @brief   -------------------------------------------------
  *            create - create a new file with no parent using an existing opened file handle
@@ -629,7 +606,7 @@ std::error_condition chd_file::create(
 		uint64_t logicalbytes,
 		uint32_t hunkbytes,
 		uint32_t unitbytes,
-		chd_codec_type compression[4])
+		const chd_codec_type (&compression)[4])
 {
 	// make sure we don't already have a file open
 	if (m_file)
@@ -650,7 +627,7 @@ std::error_condition chd_file::create(
 }
 
 /**
- * @fn  std::error_condition chd_file::create(util::random_read_write::ptr &&file, uint64_t logicalbytes, uint32_t hunkbytes, chd_codec_type compression[4], chd_file &parent)
+ * @fn  std::error_condition chd_file::create(util::random_read_write::ptr &&file, uint64_t logicalbytes, uint32_t hunkbytes, const chd_codec_type (&compression)[4], chd_file &parent)
  *
  * @brief   -------------------------------------------------
  *            create - create a new file with a parent using an existing opened file handle
@@ -669,7 +646,7 @@ std::error_condition chd_file::create(
 		util::random_read_write::ptr &&file,
 		uint64_t logicalbytes,
 		uint32_t hunkbytes,
-		chd_codec_type compression[4],
+		const chd_codec_type (&compression)[4],
 		chd_file &parent)
 {
 	// make sure we don't already have a file open
@@ -691,7 +668,7 @@ std::error_condition chd_file::create(
 }
 
 /**
- * @fn  std::error_condition chd_file::create(std::string_view filename, uint64_t logicalbytes, uint32_t hunkbytes, uint32_t unitbytes, chd_codec_type compression[4])
+ * @fn  std::error_condition chd_file::create(std::string_view filename, uint64_t logicalbytes, uint32_t hunkbytes, uint32_t unitbytes, const chd_codec_type (&compression)[4])
  *
  * @brief   -------------------------------------------------
  *            create - create a new file with no parent using a filename
@@ -711,7 +688,7 @@ std::error_condition chd_file::create(
 		uint64_t logicalbytes,
 		uint32_t hunkbytes,
 		uint32_t unitbytes,
-		chd_codec_type compression[4])
+		const chd_codec_type (&compression)[4])
 {
 	// make sure we don't already have a file open
 	if (m_file)
@@ -736,7 +713,7 @@ std::error_condition chd_file::create(
 }
 
 /**
- * @fn  std::error_condition chd_file::create(std::string_view filename, uint64_t logicalbytes, uint32_t hunkbytes, chd_codec_type compression[4], chd_file &parent)
+ * @fn  std::error_condition chd_file::create(std::string_view filename, uint64_t logicalbytes, uint32_t hunkbytes, const chd_codec_type (&compression)[4], chd_file &parent)
  *
  * @brief   -------------------------------------------------
  *            create - create a new file with a parent using a filename
@@ -755,7 +732,7 @@ std::error_condition chd_file::create(
 		std::string_view filename,
 		uint64_t logicalbytes,
 		uint32_t hunkbytes,
-		chd_codec_type compression[4],
+		const chd_codec_type (&compression)[4],
 		chd_file &parent)
 {
 	// make sure we don't already have a file open
@@ -917,7 +894,7 @@ void chd_file::close()
  * @param   hunknum         The hunknum.
  * @param [in,out]  buffer  If non-null, the buffer.
  *
- * @return  A std::error_condition.
+ * @return  The hunk.
  */
 
 std::error_condition chd_file::read_hunk(uint32_t hunknum, void *buffer)
@@ -994,12 +971,10 @@ std::error_condition chd_file::read_hunk(uint32_t hunknum, void *buffer)
 					else if (m_parent_missing)
 						throw std::error_condition(error::REQUIRES_PARENT);
 					else if (m_parent)
-						return m_parent->read_hunk(hunknum, dest);
+						m_parent->read_hunk(hunknum, dest);
 					else
-					{
 						memset(dest, 0, m_hunkbytes);
-						return std::error_condition();
-					}
+					return std::error_condition();
 				}
 
 				// compressed case
@@ -1292,19 +1267,19 @@ std::error_condition chd_file::write_bytes(uint64_t offset, const void *buffer, 
  * @param   searchindex     The searchindex.
  * @param [in,out]  output  The output.
  *
- * @return  A std::error_condition.
+ * @return  The metadata.
  */
 
 std::error_condition chd_file::read_metadata(chd_metadata_tag searchtag, uint32_t searchindex, std::string &output)
 {
-	// if we didn't find it, just return
-	metadata_entry metaentry;
-	if (std::error_condition err = metadata_find(searchtag, searchindex, metaentry))
-		return err;
-
 	// wrap this for clean reporting
 	try
 	{
+		// if we didn't find it, just return
+		metadata_entry metaentry;
+		if (!metadata_find(searchtag, searchindex, metaentry))
+			return std::error_condition(error::METADATA_NOT_FOUND);
+
 		// read the metadata
 		output.assign(metaentry.length, '\0');
 		file_read(metaentry.offset + METADATA_HEADER_SIZE, &output[0], metaentry.length);
@@ -1329,19 +1304,19 @@ std::error_condition chd_file::read_metadata(chd_metadata_tag searchtag, uint32_
  * @param   searchindex     The searchindex.
  * @param [in,out]  output  The output.
  *
- * @return  A std::error_condition.
+ * @return  The metadata.
  */
 
 std::error_condition chd_file::read_metadata(chd_metadata_tag searchtag, uint32_t searchindex, std::vector<uint8_t> &output)
 {
-	// if we didn't find it, just return
-	metadata_entry metaentry;
-	if (std::error_condition err = metadata_find(searchtag, searchindex, metaentry))
-		return err;
-
 	// wrap this for clean reporting
 	try
 	{
+		// if we didn't find it, just return
+		metadata_entry metaentry;
+		if (!metadata_find(searchtag, searchindex, metaentry))
+			throw std::error_condition(error::METADATA_NOT_FOUND);
+
 		// read the metadata
 		output.resize(metaentry.length);
 		file_read(metaentry.offset + METADATA_HEADER_SIZE, &output[0], metaentry.length);
@@ -1368,19 +1343,19 @@ std::error_condition chd_file::read_metadata(chd_metadata_tag searchtag, uint32_
  * @param   outputlen           The outputlen.
  * @param [in,out]  resultlen   The resultlen.
  *
- * @return  A std::error_condition.
+ * @return  The metadata.
  */
 
 std::error_condition chd_file::read_metadata(chd_metadata_tag searchtag, uint32_t searchindex, void *output, uint32_t outputlen, uint32_t &resultlen)
 {
-	// if we didn't find it, just return
-	metadata_entry metaentry;
-	if (std::error_condition err = metadata_find(searchtag, searchindex, metaentry))
-		return err;
-
 	// wrap this for clean reporting
 	try
 	{
+		// if we didn't find it, just return
+		metadata_entry metaentry;
+		if (!metadata_find(searchtag, searchindex, metaentry))
+			throw std::error_condition(error::METADATA_NOT_FOUND);
+
 		// read the metadata
 		resultlen = metaentry.length;
 		file_read(metaentry.offset + METADATA_HEADER_SIZE, output, std::min(outputlen, resultlen));
@@ -1407,19 +1382,19 @@ std::error_condition chd_file::read_metadata(chd_metadata_tag searchtag, uint32_
  * @param [in,out]  resulttag   The resulttag.
  * @param [in,out]  resultflags The resultflags.
  *
- * @return  A std::error_condition.
+ * @return  The metadata.
  */
 
 std::error_condition chd_file::read_metadata(chd_metadata_tag searchtag, uint32_t searchindex, std::vector<uint8_t> &output, chd_metadata_tag &resulttag, uint8_t &resultflags)
 {
-	// if we didn't find it, just return
-	metadata_entry metaentry;
-	if (std::error_condition err = metadata_find(searchtag, searchindex, metaentry))
-		return err;
-
 	// wrap this for clean reporting
 	try
 	{
+		// if we didn't find it, just return
+		metadata_entry metaentry;
+		if (!metadata_find(searchtag, searchindex, metaentry))
+			throw std::error_condition(error::METADATA_NOT_FOUND);
+
 		// read the metadata
 		output.resize(metaentry.length);
 		file_read(metaentry.offset + METADATA_HEADER_SIZE, &output[0], metaentry.length);
@@ -1462,8 +1437,7 @@ std::error_condition chd_file::write_metadata(chd_metadata_tag metatag, uint32_t
 		// find the entry if it already exists
 		metadata_entry metaentry;
 		bool finished = false;
-		std::error_condition err = metadata_find(metatag, metaindex, metaentry);
-		if (!err)
+		if (metadata_find(metatag, metaindex, metaentry))
 		{
 			// if the new data fits over the old data, just overwrite
 			if (inputlen <= metaentry.length)
@@ -1486,8 +1460,6 @@ std::error_condition chd_file::write_metadata(chd_metadata_tag metatag, uint32_t
 			else
 				metadata_set_previous_next(metaentry.prev, metaentry.next);
 		}
-		else if (err != error::METADATA_NOT_FOUND)
-			throw err;
 
 		// if not yet done, create a new entry and append
 		if (!finished)
@@ -1536,14 +1508,14 @@ std::error_condition chd_file::write_metadata(chd_metadata_tag metatag, uint32_t
 
 std::error_condition chd_file::delete_metadata(chd_metadata_tag metatag, uint32_t metaindex)
 {
-	// find the entry
-	metadata_entry metaentry;
-	if (std::error_condition err = metadata_find(metatag, metaindex, metaentry))
-		return err;
-
 	// wrap this for clean reporting
 	try
 	{
+		// find the entry
+		metadata_entry metaentry;
+		if (!metadata_find(metatag, metaindex, metaentry))
+			throw std::error_condition(error::METADATA_NOT_FOUND);
+
 		// point the previous to the next, unlinking us
 		metadata_set_previous_next(metaentry.prev, metaentry.next);
 		return std::error_condition();
@@ -1571,37 +1543,34 @@ std::error_condition chd_file::delete_metadata(chd_metadata_tag metatag, uint32_
 
 std::error_condition chd_file::clone_all_metadata(chd_file &source)
 {
-	// iterate over metadata entries in the source
-	std::vector<uint8_t> filedata;
-	metadata_entry metaentry;
-	metaentry.metatag = 0;
-	metaentry.length = 0;
-	metaentry.next = 0;
-	metaentry.flags = 0;
-	std::error_condition err;
-	for (err = source.metadata_find(CHDMETATAG_WILDCARD, 0, metaentry); !err; err = source.metadata_find(CHDMETATAG_WILDCARD, 0, metaentry, true))
+	// wrap this for clean reporting
+	try
 	{
-		// wrap this for clean reporting
-		try
+		// iterate over metadata entries in the source
+		std::vector<uint8_t> filedata;
+		metadata_entry metaentry;
+		metaentry.metatag = 0;
+		metaentry.length = 0;
+		metaentry.next = 0;
+		metaentry.flags = 0;
+		for (bool has_data = source.metadata_find(CHDMETATAG_WILDCARD, 0, metaentry); has_data; has_data = source.metadata_find(CHDMETATAG_WILDCARD, 0, metaentry, true))
 		{
 			// read the metadata item
 			filedata.resize(metaentry.length);
 			source.file_read(metaentry.offset + METADATA_HEADER_SIZE, &filedata[0], metaentry.length);
+
+			// write it to the destination
+			std::error_condition err = write_metadata(metaentry.metatag, (uint32_t)-1, &filedata[0], metaentry.length, metaentry.flags);
+			if (err)
+				throw err;
 		}
-		catch (std::error_condition const &filerr)
-		{
-			return filerr;
-		}
-	
-		// write it to the destination
-		err = write_metadata(metaentry.metatag, (uint32_t)-1, &filedata[0], metaentry.length, metaentry.flags);
-		if (err)
-			return err;
-	}
-	if (err == error::METADATA_NOT_FOUND)
 		return std::error_condition();
-	else
+	}
+	catch (std::error_condition const &err)
+	{
+		// return any errors
 		return err;
+	}
 }
 
 /**
@@ -1627,8 +1596,7 @@ util::sha1_t chd_file::compute_overall_sha1(util::sha1_t rawsha1)
 	std::vector<uint8_t> filedata;
 	std::vector<metadata_hash> hasharray;
 	metadata_entry metaentry;
-	std::error_condition err;
-	for (err = metadata_find(CHDMETATAG_WILDCARD, 0, metaentry); !err; err = metadata_find(CHDMETATAG_WILDCARD, 0, metaentry, true))
+	for (bool has_data = metadata_find(CHDMETATAG_WILDCARD, 0, metaentry); has_data; has_data = metadata_find(CHDMETATAG_WILDCARD, 0, metaentry, true))
 	{
 		// if not checksumming, continue
 		if ((metaentry.flags & CHD_MDFLAGS_CHECKSUM) == 0)
@@ -1644,8 +1612,6 @@ util::sha1_t chd_file::compute_overall_sha1(util::sha1_t rawsha1)
 		hashentry.sha1 = util::sha1_creator::simple(&filedata[0], metaentry.length);
 		hasharray.push_back(hashentry);
 	}
-	if (err != error::METADATA_NOT_FOUND)
-		throw err;
 
 	// sort the array
 	if (!hasharray.empty())
@@ -2004,9 +1970,9 @@ std::error_condition chd_file::compress_v5_map()
 		{
 			uint8_t curcomp = m_rawmap[hunknum * 12 + 0];
 
-			// promote self block references to more compact forms
 			if (curcomp == COMPRESSION_SELF)
 			{
+				// promote self block references to more compact forms
 				uint32_t refhunk = get_u48be(&m_rawmap[hunknum * 12 + 4]);
 				if (refhunk == last_self)
 					curcomp = COMPRESSION_SELF_0;
@@ -2016,10 +1982,9 @@ std::error_condition chd_file::compress_v5_map()
 					max_self = std::max(max_self, refhunk);
 				last_self = refhunk;
 			}
-
-			// promote parent block references to more compact forms
 			else if (curcomp == COMPRESSION_PARENT)
 			{
+				// promote parent block references to more compact forms
 				uint32_t refunit = get_u48be(&m_rawmap[hunknum * 12 + 4]);
 				if (refunit == mulu_32x32(hunknum, m_hunkbytes) / m_unitbytes)
 					curcomp = COMPRESSION_PARENT_SELF;
@@ -2067,9 +2032,26 @@ std::error_condition chd_file::compress_v5_map()
 			}
 		}
 
-		// compute a tree and export it to the buffer
-		std::vector<uint8_t> compressed(m_hunkcount * 6);
+		// determine the number of bits we need to hold the a length and a hunk index
+		const uint8_t lengthbits = bits_for_value(max_complen);
+		const uint8_t selfbits = bits_for_value(max_self);
+		const uint8_t parentbits = bits_for_value(max_parent);
+
+		// determine the needed size of the output buffer
+		// 16 bytes is required for the header
+		// max len per entry given to huffman encoder at instantiation is 8 bits
+		// this corresponds to worst-case max 12 bits per entry when RLE encoded.
+		// max additional bits per entry after RLE encoded tree is
+		// for COMPRESSION_TYPE_0-3: lengthbits+16
+		// for COMPRESSION_NONE: 16
+		// for COMPRESSION_SELF: selfbits
+		// for COMPRESSION_PARENT: parentbits
+		// the overall size is clamped later with bitbuf.flush()
+		int nbits_needed = (8*16) + (12 + std::max<int>({lengthbits+16, selfbits, parentbits}))*m_hunkcount;
+		std::vector<uint8_t> compressed(nbits_needed / 8 + 1);
 		bitstream_out bitbuf(&compressed[16], compressed.size() - 16);
+
+		// compute a tree and export it to the buffer
 		huffman_error err = encoder.compute_tree_from_histo();
 		if (err != HUFFERR_NONE)
 			throw std::error_condition(error::COMPRESSION_ERROR);
@@ -2080,12 +2062,6 @@ std::error_condition chd_file::compress_v5_map()
 		// encode the data
 		for (uint8_t *src = &compression_rle[0]; src < dest; src++)
 			encoder.encode_one(bitbuf, *src);
-
-		// determine the number of bits we need to hold the a length
-		// and a hunk index
-		uint8_t lengthbits = bits_for_value(max_complen);
-		uint8_t selfbits = bits_for_value(max_self);
-		uint8_t parentbits = bits_for_value(max_parent);
 
 		// for each compression type, output the relevant data
 		lastcomp = 0;
@@ -2632,7 +2608,7 @@ void chd_file::hunk_copy_from_self(uint32_t hunknum, uint32_t otherhunk)
 
 	// only permitted to reference prior hunks
 	if (otherhunk >= hunknum)
-		throw std::error_condition(error::HUNK_OUT_OF_RANGE);
+		throw std::error_condition(std::errc::invalid_argument);
 
 	// update the map entry
 	uint8_t *rawmap = &m_rawmap[hunknum * 12];
@@ -2667,7 +2643,7 @@ void chd_file::hunk_copy_from_parent(uint32_t hunknum, uint64_t parentunit)
 }
 
 /**
- * @fn  std::error_condition chd_file::metadata_find(chd_metadata_tag metatag, int32_t metaindex, metadata_entry &metaentry, bool resume)
+ * @fn  bool chd_file::metadata_find(chd_metadata_tag metatag, int32_t metaindex, metadata_entry &metaentry, bool resume)
  *
  * @brief   -------------------------------------------------
  *            metadata_find - find a metadata entry
@@ -2678,10 +2654,10 @@ void chd_file::hunk_copy_from_parent(uint32_t hunknum, uint64_t parentunit)
  * @param [in,out]  metaentry   The metaentry.
  * @param   resume              true to resume.
  *
- * @return  A std::error_condition (error::METADATA_NOT_FOUND if the search fails).
+ * @return  true if it succeeds, false if it fails.
  */
 
-std::error_condition chd_file::metadata_find(chd_metadata_tag metatag, int32_t metaindex, metadata_entry &metaentry, bool resume) const
+bool chd_file::metadata_find(chd_metadata_tag metatag, int32_t metaindex, metadata_entry &metaentry, bool resume) const
 {
 	// start at the beginning unless we're resuming a previous search
 	if (!resume)
@@ -2695,40 +2671,31 @@ std::error_condition chd_file::metadata_find(chd_metadata_tag metatag, int32_t m
 		metaentry.offset = metaentry.next;
 	}
 
-	// wrap this for clean reporting
-	try
+	// loop until we run out of options
+	while (metaentry.offset != 0)
 	{
-		// loop until we run out of options
-		while (metaentry.offset != 0)
-		{
-			// read the raw header
-			uint8_t raw_meta_header[METADATA_HEADER_SIZE];
-			file_read(metaentry.offset, raw_meta_header, sizeof(raw_meta_header));
+		// read the raw header
+		uint8_t raw_meta_header[METADATA_HEADER_SIZE];
+		file_read(metaentry.offset, raw_meta_header, sizeof(raw_meta_header));
 
-			// extract the data
-			metaentry.metatag = get_u32be(&raw_meta_header[0]);
-			metaentry.flags = raw_meta_header[4];
-			metaentry.length = get_u24be(&raw_meta_header[5]);
-			metaentry.next = get_u64be(&raw_meta_header[8]);
+		// extract the data
+		metaentry.metatag = get_u32be(&raw_meta_header[0]);
+		metaentry.flags = raw_meta_header[4];
+		metaentry.length = get_u24be(&raw_meta_header[5]);
+		metaentry.next = get_u64be(&raw_meta_header[8]);
 
-			// if we got a match, proceed
-			if (metatag == CHDMETATAG_WILDCARD || metaentry.metatag == metatag)
-				if (metaindex-- == 0)
-					return std::error_condition();
+		// if we got a match, proceed
+		if (metatag == CHDMETATAG_WILDCARD || metaentry.metatag == metatag)
+			if (metaindex-- == 0)
+				return true;
 
-			// no match, fetch the next link
-			metaentry.prev = metaentry.offset;
-			metaentry.offset = metaentry.next;
-		}
-
-		// if we get here, we didn't find it
-		return error::METADATA_NOT_FOUND;
+		// no match, fetch the next link
+		metaentry.prev = metaentry.offset;
+		metaentry.offset = metaentry.next;
 	}
-	catch (std::error_condition const &err)
-	{
-		// return any errors
-		return err;
-	}
+
+	// if we get here, we didn't find it
+	return false;
 }
 
 /**
@@ -2965,9 +2932,9 @@ std::error_condition chd_file_compressor::compress_continue(double &progress, do
 			osd_work_item_release(item.m_osd);
 		item.m_osd = nullptr;
 
-		// for parent walking, just add to the hashmap
 		if (m_walking_parent)
 		{
+			// for parent walking, just add to the hashmap
 			uint32_t uph = hunk_bytes() / unit_bytes();
 			uint32_t units = uph;
 			if (item.m_hunknum == hunk_count() - 1 || !compressed())
@@ -2976,10 +2943,9 @@ std::error_condition chd_file_compressor::compress_continue(double &progress, do
 				if (m_parent_map.find(item.m_hash[unit].m_crc16, item.m_hash[unit].m_sha1) == hashmap::NOT_FOUND)
 					m_parent_map.add(item.m_hunknum * uph + unit, item.m_hash[unit].m_crc16, item.m_hash[unit].m_sha1);
 		}
-
-		// if we're uncompressed, use regular writes
 		else if (!compressed())
 		{
+			// if we're uncompressed, use regular writes
 			std::error_condition err = write_hunk(item.m_hunknum, item.m_data);
 			if (err)
 				return err;
@@ -2987,14 +2953,14 @@ std::error_condition chd_file_compressor::compress_continue(double &progress, do
 			// writes of all-0 data don't actually take space, so see if we count this
 			chd_codec_type codec = CHD_CODEC_NONE;
 			uint32_t complen;
-			err = hunk_info(item.m_hunknum, codec, complen);
-			if (!err && codec == CHD_CODEC_NONE)
+			hunk_info(item.m_hunknum, codec, complen);
+			if (codec == CHD_CODEC_NONE)
 				m_total_out += m_hunkbytes;
 		}
-
-		// for compressing, process the result
 		else do
 		{
+			// for compressing, process the result
+
 			// first see if the hunk is in the parent or self maps
 			uint64_t selfhunk = m_current_map.find(item.m_hash[0].m_crc16, item.m_hash[0].m_sha1);
 			if (selfhunk != hashmap::NOT_FOUND)
@@ -3041,14 +3007,10 @@ std::error_condition chd_file_compressor::compress_continue(double &progress, do
 			else
 			{
 				osd_work_queue_wait(m_read_queue, 30 * osd_ticks_per_second());
-				std::error_condition err;
-				if (compressed())
-				{
-					err = set_raw_sha1(m_compsha1.finish());
-					if (!err)
-						err = compress_v5_map();
-				}
-				return err;
+				if (!compressed())
+					return std::error_condition();
+				set_raw_sha1(m_compsha1.finish());
+				return compress_v5_map();
 			}
 		}
 	}
@@ -3127,7 +3089,7 @@ void chd_file_compressor::async_walk_parent(work_item &item)
 
 void *chd_file_compressor::async_compress_hunk_static(void *param, int threadid)
 {
-	auto *item = reinterpret_cast<work_item *>(param);
+	auto *const item = reinterpret_cast<work_item *>(param);
 	item->m_compressor->async_compress_hunk(*item, threadid);
 	return nullptr;
 }
@@ -3213,9 +3175,7 @@ void chd_file_compressor::async_read()
 			uint8_t *curdest = dest;
 			for (uint64_t curoffs = m_read_done_offset; curoffs < end_offset + 1; curoffs += hunk_bytes())
 			{
-				std::error_condition err = m_parent->read_hunk(curoffs / hunk_bytes(), curdest);
-				if (err)
-					throw err;
+				m_parent->read_hunk(curoffs / hunk_bytes(), curdest);
 				curdest += hunk_bytes();
 			}
 		}
@@ -3362,40 +3322,36 @@ void chd_file_compressor::hashmap::add(uint64_t itemnum, util::crc16_t crc16, ut
 	m_map[crc16] = entry;
 }
 
-std::error_condition chd_file::check_is_hd() const
+bool chd_file::is_hd() const
 {
 	metadata_entry metaentry;
 	return metadata_find(HARD_DISK_METADATA_TAG, 0, metaentry);
 }
 
-std::error_condition chd_file::check_is_cd() const
+bool chd_file::is_cd() const
 {
 	metadata_entry metaentry;
-	std::error_condition err = metadata_find(CDROM_OLD_METADATA_TAG, 0, metaentry);
-	if (err == error::METADATA_NOT_FOUND)
-		err = metadata_find(CDROM_TRACK_METADATA_TAG, 0, metaentry);
-	if (err == error::METADATA_NOT_FOUND)
-		err = metadata_find(CDROM_TRACK_METADATA2_TAG, 0, metaentry);
-	return err;
+	return metadata_find(CDROM_OLD_METADATA_TAG, 0, metaentry)
+		|| metadata_find(CDROM_TRACK_METADATA_TAG, 0, metaentry)
+		|| metadata_find(CDROM_TRACK_METADATA2_TAG, 0, metaentry);
 }
 
-std::error_condition chd_file::check_is_gd() const
+bool chd_file::is_gd() const
 {
 	metadata_entry metaentry;
-	std::error_condition err = metadata_find(GDROM_OLD_METADATA_TAG, 0, metaentry);
-	if (err == error::METADATA_NOT_FOUND)
-		err = metadata_find(GDROM_TRACK_METADATA_TAG, 0, metaentry);
-	return err;
+	return metadata_find(GDROM_OLD_METADATA_TAG, 0, metaentry)
+		|| metadata_find(GDROM_TRACK_METADATA_TAG, 0, metaentry);
 }
 
-std::error_condition chd_file::check_is_dvd() const
+bool chd_file::is_dvd() const
 {
 	metadata_entry metaentry;
 	return metadata_find(DVD_METADATA_TAG, 0, metaentry);
 }
 
-std::error_condition chd_file::check_is_av() const
+bool chd_file::is_av() const
 {
 	metadata_entry metaentry;
 	return metadata_find(AV_METADATA_TAG, 0, metaentry);
 }
+

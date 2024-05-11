@@ -65,6 +65,9 @@ private:
 	required_device<beep_device> m_beeper;
 	required_ioport_array<8> m_inputs;
 
+	u8 m_inp_mux = 0;
+	u8 m_led_select = 0;
+
 	// address maps
 	void main_map(address_map &map);
 
@@ -75,9 +78,6 @@ private:
 	void control_w(u8 data);
 	u8 input1_r();
 	u8 input2_r();
-
-	u8 m_inp_mux = 0;
-	u8 m_led_select = 0;
 };
 
 void cforte_state::machine_start()
@@ -293,5 +293,5 @@ ROM_END
 *******************************************************************************/
 
 //    YEAR  NAME     PARENT   COMPAT  MACHINE  INPUT   CLASS         INIT        COMPANY, FULLNAME, FLAGS
-SYST( 1986, cfortea, 0,       0,      cforte,  cforte, cforte_state, empty_init, "Novag", "Constellation Forte (version A)", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1986, cforteb, cfortea, 0,      cforte,  cforte, cforte_state, empty_init, "Novag", "Constellation Forte (version B)", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+SYST( 1986, cfortea, 0,       0,      cforte,  cforte, cforte_state, empty_init, "Novag Industries", "Constellation Forte (version A)", MACHINE_SUPPORTS_SAVE )
+SYST( 1986, cforteb, cfortea, 0,      cforte,  cforte, cforte_state, empty_init, "Novag Industries", "Constellation Forte (version B)", MACHINE_SUPPORTS_SAVE )
