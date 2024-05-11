@@ -108,6 +108,11 @@ private:
 	required_device<dac_bit_interface> m_dac;
 	required_ioport_array<2> m_inputs;
 
+	u8 m_select = 0;
+	u8 m_led_data = 0;
+	u8 m_shift_data = 0;
+	u8 m_shift_clock = 0;
+
 	void main_map(address_map &map);
 
 	// I/O handlers
@@ -118,11 +123,6 @@ private:
 
 	void shift_clock_w(int state);
 	void shift_data_w(int state);
-
-	u8 m_select = 0;
-	u8 m_led_data = 0;
-	u8 m_shift_data = 0;
-	u8 m_shift_clock = 0;
 };
 
 void prodigy_state::machine_start()
@@ -304,4 +304,4 @@ ROM_END
 *******************************************************************************/
 
 //    YEAR  NAME     PARENT  COMPAT  MACHINE  INPUT    CLASS          INIT        COMPANY, FULLNAME, FLAGS
-SYST( 1982, prodigy, 0,      0,      prodigy, prodigy, prodigy_state, empty_init, "Applied Concepts", "Destiny Prodigy", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+SYST( 1982, prodigy, 0,      0,      prodigy, prodigy, prodigy_state, empty_init, "Applied Concepts", "Destiny Prodigy", MACHINE_SUPPORTS_SAVE )

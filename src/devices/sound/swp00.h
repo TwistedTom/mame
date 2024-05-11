@@ -42,8 +42,9 @@ private:
 	static const std::array<s32, 0x80> attack_linear_step;
 	static const std::array<s32, 0x20> decay_linear_step;
 	static const std::array<s32, 16> panmap;
+	static const std::array<u8, 4> dpcm_offset;
 	std::array<s32, 0x80> m_global_step;
-	std::array<s16, 0x100> m_sample_log8;
+	std::array<s16, 0x100> m_dpcm;
 
 	static const std::array<u32, 4> lfo_shape_centered_saw;
 	static const std::array<u32, 4> lfo_shape_centered_tri;
@@ -76,14 +77,13 @@ private:
 	std::array<u16, 0x20>  m_pitch;
 	std::array<u16, 0x20>  m_sample_start;
 	std::array<u16, 0x20>  m_sample_end;
-	std::array<u8,  0x20>  m_sample_dec_and_format;
+	std::array<u8,  0x20>  m_sample_dpcm_and_format;
 	std::array<u32, 0x20>  m_sample_address;
 	std::array<u8,  0x20>  m_lfo_step;
 	std::array<u8,  0x20>  m_lfo_pmod_depth;
 
 	std::array<u32, 0x20>  m_lfo_phase;
 	std::array<s32, 0x20>  m_sample_pos;
-	std::array<u32, 0x20>  m_sample_increment;
 	std::array<s32, 0x20>  m_envelope_level;
 	std::array<s32, 0x20>  m_glo_level_cur;
 	std::array<s32, 0x20>  m_pan_l;
@@ -95,6 +95,10 @@ private:
 	std::array<s32, 0x20>  m_lpf_ha;
 	std::array<s32, 0x20>  m_lpf_hb;
 	std::array<bool, 0x20> m_active, m_decay, m_decay_done, m_lpf_done;
+	std::array<s16, 0x20>  m_dpcm_current;
+	std::array<s16, 0x20>  m_dpcm_next;
+	std::array<u32, 0x20>  m_dpcm_address;
+	std::array<s32, 0x20>  m_dpcm_sum;
 
 	u16 m_waverom_val;
 	u8 m_waverom_access;
@@ -165,8 +169,8 @@ private:
 	template<int sel> u8 sample_start_r(offs_t offset);
 	template<int sel> void sample_end_w(offs_t offset, u8 data);
 	template<int sel> u8 sample_end_r(offs_t offset);
-	void sample_dec_and_format_w(offs_t offset, u8 data);
-	u8 sample_dec_and_format_r(offs_t offset);
+	void sample_dpcm_and_format_w(offs_t offset, u8 data);
+	u8 sample_dpcm_and_format_r(offs_t offset);
 	template<int sel> void sample_address_w(offs_t offset, u8 data);
 	template<int sel> u8 sample_address_r(offs_t offset);
 	void lfo_step_w(offs_t offset, u8 data);
