@@ -679,8 +679,7 @@ void lua_engine::on_machine_frame()
 {
 	std::vector<int> tasks = std::move(m_frame_tasks);
 	m_frame_tasks.clear();
-	for (int ref : tasks)
-		resume(ref);
+	resume_tasks(m_lua_state, tasks, true); // TODO: doesn't need to return anything
 
 	m_notifiers->on_frame();
 
@@ -1503,7 +1502,6 @@ void lua_engine::initialize()
 	game_driver_type["no_cocktail"] = sol::property([] (game_driver const &driver) { return (driver.flags & machine_flags::NO_COCKTAIL) != 0; });
 	game_driver_type["is_bios_root"] = sol::property([] (game_driver const &driver) { return (driver.flags & machine_flags::IS_BIOS_ROOT) != 0; });
 	game_driver_type["requires_artwork"] = sol::property([] (game_driver const &driver) { return (driver.flags & machine_flags::REQUIRES_ARTWORK) != 0; });
-	game_driver_type["clickable_artwork"] = sol::property([] (game_driver const &driver) { return (driver.flags & machine_flags::CLICKABLE_ARTWORK) != 0; });
 	game_driver_type["unofficial"] = sol::property([] (game_driver const &driver) { return (driver.flags & machine_flags::UNOFFICIAL) != 0; });
 	game_driver_type["no_sound_hw"] = sol::property([] (game_driver const &driver) { return (driver.flags & machine_flags::NO_SOUND_HW) != 0; });
 	game_driver_type["mechanical"] = sol::property([] (game_driver const &driver) { return (driver.flags & machine_flags::MECHANICAL) != 0; });
@@ -1866,6 +1864,30 @@ void lua_engine::initialize()
 					return sol::make_object(s, err.message());
 			});
 	image_type.set_function("display", &device_image_interface::call_display);
+	image_type.set_function("add_media_change_notifier",
+			[this] (device_image_interface &di, sol::protected_function cb)
+			{
+				return di.add_media_change_notifier(
+						[this, cbfunc = sol::protected_function(m_lua_state, cb)] (device_image_interface::media_change_event ev)
+						{
+							char const *evstr(nullptr);
+							switch (ev)
+							{
+							case device_image_interface::media_change_event::LOADED:
+								evstr = "loaded";
+								break;
+							case device_image_interface::media_change_event::UNLOADED:
+								evstr = "unloaded";
+								break;
+							}
+							auto status(invoke(cbfunc, evstr));
+							if (!status.valid())
+							{
+								auto err(status.template get<sol::error>());
+								osd_printf_error("[LUA ERROR] error in media change callback: %s\n", err.what());
+							}
+						});
+			});
 	image_type["is_readable"] = sol::property(&device_image_interface::is_readable);
 	image_type["is_writeable"] = sol::property(&device_image_interface::is_writeable);
 	image_type["is_creatable"] = sol::property(&device_image_interface::is_creatable);
@@ -2144,8 +2166,7 @@ bool lua_engine::frame_hook()
 {
 	std::vector<int> tasks = std::move(m_update_tasks);
 	m_update_tasks.clear();
-	for (int ref : tasks)
-		resume(ref);
+	resume_tasks(m_lua_state, tasks, true); // TODO: doesn't need to return anything
 
 	return execute_function("LUA_ON_FRAME_DONE");
 }

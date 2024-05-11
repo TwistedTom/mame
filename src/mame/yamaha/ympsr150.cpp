@@ -130,7 +130,7 @@ private:
 
 	required_device<gew7_device> m_maincpu;
 	optional_device<pwm_display_device> m_pwm;
-	optional_device<hd44780_device> m_lcdc;
+	optional_device<ks0066_device> m_lcdc;
 
 	optional_ioport_array<6> m_port;
 	optional_ioport_array<19> m_keys;
@@ -429,7 +429,7 @@ void psr150_state::psr190_base(machine_config &config)
 	m_maincpu->port_in_cb<2>().set_ioport("PC_R");
 	m_maincpu->port_out_cb<2>().set_ioport("PC_W");
 
-	HD44780(config, m_lcdc);
+	KS0066(config, m_lcdc, 270'000); // OSC = 91K resistor, TODO: actually KS0076B-00
 	m_lcdc->set_lcd_size(2, 8);
 
 	screen_device& screen(SCREEN(config, "screen", SCREEN_TYPE_SVG));
@@ -500,9 +500,9 @@ INPUT_PORTS_START(psr150)
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("C6")
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("G5")
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("B5")
-	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("G5#")
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("A5#")
 	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("A5")
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("A5#")
+	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_OTHER )  PORT_NAME("G5#")
 	PORT_BIT( 0xc0, IP_ACTIVE_HIGH, IPT_UNUSED )
 
 	PORT_START("KEY1")
@@ -1372,9 +1372,9 @@ INPUT_PORTS_START(psr180_keys) // also psr190
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER  ) PORT_NAME("B5")
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER  ) PORT_NAME("G5")
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER  ) PORT_NAME("C6")
-	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_OTHER  ) PORT_NAME("G5#")
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_OTHER  ) PORT_NAME("A5#")
 	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_OTHER  ) PORT_NAME("A5")
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_OTHER  ) PORT_NAME("A5#")
+	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_OTHER  ) PORT_NAME("G5#")
 	PORT_BIT( 0xc0, IP_ACTIVE_HIGH, IPT_UNUSED )
 INPUT_PORTS_END
 
@@ -1626,10 +1626,6 @@ INPUT_PORTS_START(psr190)
 	PORT_MODIFY("PF")
 	PORT_BIT( 0x1f, IP_ACTIVE_LOW,  IPT_OUTPUT ) PORT_WRITE_LINE_MEMBER(psr150_state, KEY_OUT_BITS(11, 5))
 
-	PORT_MODIFY("KEY10") // these are swapped on psr180, but not on psr190
-	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_OTHER  ) PORT_NAME("A5#")
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_OTHER  ) PORT_NAME("G5#")
-
 	PORT_START("KEY11")
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_KEYPAD ) PORT_CODE(KEYCODE_2) PORT_NAME("Sync Start")
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_KEYPAD ) PORT_CODE(KEYCODE_6) PORT_NAME("Main / Auto Fill B")
@@ -1807,16 +1803,16 @@ ROM_END
 } // anonymous namespace
 
 //    YEAR  NAME     PARENT  COMPAT  MACHINE  INPUT   CLASS          INIT         COMPANY   FULLNAME   FLAGS
-SYST( 1992, psr150,  0,      0,      psr150,  psr150, psr150_state,  empty_init,  "Yamaha", "PSR-150", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1993, psr110,  psr150, 0,      psr110,  psr110, psr150_state,  empty_init,  "Yamaha", "PSR-110", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1992, psr75,   psr150, 0,      psr75,   psr75,  psr150_state,  empty_init,  "Yamaha", "PSR-75",  MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1992, pss11,   psr150, 0,      pss11,   pss11,  psr150_state,  empty_init,  "Yamaha", "PSS-11",  MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1992, pss21,   psr150, 0,      pss21,   pss21,  psr150_state,  empty_init,  "Yamaha", "PSS-21",  MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1992, pss31,   psr150, 0,      pss31,   pss31,  psr150_state,  empty_init,  "Yamaha", "PSS-31",  MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1994, dd9,     0,      0,      dd9,     dd9,    psr150_state,  empty_init,  "Yamaha", "DD-9 Digital Percussion", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1994, psr180,  0,      0,      psr180,  psr180, psr150_state,  empty_init,  "Yamaha", "PSR-180", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1994, psr76,   psr180, 0,      psr76,   psr76,  psr150_state,  empty_init,  "Yamaha", "PSR-76",  MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1994, pss12,   0,      0,      pss12,   pss12,  psr150_state,  empty_init,  "Yamaha", "PSS-12",  MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1994, pss6,    pss12,  0,      pss6,    pss6,   psr150_state,  empty_init,  "Yamaha", "PSS-6",   MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+SYST( 1992, psr150,  0,      0,      psr150,  psr150, psr150_state,  empty_init,  "Yamaha", "PSR-150", MACHINE_SUPPORTS_SAVE )
+SYST( 1993, psr110,  psr150, 0,      psr110,  psr110, psr150_state,  empty_init,  "Yamaha", "PSR-110", MACHINE_SUPPORTS_SAVE )
+SYST( 1992, psr75,   psr150, 0,      psr75,   psr75,  psr150_state,  empty_init,  "Yamaha", "PSR-75",  MACHINE_SUPPORTS_SAVE )
+SYST( 1992, pss11,   psr150, 0,      pss11,   pss11,  psr150_state,  empty_init,  "Yamaha", "PSS-11",  MACHINE_SUPPORTS_SAVE )
+SYST( 1992, pss21,   psr150, 0,      pss21,   pss21,  psr150_state,  empty_init,  "Yamaha", "PSS-21",  MACHINE_SUPPORTS_SAVE )
+SYST( 1992, pss31,   psr150, 0,      pss31,   pss31,  psr150_state,  empty_init,  "Yamaha", "PSS-31",  MACHINE_SUPPORTS_SAVE )
+SYST( 1994, dd9,     0,      0,      dd9,     dd9,    psr150_state,  empty_init,  "Yamaha", "DD-9 Digital Percussion", MACHINE_SUPPORTS_SAVE )
+SYST( 1994, psr180,  0,      0,      psr180,  psr180, psr150_state,  empty_init,  "Yamaha", "PSR-180", MACHINE_SUPPORTS_SAVE )
+SYST( 1994, psr76,   psr180, 0,      psr76,   psr76,  psr150_state,  empty_init,  "Yamaha", "PSR-76",  MACHINE_SUPPORTS_SAVE )
+SYST( 1994, pss12,   0,      0,      pss12,   pss12,  psr150_state,  empty_init,  "Yamaha", "PSS-12",  MACHINE_SUPPORTS_SAVE )
+SYST( 1994, pss6,    pss12,  0,      pss6,    pss6,   psr150_state,  empty_init,  "Yamaha", "PSS-6",   MACHINE_SUPPORTS_SAVE )
 SYST( 1996, psr190,  0,      0,      psr190,  psr190, psr150_state,  empty_init,  "Yamaha", "PSR-190", MACHINE_SUPPORTS_SAVE )
 SYST( 1996, psr78,   psr190, 0,      psr78,   psr78,  psr150_state,  empty_init,  "Yamaha", "PSR-78",  MACHINE_SUPPORTS_SAVE )

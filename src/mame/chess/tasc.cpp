@@ -90,7 +90,7 @@ public:
 
 	void tasc(machine_config &config);
 
-	DECLARE_INPUT_CHANGED_MEMBER(switch_cpu_freq) { set_cpu_freq(); }
+	DECLARE_INPUT_CHANGED_MEMBER(change_cpu_freq);
 
 protected:
 	virtual void machine_start() override;
@@ -110,6 +110,12 @@ private:
 	required_ioport_array<4> m_inputs;
 	output_finder<2> m_out_leds;
 
+	bool m_bootrom_enabled = false;
+
+	u32 m_control = 0;
+	u32 m_prev_pc = 0;
+	u64 m_prev_cycle = 0;
+
 	void main_map(address_map &map);
 
 	// I/O handlers
@@ -120,14 +126,8 @@ private:
 	u8 nvram_r(offs_t offset) { return m_nvram[offset]; }
 	void nvram_w(offs_t offset, u8 data) { m_nvram[offset] = data; }
 
-	void set_cpu_freq();
 	void install_bootrom(bool enable);
 	TIMER_DEVICE_CALLBACK_MEMBER(disable_bootrom) { install_bootrom(false); }
-	bool m_bootrom_enabled = false;
-
-	u32 m_control = 0;
-	u32 m_prev_pc = 0;
-	u64 m_prev_cycle = 0;
 };
 
 void tasc_state::machine_start()
@@ -143,16 +143,15 @@ void tasc_state::machine_start()
 void tasc_state::machine_reset()
 {
 	install_bootrom(true);
-	set_cpu_freq();
 
 	m_prev_pc = m_maincpu->pc();
 	m_prev_cycle = m_maincpu->total_cycles();
 }
 
-void tasc_state::set_cpu_freq()
+INPUT_CHANGED_MEMBER(tasc_state::change_cpu_freq)
 {
 	// R30 is 30MHz, R40 is 40MHz
-	m_maincpu->set_unscaled_clock((ioport("FAKE")->read() & 1) ? 40_MHz_XTAL : 30_MHz_XTAL);
+	m_maincpu->set_unscaled_clock((newval & 1) ? 40_MHz_XTAL : 30_MHz_XTAL);
 }
 
 
@@ -268,27 +267,27 @@ void tasc_state::main_map(address_map &map)
 
 static INPUT_PORTS_START( tasc )
 	PORT_START("IN.0")
-	PORT_BIT(0x20, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_G) PORT_NAME("PLAY")
-	PORT_BIT(0x40, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_LEFT) PORT_NAME("LEFT")
+	PORT_BIT(0x20, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_P) PORT_NAME("Play")
+	PORT_BIT(0x40, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_LEFT) PORT_NAME("Left")
 	PORT_BIT(0x80, IP_ACTIVE_HIGH, IPT_UNUSED)
 
 	PORT_START("IN.1")
-	PORT_BIT(0x20, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_B) PORT_CODE(KEYCODE_BACKSPACE) PORT_NAME("BACK")
-	PORT_BIT(0x40, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_RIGHT) PORT_NAME("RIGHT")
+	PORT_BIT(0x20, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_B) PORT_CODE(KEYCODE_BACKSPACE) PORT_NAME("Back")
+	PORT_BIT(0x40, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_RIGHT) PORT_NAME("Right")
 	PORT_BIT(0x80, IP_ACTIVE_HIGH, IPT_UNUSED)
 
 	PORT_START("IN.2")
-	PORT_BIT(0x20, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_M) PORT_NAME("MENU")
-	PORT_BIT(0x40, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_UP) PORT_NAME("UP")
+	PORT_BIT(0x20, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_M) PORT_NAME("Menu")
+	PORT_BIT(0x40, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_UP) PORT_NAME("Up")
 	PORT_BIT(0x80, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_L) PORT_NAME("Left Clock")
 
 	PORT_START("IN.3")
-	PORT_BIT(0x20, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_ENTER) PORT_CODE(KEYCODE_ENTER_PAD) PORT_NAME("ENTER")
-	PORT_BIT(0x40, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_DOWN) PORT_NAME("DOWN")
+	PORT_BIT(0x20, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_ENTER) PORT_CODE(KEYCODE_ENTER_PAD) PORT_NAME("Enter")
+	PORT_BIT(0x40, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_DOWN) PORT_NAME("Down")
 	PORT_BIT(0x80, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_R) PORT_NAME("Right Clock")
 
-	PORT_START("FAKE")
-	PORT_CONFNAME( 0x01, 0x00, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, tasc_state, switch_cpu_freq, 0)
+	PORT_START("CPU")
+	PORT_CONFNAME( 0x01, 0x00, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, tasc_state, change_cpu_freq, 0)
 	PORT_CONFSETTING(    0x00, "30MHz (R30)" )
 	PORT_CONFSETTING(    0x01, "40MHz (R40)" )
 INPUT_PORTS_END
@@ -372,7 +371,7 @@ ROM_END
 *******************************************************************************/
 
 //    YEAR  NAME      PARENT   COMPAT  MACHINE  INPUT  CLASS       INIT        COMPANY, FULLNAME, FLAGS
-SYST( 1995, tascr30,  0,       0,      tasc,    tasc,  tasc_state, empty_init, "Tasc", "ChessSystem R30 (The King 2.50)", MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_TIMING | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1993, tascr30a, tascr30, 0,      tasc,    tasc,  tasc_state, empty_init, "Tasc", "ChessSystem R30 (The King 2.20)", MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_TIMING | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1993, tascr30b, tascr30, 0,      tasc,    tasc,  tasc_state, empty_init, "Tasc", "ChessSystem R30 (The King 2.23, TM version)", MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_TIMING | MACHINE_CLICKABLE_ARTWORK ) // competed in several chesscomputer tournaments
-SYST( 1993, tascr30g, tascr30, 0,      tasc,    tasc,  tasc_state, empty_init, "Tasc", "ChessSystem R30 (Gideon 3.1, prototype)", MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_TIMING | MACHINE_CLICKABLE_ARTWORK ) // made in 1993, later released in 2012
+SYST( 1995, tascr30,  0,       0,      tasc,    tasc,  tasc_state, empty_init, "Tasc", "ChessSystem R30 (The King 2.50)", MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_TIMING )
+SYST( 1993, tascr30a, tascr30, 0,      tasc,    tasc,  tasc_state, empty_init, "Tasc", "ChessSystem R30 (The King 2.20)", MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_TIMING )
+SYST( 1993, tascr30b, tascr30, 0,      tasc,    tasc,  tasc_state, empty_init, "Tasc", "ChessSystem R30 (The King 2.23, TM version)", MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_TIMING ) // competed in several chesscomputer tournaments
+SYST( 1993, tascr30g, tascr30, 0,      tasc,    tasc,  tasc_state, empty_init, "Tasc", "ChessSystem R30 (Gideon 3.1, prototype)", MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_TIMING ) // made in 1993, later released in 2012

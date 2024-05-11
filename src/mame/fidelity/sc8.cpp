@@ -60,8 +60,11 @@ private:
 	required_device<cpu_device> m_maincpu;
 	required_device<sensorboard_device> m_board;
 	required_device<pwm_display_device> m_display;
-	required_device<dac_bit_interface> m_dac;
+	required_device<dac_1bit_device> m_dac;
 	required_ioport m_inputs;
+
+	u8 m_inp_mux = 0;
+	u8 m_led_data = 0;
 
 	// address maps
 	void main_map(address_map &map);
@@ -70,9 +73,6 @@ private:
 	// I/O handlers
 	u8 input_r();
 	void control_w(offs_t offset, u8 data);
-
-	u8 m_inp_mux = 0;
-	u8 m_led_data = 0;
 };
 
 void scc_state::machine_start()
@@ -200,4 +200,4 @@ ROM_END
 *******************************************************************************/
 
 //    YEAR  NAME   PARENT  COMPAT  MACHINE  INPUT  CLASS      INIT        COMPANY, FULLNAME, FLAGS
-SYST( 1980, fscc8, 0,      0,      scc,     scc,   scc_state, empty_init, "Fidelity Electronics", "Sensory Chess Challenger \"8\"", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+SYST( 1980, fscc8, 0,      0,      scc,     scc,   scc_state, empty_init, "Fidelity Electronics", "Sensory Chess Challenger \"8\"", MACHINE_SUPPORTS_SAVE )
