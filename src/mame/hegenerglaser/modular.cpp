@@ -43,6 +43,7 @@ Undocumented buttons:
 - holding CLEAR on boot will clear the battery backed RAM
 
 TODO:
+- verify IRQ level for 32bit modules, and how IRQ is acknowledged
 - match I/S= diag speed test with real hardware (good test for proper waitstates?)
 - gen32 waitstates emulation is preliminary (without it, sound pitch is way too high
   and lcd write speed too fast). Real gen32 sound is a bit lower pitched than MAME.
@@ -139,6 +140,8 @@ private:
 	required_device<timer_device> m_bav_busy;
 	optional_ioport m_fake;
 
+	u8 m_bav_data = 0;
+
 	// address maps
 	void alm16_mem(address_map &map);
 	void alm32_mem(address_map &map);
@@ -159,8 +162,6 @@ private:
 
 	u8 spawn_cb(offs_t offset);
 	void set_sbtype(ioport_value newval);
-
-	u8 m_bav_data = 0;
 };
 
 void mmodular_state::machine_start()
@@ -358,44 +359,44 @@ static INPUT_PORTS_START( gen32 )
 	PORT_INCLUDE( bavaria )
 
 	PORT_START("KEY1")
-	PORT_BIT(0x01000000, IP_ACTIVE_HIGH, IPT_KEYPAD)  PORT_NAME("ENT")    PORT_CODE(KEYCODE_ENTER)
-	PORT_BIT(0x02000000, IP_ACTIVE_HIGH, IPT_KEYPAD)  PORT_NAME("LEFT")   PORT_CODE(KEYCODE_LEFT)
+	PORT_BIT(0x01000000, IP_ACTIVE_HIGH, IPT_KEYPAD)  PORT_NAME("ENT")    PORT_CODE(KEYCODE_ENTER) PORT_CODE(KEYCODE_ENTER_PAD) PORT_CODE(KEYCODE_7_PAD)
+	PORT_BIT(0x02000000, IP_ACTIVE_HIGH, IPT_KEYPAD)  PORT_NAME("LEFT")   PORT_CODE(KEYCODE_LEFT) PORT_CODE(KEYCODE_4_PAD)
 
 	PORT_START("KEY2")
-	PORT_BIT(0x01000000, IP_ACTIVE_HIGH, IPT_KEYPAD)  PORT_NAME("UP")     PORT_CODE(KEYCODE_UP)
-	PORT_BIT(0x02000000, IP_ACTIVE_HIGH, IPT_KEYPAD)  PORT_NAME("DOWN")   PORT_CODE(KEYCODE_DOWN)
+	PORT_BIT(0x01000000, IP_ACTIVE_HIGH, IPT_KEYPAD)  PORT_NAME("UP")     PORT_CODE(KEYCODE_UP) PORT_CODE(KEYCODE_8_PAD)
+	PORT_BIT(0x02000000, IP_ACTIVE_HIGH, IPT_KEYPAD)  PORT_NAME("DOWN")   PORT_CODE(KEYCODE_DOWN) PORT_CODE(KEYCODE_2_PAD)
 
 	PORT_START("KEY3")
-	PORT_BIT(0x01000000, IP_ACTIVE_HIGH, IPT_KEYPAD)  PORT_NAME("CL")     PORT_CODE(KEYCODE_BACKSPACE) PORT_CODE(KEYCODE_DEL)
-	PORT_BIT(0x02000000, IP_ACTIVE_HIGH, IPT_KEYPAD)  PORT_NAME("RIGHT")  PORT_CODE(KEYCODE_RIGHT)
+	PORT_BIT(0x01000000, IP_ACTIVE_HIGH, IPT_KEYPAD)  PORT_NAME("CL")     PORT_CODE(KEYCODE_BACKSPACE) PORT_CODE(KEYCODE_DEL) PORT_CODE(KEYCODE_9_PAD)
+	PORT_BIT(0x02000000, IP_ACTIVE_HIGH, IPT_KEYPAD)  PORT_NAME("RIGHT")  PORT_CODE(KEYCODE_RIGHT) PORT_CODE(KEYCODE_6_PAD)
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( alm16 )
 	PORT_START("KEY1")
-	PORT_BIT(0x0100, IP_ACTIVE_HIGH, IPT_KEYPAD)      PORT_NAME("LEFT")   PORT_CODE(KEYCODE_LEFT)
-	PORT_BIT(0x0200, IP_ACTIVE_HIGH, IPT_KEYPAD)      PORT_NAME("ENT")    PORT_CODE(KEYCODE_ENTER)
+	PORT_BIT(0x0100, IP_ACTIVE_HIGH, IPT_KEYPAD)      PORT_NAME("LEFT")   PORT_CODE(KEYCODE_LEFT) PORT_CODE(KEYCODE_4_PAD)
+	PORT_BIT(0x0200, IP_ACTIVE_HIGH, IPT_KEYPAD)      PORT_NAME("ENT")    PORT_CODE(KEYCODE_ENTER) PORT_CODE(KEYCODE_ENTER_PAD) PORT_CODE(KEYCODE_7_PAD)
 
 	PORT_START("KEY2")
-	PORT_BIT(0x0100, IP_ACTIVE_HIGH, IPT_KEYPAD)      PORT_NAME("RIGHT")  PORT_CODE(KEYCODE_RIGHT)
-	PORT_BIT(0x0200, IP_ACTIVE_HIGH, IPT_KEYPAD)      PORT_NAME("UP")     PORT_CODE(KEYCODE_UP)
+	PORT_BIT(0x0100, IP_ACTIVE_HIGH, IPT_KEYPAD)      PORT_NAME("RIGHT")  PORT_CODE(KEYCODE_RIGHT) PORT_CODE(KEYCODE_6_PAD)
+	PORT_BIT(0x0200, IP_ACTIVE_HIGH, IPT_KEYPAD)      PORT_NAME("UP")     PORT_CODE(KEYCODE_UP) PORT_CODE(KEYCODE_8_PAD)
 
 	PORT_START("KEY3")
-	PORT_BIT(0x0100, IP_ACTIVE_HIGH, IPT_KEYPAD)      PORT_NAME("DOWN")   PORT_CODE(KEYCODE_DOWN)
-	PORT_BIT(0x0200, IP_ACTIVE_HIGH, IPT_KEYPAD)      PORT_NAME("CL")     PORT_CODE(KEYCODE_BACKSPACE) PORT_CODE(KEYCODE_DEL)
+	PORT_BIT(0x0100, IP_ACTIVE_HIGH, IPT_KEYPAD)      PORT_NAME("DOWN")   PORT_CODE(KEYCODE_DOWN) PORT_CODE(KEYCODE_2_PAD)
+	PORT_BIT(0x0200, IP_ACTIVE_HIGH, IPT_KEYPAD)      PORT_NAME("CL")     PORT_CODE(KEYCODE_BACKSPACE) PORT_CODE(KEYCODE_DEL) PORT_CODE(KEYCODE_9_PAD)
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( alm32 )
 	PORT_START("KEY1")
-	PORT_BIT(0x4000, IP_ACTIVE_LOW, IPT_KEYPAD)       PORT_NAME("RIGHT")  PORT_CODE(KEYCODE_RIGHT)
-	PORT_BIT(0x8000, IP_ACTIVE_LOW, IPT_KEYPAD)       PORT_NAME("CL")     PORT_CODE(KEYCODE_BACKSPACE) PORT_CODE(KEYCODE_DEL)
+	PORT_BIT(0x4000, IP_ACTIVE_LOW, IPT_KEYPAD)       PORT_NAME("RIGHT")  PORT_CODE(KEYCODE_RIGHT) PORT_CODE(KEYCODE_6_PAD)
+	PORT_BIT(0x8000, IP_ACTIVE_LOW, IPT_KEYPAD)       PORT_NAME("CL")     PORT_CODE(KEYCODE_BACKSPACE) PORT_CODE(KEYCODE_DEL) PORT_CODE(KEYCODE_9_PAD)
 
 	PORT_START("KEY2")
-	PORT_BIT(0x4000, IP_ACTIVE_LOW, IPT_KEYPAD)       PORT_NAME("DOWN")   PORT_CODE(KEYCODE_DOWN)
-	PORT_BIT(0x8000, IP_ACTIVE_LOW, IPT_KEYPAD)       PORT_NAME("UP")     PORT_CODE(KEYCODE_UP)
+	PORT_BIT(0x4000, IP_ACTIVE_LOW, IPT_KEYPAD)       PORT_NAME("DOWN")   PORT_CODE(KEYCODE_DOWN) PORT_CODE(KEYCODE_2_PAD)
+	PORT_BIT(0x8000, IP_ACTIVE_LOW, IPT_KEYPAD)       PORT_NAME("UP")     PORT_CODE(KEYCODE_UP) PORT_CODE(KEYCODE_8_PAD)
 
 	PORT_START("KEY3")
-	PORT_BIT(0x4000, IP_ACTIVE_LOW, IPT_KEYPAD)       PORT_NAME("LEFT")   PORT_CODE(KEYCODE_LEFT)
-	PORT_BIT(0x8000, IP_ACTIVE_LOW, IPT_KEYPAD)       PORT_NAME("ENT")    PORT_CODE(KEYCODE_ENTER)
+	PORT_BIT(0x4000, IP_ACTIVE_LOW, IPT_KEYPAD)       PORT_NAME("LEFT")   PORT_CODE(KEYCODE_LEFT) PORT_CODE(KEYCODE_4_PAD)
+	PORT_BIT(0x8000, IP_ACTIVE_LOW, IPT_KEYPAD)       PORT_NAME("ENT")    PORT_CODE(KEYCODE_ENTER) PORT_CODE(KEYCODE_ENTER_PAD) PORT_CODE(KEYCODE_7_PAD)
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( port16 )
@@ -421,7 +422,7 @@ void mmodular_state::alm16(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &mmodular_state::alm16_mem);
 
 	const attotime irq_period = attotime::from_hz(12.288_MHz_XTAL / 10 / 0x800); // 600Hz
-	m_maincpu->set_periodic_int(FUNC(mmodular_state::irq2_line_hold), irq_period);
+	m_maincpu->set_periodic_int(FUNC(mmodular_state::irq3_line_hold), irq_period);
 
 	NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_0);
 
@@ -458,7 +459,7 @@ void mmodular_state::alm32(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &mmodular_state::alm32_mem);
 
 	const attotime irq_period = attotime::from_hz(12.288_MHz_XTAL / 0x4000); // 750Hz
-	m_maincpu->set_periodic_int(FUNC(mmodular_state::irq2_line_hold), irq_period);
+	m_maincpu->set_periodic_int(FUNC(mmodular_state::irq3_line_hold), irq_period);
 
 	config.set_default_layout(layout_mephisto_alm32);
 }
@@ -484,7 +485,7 @@ void mmodular_state::gen32(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &mmodular_state::gen32_mem);
 
 	const attotime irq_period = attotime::from_hz(6.144_MHz_XTAL / 0x4000); // through 4060, 375Hz
-	m_maincpu->set_periodic_int(FUNC(mmodular_state::irq2_line_hold), irq_period);
+	m_maincpu->set_periodic_int(FUNC(mmodular_state::irq3_line_hold), irq_period);
 
 	config.set_default_layout(layout_mephisto_gen32);
 }
@@ -621,24 +622,24 @@ ROM_END
 *******************************************************************************/
 
 //    YEAR  NAME     PARENT  COMPAT  MACHINE INPUT   CLASS           INIT        COMPANY, FULLNAME, FLAGS
-SYST( 1988, alm32,   0,      0,      alm32,  alm32,  mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Almeria 32 Bit", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK ) // 0.12 or 0.121?
-SYST( 1988, alm16,   alm32,  0,      alm16,  alm16,  mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Almeria 16 Bit (v0.13)", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1988, alm16a,  alm32,  0,      alm16,  alm16,  mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Almeria 16 Bit (v0.121)", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+SYST( 1988, alm32,   0,      0,      alm32,  alm32,  mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Almeria 32 Bit", MACHINE_SUPPORTS_SAVE ) // 0.12 or 0.121?
+SYST( 1988, alm16,   alm32,  0,      alm16,  alm16,  mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Almeria 16 Bit (v0.13)", MACHINE_SUPPORTS_SAVE )
+SYST( 1988, alm16a,  alm32,  0,      alm16,  alm16,  mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Almeria 16 Bit (v0.121)", MACHINE_SUPPORTS_SAVE )
 
-SYST( 1989, port32,  0,      0,      port32, port32, mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Portorose 32 Bit (v1.04)", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1989, port32a, port32, 0,      port32, port32, mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Portorose 32 Bit (v1.03)", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1989, port32b, port32, 0,      port32, port32, mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Portorose 32 Bit (v1.01)", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1989, port16,  port32, 0,      port16, port16, mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Portorose 16 Bit (v1.01)", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+SYST( 1989, port32,  0,      0,      port32, port32, mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Portorose 32 Bit (v1.04)", MACHINE_SUPPORTS_SAVE )
+SYST( 1989, port32a, port32, 0,      port32, port32, mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Portorose 32 Bit (v1.03)", MACHINE_SUPPORTS_SAVE )
+SYST( 1989, port32b, port32, 0,      port32, port32, mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Portorose 32 Bit (v1.01)", MACHINE_SUPPORTS_SAVE )
+SYST( 1989, port16,  port32, 0,      port16, port16, mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Portorose 16 Bit (v1.01)", MACHINE_SUPPORTS_SAVE )
 
-SYST( 1990, lyon32,  0,      0,      port32, port32, mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Lyon 32 Bit", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1990, lyon16,  lyon32, 0,      port16, port16, mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Lyon 16 Bit", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+SYST( 1990, lyon32,  0,      0,      port32, port32, mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Lyon 32 Bit", MACHINE_SUPPORTS_SAVE )
+SYST( 1990, lyon16,  lyon32, 0,      port16, port16, mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Lyon 16 Bit", MACHINE_SUPPORTS_SAVE )
 
-SYST( 1991, van32,   0,      0,      van32,  port32, mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Vancouver 32 Bit", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1991, van16,   van32,  0,      van16,  port16, mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Vancouver 16 Bit", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+SYST( 1991, van32,   0,      0,      van32,  port32, mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Vancouver 32 Bit", MACHINE_SUPPORTS_SAVE )
+SYST( 1991, van16,   van32,  0,      van16,  port16, mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Vancouver 16 Bit", MACHINE_SUPPORTS_SAVE )
 
-SYST( 1993, gen32,   0,      0,      gen32,  gen32,  mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Genius 68030 (v4.01)", MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_TIMING | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1993, gen32a,  gen32,  0,      gen32,  gen32,  mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Genius 68030 (v4.00)", MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_TIMING | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1996, gen32l,  gen32,  0,      gen32,  gen32,  mmodular_state, empty_init, "Richard Lang", "Mephisto Genius 68030 (London upgrade)", MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_TIMING | MACHINE_CLICKABLE_ARTWORK )
+SYST( 1993, gen32,   0,      0,      gen32,  gen32,  mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Genius 68030 (v4.01)", MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_TIMING )
+SYST( 1993, gen32a,  gen32,  0,      gen32,  gen32,  mmodular_state, empty_init, "Hegener + Glaser", "Mephisto Genius 68030 (v4.00)", MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_TIMING )
+SYST( 1996, gen32l,  gen32,  0,      gen32,  gen32,  mmodular_state, empty_init, "Richard Lang", "Mephisto Genius 68030 (London upgrade)", MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_TIMING )
 
-SYST( 1996, lond32,  0,      0,      van32,  port32, mmodular_state, empty_init, "Richard Lang", "Mephisto London 32 Bit", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK ) // for alm32/port32/lyon32/van32
-SYST( 1996, lond16,  lond32, 0,      van16,  port16, mmodular_state, empty_init, "Richard Lang", "Mephisto London 16 Bit", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK ) // for alm16/port16/lyon16/van16
+SYST( 1996, lond32,  0,      0,      van32,  port32, mmodular_state, empty_init, "Richard Lang", "Mephisto London 32 Bit", MACHINE_SUPPORTS_SAVE ) // for alm32/port32/lyon32/van32
+SYST( 1996, lond16,  lond32, 0,      van16,  port16, mmodular_state, empty_init, "Richard Lang", "Mephisto London 16 Bit", MACHINE_SUPPORTS_SAVE ) // for alm16/port16/lyon16/van16

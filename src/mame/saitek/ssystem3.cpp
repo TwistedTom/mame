@@ -123,10 +123,19 @@ private:
 	required_device<md4332b_device> m_lcd1;
 	optional_device_array<hlcd0438_device, 2> m_lcd2;
 	optional_device_array<pwm_display_device, 2> m_display;
-	required_device<dac_bit_interface> m_dac;
+	required_device<dac_1bit_device> m_dac;
 	optional_shared_ptr<u8> m_nvram;
 	optional_ioport_array<4+3> m_inputs;
 	output_finder<8, 48> m_out_lcd2;
+
+	u8 m_inp_mux = 0;
+	u8 m_control = 0;
+	u8 m_shift = 0;
+	u32 m_lcd1_data = 0;
+	u64 m_lcd2_data = 0;
+	u8 m_lcd2_select = 0;
+
+	bool m_xor_kludge = false;
 
 	// address maps
 	void ssystem3_map(address_map &map);
@@ -150,14 +159,6 @@ private:
 	u8 cu_pia_a_r();
 	void cu_pia_b_w(u8 data);
 	u8 cu_pia_b_r();
-
-	u8 m_inp_mux = 0;
-	u8 m_control = 0;
-	u8 m_shift = 0;
-	u32 m_lcd1_data = 0;
-	u64 m_lcd2_data = 0;
-	u8 m_lcd2_select = 0;
-	bool m_xor_kludge = false;
 };
 
 void ssystem3_state::machine_start()
@@ -488,7 +489,7 @@ void ssystem3_state::ssystem3(machine_config &config)
 	// basic machine hardware
 	m_maincpu->set_addrmap(AS_PROGRAM, &ssystem3_state::ssystem3_map);
 
-	M6808(config, m_subcpu, 6800000); // LC circuit, measured
+	M6808(config, m_subcpu, 6'800'000); // LC circuit, measured
 	m_subcpu->set_addrmap(AS_PROGRAM, &ssystem3_state::chessunit_map);
 
 	config.set_perfect_quantum(m_maincpu);
@@ -567,5 +568,5 @@ ROM_END
 *******************************************************************************/
 
 //    YEAR  NAME      PARENT  COMPAT  MACHINE   INPUT     CLASS           INIT           COMPANY, FULLNAME, FLAGS
-SYST( 1979, ssystem3, 0,      0,      ssystem3, ssystem3, ssystem3_state, init_ssystem3, "SciSys / Novag", "Chess Champion: Super System III", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1980, ssystem4, 0,      0,      ssystem4, ssystem4, ssystem3_state, empty_init,    "SciSys", "Chess Champion: Super System IV", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+SYST( 1979, ssystem3, 0,      0,      ssystem3, ssystem3, ssystem3_state, init_ssystem3, "SciSys / Novag Industries", "Chess Champion: Super System III", MACHINE_SUPPORTS_SAVE )
+SYST( 1980, ssystem4, 0,      0,      ssystem4, ssystem4, ssystem3_state, empty_init,    "SciSys", "Chess Champion: Super System IV", MACHINE_SUPPORTS_SAVE )

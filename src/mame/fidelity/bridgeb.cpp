@@ -62,9 +62,11 @@ private:
 	required_device<z80pio_device> m_z80pio;
 	required_device_array<dl1414_device, 3> m_dl1414;
 	required_device<pwm_display_device> m_led_pwm;
-	required_device<dac_bit_interface> m_dac;
+	required_device<dac_1bit_device> m_dac;
 	required_ioport_array<8> m_inputs;
 	output_finder<12> m_digits;
+
+	u8 m_inp_mux = 0;
 
 	void main_map(address_map &map);
 	void main_io(address_map &map);
@@ -76,8 +78,6 @@ private:
 	u8 input_r();
 	void input_w(u8 data);
 	void update_pa();
-
-	u8 m_inp_mux = 0;
 };
 
 void bridgeb_state::machine_start()
@@ -248,12 +248,12 @@ static const z80_daisy_config daisy_chain[] =
 void bridgeb_state::bridgeb(machine_config &config)
 {
 	// basic machine hardware
-	Z80(config, m_maincpu, 1000000); // R/C clock, appromixation
+	Z80(config, m_maincpu, 1'000'000); // R/C clock, appromixation
 	m_maincpu->set_addrmap(AS_PROGRAM, &bridgeb_state::main_map);
 	m_maincpu->set_addrmap(AS_IO, &bridgeb_state::main_io);
 	m_maincpu->set_daisy_config(daisy_chain);
 
-	Z80PIO(config, m_z80pio, 1000000);
+	Z80PIO(config, m_z80pio, 1'000'000);
 	m_z80pio->out_int_callback().set_inputline(m_maincpu, INPUT_LINE_IRQ0);
 	m_z80pio->out_pa_callback().set(FUNC(bridgeb_state::control_w));
 	m_z80pio->in_pa_callback().set(FUNC(bridgeb_state::input_r));
@@ -293,4 +293,4 @@ ROM_END
 *******************************************************************************/
 
 //    YEAR  NAME     PARENT  COMPAT  MACHINE  INPUT    CLASS          INIT        COMPANY, FULLNAME, FLAGS
-SYST( 1980, bridgeb, 0,      0,      bridgeb, bridgeb, bridgeb_state, empty_init, "Fidelity Electronics", "Bridge Bidder", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+SYST( 1980, bridgeb, 0,      0,      bridgeb, bridgeb, bridgeb_state, empty_init, "Fidelity Electronics", "Bridge Bidder", MACHINE_SUPPORTS_SAVE )

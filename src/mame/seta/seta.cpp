@@ -8897,21 +8897,18 @@ void seta_state::utoukond(machine_config &config)
 	PALETTE(config, m_palette).set_entries(512 * 3);    // sprites, layer1, layer2
 
 	// sound hardware
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "mono").front_center();
 
 	GENERIC_LATCH_8(config, m_soundlatch);
 	m_soundlatch->data_pending_callback().set_inputline(m_audiocpu, 0);
 	m_soundlatch->set_separate_acknowledge(true);
 
 	X1_010(config, m_x1snd, 16000000);
-	m_x1snd->add_route(0, "lspeaker", 1.0);
-	m_x1snd->add_route(1, "rspeaker", 1.0);
+	m_x1snd->add_route(ALL_OUTPUTS, "mono", 0.50);
 
-	ym3438_device &ymsnd(YM3438(config, "ymsnd", 16000000/4)); // 4 MHz
+	ym3438_device &ymsnd(YM3438(config, "ymsnd", 16000000/2)); // 8 MHz
 	ymsnd.irq_handler().set_inputline(m_audiocpu, INPUT_LINE_NMI);
-	ymsnd.add_route(0, "lspeaker", 0.30);
-	ymsnd.add_route(1, "rspeaker", 0.30);
+	ymsnd.add_route(ALL_OUTPUTS, "mono", 0.30);
 }
 
 
@@ -11309,8 +11306,8 @@ void jockeyc_state::init_inttoote()
 
 ***************************************************************************/
 
-GAME( 1989?, setaroul,  0,        setaroul,  setaroul,  setaroul_state, empty_init,    ROT270, "Visco",                     "The Roulette (Visco)", MACHINE_CLICKABLE_ARTWORK )
-GAME( 1989?, setaroula, setaroul, setaroul,  setaroul,  setaroul_state, empty_init,    ROT270, "hack (CODERE)",             "Super Ruleta 36 (Spanish hack of The Roulette)", MACHINE_CLICKABLE_ARTWORK )
+GAME( 1989?, setaroul,  0,        setaroul,  setaroul,  setaroul_state, empty_init,    ROT270, "Visco",                     "The Roulette (Visco)", 0 )
+GAME( 1989?, setaroula, setaroul, setaroul,  setaroul,  setaroul_state, empty_init,    ROT270, "hack (CODERE)",             "Super Ruleta 36 (Spanish hack of The Roulette)", 0 )
 
 GAME( 1989, drgnunit,  0,        drgnunit,  drgnunit,  seta_state,     empty_init,     ROT0,   "Athena / Seta",             "Dragon Unit / Castle of Dragon", 0 ) // Country/License: DSW
 
@@ -11324,10 +11321,10 @@ GAME( 1990, thunderlbl2,thunderl,thunderlbl,thunderl,  thunderl_state, empty_ini
 GAME( 1994, wiggie,    0,        wiggie,    thunderl,  seta_state,     init_wiggie,    ROT270, "Promat",                    "Wiggie Waggie", MACHINE_IMPERFECT_GRAPHICS ) // hack of Thunder & Lightning
 GAME( 1994, superbar,  wiggie,   superbar,  thunderl,  seta_state,     init_wiggie,    ROT270, "Promat",                    "Super Bar", MACHINE_IMPERFECT_GRAPHICS ) // hack of Thunder & Lightning
 
-GAME( 1990, jockeyc,   0,        jockeyc,   jockeyc,   jockeyc_state,  empty_init,     ROT0,   "Seta (Visco license)",      "Jockey Club (v1.18)", MACHINE_CLICKABLE_ARTWORK )
-GAME( 1993, inttoote2, jockeyc,  jockeyc,   jockeyc,   jockeyc_state,  empty_init,     ROT0,   "bootleg (Coinmaster)",      "International Toote II (v1.24, P387.V01)", MACHINE_CLICKABLE_ARTWORK )
-GAME( 1998, inttoote,  jockeyc,  inttoote,  inttoote,  jockeyc_state,  init_inttoote,  ROT0,   "bootleg (Coinmaster)",      "International Toote (Germany, P523.V01)", MACHINE_NOT_WORKING | MACHINE_UNEMULATED_PROTECTION | MACHINE_CLICKABLE_ARTWORK )
-GAME( 1990, gderby,    jockeyc,  jockeyc,   jockeyc,   jockeyc_state,  empty_init,     ROT0,   "hack (CODERE)",             "Gran Derby (Spanish hack of Jockey Club)", MACHINE_CLICKABLE_ARTWORK )
+GAME( 1990, jockeyc,   0,        jockeyc,   jockeyc,   jockeyc_state,  empty_init,     ROT0,   "Seta (Visco license)",      "Jockey Club (v1.18)", 0 )
+GAME( 1993, inttoote2, jockeyc,  jockeyc,   jockeyc,   jockeyc_state,  empty_init,     ROT0,   "bootleg (Coinmaster)",      "International Toote II (v1.24, P387.V01)", 0 )
+GAME( 1998, inttoote,  jockeyc,  inttoote,  inttoote,  jockeyc_state,  init_inttoote,  ROT0,   "bootleg (Coinmaster)",      "International Toote (Germany, P523.V01)", MACHINE_NOT_WORKING | MACHINE_UNEMULATED_PROTECTION )
+GAME( 1990, gderby,    jockeyc,  jockeyc,   jockeyc,   jockeyc_state,  empty_init,     ROT0,   "hack (CODERE)",             "Gran Derby (Spanish hack of Jockey Club)", 0 )
 
 GAME( 1992, rezon,     0,        rezon,     rezon,     seta_state,     empty_init,     ROT0,   "Allumer",                   "Rezon", 0 ) // License: Jumper
 GAME( 1991, rezono,    rezon,    rezon,     rezon,     seta_state,     empty_init,     ROT0,   "Allumer",                   "Rezon (earlier)", 0 ) // ""

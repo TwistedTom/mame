@@ -111,6 +111,14 @@ private:
 	output_finder<2, 6> m_fdigit;
 	required_ioport_array<4+3> m_inputs;
 
+	u8 m_inp_mux = 0;
+	u16 m_digit_data = 0;
+	u8 m_shift_data = 0;
+	u8 m_shift_clock = 0;
+
+	bool m_extram_enabled = false;
+	u8 m_overlay = 0;
+
 	void main_map(address_map &map);
 
 	void update_reset(ioport_value state);
@@ -129,14 +137,6 @@ private:
 
 	void shift_clock_w(int state);
 	void shift_data_w(int state);
-
-	u8 m_inp_mux = 0;
-	u16 m_digit_data = 0;
-	u8 m_shift_data = 0;
-	u8 m_shift_clock = 0;
-
-	bool m_extram_enabled = false;
-	u8 m_overlay = 0;
 };
 
 void ggm_state::machine_start()
@@ -463,7 +463,7 @@ static INPUT_PORTS_START( overlay_lasvegas )
 
 	PORT_MODIFY("IN.3")
 	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) OVERLAY(0x04) PORT_CODE(KEYCODE_L) PORT_NAME("Split")
-	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_KEYPAD) OVERLAY(0x04) PORT_CODE(KEYCODE_U) PORT_NAME("Shuffle Point")
+	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_KEYPAD) OVERLAY(0x04) PORT_CODE(KEYCODE_P) PORT_NAME("Shuffle Point")
 	PORT_BIT(0x04, IP_ACTIVE_HIGH, IPT_KEYPAD) OVERLAY(0x04) PORT_CODE(KEYCODE_A) PORT_NAME("Audio")
 	PORT_BIT(0x08, IP_ACTIVE_HIGH, IPT_KEYPAD) OVERLAY(0x04) PORT_CODE(KEYCODE_T) PORT_NAME("Total")
 	PORT_BIT(0x10, IP_ACTIVE_HIGH, IPT_KEYPAD) OVERLAY(0x04) PORT_CODE(KEYCODE_ENTER) PORT_CODE(KEYCODE_ENTER_PAD) PORT_NAME("Enter")
@@ -485,7 +485,7 @@ static INPUT_PORTS_START( overlay_odin )
 	PORT_BIT(0x10, IP_ACTIVE_HIGH, IPT_KEYPAD) OVERLAY(0x05) PORT_CODE(KEYCODE_U) PORT_NAME("Audio")
 
 	PORT_MODIFY("IN.2")
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) OVERLAY(0x05) PORT_CODE(KEYCODE_Y) PORT_NAME("Play / -")
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) OVERLAY(0x05) PORT_CODE(KEYCODE_P) PORT_NAME("Play / -")
 	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_KEYPAD) OVERLAY(0x05) PORT_CODE(KEYCODE_W) PORT_NAME("B/W")
 	PORT_BIT(0x04, IP_ACTIVE_HIGH, IPT_KEYPAD) OVERLAY(0x05) PORT_CODE(KEYCODE_K) PORT_NAME("Rank")
 	PORT_BIT(0x08, IP_ACTIVE_HIGH, IPT_KEYPAD) OVERLAY(0x05) PORT_CODE(KEYCODE_T) PORT_NAME("Time")
@@ -616,4 +616,4 @@ ROM_END
 *******************************************************************************/
 
 //    YEAR  NAME  PARENT  COMPAT  MACHINE  INPUT  CLASS      INIT        COMPANY, FULLNAME, FLAGS
-SYST( 1980, ggm,  0,      0,      ggm,     ggm,   ggm_state, empty_init, "Applied Concepts", "Great Game Machine", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+SYST( 1980, ggm,  0,      0,      ggm,     ggm,   ggm_state, empty_init, "Applied Concepts", "Great Game Machine", MACHINE_SUPPORTS_SAVE )

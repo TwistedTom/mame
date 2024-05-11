@@ -56,6 +56,9 @@ private:
 	required_device<pwm_display_device> m_display;
 	required_ioport_array<4> m_inputs;
 
+	u8 m_io[2] = { };
+	u8 m_4042 = 0;
+
 	void main_map(address_map &map);
 	void main_io(address_map &map);
 
@@ -65,9 +68,6 @@ private:
 	void mux_w(u8 data);
 	void digit_w(u8 data);
 	u8 input_r();
-
-	u8 m_io[2] = { };
-	u8 m_4042 = 0;
 };
 
 void boris_state::machine_start()
@@ -148,7 +148,7 @@ void boris_state::main_map(address_map &map)
 {
 	map.global_mask(0x0fff);
 	map(0x0000, 0x0bff).rom();
-	map(0x0c00, 0x0fff).ram();
+	map(0x0c00, 0x0cff).mirror(0x300).ram();
 }
 
 void boris_state::main_io(address_map &map)
@@ -244,5 +244,5 @@ ROM_END
 *******************************************************************************/
 
 //    YEAR  NAME    PARENT  COMPAT  MACHINE  INPUT  CLASS        INIT        COMPANY, FULLNAME, FLAGS
-SYST( 1978, boris,  0,      0,      boris,   boris, boris_state, empty_init, "Applied Concepts", "Boris (rev. 01)", MACHINE_SUPPORTS_SAVE | MACHINE_NO_SOUND_HW | MACHINE_CLICKABLE_ARTWORK ) // "Boris awaits your move"
-SYST( 1978, borisa, boris,  0,      boris,   boris, boris_state, empty_init, "Applied Concepts", "Boris (rev. 00)", MACHINE_SUPPORTS_SAVE | MACHINE_NO_SOUND_HW | MACHINE_CLICKABLE_ARTWORK ) // "Boris plays black"
+SYST( 1978, boris,  0,      0,      boris,   boris, boris_state, empty_init, "Applied Concepts", "Boris (rev. 01)", MACHINE_SUPPORTS_SAVE | MACHINE_NO_SOUND_HW ) // "Boris awaits your move"
+SYST( 1978, borisa, boris,  0,      boris,   boris, boris_state, empty_init, "Applied Concepts", "Boris (rev. 00)", MACHINE_SUPPORTS_SAVE | MACHINE_NO_SOUND_HW ) // "Boris plays black"

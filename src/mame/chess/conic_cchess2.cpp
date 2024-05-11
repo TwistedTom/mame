@@ -70,8 +70,12 @@ private:
 	required_device_array<pia6821_device, 2> m_pia;
 	required_device<sensorboard_device> m_board;
 	required_device<pwm_display_device> m_display;
-	required_device<dac_bit_interface> m_dac;
+	required_device<dac_1bit_device> m_dac;
 	required_ioport_array<8> m_inputs;
+
+	u8 m_inp_mux = 0;
+	u8 m_led_data = 0;
+	int m_dac_on = 0;
 
 	// address maps
 	void main_map(address_map &map);
@@ -84,10 +88,6 @@ private:
 	u8 pia1_pa_r();
 	u8 pia1_pb_r();
 	void pia1_pb_w(u8 data);
-
-	u8 m_inp_mux = 0;
-	u8 m_led_data = 0;
-	int m_dac_on = 0;
 };
 
 void cchess2_state::machine_start()
@@ -237,7 +237,7 @@ INPUT_PORTS_END
 void cchess2_state::cncchess2(machine_config &config)
 {
 	// basic machine hardware
-	M6504(config, m_maincpu, 1000000); // approximation, no XTAL
+	M6504(config, m_maincpu, 1'000'000); // approximation, no XTAL
 	m_maincpu->set_addrmap(AS_PROGRAM, &cchess2_state::main_map);
 
 	PIA6821(config, m_pia[0]);
@@ -282,4 +282,4 @@ ROM_END
 *******************************************************************************/
 
 //    YEAR  NAME       PARENT  COMPAT  MACHINE    INPUT      CLASS          INIT        COMPANY, FULLNAME, FLAGS
-SYST( 1980, cncchess2, 0,      0,      cncchess2, cncchess2, cchess2_state, empty_init, "Conic", "Computer Chess (Conic, model 7012)", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+SYST( 1980, cncchess2, 0,      0,      cncchess2, cncchess2, cchess2_state, empty_init, "Conic", "Computer Chess (Conic, model 7012)", MACHINE_SUPPORTS_SAVE )
