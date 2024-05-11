@@ -262,8 +262,6 @@ private:
 };
 
 
-// video
-
 void djboy_state::scrollx_w(uint8_t data)
 {
 	m_scrollx = data;
@@ -283,7 +281,7 @@ TILE_GET_INFO_MEMBER(djboy_state::get_bg_tile_info)
 	if (color & 8)
 		code |= 0x1000;
 
-	tileinfo.set(1, code, color, 0);    // no flip
+	tileinfo.set(0, code, color, 0);    // no flip
 }
 
 void djboy_state::videoram_w(offs_t offset, uint8_t data)
@@ -336,8 +334,6 @@ void djboy_state::screen_vblank(int state)
 	}
 }
 
-
-// machine
 
 // KANEKO BEAST state
 
@@ -607,8 +603,11 @@ INPUT_PORTS_END
 
 
 static GFXDECODE_START( gfx_djboy )
-	GFXDECODE_ENTRY( "sprites", 0, gfx_8x8x4_row_2x2_group_packed_msb, 0x100, 16 )
 	GFXDECODE_ENTRY( "bgtiles", 0, gfx_8x8x4_row_2x2_group_packed_msb, 0x000, 16 )
+GFXDECODE_END
+
+static GFXDECODE_START( gfx_djboy_spr )
+	GFXDECODE_ENTRY( "sprites", 0, gfx_8x8x4_row_2x2_group_packed_msb, 0x100, 16 )
 GFXDECODE_END
 
 /******************************************************************************/
@@ -699,8 +698,7 @@ void djboy_state::djboy(machine_config &config)
 	GFXDECODE(config, m_gfxdecode, m_palette, gfx_djboy);
 	PALETTE(config, m_palette).set_entries(0x200);
 
-	KANEKO_PANDORA(config, m_pandora, 0);
-	m_pandora->set_gfxdecode_tag(m_gfxdecode);
+	KANEKO_PANDORA(config, m_pandora, 0, m_palette, gfx_djboy_spr);
 
 	SPEAKER(config, "lspeaker").front_left();
 	SPEAKER(config, "rspeaker").front_right();

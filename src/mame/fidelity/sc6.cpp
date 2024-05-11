@@ -119,9 +119,12 @@ private:
 	required_region_ptr<u8> m_rom;
 	required_device<sensorboard_device> m_board;
 	required_device<pwm_display_device> m_display;
-	required_device<dac_bit_interface> m_dac;
+	required_device<dac_1bit_device> m_dac;
 	optional_device<generic_slot_device> m_cart;
 	required_ioport m_inputs;
+
+	u8 m_led_select = 0;
+	u8 m_inp_mux = 0;
 
 	// address maps
 	void msc_map(address_map &map);
@@ -137,9 +140,6 @@ private:
 	u8 input_r();
 	int input6_r();
 	int input7_r();
-
-	u8 m_led_select = 0;
-	u8 m_inp_mux = 0;
 };
 
 void sc6_state::machine_start()
@@ -373,7 +373,7 @@ ROM_END
 *******************************************************************************/
 
 //    YEAR  NAME     PARENT  COMPAT  MACHINE  INPUT   CLASS      INIT        COMPANY, FULLNAME, FLAGS
-SYST( 1982, fscc6,   0,      0,      sc6,     sc6,    sc6_state, empty_init, "Fidelity Electronics", "Sensory Chess Challenger \"6\"", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
-SYST( 1982, miniscc, 0,      0,      msc,     msc,    sc6_state, empty_init, "Fidelity Electronics", "Mini Sensory Chess Challenger (1982 version)", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK ) // aka "Mini Sensory II"
+SYST( 1982, fscc6,   0,      0,      sc6,     sc6,    sc6_state, empty_init, "Fidelity Electronics", "Sensory Chess Challenger \"6\"", MACHINE_SUPPORTS_SAVE )
+SYST( 1982, miniscc, 0,      0,      msc,     msc,    sc6_state, empty_init, "Fidelity Electronics", "Mini Sensory Chess Challenger (1982 version)", MACHINE_SUPPORTS_SAVE ) // aka "Mini Sensory II"
 
-SYST( 1989, gambit,  0,      0,      gambit,  gambit, sc6_state, empty_init, "Fidelity Electronics", "The Gambit (1989 version)", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+SYST( 1989, gambit,  0,      0,      gambit,  gambit, sc6_state, empty_init, "Fidelity International", "The Gambit (1989 version)", MACHINE_SUPPORTS_SAVE )

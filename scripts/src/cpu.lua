@@ -194,6 +194,8 @@ if CPUS["ARM7"] then
 		MAME_DIR .. "src/devices/cpu/arm7/arm7.h",
 		MAME_DIR .. "src/devices/cpu/arm7/arm7thmb.cpp",
 		MAME_DIR .. "src/devices/cpu/arm7/arm7ops.cpp",
+		MAME_DIR .. "src/devices/cpu/arm7/ap2010cpu.cpp",
+		MAME_DIR .. "src/devices/cpu/arm7/ap2010cpu.h",
 		MAME_DIR .. "src/devices/cpu/arm7/lpc210x.cpp",
 		MAME_DIR .. "src/devices/cpu/arm7/lpc210x.h",
 		MAME_DIR .. "src/devices/cpu/arm7/upd800468.cpp",
@@ -649,14 +651,14 @@ if CPUS["G65816"] then
 	files {
 		MAME_DIR .. "src/devices/cpu/g65816/g65816.cpp",
 		MAME_DIR .. "src/devices/cpu/g65816/g65816.h",
+		MAME_DIR .. "src/devices/cpu/g65816/g65816cm.h",
+		MAME_DIR .. "src/devices/cpu/g65816/g65816ds.h",
 		MAME_DIR .. "src/devices/cpu/g65816/g65816o0.cpp",
 		MAME_DIR .. "src/devices/cpu/g65816/g65816o1.cpp",
 		MAME_DIR .. "src/devices/cpu/g65816/g65816o2.cpp",
 		MAME_DIR .. "src/devices/cpu/g65816/g65816o3.cpp",
 		MAME_DIR .. "src/devices/cpu/g65816/g65816o4.cpp",
-		MAME_DIR .. "src/devices/cpu/g65816/g65816cm.h",
-		MAME_DIR .. "src/devices/cpu/g65816/g65816ds.h",
-		MAME_DIR .. "src/devices/cpu/g65816/g65816op.h",
+		MAME_DIR .. "src/devices/cpu/g65816/g65816op.ipp",
 	}
 end
 
@@ -697,8 +699,8 @@ if CPUS["H8"] then
 		MAME_DIR .. "src/devices/cpu/h8/h8s2000.h",
 		MAME_DIR .. "src/devices/cpu/h8/h8s2600.cpp",
 		MAME_DIR .. "src/devices/cpu/h8/h8s2600.h",
-		MAME_DIR .. "src/devices/cpu/h8/h83337.cpp",
-		MAME_DIR .. "src/devices/cpu/h8/h83337.h",
+		MAME_DIR .. "src/devices/cpu/h8/h8325.cpp",
+		MAME_DIR .. "src/devices/cpu/h8/h8325.h",
 		MAME_DIR .. "src/devices/cpu/h8/h83002.cpp",
 		MAME_DIR .. "src/devices/cpu/h8/h83002.h",
 		MAME_DIR .. "src/devices/cpu/h8/h83003.cpp",
@@ -713,10 +715,16 @@ if CPUS["H8"] then
 		MAME_DIR .. "src/devices/cpu/h8/h83042.h",
 		MAME_DIR .. "src/devices/cpu/h8/h83048.cpp",
 		MAME_DIR .. "src/devices/cpu/h8/h83048.h",
+		MAME_DIR .. "src/devices/cpu/h8/h83217.cpp",
+		MAME_DIR .. "src/devices/cpu/h8/h83217.h",
+		MAME_DIR .. "src/devices/cpu/h8/h83337.cpp",
+		MAME_DIR .. "src/devices/cpu/h8/h83337.h",
 		MAME_DIR .. "src/devices/cpu/h8/h8s2245.cpp",
 		MAME_DIR .. "src/devices/cpu/h8/h8s2245.h",
-		MAME_DIR .. "src/devices/cpu/h8/h8s2320.cpp",
-		MAME_DIR .. "src/devices/cpu/h8/h8s2320.h",
+		MAME_DIR .. "src/devices/cpu/h8/h8s2319.cpp",
+		MAME_DIR .. "src/devices/cpu/h8/h8s2319.h",
+		MAME_DIR .. "src/devices/cpu/h8/h8s2329.cpp",
+		MAME_DIR .. "src/devices/cpu/h8/h8s2329.h",
 		MAME_DIR .. "src/devices/cpu/h8/h8s2357.cpp",
 		MAME_DIR .. "src/devices/cpu/h8/h8s2357.h",
 		MAME_DIR .. "src/devices/cpu/h8/h8s2655.cpp",
@@ -741,6 +749,8 @@ if CPUS["H8"] then
 		MAME_DIR .. "src/devices/cpu/h8/h8_watchdog.h",
 		MAME_DIR .. "src/devices/cpu/h8/gt913.cpp",
 		MAME_DIR .. "src/devices/cpu/h8/gt913.h",
+		MAME_DIR .. "src/devices/cpu/h8/swx00.cpp",
+		MAME_DIR .. "src/devices/cpu/h8/swx00.h",
 	}
 
 	dependency {
@@ -889,6 +899,24 @@ if CPUS["SH"] then
 		MAME_DIR .. "src/devices/cpu/sh/sh7021.h",
 		MAME_DIR .. "src/devices/cpu/sh/sh7032.cpp",
 		MAME_DIR .. "src/devices/cpu/sh/sh7032.h",
+		MAME_DIR .. "src/devices/cpu/sh/sh7042.cpp",
+		MAME_DIR .. "src/devices/cpu/sh/sh7042.h",
+		MAME_DIR .. "src/devices/cpu/sh/sh_adc.cpp",
+		MAME_DIR .. "src/devices/cpu/sh/sh_adc.h",
+		MAME_DIR .. "src/devices/cpu/sh/sh_bsc.cpp",
+		MAME_DIR .. "src/devices/cpu/sh/sh_bsc.h",
+		MAME_DIR .. "src/devices/cpu/sh/sh_cmt.cpp",
+		MAME_DIR .. "src/devices/cpu/sh/sh_cmt.h",
+		MAME_DIR .. "src/devices/cpu/sh/sh_dmac.cpp",
+		MAME_DIR .. "src/devices/cpu/sh/sh_dmac.h",
+		MAME_DIR .. "src/devices/cpu/sh/sh_intc.cpp",
+		MAME_DIR .. "src/devices/cpu/sh/sh_intc.h",
+		MAME_DIR .. "src/devices/cpu/sh/sh_mtu.cpp",
+		MAME_DIR .. "src/devices/cpu/sh/sh_mtu.h",
+		MAME_DIR .. "src/devices/cpu/sh/sh_port.cpp",
+		MAME_DIR .. "src/devices/cpu/sh/sh_port.h",
+		MAME_DIR .. "src/devices/cpu/sh/sh_sci.cpp",
+		MAME_DIR .. "src/devices/cpu/sh/sh_sci.h",
 		MAME_DIR .. "src/devices/cpu/sh/sh7604_bus.cpp",
 		MAME_DIR .. "src/devices/cpu/sh/sh7604_bus.h",
 		MAME_DIR .. "src/devices/cpu/sh/sh7604_sci.cpp",
@@ -1555,6 +1583,23 @@ if opt_tool(CPUS, "PSX") then
 end
 
 --------------------------------------------------
+-- MIPS-X
+--@src/devices/cpu/mipsx/mipsx.h,CPUS["MIPSX"] = true
+--------------------------------------------------
+
+if CPUS["MIPSX"] then
+	files {
+		MAME_DIR .. "src/devices/cpu/mipsx/mipsx.cpp",
+		MAME_DIR .. "src/devices/cpu/mipsx/mipsx.h",
+	}
+end
+
+if opt_tool(CPUS, "MIPSX") then
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/mipsx/mipsxdasm.cpp")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/mipsx/mipsxdasm.h")
+end
+
+--------------------------------------------------
 -- Mitsubishi MELPS 4 series
 --@src/devices/cpu/melps4/melps4.h,CPUS["MELPS4"] = true
 --------------------------------------------------
@@ -1622,6 +1667,7 @@ end
 --@src/devices/cpu/m6502/gew7.h,CPUS["M6502"] = true
 --@src/devices/cpu/m6502/gew12.h,CPUS["M6502"] = true
 --@src/devices/cpu/m6502/m3745x.h,CPUS["M6502"] = true
+--@src/devices/cpu/m6502/m37640.h,CPUS["M6502"] = true
 --@src/devices/cpu/m6502/m4510.h,CPUS["M6502"] = true
 --@src/devices/cpu/m6502/m50734.h,CPUS["M6502"] = true
 --@src/devices/cpu/m6502/m5074x.h,CPUS["M6502"] = true
@@ -1661,6 +1707,8 @@ if CPUS["M6502"] then
 		MAME_DIR .. "src/devices/cpu/m6502/gew12.h",
 		MAME_DIR .. "src/devices/cpu/m6502/m3745x.cpp",
 		MAME_DIR .. "src/devices/cpu/m6502/m3745x.h",
+		MAME_DIR .. "src/devices/cpu/m6502/m37640.cpp",
+		MAME_DIR .. "src/devices/cpu/m6502/m37640.h",
 		MAME_DIR .. "src/devices/cpu/m6502/m4510.cpp",
 		MAME_DIR .. "src/devices/cpu/m6502/m4510.h",
 		MAME_DIR .. "src/devices/cpu/m6502/m50734.cpp",
@@ -2236,8 +2284,6 @@ if CPUS["UPD7810"] then
 		MAME_DIR .. "src/devices/cpu/upd7810/upd7810_opcodes.cpp",
 		MAME_DIR .. "src/devices/cpu/upd7810/upd7810_table.cpp",
 		MAME_DIR .. "src/devices/cpu/upd7810/upd7810_macros.h",
-		MAME_DIR .. "src/devices/cpu/upd7810/upd7811.cpp",
-		MAME_DIR .. "src/devices/cpu/upd7810/upd7811.h",
 	}
 end
 
@@ -2935,6 +2981,8 @@ local want_disasm_z80  = opt_tool(CPUS, "Z80")
 local want_disasm_kc80 = opt_tool(CPUS, "KC80")
 
 if want_disasm_z80 or want_disasm_kc80 then
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/z80/r800dasm.cpp")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/z80/r800dasm.h")
 	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/z80/z80dasm.cpp")
 	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/z80/z80dasm.h")
 end
@@ -3368,20 +3416,20 @@ if opt_tool(CPUS, "HPC") then
 end
 
 --------------------------------------------------
--- Yamaha Multiple Effects Generator
---@src/devices/sound/meg.h,CPUS["MEG"] = true
+-- Yamaha SWP30
+--@src/devices/sound/swp30.h,CPUS["SWP30"] = true
 --------------------------------------------------
 
-if CPUS["MEG"] then
+if CPUS["SWP30"] then
 	files {
-		MAME_DIR .. "src/devices/sound/meg.cpp",
-		MAME_DIR .. "src/devices/sound/meg.h",
+		MAME_DIR .. "src/devices/sound/swp30.cpp",
+		MAME_DIR .. "src/devices/sound/swp30.h",
 	}
 end
 
-if opt_tool(CPUS, "MEG") then
-	table.insert(disasm_files , MAME_DIR .. "src/devices/sound/megd.cpp")
-	table.insert(disasm_files , MAME_DIR .. "src/devices/sound/megd.h")
+if opt_tool(CPUS, "SWP30") then
+	table.insert(disasm_files , MAME_DIR .. "src/devices/sound/swp30d.cpp")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/sound/swp30d.h")
 end
 
 --------------------------------------------------
@@ -3410,13 +3458,13 @@ if CPUS["NS32000"] then
 	files {
 		MAME_DIR .. "src/devices/cpu/ns32000/ns32000.cpp",
 		MAME_DIR .. "src/devices/cpu/ns32000/ns32000.h",
-		MAME_DIR .. "src/devices/cpu/ns32000/slave.h",
+		MAME_DIR .. "src/devices/cpu/ns32000/common.h",
 	}
 end
 
 if opt_tool(CPUS, "NS32000") then
-	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/ns32000/ns32000dasm.cpp")
-	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/ns32000/ns32000dasm.h")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/ns32000/ns32000d.cpp")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/ns32000/ns32000d.h")
 end
 
 --------------------------------------------------
@@ -3889,4 +3937,97 @@ end
 if opt_tool(CPUS, "DDP516") then
 	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/ddp516/ddp516d.cpp")
 	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/ddp516/ddp516d.h")
+end
+
+--------------------------------------------------
+-- Whatever is in the Evolution
+--@src/devices/cpu/evolution/evo.h,CPUS["EVOLUTION"] = true
+--------------------------------------------------
+
+if CPUS["EVOLUTION"] then
+	files {
+		MAME_DIR .. "src/devices/cpu/evolution/evo.cpp",
+		MAME_DIR .. "src/devices/cpu/evolution/evo.h",
+	}
+end
+
+if opt_tool(CPUS, "EVOLUTION") then
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/evolution/evod.cpp")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/evolution/evod.h")
+end
+
+--------------------------------------------------
+-- Tensilica Xtensa
+--@src/devices/cpu/xtensa/xtensa.h,CPUS["XTENSA"] = true
+--------------------------------------------------
+
+if CPUS["XTENSA"] then
+	files {
+		MAME_DIR .. "src/devices/cpu/xtensa/xtensa.cpp",
+		MAME_DIR .. "src/devices/cpu/xtensa/xtensa.h",
+		MAME_DIR .. "src/devices/cpu/xtensa/xtensa_helper.cpp",
+		MAME_DIR .. "src/devices/cpu/xtensa/xtensa_helper.h",
+	}
+end
+
+if opt_tool(CPUS, "XTENSA") then
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/xtensa/xtensad.cpp")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/xtensa/xtensad.h")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/xtensa/xtensa_helper.cpp")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/xtensa/xtensa_helper.h")
+end
+
+--------------------------------------------------
+-- Holtek HT1130
+--@src/devices/cpu/ht1130/ht1130.h,CPUS["HT1130"] = true
+--------------------------------------------------
+
+if CPUS["HT1130"] then
+	files {
+		MAME_DIR .. "src/devices/cpu/ht1130/ht1130.cpp",
+		MAME_DIR .. "src/devices/cpu/ht1130/ht1130.h",
+	}
+end
+
+if opt_tool(CPUS, "HT1130") then
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/ht1130/ht1130d.cpp")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/ht1130/ht1130d.h")
+end
+
+--------------------------------------------------
+-- Epson C33 STD, C33 ADV, etc.
+--@src/devices/cpu/c33/c33common.h,CPUS["C33"] = true
+--------------------------------------------------
+
+if CPUS["C33"] then
+	files {
+		MAME_DIR .. "src/devices/cpu/c33/c33common.h",
+		MAME_DIR .. "src/devices/cpu/c33/c33helpers.ipp",
+		MAME_DIR .. "src/devices/cpu/c33/c33std.cpp",
+		MAME_DIR .. "src/devices/cpu/c33/c33std.h",
+		MAME_DIR .. "src/devices/cpu/c33/s1c33209.cpp",
+		MAME_DIR .. "src/devices/cpu/c33/s1c33209.h",
+	}
+end
+
+if opt_tool(CPUS, "C33") then
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/c33/c33dasm.cpp")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/c33/c33dasm.h")
+end
+
+--------------------------------------------------
+-- IBM PALM
+--@src/devices/cpu/palm/palm.h,CPUS["PALM"] = true
+--------------------------------------------------
+
+if CPUS["PALM"] then
+	files {
+		MAME_DIR .. "src/devices/cpu/palm/palm.cpp",
+		MAME_DIR .. "src/devices/cpu/palm/palm.h",
+	}
+end
+
+if opt_tool(CPUS, "PALM") then
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/palm/palmd.cpp")
+	table.insert(disasm_files , MAME_DIR .. "src/devices/cpu/palm/palmd.h")
 end

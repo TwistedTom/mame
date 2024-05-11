@@ -309,24 +309,24 @@ public:
 	uint32_t hunk_count() const noexcept { return m_hunkcount; }
 	uint32_t unit_bytes() const noexcept { return m_unitbytes; }
 	uint64_t unit_count() const noexcept { return m_unitcount; }
-	bool compressed() const noexcept { return (m_compression[0] != CHD_CODEC_NONE); }
+	bool compressed() const { return (m_compression[0] != CHD_CODEC_NONE); }
 	chd_codec_type compression(int index) const noexcept { return m_compression[index]; }
 	chd_file *parent() const noexcept { return m_parent.get(); }
 	bool parent_missing() const noexcept;
-	util::sha1_t sha1() const;
-	util::sha1_t raw_sha1() const;
-	util::sha1_t parent_sha1() const;
+	util::sha1_t sha1();
+	util::sha1_t raw_sha1();
+	util::sha1_t parent_sha1();
 	std::error_condition hunk_info(uint32_t hunknum, chd_codec_type &compressor, uint32_t &compbytes);
 
 	// setters
-	std::error_condition set_raw_sha1(util::sha1_t rawdata);
-	std::error_condition set_parent_sha1(util::sha1_t parent);
+	void set_raw_sha1(util::sha1_t rawdata);
+	void set_parent_sha1(util::sha1_t parent);
 
 	// file create
-	std::error_condition create(std::string_view filename, uint64_t logicalbytes, uint32_t hunkbytes, uint32_t unitbytes, chd_codec_type compression[4]);
-	std::error_condition create(util::random_read_write::ptr &&file, uint64_t logicalbytes, uint32_t hunkbytes, uint32_t unitbytes, chd_codec_type compression[4]);
-	std::error_condition create(std::string_view filename, uint64_t logicalbytes, uint32_t hunkbytes, chd_codec_type compression[4], chd_file &parent);
-	std::error_condition create(util::random_read_write::ptr &&file, uint64_t logicalbytes, uint32_t hunkbytes, chd_codec_type compression[4], chd_file &parent);
+	std::error_condition create(std::string_view filename, uint64_t logicalbytes, uint32_t hunkbytes, uint32_t unitbytes, const chd_codec_type (&compression)[4]);
+	std::error_condition create(util::random_read_write::ptr &&file, uint64_t logicalbytes, uint32_t hunkbytes, uint32_t unitbytes, const chd_codec_type (&compression)[4]);
+	std::error_condition create(std::string_view filename, uint64_t logicalbytes, uint32_t hunkbytes, const chd_codec_type (&compression)[4], chd_file &parent);
+	std::error_condition create(util::random_read_write::ptr &&file, uint64_t logicalbytes, uint32_t hunkbytes, const chd_codec_type (&compression)[4], chd_file &parent);
 
 	// file open
 	std::error_condition open(std::string_view filename, bool writeable = false, chd_file *parent = nullptr, const open_parent_func &open_parent = nullptr);
@@ -361,19 +361,19 @@ public:
 	std::error_condition codec_configure(chd_codec_type codec, int param, void *config);
 
 	// typing
-	std::error_condition check_is_hd() const;
-	std::error_condition check_is_cd() const;
-	std::error_condition check_is_gd() const;
-	std::error_condition check_is_dvd() const;
-	std::error_condition check_is_av() const;
+	bool is_hd() const;
+	bool is_cd() const;
+	bool is_gd() const;
+	bool is_dvd() const;
+	bool is_av() const;
 
 private:
 	struct metadata_entry;
 	struct metadata_hash;
 
 	// inline helpers
-	util::sha1_t be_read_sha1(const uint8_t *base) const noexcept;
-	void be_write_sha1(uint8_t *base, util::sha1_t value) noexcept;
+	util::sha1_t be_read_sha1(const uint8_t *base) const;
+	void be_write_sha1(uint8_t *base, util::sha1_t value);
 	void file_read(uint64_t offset, void *dest, uint32_t length) const;
 	void file_write(uint64_t offset, const void *source, uint32_t length);
 	uint64_t file_append(const void *source, uint32_t length, uint32_t alignment = 0);
@@ -393,7 +393,7 @@ private:
 	void hunk_write_compressed(uint32_t hunknum, int8_t compression, const uint8_t *compressed, uint32_t complength, util::crc16_t crc16);
 	void hunk_copy_from_self(uint32_t hunknum, uint32_t otherhunk);
 	void hunk_copy_from_parent(uint32_t hunknum, uint64_t parentunit);
-	std::error_condition metadata_find(chd_metadata_tag metatag, int32_t metaindex, metadata_entry &metaentry, bool resume = false) const;
+	bool metadata_find(chd_metadata_tag metatag, int32_t metaindex, metadata_entry &metaentry, bool resume = false) const;
 	void metadata_set_previous_next(uint64_t prevoffset, uint64_t nextoffset);
 	void metadata_update_hash();
 	static int CLIB_DECL metadata_hash_compare(const void *elem1, const void *elem2);
