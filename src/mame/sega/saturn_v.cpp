@@ -232,7 +232,7 @@ void saturn_state::stv_clear_framebuffer( int which_framebuffer )
 }
 
 
-void saturn_state::stv_prepare_framebuffers( void )
+void saturn_state::stv_prepare_framebuffers()
 {
 	int i,rowsize;
 
@@ -273,7 +273,7 @@ void saturn_state::stv_prepare_framebuffers( void )
 
 }
 
-void saturn_state::stv_vdp1_change_framebuffers( void )
+void saturn_state::stv_vdp1_change_framebuffers()
 {
 	m_vdp1.framebuffer_current_display ^= 1;
 	m_vdp1.framebuffer_current_draw ^= 1;
@@ -283,7 +283,7 @@ void saturn_state::stv_vdp1_change_framebuffers( void )
 	stv_prepare_framebuffers();
 }
 
-void saturn_state::stv_set_framebuffer_config( void )
+void saturn_state::stv_set_framebuffer_config()
 {
 	if ( m_vdp1.framebuffer_mode == STV_VDP1_TVM &&
 			m_vdp1.framebuffer_double_interlace == STV_VDP1_DIE ) return;
@@ -521,12 +521,12 @@ the rest are data used by it
 
 */
 
-void saturn_state::stv_clear_gouraud_shading(void)
+void saturn_state::stv_clear_gouraud_shading()
 {
-	memset( &stv_gouraud_shading, 0, sizeof( stv_gouraud_shading ) );
+	stv_gouraud_shading = decltype(stv_gouraud_shading)();
 }
 
-uint8_t saturn_state::stv_read_gouraud_table( void )
+uint8_t saturn_state::stv_read_gouraud_table()
 {
 	int gaddr;
 
@@ -1086,7 +1086,7 @@ void saturn_state::drawpixel_generic(int x, int y, int patterndata, int offsetcn
 }
 
 
-void saturn_state::stv_vdp1_set_drawpixel( void )
+void saturn_state::stv_vdp1_set_drawpixel()
 {
 	int sprite_type = stv2_current_sprite.CMDCTRL & 0x000f;
 	int sprite_mode = stv2_current_sprite.CMDPMOD&0x0038;
@@ -1818,7 +1818,7 @@ TIMER_CALLBACK_MEMBER(saturn_state::vdp1_draw_end )
 }
 
 
-void saturn_state::stv_vdp1_process_list( void )
+void saturn_state::stv_vdp1_process_list()
 {
 	int position;
 	int spritecount;
@@ -2062,7 +2062,7 @@ void saturn_state::stv_vdp1_process_list( void )
 	if (VDP1_LOG) logerror ("End of list processing!\n");
 }
 
-void saturn_state::video_update_vdp1( void )
+void saturn_state::video_update_vdp1()
 {
 	int framebuffer_changed = 0;
 
@@ -2157,7 +2157,7 @@ void saturn_state::video_update_vdp1( void )
 	//popmessage("%04x %04x",STV_VDP1_EWRR_X3,STV_VDP1_EWRR_Y3);
 }
 
-void saturn_state::stv_vdp1_state_save_postload( void )
+void saturn_state::stv_vdp1_state_save_postload()
 {
 	uint8_t *vdp1 = m_vdp1.gfx_decode.get();
 	int offset;
@@ -2179,7 +2179,7 @@ void saturn_state::stv_vdp1_state_save_postload( void )
 	}
 }
 
-int saturn_state::stv_vdp1_start ( void )
+int saturn_state::stv_vdp1_start()
 {
 	m_vdp1_regs = make_unique_clear<uint16_t[]>(0x020/2 );
 	m_vdp1_vram = make_unique_clear<uint32_t[]>(0x100000/4 );
@@ -4450,7 +4450,7 @@ void saturn_state::stv_vdp2_fill_rotation_parameter_table( uint8_t rot_parameter
 }
 
 /* check if RGB layer has rotation applied */
-uint8_t saturn_state::stv_vdp2_is_rotation_applied(void)
+uint8_t saturn_state::stv_vdp2_is_rotation_applied()
 {
 #define _FIXED_1    (0x00010000)
 #define _FIXED_0    (0x00000000)
@@ -4477,7 +4477,7 @@ uint8_t saturn_state::stv_vdp2_is_rotation_applied(void)
 	}
 }
 
-uint8_t saturn_state::stv_vdp2_are_map_registers_equal(void)
+uint8_t saturn_state::stv_vdp2_are_map_registers_equal()
 {
 	int i;
 
@@ -4491,7 +4491,7 @@ uint8_t saturn_state::stv_vdp2_are_map_registers_equal(void)
 	return 1;
 }
 
-void saturn_state::stv_vdp2_check_fade_control_for_layer( void )
+void saturn_state::stv_vdp2_check_fade_control_for_layer()
 {
 	if ( stv2_current_tilemap.fade_control & 1 )
 	{
@@ -6373,9 +6373,7 @@ void saturn_state::stv_vdp2_draw_basic_tilemap(bitmap_rgb32 &bitmap, const recta
 
 #define STV_VDP2_READ_VERTICAL_LINESCROLL( _val, _address ) \
 	{ \
-		_val = m_vdp2_vram[ _address ]; \
-		_val &= 0x07ffff00; \
-		if ( _val & 0x04000000 ) _val |= 0xf8000000; \
+		_val = util::sext(m_vdp2_vram[ _address ] & 0x07ffff00, 27); \
 	}
 
 
@@ -6478,8 +6476,7 @@ void saturn_state::stv_vdp2_check_tilemap_with_linescroll(bitmap_rgb32 &bitmap, 
 		// linescroll
 		if ( linescroll_enable )
 		{
-			prev_scroll_values[i] &= 0x07ffff00;
-			if ( prev_scroll_values[i] & 0x04000000 ) prev_scroll_values[i] |= 0xf8000000;
+			prev_scroll_values[i] = util::sext(prev_scroll_values[i] & 0x07ffff00, 27);
 			stv2_current_tilemap.scrollx = main_scrollx + (prev_scroll_values[i] >> 16);
 			i++;
 		}
@@ -6493,8 +6490,7 @@ void saturn_state::stv_vdp2_check_tilemap_with_linescroll(bitmap_rgb32 &bitmap, 
 		// linezooom
 		if ( linezoom_enable )
 		{
-			prev_scroll_values[i] &= 0x0007ff00;
-			if ( prev_scroll_values[i] & 0x00040000 ) prev_scroll_values[i] |= 0xfff80000;
+			prev_scroll_values[i] = util::sext(prev_scroll_values[i] & 0x0007ff00, 19);
 			stv2_current_tilemap.incx = prev_scroll_values[i];
 			i++;
 		}
@@ -8163,7 +8159,7 @@ void saturn_state::saturn_vdp2_cram_w(offs_t offset, uint32_t data, uint32_t mem
 	}
 }
 
-void saturn_state::refresh_palette_data( void )
+void saturn_state::refresh_palette_data()
 {
 	int r,g,b;
 	int c_i;
@@ -8239,7 +8235,7 @@ void saturn_state::saturn_vdp2_regs_w(offs_t offset, uint16_t data, uint16_t mem
 		printf("VDP2 sets up 8 Mbit VRAM!\n");
 }
 
-int saturn_state::get_hblank_duration( void )
+int saturn_state::get_hblank_duration()
 {
 	int res;
 
@@ -8254,7 +8250,7 @@ int saturn_state::get_hblank_duration( void )
 
 /*some vblank lines measurements (according to Charles MacDonald)*/
 /* TODO: interlace mode "eats" one line, should be 262.5 */
-int saturn_state::get_vblank_duration( void )
+int saturn_state::get_vblank_duration()
 {
 	int res;
 
@@ -8270,7 +8266,7 @@ int saturn_state::get_vblank_duration( void )
 	return res;
 }
 
-int saturn_state::get_pixel_clock( void )
+int saturn_state::get_pixel_clock()
 {
 	int res,divider;
 
@@ -8291,7 +8287,7 @@ int saturn_state::get_pixel_clock( void )
 }
 
 /* TODO: hblank position and hblank firing doesn't really match HW behaviour. */
-uint8_t saturn_state::get_hblank( void )
+uint8_t saturn_state::get_hblank()
 {
 	const rectangle &visarea = m_screen->visible_area();
 	int cur_h = m_screen->hpos();
@@ -8302,7 +8298,7 @@ uint8_t saturn_state::get_hblank( void )
 	return 0;
 }
 
-uint8_t saturn_state::get_vblank( void )
+uint8_t saturn_state::get_vblank()
 {
 	int cur_v,vblank;
 	cur_v = m_screen->vpos();
@@ -8315,7 +8311,7 @@ uint8_t saturn_state::get_vblank( void )
 	return 0;
 }
 
-uint8_t saturn_state::get_odd_bit( void )
+uint8_t saturn_state::get_odd_bit()
 {
 	if(STV_VDP2_HRES & 4) //exclusive monitor mode makes this bit to be always 1
 		return 1;
@@ -8327,7 +8323,7 @@ uint8_t saturn_state::get_odd_bit( void )
 	return m_vdp2.odd;//m_screen->frame_number() & 1;
 }
 
-int saturn_state::get_vblank_start_position( void )
+int saturn_state::get_vblank_start_position()
 {
 	// TODO: test says that second setting happens at 241, might need further investigation ...
 	//       also first one happens at 240, but needs mods in SMPC otherwise we get 2 credits at startup in shanhigw and sokyugrt
@@ -8342,7 +8338,7 @@ int saturn_state::get_vblank_start_position( void )
 	return vblank_line;
 }
 
-int saturn_state::get_ystep_count( void )
+int saturn_state::get_ystep_count()
 {
 	int max_y = m_screen->height();
 	int y_step;
@@ -8356,7 +8352,7 @@ int saturn_state::get_ystep_count( void )
 }
 
 /* TODO: these needs to be checked via HW tests! */
-int saturn_state::get_hcounter( void )
+int saturn_state::get_hcounter()
 {
 	int hcount;
 
@@ -8387,7 +8383,7 @@ int saturn_state::get_hcounter( void )
 	return hcount;
 }
 
-int saturn_state::get_vcounter( void )
+int saturn_state::get_vcounter()
 {
 	int vcount;
 
@@ -8406,7 +8402,7 @@ int saturn_state::get_vcounter( void )
 	return (true_vcount[vcount & 0x1ff][STV_VDP2_VRES]); // Non-interlace
 }
 
-void saturn_state::stv_vdp2_state_save_postload( void )
+void saturn_state::stv_vdp2_state_save_postload()
 {
 	uint8_t *gfxdata = m_vdp2.gfx_decode.get();
 	int offset;
@@ -8442,13 +8438,13 @@ void saturn_state::stv_vdp2_state_save_postload( void )
 	refresh_palette_data();
 }
 
-void saturn_state::stv_vdp2_exit ( void )
+void saturn_state::stv_vdp2_exit()
 {
 	m_vdp2.roz_bitmap[0].reset();
 	m_vdp2.roz_bitmap[1].reset();
 }
 
-int saturn_state::stv_vdp2_start ( void )
+int saturn_state::stv_vdp2_start()
 {
 	machine().add_notifier(MACHINE_NOTIFY_EXIT, machine_notify_delegate(&saturn_state::stv_vdp2_exit, this));
 
@@ -8509,7 +8505,7 @@ VIDEO_START_MEMBER(saturn_state,stv_vdp2)
 	}
 }
 
-void saturn_state::stv_vdp2_dynamic_res_change( void )
+void saturn_state::stv_vdp2_dynamic_res_change()
 {
 	const int d_vres[4] = { 224, 240, 256, 256 };
 	const int d_hres[4] = { 320, 352, 640, 704 };
@@ -8550,7 +8546,7 @@ void saturn_state::stv_vdp2_dynamic_res_change( void )
 
 /*This is for calculating the rgb brightness*/
 /*TODO: Optimize this...*/
-void saturn_state::stv_vdp2_fade_effects( void )
+void saturn_state::stv_vdp2_fade_effects()
 {
 	/*
 	Note:We have to use temporary storages because palette_get_color must use

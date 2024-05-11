@@ -157,8 +157,6 @@ private:
 };
 
 
-// video
-
 TILE_GET_INFO_MEMBER(ashnojoe_state::get_tile_info_highest)
 {
 	const int code = m_tileram[0][tile_index];
@@ -314,8 +312,6 @@ u32 ashnojoe_state::screen_update(screen_device &screen, bitmap_ind16 &bitmap, c
 	return 0;
 }
 
-
-// machine
 
 u16 ashnojoe_state::fake_4a00a_r()
 {
@@ -489,7 +485,7 @@ GFXDECODE_END
 
 void ashnojoe_state::ym2203_write_a(u8 data)
 {
-	// This gets called at 8910 startup with 0xff before the 5205 exists, causing a crash
+	// HACK: This gets called at 8910 startup with 0xff before the 5205 exists, causing a crash
 	if (data == 0xff)
 		return;
 
@@ -528,8 +524,12 @@ void ashnojoe_state::machine_start()
 
 void ashnojoe_state::machine_reset()
 {
+	// start the sound section with a known state
+	// (would otherwise playback the full ADPCM bank on soft resets)
 	m_adpcm_byte = 0;
 	m_msm5205_vclk_toggle = 0;
+	m_msm->reset_w(1);
+	m_audiobank->set_entry(0);
 }
 
 

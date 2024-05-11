@@ -297,6 +297,24 @@ private:
 	void mem_map_wfcentro(address_map& map);
 };
 
+
+class spg2xx_game_lexiart_state : public spg2xx_game_state
+{
+public:
+	spg2xx_game_lexiart_state(const machine_config &mconfig, device_type type, const char *tag) :
+		spg2xx_game_state(mconfig, type, tag)
+	{ }
+
+	void lexiart(machine_config &config);
+
+protected:
+
+private:
+
+	void mem_map_lexiart(address_map& map);
+};
+
+
 class spg2xx_game_ordentv_state : public spg2xx_game_state
 {
 public:
@@ -307,6 +325,7 @@ public:
 	void ordentv(machine_config &config);
 
 	void init_ordentv();
+	void init_jeuint();
 
 protected:
 
@@ -346,6 +365,7 @@ public:
 	{ }
 
 	void doraphone(machine_config &config);
+	void doraphonep(machine_config &config);
 
 private:
 	uint16_t porta_r(offs_t offset, uint16_t mem_mask = ~0);

@@ -63,7 +63,7 @@ Notes:
                 V100.U7  - ST M27C801 8MBit DIP32 EPROM; Audio Samples?
 
     TODO:
-     - Game speed seems to be completely wrong, timers and player movement too fast?
+     - blitter timing is guessed, definitely expect non-instant transfers otherwise game is too fast
 
     The EEPROM protection method is the same as in the subsino2.cpp games.
 
@@ -151,6 +151,10 @@ private:
 	required_device<ds2430a_device> m_eeprom;
 	required_device<screen_device> m_screen;
 	required_device<palette_device> m_palette;
+
+	bool m_blitter_busy = false;
+	emu_timer *m_blitter_end_timer = nullptr;
+	TIMER_CALLBACK_MEMBER(blitter_end_cb);
 };
 
 
@@ -166,6 +170,8 @@ void lastfght_state::video_start()
 
 	save_item(NAME(m_bitmap[0]));
 	save_item(NAME(m_bitmap[1]));
+
+	m_blitter_end_timer = timer_alloc(FUNC(lastfght_state::blitter_end_cb), this);
 }
 
 
@@ -348,9 +354,19 @@ void lastfght_state::blit_w(offs_t offset, uint16_t data, uint16_t mem_mask)
 					dest.pix(m_y + y, m_x + x) = data;
 			}
 		}
+		m_blitter_busy = true;
+		// num pixels x2 seems to match a reasonable timer countdown during gameplay.
+		// notice that the other two bits (bit 6 and bit 5 in $c00007) are all
+		// busy checks, implying multiple stall checks (drawing? vblank?).
+		m_blitter_end_timer->adjust(m_maincpu->cycles_to_attotime(m_w * m_h * 2));
 	}
 	if (ACCESSING_BITS_0_7)
 		logerror("%06x: 600007.b = %02x\n", m_maincpu->pc(), data);
+}
+
+TIMER_CALLBACK_MEMBER(lastfght_state::blitter_end_cb)
+{
+	m_blitter_busy = false;
 }
 
 // toggle framebuffer
@@ -364,7 +380,7 @@ uint8_t lastfght_state::c00000_r()
 {
 	// bit 7 = blitter busy
 	// bit 6 = blitter?
-	return 0x40;
+	return 0x40 | m_blitter_busy << 7;
 }
 
 uint8_t lastfght_state::c00002_r()
@@ -541,7 +557,7 @@ void lastfght_state::lastfght(machine_config &config)
 	io.in_port_callback<7>().set_ioport("PROT");
 	io.out_port_callback<7>().set(FUNC(lastfght_state::c00007_w));
 
-	DS2430A(config, m_eeprom).set_timing_scale(0.16);
+	DS2430A(config, m_eeprom).set_timing_scale(0.32);
 
 	/* video hardware */
 	PALETTE(config, m_palette).set_entries(256);
@@ -553,6 +569,7 @@ void lastfght_state::lastfght(machine_config &config)
 	m_screen->set_size(512, 256);
 	m_screen->set_visarea(0, 512-1, 0, 256-16-1);
 	m_screen->set_refresh_hz(60);
+	m_screen->set_vblank_time(ATTOSECONDS_IN_USEC(2500));
 	m_screen->set_screen_update(FUNC(lastfght_state::screen_update));
 	m_screen->set_palette(m_palette);
 	m_screen->screen_vblank().set_inputline(m_maincpu, 0);
@@ -577,7 +594,7 @@ ROM_START( lastfght )
 	ROM_LOAD( "v100.u7", 0x000000, 0x100000, CRC(c134378c) SHA1(999c75f3a7890421cfd904a926ca377ee43a6825) )
 
 	ROM_REGION( 0x28, "eeprom", 0 )
-	ROM_LOAD( "ds2430a.bin", 0x00, 0x28, CRC(622a8862) SHA1(fae60a326e6905aefc36275d505147e1860a71d0) BAD_DUMP ) // handcrafted to pass protection check
+	ROM_LOAD( "ds2430a.q3", 0x00, 0x28, CRC(af461d83) SHA1(bb8d25e9bb60e00e460e4b7e1855c735becaaa6d) )
 ROM_END
 
 void lastfght_state::init_lastfght()
@@ -588,7 +605,7 @@ void lastfght_state::init_lastfght()
 	rom[0x01b86 / 2] = 0x5670;
 }
 
-} // Anonymous namespace
+} // anonymous namespace
 
 
-GAME( 2000, lastfght, 0, lastfght, lastfght, lastfght_state, init_lastfght, ROT0, "Subsino", "Last Fighting", MACHINE_NOT_WORKING | MACHINE_NO_SOUND | MACHINE_SUPPORTS_SAVE )
+GAME( 2000, lastfght, 0, lastfght, lastfght, lastfght_state, init_lastfght, ROT0, "Subsino", "Last Fighting", MACHINE_NOT_WORKING | MACHINE_NO_SOUND | MACHINE_IMPERFECT_TIMING | MACHINE_SUPPORTS_SAVE )

@@ -53,8 +53,12 @@ private:
 	required_device<mcs48_cpu_device> m_maincpu;
 	required_device<pwm_display_device> m_display;
 	required_device<sensorboard_device> m_board;
-	required_device<dac_bit_interface> m_dac;
+	required_device<dac_1bit_device> m_dac;
 	required_ioport m_inputs;
+
+	bool m_kp_select = false;
+	u16 m_inp_mux = 0;
+	u8 m_led_select = 0;
 
 	// I/O handlers
 	void update_display();
@@ -63,10 +67,6 @@ private:
 	void control_w(u8 data);
 	int t0_r();
 	u8 input_r();
-
-	bool m_kp_select = false;
-	u16 m_inp_mux = 0;
-	u8 m_led_select = 0;
 };
 
 void eldorado_state::machine_start()
@@ -203,4 +203,4 @@ ROM_END
 *******************************************************************************/
 
 //    YEAR  NAME   PARENT  COMPAT  MACHINE   INPUT     CLASS           INIT        COMPANY, FULLNAME, FLAGS
-SYST( 1990, feldo, 0,      0,      eldorado, eldorado, eldorado_state, empty_init, "Fidelity Electronics / CXG Systems", "Eldorado Chess Challenger", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+SYST( 1990, feldo, 0,      0,      eldorado, eldorado, eldorado_state, empty_init, "Fidelity Electronics International / CXG Systems", "Eldorado Chess Challenger", MACHINE_SUPPORTS_SAVE )

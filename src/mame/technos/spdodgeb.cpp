@@ -122,8 +122,6 @@ private:
 };
 
 
-// video
-
 
 void spdodgeb_state::palette(palette_device &palette) const
 {
@@ -327,8 +325,6 @@ uint32_t spdodgeb_state::screen_update(screen_device &screen, bitmap_ind16 &bitm
 	return 0;
 }
 
-// machine
-
 void spdodgeb_state::adpcm_w(offs_t offset, uint8_t data)
 {
 	int chip = offset & 1;
@@ -430,11 +426,8 @@ void spdodgeb_state::sound_map(address_map &map)
 
 void spdodgeb_state::mcu_map(address_map &map)
 {
-	map(0x0000, 0x0027).m(m_mcu, FUNC(hd63701y0_cpu_device::hd6301y_io));
-	map(0x0040, 0x013f).ram();
 	map(0x8080, 0x8080).r("mculatch", FUNC(generic_latch_8_device::read));
 	map(0x8081, 0x8085).w(FUNC(spdodgeb_state::mcu_data_w));
-	map(0xc000, 0xffff).rom().region("mcu", 0);
 }
 
 

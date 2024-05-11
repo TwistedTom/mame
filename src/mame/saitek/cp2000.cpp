@@ -64,8 +64,12 @@ private:
 	required_device<cpu_device> m_maincpu;
 	required_device<pwm_display_device> m_display;
 	required_device<sensorboard_device> m_board;
-	required_device<dac_bit_interface> m_dac;
+	required_device<dac_1bit_device> m_dac;
 	required_ioport_array<4> m_inputs;
+
+	u16 m_inp_mux = 0;
+	u8 m_select = 0;
+	u8 m_7seg_data = 0;
 
 	// address maps
 	void main_map(address_map &map);
@@ -76,10 +80,6 @@ private:
 	void control_w(u8 data);
 	void digit_w(u8 data);
 	u8 input_r();
-
-	u16 m_inp_mux = 0;
-	u8 m_select = 0;
-	u8 m_7seg_data = 0;
 };
 
 void cp2000_state::machine_start()
@@ -216,12 +216,12 @@ INPUT_PORTS_END
 void cp2000_state::cp2000(machine_config &config)
 {
 	// basic machine hardware
-	F8(config, m_maincpu, 2750000); // see driver notes
+	F8(config, m_maincpu, 2'750'000); // see driver notes
 	m_maincpu->set_addrmap(AS_PROGRAM, &cp2000_state::main_map);
 	m_maincpu->set_addrmap(AS_IO, &cp2000_state::main_io);
 	m_maincpu->set_irq_acknowledge_callback("f3853", FUNC(f3853_device::int_acknowledge));
 
-	f3853_device &f3853(F3853(config, "f3853", 2750000));
+	f3853_device &f3853(F3853(config, "f3853", 2'750'000));
 	f3853.int_req_callback().set_inputline("maincpu", F8_INPUT_LINE_INT_REQ);
 
 	SENSORBOARD(config, m_board).set_type(sensorboard_device::BUTTONS);
@@ -258,4 +258,4 @@ ROM_END
 *******************************************************************************/
 
 //    YEAR  NAME    PARENT  COMPAT  MACHINE  INPUT   CLASS         INIT        COMPANY, FULLNAME, FLAGS
-SYST( 1980, cp2000, 0,      0,      cp2000,  cp2000, cp2000_state, empty_init, "SciSys / Novag", "Chess Partner 2000", MACHINE_SUPPORTS_SAVE | MACHINE_CLICKABLE_ARTWORK )
+SYST( 1980, cp2000, 0,      0,      cp2000,  cp2000, cp2000_state, empty_init, "SciSys / Novag Industries", "Chess Partner 2000", MACHINE_SUPPORTS_SAVE )
