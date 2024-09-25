@@ -447,7 +447,7 @@ GFXDECODE_END
 
 /* squaitsa doesn't map the dial directly, instead it polls the results of the dial through an external circuitry.
    I don't know if the following is correct, there can possibly be multiple solutions for the same problem. */
-template <unsigned N> CUSTOM_INPUT_MEMBER(squaitsa_state::dial_input_r)
+template <unsigned N> ioport_value squaitsa_state::dial_input_r()
 {
 	uint8_t const dial_val = m_dial[N]->read();
 
@@ -479,8 +479,8 @@ void bagman_state::bagman_base(machine_config &config)
 
 	LS259(config, m_mainlatch); // 8H
 	m_mainlatch->q_out_cb<0>().set(FUNC(bagman_state::irq_mask_w));
-	m_mainlatch->q_out_cb<1>().set(FUNC(bagman_state::flipscreen_x_w));
-	m_mainlatch->q_out_cb<2>().set(FUNC(bagman_state::flipscreen_y_w));
+	m_mainlatch->q_out_cb<1>().set(FUNC(bagman_state::flip_screen_x_set));
+	m_mainlatch->q_out_cb<2>().set(FUNC(bagman_state::flip_screen_y_set));
 	// video enable register not available on earlier hardware revision(s)
 	// Bagman is supposed to have glitches during screen transitions
 	m_mainlatch->q_out_cb<4>().set(FUNC(bagman_state::coin_counter_w));
@@ -558,8 +558,8 @@ void pickin_state::pickin(machine_config &config)
 
 	LS259(config, m_mainlatch);
 	m_mainlatch->q_out_cb<0>().set(FUNC(pickin_state::irq_mask_w));
-	m_mainlatch->q_out_cb<1>().set(FUNC(pickin_state::flipscreen_x_w));
-	m_mainlatch->q_out_cb<2>().set(FUNC(pickin_state::flipscreen_y_w));
+	m_mainlatch->q_out_cb<1>().set(FUNC(pickin_state::flip_screen_x_set));
+	m_mainlatch->q_out_cb<2>().set(FUNC(pickin_state::flip_screen_y_set));
 	m_mainlatch->q_out_cb<3>().set(FUNC(pickin_state::video_enable_w));
 	m_mainlatch->q_out_cb<4>().set(FUNC(pickin_state::coin_counter_w));
 	m_mainlatch->q_out_cb<5>().set_nop(); // ????
@@ -620,8 +620,8 @@ void pickin_state::botanic(machine_config &config)
 
 	LS259(config, m_mainlatch);
 	m_mainlatch->q_out_cb<0>().set(FUNC(pickin_state::irq_mask_w));
-	m_mainlatch->q_out_cb<1>().set(FUNC(pickin_state::flipscreen_x_w));
-	m_mainlatch->q_out_cb<2>().set(FUNC(pickin_state::flipscreen_y_w));
+	m_mainlatch->q_out_cb<1>().set(FUNC(pickin_state::flip_screen_x_set));
+	m_mainlatch->q_out_cb<2>().set(FUNC(pickin_state::flip_screen_y_set));
 	m_mainlatch->q_out_cb<3>().set(FUNC(pickin_state::video_enable_w));
 	m_mainlatch->q_out_cb<4>().set(FUNC(pickin_state::coin_counter_w));
 	m_mainlatch->q_out_cb<5>().set_nop();    // ????

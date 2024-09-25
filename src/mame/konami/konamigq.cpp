@@ -108,8 +108,8 @@ public:
 	void konamigq(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	emu_timer *m_dma_timer;
@@ -144,10 +144,10 @@ private:
 	void scsi_dma_write( uint32_t *p_n_psxram, uint32_t n_address, int32_t n_size );
 	void scsi_drq(int state);
 
-	void konamigq_dasp_map(address_map &map);
-	void konamigq_k054539_map(address_map &map);
-	void konamigq_map(address_map &map);
-	void konamigq_sound_map(address_map &map);
+	void konamigq_dasp_map(address_map &map) ATTR_COLD;
+	void konamigq_k054539_map(address_map &map) ATTR_COLD;
+	void konamigq_map(address_map &map) ATTR_COLD;
+	void konamigq_sound_map(address_map &map) ATTR_COLD;
 };
 
 /* EEPROM */
@@ -287,7 +287,7 @@ void konamigq_state::scsi_dma_read( uint32_t *p_n_psxram, uint32_t n_address, in
 	m_dma_offset = n_address;
 	m_dma_size = n_size * 4;
 	m_dma_is_write = false;
-	m_dma_timer->adjust(attotime::from_usec(10));
+	m_dma_timer->adjust(attotime::zero);
 }
 
 void konamigq_state::scsi_dma_write( uint32_t *p_n_psxram, uint32_t n_address, int32_t n_size )
@@ -296,12 +296,13 @@ void konamigq_state::scsi_dma_write( uint32_t *p_n_psxram, uint32_t n_address, i
 	m_dma_offset = n_address;
 	m_dma_size = n_size * 4;
 	m_dma_is_write = true;
-	m_dma_timer->adjust(attotime::from_usec(10));
+	m_dma_timer->adjust(attotime::zero);
 }
 
 TIMER_CALLBACK_MEMBER(konamigq_state::scsi_dma_transfer)
 {
-	if (m_dma_requested && m_dma_data_ptr != nullptr && m_dma_size > 0)
+	// TODO: Figure out proper DMA timings
+	while (m_dma_requested && m_dma_data_ptr != nullptr && m_dma_size > 0)
 	{
 		if (m_dma_is_write)
 			m_ncr53cf96->dma_w(util::little_endian_cast<const uint8_t>(m_dma_data_ptr)[m_dma_offset]);
@@ -311,15 +312,12 @@ TIMER_CALLBACK_MEMBER(konamigq_state::scsi_dma_transfer)
 		m_dma_offset++;
 		m_dma_size--;
 	}
-
-	if (m_dma_requested && m_dma_size > 0)
-		m_dma_timer->adjust(attotime::from_usec(10));
 }
 
 void konamigq_state::scsi_drq(int state)
 {
 	if (!m_dma_requested && state)
-		m_dma_timer->adjust(attotime::from_usec(10));
+		m_dma_timer->adjust(attotime::zero);
 
 	m_dma_requested = state;
 }
