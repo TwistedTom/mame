@@ -35,7 +35,7 @@ namespace {
 
 static INPUT_PORTS_START( mu500 )
 	PORT_START("SWS0")
-	PORT_BIT(0x03, IP_ACTIVE_LOW, IPT_UNUSED)	
+	PORT_BIT(0x03, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Strings")
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Bass")
 	PORT_BIT(0x10, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Guitar")
@@ -44,7 +44,7 @@ static INPUT_PORTS_START( mu500 )
 	PORT_BIT(0x80, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Piano")
 
 	PORT_START("SWS1")
-	PORT_BIT(0x03, IP_ACTIVE_LOW, IPT_UNUSED)	
+	PORT_BIT(0x03, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Synth pad")
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Synth lead")
 	PORT_BIT(0x10, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Pipe")
@@ -53,7 +53,7 @@ static INPUT_PORTS_START( mu500 )
 	PORT_BIT(0x80, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Ensemble")
 
 	PORT_START("SWS2")
-	PORT_BIT(0x03, IP_ACTIVE_LOW, IPT_UNUSED)	
+	PORT_BIT(0x03, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Drum")
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Model excl.")
 	PORT_BIT(0x10, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("SFX")
@@ -62,7 +62,7 @@ static INPUT_PORTS_START( mu500 )
 	PORT_BIT(0x80, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Synth effects")
 
 	PORT_START("SWS3")
-	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_UNUSED)	
+	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Part +")    PORT_CODE(KEYCODE_CLOSEBRACE)
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Part -")    PORT_CODE(KEYCODE_OPENBRACE)
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Mute/Solo") PORT_CODE(KEYCODE_S)
@@ -72,7 +72,7 @@ static INPUT_PORTS_START( mu500 )
 	PORT_BIT(0x80, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Play")      PORT_CODE(KEYCODE_A)
 
 	PORT_START("SWS4")
-	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_UNUSED)	
+	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Value +")   PORT_CODE(KEYCODE_EQUALS)
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Value -")   PORT_CODE(KEYCODE_MINUS)
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Exit")      PORT_CODE(KEYCODE_BACKSPACE)
@@ -82,7 +82,7 @@ static INPUT_PORTS_START( mu500 )
 	PORT_BIT(0x80, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Seq")       PORT_CODE(KEYCODE_Q)
 
 	PORT_START("SWS5")
-	PORT_BIT(0x1f, IP_ACTIVE_LOW, IPT_UNUSED)	
+	PORT_BIT(0x1f, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x20, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Audition")  PORT_CODE(KEYCODE_Z)
 	PORT_BIT(0x40, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Select")    PORT_CODE(KEYCODE_X)
 	PORT_BIT(0x80, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Sampling/Mode") PORT_CODE(KEYCODE_M)
@@ -119,11 +119,11 @@ protected:
 	u16 m_pe;
 	u8 m_ledsw1, m_ledsw2;
 
-	void map_500(address_map &map);
-	void swp30_map(address_map &map);
+	void map_500(address_map &map) ATTR_COLD;
+	void swp30_map(address_map &map) ATTR_COLD;
 
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 	u16 adc_ar_r();
 	u16 adc_al_r();
@@ -153,7 +153,7 @@ public:
 
 protected:
 	required_device<swp30_device> m_swp30s;
-	void map_1000(address_map &map);
+	void map_1000(address_map &map) ATTR_COLD;
 };
 
 class mu2000_state : public mu1000_state
@@ -166,7 +166,7 @@ public:
 	void mu2000(machine_config &config);
 
 protected:
-	void map_2000(address_map &map);
+	void map_2000(address_map &map) ATTR_COLD;
 };
 
 

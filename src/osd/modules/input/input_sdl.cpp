@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <cctype>
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <cstring>
 #include <initializer_list>
@@ -607,6 +608,7 @@ public:
 
 	virtual void reset() override
 	{
+		sdl_device::reset();
 		memset(&m_keyboard.state, 0, sizeof(m_keyboard.state));
 		m_capslock_pressed = std::chrono::steady_clock::time_point::min();
 	}
@@ -661,6 +663,7 @@ public:
 
 	virtual void reset() override
 	{
+		sdl_device::reset();
 		memset(&m_mouse, 0, sizeof(m_mouse));
 		m_v = m_h = 0;
 	}
@@ -1329,6 +1332,7 @@ public:
 
 	virtual void reset() override
 	{
+		sdl_joystick_device_base::reset();
 		memset(&m_joystick, 0, sizeof(m_joystick));
 	}
 
@@ -2047,6 +2051,7 @@ public:
 
 	virtual void reset() override
 	{
+		sdl_joystick_device_base::reset();
 		memset(&m_controller, 0, sizeof(m_controller));
 	}
 
