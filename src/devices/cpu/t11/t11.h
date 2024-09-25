@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "machine/z80daisy.h"
+
 
 enum
 {
@@ -93,7 +95,6 @@ protected:
 	// device_execute_interface overrides
 	virtual uint32_t execute_min_cycles() const noexcept override { return 12; }
 	virtual uint32_t execute_max_cycles() const noexcept override { return 114; }
-	virtual uint32_t execute_input_lines() const noexcept override { return 8; }
 	virtual bool execute_input_edge_triggered(int inputnum) const noexcept override { return inputnum == PF_LINE || inputnum == HLT_LINE || inputnum == BUS_ERROR; }
 	virtual void execute_run() override;
 	virtual void execute_set_input(int inputnum, int state) override;
@@ -1194,7 +1195,7 @@ protected:
 	void sub_ixd_ixd(uint16_t op);
 };
 
-class k1801vm1_device : public t11_device
+class k1801vm1_device : public t11_device, public z80_daisy_chain_interface
 {
 public:
 	// construction/destruction
@@ -1212,7 +1213,7 @@ protected:
 };
 
 
-class k1801vm2_device : public t11_device
+class k1801vm2_device : public t11_device, public z80_daisy_chain_interface
 {
 public:
 	// construction/destruction

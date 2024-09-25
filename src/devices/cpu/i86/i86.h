@@ -139,6 +139,7 @@ protected:
 	virtual uint8_t read_port_byte(uint16_t port);
 	virtual uint16_t read_port_word(uint16_t port);
 	virtual void write_port_byte(uint16_t port, uint8_t data);
+	virtual void write_port_byte_al(uint16_t port);
 	virtual void write_port_word(uint16_t port, uint16_t data);
 
 	// Executing instructions
@@ -358,7 +359,6 @@ protected:
 
 	virtual void execute_run() override;
 	virtual void device_start() override;
-	virtual uint32_t execute_input_lines() const noexcept override { return 1; }
 	virtual uint8_t fetch() override;
 	inline address_space *sreg_to_space(int sreg) const;
 	virtual uint8_t read_byte(uint32_t addr) override;

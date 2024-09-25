@@ -1359,20 +1359,20 @@ void spacegun_state::spacegun_eeprom_w(u8 data)
                        GAME INPUTS
 **********************************************************/
 
-CUSTOM_INPUT_MEMBER(taitoz_state::gas_pedal_r)
+ioport_value taitoz_state::gas_pedal_r()
 {
 	static const u8 retval[8] = { 0,1,3,2,6,7,5,4 };
 	return retval[m_gas.read_safe(0) & 7];
 }
 
-CUSTOM_INPUT_MEMBER(taitoz_state::brake_pedal_r)
+ioport_value taitoz_state::brake_pedal_r()
 {
 	static const u8 retval[8] = { 0,1,3,2,6,7,5,4 };
 	return retval[m_brake.read_safe(0) & 7];
 }
 
 // enforceja only, 3 bits applied on both pots
-template <int axis> CUSTOM_INPUT_MEMBER(taitoz_state::adstick_r)
+template <int axis> ioport_value taitoz_state::adstick_r()
 {
 	static const u8 retval[8] = { 0,1,3,2,6,7,5,4 };
 	u8 raw_value = ((axis == 0 ? m_stickx : m_sticky).read_safe(0) >> 5) & 7;
@@ -2711,6 +2711,10 @@ static INPUT_PORTS_START( nghtstru )
 	TAITO_COINAGE_US_LOC(SW A)
 INPUT_PORTS_END
 
+// default all off but Cabinet: Upright according to Jp manual.
+// jp manual also shows a Yoke-like analog test mode, and demo sounds with reversed meaning,
+// (off position -> with sounds), undumped revision?
+// NOTE: setting to Cockpit dip doesn't seem to do anything compared to Upright.
 static INPUT_PORTS_START( aquajack )
 	PORT_START("DSWA")
 	PORT_DIPNAME( 0x80, 0x00, DEF_STR( Cabinet ) ) PORT_DIPLOCATION("SW A:1")
@@ -2778,8 +2782,8 @@ static INPUT_PORTS_START( aquajack )
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_PLAYER(1)
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_UNKNOWN )
 
-	PORT_START("IN2")   /* what is it ??? */
-	PORT_BIT( 0xff, 0x00, IPT_DIAL ) PORT_SENSITIVITY(50) PORT_KEYDELTA(10) PORT_PLAYER(1)
+	PORT_START("IN2")
+	PORT_BIT( 0xff, IP_ACTIVE_LOW, IPT_UNKNOWN )
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( aquajckj )

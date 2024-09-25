@@ -372,8 +372,8 @@ protected:
 	memory_share_creator<uint8_t> m_fg_videoram;
 	required_shared_ptr<uint16_t> m_spriteram;
 
-	virtual void machine_start() override;
-	virtual void video_start() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void video_start() override ATTR_COLD;
 
 	uint16_t spriteram_kludge_r();
 	uint8_t fg_videoram_r(offs_t offset);
@@ -385,15 +385,15 @@ protected:
 	TILE_GET_INFO_MEMBER(bg_info);
 	void palette(palette_device &palette) const;
 	uint32_t screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
-	TIMER_DEVICE_CALLBACK_MEMBER(scanline);
+	TIMER_DEVICE_CALLBACK_MEMBER(scanline_cb);
 	void draw_sprites_block(bitmap_ind16 &bitmap, const rectangle &cliprect, int start, int end);
 	void draw_sprites(bitmap_ind16 &bitmap, const rectangle &cliprect);
 	void unpack_block(const char *region, int offset, int size);
 	void unpack_region(const char *region);
 
-	void bngotime_map(address_map &map);
-	void equites_map(address_map &map);
-	void common_map(address_map &map);
+	void bngotime_map(address_map &map) ATTR_COLD;
+	void equites_map(address_map &map) ATTR_COLD;
+	void common_map(address_map &map) ATTR_COLD;
 
 	tilemap_t *m_fg_tilemap = nullptr;
 	tilemap_t *m_bg_tilemap = nullptr;
@@ -412,10 +412,10 @@ public:
 	void gekisou(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
-	void gekisou_map(address_map &map);
+	void gekisou_map(address_map &map) ATTR_COLD;
 	void unknown_bit_w(offs_t offset, uint16_t data);
 
 	int m_unknown_bit = 0;
@@ -551,15 +551,17 @@ uint32_t equites_state::screen_update(screen_device &screen, bitmap_ind16 &bitma
 /******************************************************************************/
 // Interrupt Handlers
 
-TIMER_DEVICE_CALLBACK_MEMBER(equites_state::scanline)
+TIMER_DEVICE_CALLBACK_MEMBER(equites_state::scanline_cb)
 {
 	int scanline = param;
 
-	if(scanline == 232) // vblank-out irq
-		m_maincpu->set_input_line(1, HOLD_LINE);
-
-	if(scanline == 24) // vblank-in irq
+	// all games but bullfgtr have both valid
+	// bullfgtr definitely expects to vblank from 2, reversing will make it to run at half speed.
+	if(scanline == 232) // vblank-in irq
 		m_maincpu->set_input_line(2, HOLD_LINE);
+
+	if(scanline == 24) // vblank-out irq or sprite DMA done
+		m_maincpu->set_input_line(1, HOLD_LINE);
 }
 
 
@@ -912,7 +914,7 @@ void equites_state::equites(machine_config &config)
 	// basic machine hardware
 	M68000(config, m_maincpu, 12_MHz_XTAL/4); // 68000P8 running at 3mhz! verified on pcb
 	m_maincpu->set_addrmap(AS_PROGRAM, &equites_state::equites_map);
-	TIMER(config, "scantimer").configure_scanline(FUNC(equites_state::scanline), "screen", 0, 1);
+	TIMER(config, "scantimer").configure_scanline(FUNC(equites_state::scanline_cb), "screen", 0, 1);
 
 	LS259(config, m_mainlatch);
 	m_mainlatch->q_out_cb<1>().set(FUNC(equites_state::flip_screen_set));

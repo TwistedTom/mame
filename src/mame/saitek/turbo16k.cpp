@@ -60,7 +60,7 @@ SX8(A) program is used in:
 #include "cpu/m6800/m6801.h"
 #include "machine/msm5001n.h"
 #include "machine/sensorboard.h"
-#include "sound/spkrdev.h"
+#include "sound/dac.h"
 #include "video/pwm.h"
 
 #include "speaker.h"
@@ -100,14 +100,14 @@ public:
 	DECLARE_INPUT_CHANGED_MEMBER(change_cpu_freq);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 	// devices/pointers
 	required_device<hd6301y0_cpu_device> m_maincpu;
 	required_device<sensorboard_device> m_board;
 	optional_device_array<msm5001n_device, 2> m_lcd_clock;
 	required_device<pwm_display_device> m_display;
-	required_device<speaker_sound_device> m_dac;
+	required_device<dac_1bit_device> m_dac;
 	required_ioport_array<2> m_inputs;
 	output_finder<2, 4> m_lcd_digits;
 	output_finder<2> m_lcd_colon;
@@ -244,7 +244,7 @@ void turbo16k_state::p6_w(u8 data)
 	update_display();
 
 	// P67: speaker out
-	m_dac->level_w(BIT(~data, 7));
+	m_dac->write(BIT(~data, 7));
 }
 
 
@@ -340,17 +340,23 @@ static INPUT_PORTS_START( turbo16k )
 	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_G) PORT_CHANGED_MEMBER(DEVICE_SELF, turbo16k_state, go_button, 0) PORT_NAME("Go")
 
 	PORT_START("FREQ")
-	PORT_BIT(0x88, 0x80, IPT_CUSTOM) // 12MHz
+	PORT_CONFNAME( 0x88, 0x80, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, turbo16k_state, change_cpu_freq, 0) // factory set
+	PORT_CONFSETTING(    0x00, "4MHz (unofficial)" )
+	PORT_CONFSETTING(    0x08, "8MHz (Companion III, Express 16K)" )
+	PORT_CONFSETTING(    0x80, "12MHz (Turbo 16K, Astral)" )
+	PORT_CONFSETTING(    0x88, "16MHz (unofficial)" )
 	PORT_BIT(0x77, IP_ACTIVE_LOW, IPT_UNUSED)
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( compan3 )
 	PORT_INCLUDE( turbo16k )
 
-	PORT_MODIFY("FREQ")
+	PORT_MODIFY("FREQ") // default to 8MHz
 	PORT_CONFNAME( 0x88, 0x08, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, turbo16k_state, change_cpu_freq, 0) // factory set
-	PORT_CONFSETTING(    0x08, "8MHz (Companion III)" )
-	PORT_CONFSETTING(    0x80, "12MHz (Astral)" )
+	PORT_CONFSETTING(    0x00, "4MHz (unofficial)" )
+	PORT_CONFSETTING(    0x08, "8MHz (Companion III, Express 16K)" )
+	PORT_CONFSETTING(    0x80, "12MHz (Turbo 16K, Astral)" )
+	PORT_CONFSETTING(    0x88, "16MHz (unofficial)" )
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( conquist )
@@ -375,17 +381,24 @@ static INPUT_PORTS_START( conquist )
 	PORT_BIT(0x20, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_U) PORT_NAME("Set Up")
 	PORT_BIT(0x40, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_S) PORT_NAME("Stop")
 	PORT_BIT(0x80, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_I) PORT_NAME("Info")
+
+	PORT_MODIFY("FREQ")
+	PORT_CONFNAME( 0x88, 0x80, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, turbo16k_state, change_cpu_freq, 0) // factory set
+	PORT_CONFSETTING(    0x08, "8MHz (Team-Mate)" )
+	PORT_CONFSETTING(    0x80, "12MHz (Conquistador)" )
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( tmate )
 	PORT_INCLUDE( conquist )
 
-	PORT_MODIFY("FREQ")
-	PORT_BIT(0x88, 0x08, IPT_CUSTOM) // 8MHz
+	PORT_MODIFY("FREQ") // default to 8MHz
+	PORT_CONFNAME( 0x88, 0x08, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, turbo16k_state, change_cpu_freq, 0) // factory set
+	PORT_CONFSETTING(    0x08, "8MHz (Team-Mate)" )
+	PORT_CONFSETTING(    0x80, "12MHz (Conquistador)" )
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( t1850 )
-	PORT_INCLUDE( turbo16k )
+	PORT_INCLUDE( compan3 )
 
 	PORT_MODIFY("IN.0")
 	PORT_BIT(0x40, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_S) PORT_NAME("Sound")
@@ -396,9 +409,6 @@ static INPUT_PORTS_START( t1850 )
 
 	PORT_MODIFY("RESET")
 	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_O) PORT_CHANGED_MEMBER(DEVICE_SELF, turbo16k_state, go_button, 0) PORT_NAME("Power On")
-
-	PORT_MODIFY("FREQ")
-	PORT_BIT(0x88, 0x08, IPT_CUSTOM) // 8MHz
 INPUT_PORTS_END
 
 
@@ -436,7 +446,7 @@ void turbo16k_state::compan3(machine_config &config)
 
 	// sound hardware
 	SPEAKER(config, "speaker").front_center();
-	SPEAKER_SOUND(config, m_dac).add_route(ALL_OUTPUTS, "speaker", 0.25);
+	DAC_1BIT(config, m_dac).add_route(ALL_OUTPUTS, "speaker", 0.25);
 }
 
 void turbo16k_state::turbo16k(machine_config &config)

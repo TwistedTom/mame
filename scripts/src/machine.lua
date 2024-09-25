@@ -1561,6 +1561,17 @@ if (MACHINES["1MB5"]~=null) then
 end
 
 ---------------------------------------------------
+--@src/devices/machine/i2chle.h,MACHINES["I2CHLE"] = true
+---------------------------------------------------
+
+if (MACHINES["I2CHLE"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/machine/i2chle.cpp",
+		MAME_DIR .. "src/devices/machine/i2chle.h",
+	}
+end
+
+---------------------------------------------------
 --
 --@src/devices/machine/i2cmem.h,MACHINES["I2CMEM"] = true
 ---------------------------------------------------
@@ -2068,6 +2079,18 @@ if (MACHINES["LDP1450"]~=null) then
 	files {
 		MAME_DIR .. "src/devices/machine/ldp1450.cpp",
 		MAME_DIR .. "src/devices/machine/ldp1450.h",
+	}
+end
+
+---------------------------------------------------
+--
+--@src/devices/machine/ldp1450hle.h,MACHINES["LDP1450HLE"] = true
+---------------------------------------------------
+
+if (MACHINES["LDP1450HLE"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/machine/ldp1450hle.cpp",
+		MAME_DIR .. "src/devices/machine/ldp1450hle.h",
 	}
 end
 
@@ -3021,6 +3044,18 @@ if (MACHINES["R10788"]~=null) then
 	files {
 		MAME_DIR .. "src/devices/machine/r10788.cpp",
 		MAME_DIR .. "src/devices/machine/r10788.h",
+	}
+end
+
+---------------------------------------------------
+--
+--@src/devices/machine/r65c52.h,MACHINES["R65C52"] = true
+---------------------------------------------------
+
+if (MACHINES["R65C52"]~=null) then
+	files {
+		MAME_DIR .. "src/devices/machine/r65c52.cpp",
+		MAME_DIR .. "src/devices/machine/r65c52.h",
 	}
 end
 

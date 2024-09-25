@@ -294,7 +294,7 @@ void midvunit_base_state::tms32031_control_w(offs_t offset, uint32_t data, uint3
 {
 	COMBINE_DATA(&m_tms32031_control[offset]);
 
-	
+
 	if (offset == 0x64)
 		; // ignore changes to the memory control register
 	else if (offset == 0x20 || offset == 0x30)
@@ -504,7 +504,7 @@ void midvunit_state::wheel_board_w(uint32_t data)
 }
 
 
-DECLARE_CUSTOM_INPUT_MEMBER(crusnusa_state::motion_r)
+ioport_value crusnusa_state::motion_r()
 {
 	uint8_t const status = m_motion->read();
 	for (uint8_t bit = 0; bit < 8; bit++)
@@ -997,7 +997,7 @@ static INPUT_PORTS_START( offroadc )
 
 	// DSW3 at U19
 	PORT_DIPUNUSED_DIPLOC( 0x0100, 0x0100, "SW3:8" )    // Manual states "Switches 6, 7 and 8 are not active. We recommend
-	PORT_DIPUNUSED_DIPLOC( 0x0200, 0x0200, "SW3:7" )    // they be set to the facorty default (OFF) positions."           
+	PORT_DIPUNUSED_DIPLOC( 0x0200, 0x0200, "SW3:7" )    // they be set to the facorty default (OFF) positions."
 	PORT_DIPUNUSED_DIPLOC( 0x0400, 0x0400, "SW3:6" )
 	PORT_DIPNAME( 0xf800, 0xf800, DEF_STR( Coinage ) )      PORT_DIPLOCATION("SW3:5,4,3,2,1")
 	PORT_DIPSETTING(      0xf800, "USA 1" )

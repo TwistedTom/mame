@@ -1,11 +1,9 @@
-// license:BSD-3-Clause
-// copyright-holders:Angelo Salese
+// license: BSD-3-Clause
+// copyright-holders: Angelo Salese
+// thanks-to: Tomasz Slanina, Sarah Walker
 /***************************************************************************
 
     Acorn RiscPC line of computers
-
-    preliminary driver by Angelo Salese,
-    based on work by Tomasz Slanina and Sarah Walker
 
     TODO:
     - IOMD currently hardwired with ARM7500FE flavour for all machines, needs information about
@@ -18,7 +16,6 @@
 
 #include "emu.h"
 #include "cpu/arm7/arm7.h"
-#include "cpu/arm7/arm7core.h"
 #include "machine/acorn_vidc.h"
 #include "machine/arm_iomd.h"
 #include "machine/i2cmem.h"
@@ -63,11 +60,11 @@ private:
 	required_device<i2cmem_device> m_i2cmem;
 	required_device<ps2_keyboard_controller_device> m_kbdc;
 
-	virtual void machine_reset() override;
-	virtual void machine_start() override;
+	virtual void machine_reset() override ATTR_COLD;
+	virtual void machine_start() override ATTR_COLD;
 
-	void a7000_map(address_map &map);
-	void riscpc_map(address_map &map);
+	void a7000_map(address_map &map) ATTR_COLD;
+	void riscpc_map(address_map &map) ATTR_COLD;
 
 	bool m_i2cmem_clock = false;
 	int iocr_od0_r();
