@@ -333,7 +333,7 @@ Sound Chips:
 
 Graphics Custom 208pin QFP:
  GP9001 L7A0498 TOA PLAN
- (emulated in video/gp9001.c)
+ (emulated in toaplan/gp9001.cpp)
 
 *********************************************************************
 
@@ -403,8 +403,6 @@ To reset the NVRAM in Othello Derby, hold P1 Button 1 down while booting.
 #include "sound/ymz280b.h"
 #include "speaker.h"
 
-
-#define PWRKICK_HOPPER_PULSE    50          // time between hopper pulses in milliseconds (probably wrong)
 
 //#define TRUXTON2_STEREO       /* Uncomment to hear truxton2 music in stereo */
 
@@ -1081,10 +1079,10 @@ void toaplan2_state::batsugunbl_68k_mem(address_map &map)
 	map(0x200010, 0x200011).portr("IN1");
 	map(0x200014, 0x200015).portr("IN2");
 	map(0x200018, 0x200019).portr("SYS");
+	map(0x20001c, 0x20001d).nopw(); // leftover code from the original?
 	map(0x21f004, 0x21f005).portr("DSWA");
 	map(0x21f006, 0x21f007).portr("DSWB");
 	map(0x21f008, 0x21f009).portr("JMPR");
-	map(0x20001c, 0x20001d).nopw(); // leftover code from the original?
 	map(0x300000, 0x30000d).rw(m_vdp[0], FUNC(gp9001vdp_device::read), FUNC(gp9001vdp_device::write));
 	map(0x400000, 0x400fff).ram().w(m_palette, FUNC(palette_device::write16)).share("palette");
 	map(0x500000, 0x50000d).rw(m_vdp[1], FUNC(gp9001vdp_device::read), FUNC(gp9001vdp_device::write));
@@ -4188,7 +4186,7 @@ void pwrkick_state::pwrkick(machine_config &config) // Sunwise SW931201-1 PCB (2
 
 	NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_0);
 
-	TICKET_DISPENSER(config, m_hopper, attotime::from_msec(PWRKICK_HOPPER_PULSE), TICKET_MOTOR_ACTIVE_HIGH, TICKET_STATUS_ACTIVE_HIGH);
+	TICKET_DISPENSER(config, m_hopper, attotime::from_msec(50)); // duration is probably wrong
 
 	/* video hardware */
 	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
