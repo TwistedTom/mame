@@ -42,12 +42,14 @@ DEFINE_DEVICE_TYPE(K1801VM2, k1801vm2_device, "k1801vm2", "K1801VM2")
 
 k1801vm1_device::k1801vm1_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
 	: t11_device(mconfig, K1801VM1, tag, owner, clock)
+	, z80_daisy_chain_interface(mconfig, *this)
 {
 	c_insn_set = IS_LEIS | IS_MXPS | IS_VM1;
 }
 
 k1801vm2_device::k1801vm2_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
 	: t11_device(mconfig, K1801VM2, tag, owner, clock)
+	, z80_daisy_chain_interface(mconfig, *this)
 {
 	c_insn_set = IS_LEIS | IS_EIS | IS_MXPS | IS_VM2;
 }
@@ -228,11 +230,7 @@ void k1801vm1_device::t11_check_irqs()
 	// 5. illegal insn; nm
 	else if (m_mcir == MCIR_ILL)
 	{
-		WWORD(VM1_SEL1, RWORD(VM1_SEL1) & ~SEL1_HALT);
-		PUSH(PSW);
-		PUSH(PC);
-		PC = RWORD(m_vsel);
-		PSW = RWORD(m_vsel + 2);
+		take_interrupt(m_vsel);
 	}
 	// 6. trace trap; WCPU
 	else if (m_trace_trap && m_mcir == MCIR_NONE) // allow trap_to() to execute first
@@ -258,6 +256,7 @@ void k1801vm1_device::t11_check_irqs()
 	// 8. external HALT (nIRQ1 pin); PSW11, PSW10
 	else if (m_hlt_active)
 	{
+		m_hlt_active = 0;
 		m_mcir = MCIR_HALT;
 		m_vsel = VM1_HALT;
 	}
@@ -277,7 +276,8 @@ void k1801vm1_device::t11_check_irqs()
 	// 12. nVIRQ pin; PSW7, PSW10
 	else if (m_vec_active && !GET_I)
 	{
-		int vec = m_in_iack_func(0);
+		device_z80daisy_interface *intf = daisy_get_irq_device();
+		int vec = (intf != nullptr) ? intf->z80daisy_irq_ack() : m_in_iack_func(0);
 		if (vec == -1 || vec == 0)
 		{
 			m_vec_active = 0;
@@ -290,14 +290,10 @@ void k1801vm1_device::t11_check_irqs()
 	switch (m_mcir)
 	{
 	case MCIR_SET:
-		if (m_vsel >= 0160000) // FIXME
-			WWORD(VM1_SEL1, RWORD(VM1_SEL1) | SEL1_HALT);
+		if (m_vsel >= 0160000)
+			take_interrupt_halt(m_vsel);
 		else
-			WWORD(VM1_SEL1, RWORD(VM1_SEL1) & ~SEL1_HALT);
-		PUSH(PSW);
-		PUSH(PC);
-		PC = RWORD(m_vsel);
-		PSW = RWORD(m_vsel + 2);
+			take_interrupt(m_vsel);
 		break;
 
 	case MCIR_IRQ:
@@ -314,6 +310,9 @@ void k1801vm1_device::t11_check_irqs()
 
 void k1801vm1_device::take_interrupt_halt(uint16_t vector)
 {
+	// vectors in HALT mode are word (not doubleworld) aligned
+	assert((vector & 1) == 0);
+
 	// enter HALT mode
 	WWORD(VM1_SEL1, RWORD(VM1_SEL1) | SEL1_HALT);
 
@@ -471,8 +470,8 @@ void t11_device::device_start()
 	state_add( T11_R4,  "R4",  m_reg[4].w.l).formatstr("%06O");
 	state_add( T11_R5,  "R5",  m_reg[5].w.l).formatstr("%06O");
 
-	state_add(STATE_GENPC, "GENPC", m_reg[7].w.l).noshow();
-	state_add(STATE_GENPCBASE, "CURPC", m_ppc.w.l).noshow();
+	state_add(STATE_GENPC, "GENPC", m_reg[7].w.l).formatstr("%06O").noshow();
+	state_add(STATE_GENPCBASE, "CURPC", m_ppc.w.l).formatstr("%06O").noshow();
 	state_add(STATE_GENFLAGS, "GENFLAGS", m_psw.b.l).formatstr("%8s").noshow();
 
 	set_icountptr(m_icount);

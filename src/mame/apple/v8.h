@@ -11,12 +11,11 @@
 #include "machine/swim2.h"
 #include "sound/asc.h"
 #include "emupal.h"
-#include "speaker.h"
 #include "screen.h"
 
 // ======================> v8_device
 
-class v8_device :  public device_t
+class v8_device : public device_t, public device_sound_interface
 {
 public:
 	// construction/destruction
@@ -30,7 +29,7 @@ public:
 	auto hmmu_enable_callback() { return write_hmmu_enable.bind(); }
 	auto pb3_callback() { return read_pb3.bind(); }
 
-	virtual void map(address_map &map);
+	virtual void map(address_map &map) ATTR_COLD;
 
 	template <typename... T> void set_maincpu_tag(T &&... args) { m_maincpu.set_tag(std::forward<T>(args)...); }
 	template <typename... T> void set_rom_tag(T &&... args) { m_rom.set_tag(std::forward<T>(args)...); }
@@ -58,10 +57,12 @@ protected:
 	v8_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, u32 clock);
 
 	// device-level overrides
-	virtual void device_start() override;
-	virtual void device_reset() override;
-	virtual void device_add_mconfig(machine_config &config) override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 	virtual ioport_constructor device_input_ports() const override;
+
+	virtual void sound_stream_update(sound_stream &stream, std::vector<read_stream_view> const &inputs, std::vector<write_stream_view> &outputs) override;
 
 	virtual u8 pseudovia_r(offs_t offset);
 
@@ -77,6 +78,7 @@ private:
 	required_device<via6522_device> m_via1;
 	required_region_ptr<u32> m_rom;
 
+	sound_stream *m_stream;
 	emu_timer *m_6015_timer;
 	int m_via_interrupt, m_via2_interrupt, m_scc_interrupt, m_last_taken_interrupt;
 	u8 m_pseudovia_ier, m_pseudovia_ifr;
@@ -119,7 +121,7 @@ public:
 	eagle_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock);
 
 protected:
-	virtual void device_add_mconfig(machine_config &config) override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 	virtual ioport_constructor device_input_ports() const override;
 
 private:
@@ -143,8 +145,8 @@ public:
 protected:
 	spice_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, u32 clock);
 
-	virtual void device_start() override;
-	virtual void device_add_mconfig(machine_config &config) override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 	virtual ioport_constructor device_input_ports() const override;
 
 	void phases_w(u8 phases);
@@ -173,7 +175,7 @@ public:
 	tinkerbell_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock);
 
 protected:
-	virtual void device_add_mconfig(machine_config &config) override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 
 	virtual void ram_size(u8 config) override;
 
