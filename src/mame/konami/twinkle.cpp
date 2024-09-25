@@ -18,12 +18,14 @@ The SPU has an IRQ2 handler that doesn't do anything, find out if or to what it 
 
 
 Konami Twinkle Hardware Overview
-Konami 1999-2002
+Konami 1997-2002
 
 The following games are known to exist on this hardware (there may be more)
                                                                   Video CD      Security
 Game Title                            Year     Program CD       6/7/8 use DVD   Dongle      HDD label
 -----------------------------------------------------------------------------------------------------
+Ugoke! Purimucho                      1997     GQ751?           (not used)     ?           (not used)
+
 beatmania IIDX (English)              1999     GQ863 A01        GQ863 A04      863 A02!    863 HDD A01
 beatmania IIDX (Japanese)             1999     GQ863-JA B01     GQ863 A04      863 A02!    863 HDD A01
 beatmania IIDX + DDR Club Kit         1999     896 JA ABM       GQ863 A04      863 A02!    863 HDD A01
@@ -256,6 +258,12 @@ Notes:
       863A05.2X- 27C4096 EPROM (DIP40)
 
 
+Ugoke! Purimucho notes:
+Ugoke! Purimucho's schematic shows TWINKLE/SUB GQ751PWB(B1) as the subboard instead of the SUB2 used by beatmania IIDX
+"VENDER GQ751PWB(C2)" for vendor box hardware
+Has an LCD with a touch panel overlayed on it
+Also includes a camera and printer (Mitsubishi CP700A, used to print pictures for keyholders)
+
 */
 
 #include "emu.h"
@@ -325,8 +333,8 @@ public:
 	void twinkle_dvd_type2(machine_config &config);
 
 private:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 	void twinkle_io_w(offs_t offset, uint8_t data);
 	uint8_t twinkle_io_r(offs_t offset);
@@ -347,9 +355,9 @@ private:
 	void scsi_dma_write(uint32_t *p_n_psxram, uint32_t n_address, int32_t n_size);
 	void scsi_drq(int state);
 
-	void main_map(address_map &map);
-	void rf5c400_map(address_map &map);
-	void sound_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
+	void rf5c400_map(address_map &map) ATTR_COLD;
+	void sound_map(address_map &map) ATTR_COLD;
 
 	TIMER_CALLBACK_MEMBER(scsi_dma_transfer);
 
@@ -1088,7 +1096,7 @@ void twinkle_state::scsi_dma_read(uint32_t *p_n_psxram, uint32_t n_address, int3
 	m_dma_offset = n_address;
 	m_dma_size = n_size * 4;
 	m_dma_is_write = false;
-	m_dma_timer->adjust(attotime::from_usec(10));
+	m_dma_timer->adjust(attotime::zero);
 }
 
 void twinkle_state::scsi_dma_write(uint32_t *p_n_psxram, uint32_t n_address, int32_t n_size)
@@ -1097,12 +1105,13 @@ void twinkle_state::scsi_dma_write(uint32_t *p_n_psxram, uint32_t n_address, int
 	m_dma_offset = n_address;
 	m_dma_size = n_size * 4;
 	m_dma_is_write = true;
-	m_dma_timer->adjust(attotime::from_usec(10));
+	m_dma_timer->adjust(attotime::zero);
 }
 
 TIMER_CALLBACK_MEMBER(twinkle_state::scsi_dma_transfer)
 {
-	if (m_dma_requested && m_dma_data_ptr != nullptr && m_dma_size > 0)
+	// TODO: Figure out proper DMA timings
+	while (m_dma_requested && m_dma_data_ptr != nullptr && m_dma_size > 0)
 	{
 		if (m_dma_is_write)
 			m_ncr53cf96->dma_w(util::little_endian_cast<const uint8_t>(m_dma_data_ptr)[m_dma_offset]);
@@ -1112,15 +1121,12 @@ TIMER_CALLBACK_MEMBER(twinkle_state::scsi_dma_transfer)
 		m_dma_offset++;
 		m_dma_size--;
 	}
-
-	if (m_dma_requested && m_dma_size > 0)
-		m_dma_timer->adjust(attotime::from_usec(10));
 }
 
 void twinkle_state::scsi_drq(int state)
 {
 	if (!m_dma_requested && state)
-		m_dma_timer->adjust(attotime::from_usec(10));
+		m_dma_timer->adjust(attotime::zero);
 
 	m_dma_requested = state;
 }

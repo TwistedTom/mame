@@ -1,6 +1,6 @@
 // license:BSD-3-Clause
 // copyright-holders:hap
-// thanks-to:digshadow, segher
+// thanks-to:digshadow, Segher
 /*******************************************************************************
 
 Bandai Tamagotchi generation 1 hardware
@@ -10,6 +10,10 @@ Hardware notes:
 - Seiko Epson E0C6S46 MCU under epoxy
 - 32*16 LCD screen + 8 custom segments
 - 1-bit sound
+
+TODO:
+- change to SVG screen
+- add the Mothra version that was recently dumped (has a E0C6S48)
 
 *******************************************************************************/
 
@@ -41,7 +45,7 @@ public:
 	DECLARE_INPUT_CHANGED_MEMBER(input_changed);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	void tama_palette(palette_device &palette) const;

@@ -37,7 +37,7 @@
 
 The I/O board is connected to the internal COMB port of the Gigabyte motherboard using
 the COM RS-232 port of the I/O PCB.
- 
+
 **************************************************************************************************/
 
 #include "emu.h"
@@ -58,7 +58,7 @@ public:
 	void conliner(machine_config &config);
 
 private:
-	void mem_map(address_map &map);
+	void mem_map(address_map &map) ATTR_COLD;
 
 	required_device<cpu_device> m_maincpu;
 };

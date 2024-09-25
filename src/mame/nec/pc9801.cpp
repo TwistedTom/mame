@@ -1246,7 +1246,7 @@ void pc9801vm_state::upd7220_grcg_2_map(address_map &map)
 	map(0x00000, 0x3ffff).rw(FUNC(pc9801vm_state::upd7220_grcg_r), FUNC(pc9801vm_state::upd7220_grcg_w)).share("video_ram_2");
 }
 
-CUSTOM_INPUT_MEMBER(pc98_base_state::system_type_r)
+ioport_value pc98_base_state::system_type_r()
 {
 //  System Type (0x00 stock PC-9801, 0xc0 PC-9801U / PC-98LT, PC-98HA, 0x80 others)
 	return m_sys_type;
@@ -3068,3 +3068,5 @@ COMP( 1993, pc9801bx2,  0,        0, pc9801bx2, pc9801rs, pc9801bx_state, init_p
 //          Most likely just DOS/V compatible and not going to fit here except for RAS capabilities)
 
 // TWINPOS ("Point Of Sale" from NEC, originally based off PC-98 arch, eventually switched to DOS/V too?)
+
+// Metrologie BFM 186 (speculated, French PAL CAD machine with dual text and gfx 7220 + other NEC parts & Basic 86, fabricated by Ye DATA Japan)

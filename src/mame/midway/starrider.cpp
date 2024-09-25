@@ -345,10 +345,10 @@ private:
 	template <unsigned N> void sound_fifo_or(int state);
 	template <unsigned N> void sound_fifo_flag(int state);
 
-	void main_memory(address_map &map);
-	void main_banks(address_map &map);
-	void pif_memory(address_map &map);
-	void sound_memory(address_map &map);
+	void main_memory(address_map &map) ATTR_COLD;
+	void main_banks(address_map &map) ATTR_COLD;
+	void pif_memory(address_map &map) ATTR_COLD;
+	void sound_memory(address_map &map) ATTR_COLD;
 
 	required_device<cpu_device> m_main_cpu;
 	required_device<pia6821_device> m_main_pia1;
@@ -933,7 +933,7 @@ ROM_START(starridr)
 	ROM_LOAD("rom_34.u45", 0x1'0000, 0x2000, CRC(5b0b9a26) SHA1(3e2f8efa805a797546f984c6538fd353f3f7470b))
 
 	ROM_REGION(0x1000, "pif", 0)
-	ROM_LOAD("rom_26.u3", 0x0000, 0x1000, CRC(04e9d9fc) SHA1(c5531f6acf929bc243b5313bee6627d93dac90b9) BAD_DUMP) // reset vector points to RAM - can't be right
+	ROM_LOAD("rom_26.u3", 0x0000, 0x1000, CRC(2afef78c) SHA1(467d9441927ded3b6dceb9da10917620dfb58a3c))
 
 	ROM_REGION(0x1'0000, "snd", 0)
 	// 0x0000 U8 unpopulated
