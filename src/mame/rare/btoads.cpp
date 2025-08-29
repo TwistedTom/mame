@@ -878,9 +878,9 @@ static INPUT_PORTS_START( btoads )
 	PORT_BIT( 0xffffffff, IP_ACTIVE_LOW, IPT_UNKNOWN )
 
 	PORT_START("SPECIAL")
-	PORT_BIT( 0x00000001, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(btoads_state, sound_to_main_r)
+	PORT_BIT( 0x00000001, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(btoads_state::sound_to_main_r))
 	PORT_SERVICE_NO_TOGGLE( 0x0002, IP_ACTIVE_LOW )
-	PORT_BIT( 0x00000080, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(btoads_state, main_to_sound_r)
+	PORT_BIT( 0x00000080, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(btoads_state::main_to_sound_r))
 	PORT_BIT( 0xffffff7c, IP_ACTIVE_LOW, IPT_UNKNOWN )
 
 	PORT_START("SW1")
@@ -946,12 +946,11 @@ void btoads_state::btoads(machine_config &config)
 	m_screen->set_screen_update("maincpu", FUNC(tms34020_device::tms340x0_rgb32));
 
 	// sound hardware
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	BSMT2000(config, m_bsmt, SOUND_CLOCK);
-	m_bsmt->add_route(0, "lspeaker", 1.0);
-	m_bsmt->add_route(1, "rspeaker", 1.0);
+	m_bsmt->add_route(0, "speaker", 1.0, 0);
+	m_bsmt->add_route(1, "speaker", 1.0, 1);
 }
 
 

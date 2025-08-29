@@ -199,16 +199,16 @@ static INPUT_PORTS_START( ultrsprt )
 	PORT_BIT( 0xfff, 0x000, IPT_TRACKBALL_Y ) PORT_SENSITIVITY(70) PORT_KEYDELTA(80) PORT_PLAYER(2)
 
 	PORT_START("BUTTONS")
-	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_WRITE_LINE_DEVICE_MEMBER("upd1", upd4701_device, left_w)
-	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_PLAYER(1) PORT_WRITE_LINE_DEVICE_MEMBER("upd1", upd4701_device, right_w)
-	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_START1 ) PORT_WRITE_LINE_DEVICE_MEMBER("upd1", upd4701_device, middle_w)
-	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_SERVICE1 ) PORT_WRITE_LINE_DEVICE_MEMBER("upd2", upd4701_device, left_w)
-	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_PLAYER(2) PORT_WRITE_LINE_DEVICE_MEMBER("upd2", upd4701_device, right_w)
-	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_START2 ) PORT_WRITE_LINE_DEVICE_MEMBER("upd2", upd4701_device, middle_w)
+	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_WRITE_LINE_DEVICE_MEMBER("upd1", FUNC(upd4701_device::left_w))
+	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_PLAYER(1) PORT_WRITE_LINE_DEVICE_MEMBER("upd1", FUNC(upd4701_device::right_w))
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_START1 ) PORT_WRITE_LINE_DEVICE_MEMBER("upd1", FUNC(upd4701_device::middle_w))
+	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_SERVICE1 ) PORT_WRITE_LINE_DEVICE_MEMBER("upd2", FUNC(upd4701_device::left_w))
+	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_PLAYER(2) PORT_WRITE_LINE_DEVICE_MEMBER("upd2", FUNC(upd4701_device::right_w))
+	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_START2 ) PORT_WRITE_LINE_DEVICE_MEMBER("upd2", FUNC(upd4701_device::middle_w))
 
 	PORT_START("SERVICE")
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_UNUSED )
-	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", eeprom_serial_93cxx_device, do_read)
+	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", FUNC(eeprom_serial_93cxx_device::do_read))
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_CUSTOM ) // VRAM page flip status?
 	PORT_SERVICE_NO_TOGGLE( 0x08, IP_ACTIVE_LOW )
 INPUT_PORTS_END
@@ -277,13 +277,12 @@ void ultrsprt_state::ultrsprt(machine_config &config)
 	K056800(config, m_k056800, XTAL(18'432'000));
 	m_k056800->int_callback().set_inputline(m_audiocpu, M68K_IRQ_6);
 
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	k054539_device &k054539(K054539(config, "k054539", XTAL(18'432'000)));
 	k054539.timer_handler().set_inputline("audiocpu", M68K_IRQ_5);
-	k054539.add_route(0, "lspeaker", 1.0);
-	k054539.add_route(1, "rspeaker", 1.0);
+	k054539.add_route(0, "speaker", 1.0, 0);
+	k054539.add_route(1, "speaker", 1.0, 1);
 }
 
 

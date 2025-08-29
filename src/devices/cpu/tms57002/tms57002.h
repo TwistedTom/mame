@@ -31,12 +31,12 @@ public:
 	int pc0_r();
 	void sync_w(int state);
 
-	void internal_pgm(address_map &map);
+	void internal_pgm(address_map &map) ATTR_COLD;
 
 protected:
-	virtual void device_start() override;
-	virtual void device_reset() override;
-	virtual void sound_stream_update(sound_stream &stream, std::vector<read_stream_view> const &inputs, std::vector<write_stream_view> &outputs) override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
+	virtual void sound_stream_update(sound_stream &stream) override;
 	virtual space_config_vector memory_space_config() const override;
 	virtual u32 execute_min_cycles() const noexcept override;
 	virtual u32 execute_max_cycles() const noexcept override;

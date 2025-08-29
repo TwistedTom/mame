@@ -296,9 +296,9 @@ void pkspirit_state::sound_map(address_map &map) // TODO: verify everything
 // TODO: verify some of these labels means anything in normal English, remap accordingly
 static INPUT_PORTS_START( pkspirit )
 	PORT_START("COIN")
-	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_COIN1 ) PORT_WRITE_LINE_DEVICE_MEMBER("opto1", taitoio_opto_device, coin_sense_w)
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_COIN1 ) PORT_WRITE_LINE_DEVICE_MEMBER("opto1", FUNC(taitoio_opto_device::coin_sense_w))
 	// FIXME: check error triggered if pressed for too long once video emulation is better
-	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_COIN2 ) PORT_WRITE_LINE_DEVICE_MEMBER("opto2", taitoio_opto_device, coin_sense_w)
+	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_COIN2 ) PORT_WRITE_LINE_DEVICE_MEMBER("opto2", FUNC(taitoio_opto_device::coin_sense_w))
 
 	PORT_START("IN1")
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_GAMBLE_BET ) PORT_NAME("1 Bet SW")
@@ -307,8 +307,8 @@ static INPUT_PORTS_START( pkspirit )
 	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_GAMBLE_DEAL ) PORT_NAME("Deal/Draw SW") // "DE/DR"
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_GAMBLE_D_UP ) PORT_NAME("Double SW")
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_GAMBLE_PAYOUT ) PORT_NAME("Payout SW")
-	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto2", taitoio_opto_device, opto_h_r)
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto2", taitoio_opto_device, opto_l_r)
+	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto2", FUNC(taitoio_opto_device::opto_h_r))
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto2", FUNC(taitoio_opto_device::opto_l_r))
 
 	PORT_START("IN2")
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_POKER_HOLD1 )
@@ -317,8 +317,8 @@ static INPUT_PORTS_START( pkspirit )
 	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_POKER_HOLD4 )
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_POKER_HOLD5 )
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_UNUSED )
-	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto1", taitoio_opto_device, opto_h_r)
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto1", taitoio_opto_device, opto_l_r)
+	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto1", FUNC(taitoio_opto_device::opto_h_r))
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto1", FUNC(taitoio_opto_device::opto_l_r))
 
 	PORT_START("IN3")
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_SERVICE1 ) PORT_NAME("Reset Key")
@@ -367,7 +367,7 @@ static INPUT_PORTS_START( pkspirit )
 	PORT_DIPSETTING(      0x0300, DEF_STR( 1C_1C ) )
 	PORT_DIPSETTING(      0x0100, DEF_STR( 1C_2C ) )
 	PORT_DIPSETTING(      0x0200, DEF_STR( 1C_5C ) )
-	PORT_DIPSETTING(      0x0000, "1 Coin/10 Credits" )
+	PORT_DIPSETTING(      0x0000, DEF_STR( 1C_10C ) )
 	PORT_DIPNAME( 0x0c00, 0x0c00, "Up / Down Credit" ) PORT_DIPLOCATION("SW2:3,4") // actually spelt 'doun' in the dip sheet
 	PORT_DIPSETTING(      0x0c00, DEF_STR( Off ) )
 	PORT_DIPSETTING(      0x0800, "10" )

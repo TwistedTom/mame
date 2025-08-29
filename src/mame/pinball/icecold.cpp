@@ -161,14 +161,14 @@ static INPUT_PORTS_START( icecold )
 	PORT_DIPSETTING(    0xc0, "X-Fast" )
 
 	PORT_START("TEST")  // service switch is directly hard-wired with the NMI line
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_SERVICE) PORT_CHANGED_MEMBER(DEVICE_SELF, icecold_state, test_switch_press, 1)
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_SERVICE) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(icecold_state::test_switch_press), 1)
 
 	PORT_START("JOY")
 	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_JOYSTICKRIGHT_DOWN)
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_JOYSTICKLEFT_DOWN)
 	PORT_BIT(0x20, IP_ACTIVE_LOW, IPT_JOYSTICKRIGHT_UP)
 	PORT_BIT(0x80, IP_ACTIVE_LOW, IPT_JOYSTICKLEFT_UP)
-	PORT_BIT(0x55, IP_ACTIVE_LOW, IPT_CUSTOM)          PORT_CUSTOM_MEMBER(icecold_state, motors_limit_r)
+	PORT_BIT(0x55, IP_ACTIVE_LOW, IPT_CUSTOM)          PORT_CUSTOM_MEMBER(FUNC(icecold_state::motors_limit_r))
 
 	PORT_START("X0")
 	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_START1)
@@ -217,7 +217,7 @@ void icecold_state::machine_start()
 void icecold_state::machine_reset()
 {
 	// CH-C is used for generate a 30hz clock
-	m_ay8910[0]->set_volume(2, 0);
+	m_ay8910[0]->set_output_gain(2, 0.0);
 
 	m_rmotor = m_lmotor = 10;
 	m_sint = 0;
