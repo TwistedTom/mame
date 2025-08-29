@@ -487,7 +487,7 @@ void tandy1000_state::tandy1000_bank_w(offs_t offset, uint8_t data)
 static INPUT_PORTS_START( t1000 )
 	PORT_START("IN0") /* IN0 */
 	PORT_BIT ( 0xf0, 0xf0,   IPT_UNUSED )
-	PORT_BIT ( 0x08, 0x08,   IPT_CUSTOM ) PORT_VBLANK("pcvideo_t1000:screen")
+	PORT_BIT ( 0x08, 0x08,   IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("pcvideo_t1000:screen", FUNC(screen_device::vblank))
 	PORT_BIT ( 0x07, 0x07,   IPT_UNUSED )
 
 	PORT_START("DSW0") /* IN1 */
@@ -565,7 +565,7 @@ public:
 	t1000_keyboard_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 protected:
-	virtual ioport_constructor device_input_ports() const override;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
 };
 
 DEFINE_DEVICE_TYPE(T1000_KEYB, t1000_keyboard_device, "t1000_keyb", "Tandy 1000 Keyboard")

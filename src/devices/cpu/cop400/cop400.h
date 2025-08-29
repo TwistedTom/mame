@@ -8,8 +8,8 @@
 
 ***************************************************************************/
 
-#ifndef MAME_DEVICES_CPU_COP400_H
-#define MAME_DEVICES_CPU_COP400_H
+#ifndef MAME_CPU_COP400_COP400_H
+#define MAME_CPU_COP400_COP400_H
 
 #pragma once
 
@@ -120,20 +120,20 @@ public:
 	uint8_t microbus_r();
 	void microbus_w(uint8_t data);
 
-	void data_128b(address_map &map);
-	void data_32b(address_map &map);
-	void data_64b(address_map &map);
-	void program_1kb(address_map &map);
-	void program_2kb(address_map &map);
-	void program_512b(address_map &map);
+	void data_128b(address_map &map) ATTR_COLD;
+	void data_32b(address_map &map) ATTR_COLD;
+	void data_64b(address_map &map) ATTR_COLD;
+	void program_1kb(address_map &map) ATTR_COLD;
+	void program_2kb(address_map &map) ATTR_COLD;
+	void program_512b(address_map &map) ATTR_COLD;
 
 protected:
 	// construction/destruction
 	cop400_cpu_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock, uint8_t program_addr_bits, uint8_t data_addr_bits, uint8_t featuremask, uint8_t g_mask, uint8_t d_mask, uint8_t in_mask, bool has_counter, bool has_inil, address_map_constructor internal_map_program, address_map_constructor internal_map_data);
 
 	// device-level overrides
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	// device_execute_interface overrides
 	virtual uint64_t execute_clocks_to_cycles(uint64_t clocks) const noexcept override { return (clocks + m_cki - 1) / m_cki; }
@@ -528,4 +528,4 @@ DECLARE_DEVICE_TYPE(COP444C, cop444c_cpu_device)
 DECLARE_DEVICE_TYPE(COP445C, cop445c_cpu_device)
 DECLARE_DEVICE_TYPE(COP446C, cop446c_cpu_device)
 
-#endif  // MAME_DEVICES_CPU_COP400_H
+#endif // MAME_CPU_COP400_COP400_H

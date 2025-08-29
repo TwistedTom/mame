@@ -35,16 +35,19 @@ protected:
 		this->compliance = compliance;
 	}
 
-	virtual void device_start() override;
-	virtual void device_reset() override;
-	virtual void device_add_mconfig(machine_config &config) override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 
 	virtual void scsi_command() override;
 	virtual uint8_t scsi_get_data(int id, int pos) override;
 	virtual void scsi_put_data(int buf, int offset, uint8_t data) override;
+	virtual bool scsi_command_done(uint8_t command, uint8_t length) override;
 
 	virtual void return_no_cd();
 	static int to_msf(int frame);
+
+	void update_directory();
 
 	bool m_removal_prevented;
 
@@ -65,6 +68,14 @@ private:
 	uint8_t compliance;
 
 	uint8_t cdda_sotc;
+
+	uint32_t m_xfer_position;
+	uint16_t m_write_length;
+	uint32_t m_write_offset;
+	bool m_write_is_setup;
+	std::string m_write_path;
+	std::vector<osd::directory::entry> m_directory;
+	std::vector<uint8_t> m_xfer_buffer;
 };
 
 class nscsi_cdrom_sgi_device : public nscsi_cdrom_device
@@ -129,7 +140,7 @@ class nscsi_cdrom_apple_device : public nscsi_cdrom_device
 {
 public:
 	nscsi_cdrom_apple_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 
 protected:
 	virtual void scsi_command() override;

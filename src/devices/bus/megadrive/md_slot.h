@@ -83,6 +83,8 @@ enum
 	TEKKENSP,                    /* Tekken Special */
 	TOPFIGHTER,                  /* Top Fighter 2000 MK VIII */
 
+	TITAN,
+
 	// when loading from fullpath, we need to treat SRAM in custom way
 	SEGA_SRAM_FULLPATH,
 	SEGA_SRAM_FALLBACK
@@ -198,7 +200,7 @@ protected:
 	base_md_cart_slot_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock);
 
 	// device_t implementation
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 };
 
 // ======================> md_cart_slot_device

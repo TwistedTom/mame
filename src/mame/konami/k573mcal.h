@@ -4,8 +4,8 @@
  * Konami 573 Master Calendar
  *
  */
-#ifndef MAME_KONAMI_K573_MCAL_H
-#define MAME_KONAMI_K573_MCAL_H
+#ifndef MAME_KONAMI_K573MCAL_H
+#define MAME_KONAMI_K573MCAL_H
 
 #pragma once
 
@@ -24,7 +24,7 @@ public:
 
 	k573mcal_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
-	virtual ioport_constructor device_input_ports() const override;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
 
 protected:
 	virtual void device_start() override ATTR_COLD;
@@ -47,4 +47,4 @@ private:
 
 DECLARE_DEVICE_TYPE(KONAMI_573_MASTER_CALENDAR, k573mcal_device)
 
-#endif // MAME_KONAMI_K573_MCAL_H
+#endif // MAME_KONAMI_K573MCAL_H

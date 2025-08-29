@@ -49,8 +49,7 @@ public:
 		, m_usart(*this, "usart")
 //      , m_cassette(*this, "cassette")
 		, m_beeper(*this, "beeper")
-		, m_lspeaker(*this, "lspeaker")
-		, m_rspeaker(*this, "rspeaker")
+		, m_speaker(*this, "speaker")
 		, m_palette(*this, "palette")
 		, m_n80rom(*this, "n80rom")
 		, m_n88rom(*this, "n88rom")
@@ -91,8 +90,7 @@ protected:
 	required_device<i8251_device> m_usart;
 //  required_device<cassette_image_device> m_cassette;
 	required_device<beep_device> m_beeper;
-	required_device<speaker_device> m_lspeaker;
-	required_device<speaker_device> m_rspeaker;
+	required_device<speaker_device> m_speaker;
 	required_device<palette_device> m_palette;
 	required_region_ptr<u8> m_n80rom;
 	required_region_ptr<u8> m_n88rom;
@@ -228,7 +226,7 @@ public:
 	void pc8801mk2mr(machine_config &config);
 
 protected:
-	virtual void main_io(address_map &map) override;
+	virtual void main_io(address_map &map) override ATTR_COLD;
 
 	uint8_t opn_porta_r();
 	uint8_t opn_portb_r();
@@ -252,7 +250,7 @@ public:
 protected:
 	virtual void machine_start() override ATTR_COLD;
 	virtual void machine_reset() override ATTR_COLD;
-	virtual void main_io(address_map &map) override;
+	virtual void main_io(address_map &map) override ATTR_COLD;
 
 private:
 	required_device<ym2608_device> m_opna;
@@ -280,7 +278,7 @@ protected:
 	virtual void machine_start() override ATTR_COLD;
 	virtual void machine_reset() override ATTR_COLD;
 
-	virtual void main_io(address_map &map) override;
+	virtual void main_io(address_map &map) override ATTR_COLD;
 
 	virtual uint8_t dictionary_rom_r(offs_t offset) override;
 	virtual bool dictionary_rom_enable() override;
@@ -309,7 +307,7 @@ protected:
 	virtual void machine_start() override ATTR_COLD;
 	virtual void machine_reset() override ATTR_COLD;
 
-	virtual void main_io(address_map &map) override;
+	virtual void main_io(address_map &map) override ATTR_COLD;
 
 private:
 	virtual uint8_t cdbios_rom_r(offs_t offset) override;

@@ -70,8 +70,8 @@ TODO:
 
 #include "bus/generic/carts.h"
 #include "bus/generic/slot.h"
+#include "cpu/m6502/g65sc02.h"
 #include "cpu/m6502/m6502.h"
-#include "cpu/m6502/m65sc02.h"
 #include "cpu/m6502/r65c02.h"
 #include "machine/clock.h"
 #include "machine/nvram.h"
@@ -117,7 +117,7 @@ public:
 
 protected:
 	virtual void machine_start() override ATTR_COLD;
-	virtual void machine_reset() override { m_power = true; }
+	virtual void machine_reset() override ATTR_COLD { m_power = true; }
 
 private:
 	// devices/pointers
@@ -213,6 +213,7 @@ u8 const_state::input2_r()
 {
 	u8 data = 0;
 
+	// d0-d2: printer
 	// d3: timing related? seems unused (always high)
 	// other: ?
 
@@ -233,8 +234,8 @@ u8 const_state::input2_r()
 void const_state::ssensor4_map(address_map &map)
 {
 	map(0x0000, 0x03ff).ram().share("nvram");
-	map(0x2000, 0x2000).nopw(); // accessory?
-	map(0x4000, 0x4000).nopw(); // "
+	map(0x2000, 0x2000).nopw(); // printer
+	map(0x4000, 0x4000).nopw(); // printer
 	map(0x6000, 0x6000).rw(FUNC(const_state::input2_r), FUNC(const_state::mux_w));
 	map(0x8000, 0x8000).rw(FUNC(const_state::input1_r), FUNC(const_state::control_w));
 	map(0xc000, 0xdfff).r("exrom", FUNC(generic_slot_device::read_rom));
@@ -252,8 +253,8 @@ void const_state::const_map(address_map &map)
 void const_state::sconst_map(address_map &map)
 {
 	map(0x0000, 0x0fff).ram().share("nvram");
-	map(0x1c00, 0x1c00).nopw(); // accessory?
-	map(0x1d00, 0x1d00).nopw(); // "
+	map(0x1c00, 0x1c00).nopw(); // printer
+	map(0x1d00, 0x1d00).nopw(); // printer
 	map(0x1e00, 0x1e00).rw(FUNC(const_state::input2_r), FUNC(const_state::mux_w));
 	map(0x1f00, 0x1f00).rw(FUNC(const_state::input1_r), FUNC(const_state::control_w));
 	map(0x2000, 0xffff).rom();
@@ -320,7 +321,7 @@ static INPUT_PORTS_START( ssensor4 )
 	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_W) PORT_NAME("Hint")
 
 	PORT_START("POWER") // needs to be triggered for nvram to work
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_POWER_OFF) PORT_CHANGED_MEMBER(DEVICE_SELF, const_state, power_off, 0)
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_POWER_OFF) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(const_state::power_off), 0)
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( nconstq )
@@ -345,7 +346,7 @@ static INPUT_PORTS_START( sconst )
 	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_3) PORT_NAME("Print List / Acc. Time / Pawn")
 
 	PORT_START("POWER")
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_POWER_OFF) PORT_CHANGED_MEMBER(DEVICE_SELF, const_state, power_off, 0)
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_POWER_OFF) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(const_state::power_off), 0)
 INPUT_PORTS_END
 
 
@@ -402,7 +403,7 @@ void const_state::nconst36(machine_config &config)
 	nconst(config);
 
 	// basic machine hardware
-	M65SC02(config.replace(), m_maincpu, 7.2_MHz_XTAL/2);
+	G65SC02(config.replace(), m_maincpu, 7.2_MHz_XTAL/2);
 	m_maincpu->set_addrmap(AS_PROGRAM, &const_state::const_map);
 
 	subdevice<clock_device>("irq_clock")->set_clock(7.2_MHz_XTAL/2 / 0x2000); // ~439Hz (pulse width same as nconst)

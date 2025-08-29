@@ -1,8 +1,8 @@
 // license:BSD-3-Clause
 // copyright-holders:AJR
 
-#ifndef MAME_SKELETON_ITT1700_KBD
-#define MAME_SKELETON_ITT1700_KBD
+#ifndef MAME_SKELETON_ITT1700_KBD_H
+#define MAME_SKELETON_ITT1700_KBD_H
 
 #pragma once
 
@@ -28,7 +28,7 @@ public:
 protected:
 	// device-specific overrides
 	virtual void device_start() override ATTR_COLD;
-	virtual ioport_constructor device_input_ports() const override;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
 
 private:
 	// internal state
