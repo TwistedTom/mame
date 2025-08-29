@@ -133,6 +133,33 @@ void microtouch_device::send_format_decimal_packet(int x, int y)
 	m_tx_buffer[m_tx_buffer_num++] = 0x0d;
 }
 
+void microtouch_device::send_format_hex_packet(int x, int y)
+{
+	int hexx, hexy;
+
+	hexx = x / 16;
+	if (hexx > 0x3ff)
+		hexx = 0x3ff;
+	hexy = y / 16;
+	if (hexy > 0x3ff)
+		hexy = 0x3ff;
+
+	// header byte
+	m_tx_buffer[m_tx_buffer_num++] = 0x01;
+	// x coordinate in decimal mode
+	m_tx_buffer[m_tx_buffer_num++] = ntoc(hexx / 0x100);
+	m_tx_buffer[m_tx_buffer_num++] = ntoc((hexx / 0x10) % 0x10);
+	m_tx_buffer[m_tx_buffer_num++] = ntoc(hexx % 0x10);
+	// comma (separator)
+	m_tx_buffer[m_tx_buffer_num++] = ',';
+	// y coordinate in decimal mode
+	m_tx_buffer[m_tx_buffer_num++] = ntoc(hexy / 0x100);
+	m_tx_buffer[m_tx_buffer_num++] = ntoc((hexy / 0x10) % 0x10);
+	m_tx_buffer[m_tx_buffer_num++] = ntoc(hexy % 0x10);
+	// terminator
+	m_tx_buffer[m_tx_buffer_num++] = 0x0d;
+}
+
 void microtouch_device::send_touch_packet()
 {
 	int tx = m_touchx->read();
@@ -149,6 +176,9 @@ void microtouch_device::send_touch_packet()
 				break;
 			case FORMAT_DECIMAL:
 				send_format_decimal_packet(tx, ty);
+				break;
+			case FORMAT_HEX:
+				send_format_hex_packet(tx, ty);
 				break;
 			case FORMAT_UNKNOWN:
 				break;
@@ -199,6 +229,9 @@ TIMER_CALLBACK_MEMBER(microtouch_device::update_output)
 					break;
 				case FORMAT_DECIMAL:
 					send_format_decimal_packet(m_last_x, m_last_y);
+					break;
+				case FORMAT_HEX:
+					send_format_hex_packet(m_last_x, m_last_y);
 					break;
 				case FORMAT_UNKNOWN:
 					break;
@@ -292,6 +325,10 @@ void microtouch_device::rcv_complete()
 		{
 			m_format = FORMAT_DECIMAL;
 		}
+		else if (check_command("FH", m_rx_buffer_ptr, m_rx_buffer))
+		{
+			m_format = FORMAT_HEX;
+		}
 		else if (check_command("OI", m_rx_buffer_ptr, m_rx_buffer))
 		{
 			// output identity - SMT3, ver 01.00
@@ -361,7 +398,7 @@ ROM_END
 
 static INPUT_PORTS_START(microtouch)
 	PORT_START("TOUCH")
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_BUTTON1) PORT_NAME("Touch screen") PORT_CHANGED_MEMBER(DEVICE_SELF, microtouch_device, touch, 0)
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_BUTTON1) PORT_NAME("Touch screen") PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(microtouch_device::touch), 0)
 	PORT_START("TOUCH_X")
 	PORT_BIT(0x3fff, 0x2000, IPT_LIGHTGUN_X) PORT_CROSSHAIR(X, 1.0, 0.0, 0) PORT_SENSITIVITY(45) PORT_KEYDELTA(15)
 	PORT_START("TOUCH_Y")

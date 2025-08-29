@@ -2,15 +2,15 @@
 // copyright-holders:Jonathan Edwards
 /*********************************************************************
 
-    bml3mp1802.h
+    mp1802.h
 
     Hitachi MP-1802 floppy disk controller card for the MB-6890
     Hitachi MP-3550 floppy drive is attached
 
 *********************************************************************/
 
-#ifndef MAME_BUS_BML3_BML3MP1802_H
-#define MAME_BUS_BML3_BML3MP1802_H
+#ifndef MAME_BUS_BML3_MP1802_H
+#define MAME_BUS_BML3_MP1802_H
 
 #pragma once
 
@@ -36,12 +36,12 @@ public:
 	void write(uint8_t data);
 
 protected:
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	// optional information overrides
-	virtual void device_add_mconfig(machine_config &config) override;
-	virtual const tiny_rom_entry *device_rom_region() const override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
 
 	virtual void map_exrom(address_space_installer &space) override;
 	virtual void map_io(address_space_installer &space) override;
@@ -59,4 +59,4 @@ private:
 // device type definition
 DECLARE_DEVICE_TYPE(BML3BUS_MP1802, bml3bus_mp1802_device)
 
-#endif // MAME_BUS_BML3_BML3MP1802_H
+#endif // MAME_BUS_BML3_MP1802_H

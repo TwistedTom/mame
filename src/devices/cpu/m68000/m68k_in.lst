@@ -5063,7 +5063,7 @@ e3c0 ffc0 lsl      w A+-DXWL    01:8 7:14 234fc:5
 			{
 				m_pmmu_enabled = 0;
 			}
-			m_instruction_restart = m_pmmu_enabled || m_emmu_enabled;
+			m_can_instruction_restart = m_pmmu_enabled || m_emmu_enabled;
 			break;
 		case 0x004:         /* ITT0 */
 			m_mmu_itt0 = REG_DA()[(word2 >> 12) & 15];
@@ -7795,6 +7795,11 @@ e5c0 ffc0 roxl     w A+-DXWL    01:8 7:14 234fc:5
 	m_c_flag = CFLAG_CLEAR;
 
 	m68ki_write_8(ea, dst | 0x80);
+
+4ac8 ffff halt     . .          c:0p
+	m68ki_trace_t0();              /* auto-disable (see m68kcpu.h) */
+	m_icount = 0;
+	m_stopped = STOP_LEVEL_HALT;
 
 
 4e40 fff0 trap     . .          071234fc:4

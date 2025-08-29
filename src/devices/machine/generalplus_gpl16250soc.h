@@ -49,6 +49,7 @@ public:
 	virtual void device_add_mconfig(machine_config& config) override;
 
 	void set_bootmode(int mode) { m_boot_mode = mode; }
+	void set_alt_periodic_irq(bool alt) { m_alt_periodic_irq = alt; }
 
 	IRQ_CALLBACK_MEMBER(irq_vector_cb);
 	template <typename... T> void set_cs_config_callback(T &&... args) { m_cs_callback.set(std::forward<T>(args)...); }
@@ -62,6 +63,7 @@ public:
 	//void set_pal_back_hack(int pal_back) { m_spg_video->set_pal_back(pal_back); }
 	void set_alt_extrasprite_hack(int alt_extrasprite_hack) { m_spg_video->set_alt_extrasprite(alt_extrasprite_hack); }
 	void set_legacy_video_mode() { m_spg_video->set_legacy_video_mode(); }
+	void set_disallow_resolution_control() { m_spg_video->set_disallow_resolution_control(); }
 
 	void set_romtype(int romtype) { m_romtype = romtype; }
 
@@ -70,13 +72,13 @@ public:
 protected:
 	sunplus_gcm394_base_device(const machine_config& mconfig, device_type type, const char* tag, device_t* owner, uint32_t clock, address_map_constructor internal);
 
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	virtual void device_post_load() override;
 
-	void gcm394_internal_map(address_map &map);
-	void base_internal_map(address_map &map);
+	void gcm394_internal_map(address_map &map) ATTR_COLD;
+	void base_internal_map(address_map &map) ATTR_COLD;
 
 	required_device<screen_device> m_screen;
 	required_device<gcm394_video_device> m_spg_video;
@@ -295,10 +297,12 @@ private:
 	void unkarea_78b8_w(uint16_t data);
 
 	uint16_t unkarea_78c0_r();
+	uint16_t unkarea_78c8_r();
 
 	uint16_t unkarea_78d0_r();
 	uint16_t unkarea_78d8_r();
 
+	uint16_t unkarea_78f0_r();
 	void unkarea_78f0_w(uint16_t data);
 
 	uint16_t unkarea_7904_r();
@@ -319,7 +323,7 @@ private:
 	void unkarea_7960_w(uint16_t data);
 	uint16_t unkarea_7961_r();
 	void unkarea_7961_w(uint16_t data);
-
+	uint16_t unkarea_7962_r();
 
 	void videoirq_w(int state);
 	void audioirq_w(int state);
@@ -339,6 +343,8 @@ private:
 
 	inline uint16_t read_space(uint32_t offset);
 	inline void write_space(uint32_t offset, uint16_t data);
+
+	bool m_alt_periodic_irq; // might be multiple timers, might be a register to configure, currently a config option.
 
 	// config registers (external pins)
 	int m_boot_mode; // 2 pins determine boot mode, likely only read at power-on
@@ -375,10 +381,10 @@ public:
 	generalplus_gpac800_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
 protected:
-	void gpac800_internal_map(address_map &map);
+	void gpac800_internal_map(address_map &map) ATTR_COLD;
 
-	//virtual void device_start() override;
-	virtual void device_reset() override;
+	//virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 private:
 	void recalculate_calculate_effective_nand_address();
@@ -430,10 +436,10 @@ public:
 	generalplus_gpspispi_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
 protected:
-	void gpspispi_internal_map(address_map &map);
+	void gpspispi_internal_map(address_map &map) ATTR_COLD;
 
-	//virtual void device_start() override;
-	//virtual void device_reset() override;
+	//virtual void device_start() override ATTR_COLD;
+	//virtual void device_reset() override ATTR_COLD;
 
 private:
 	uint16_t spi_unk_7943_r();
@@ -455,10 +461,10 @@ public:
 	generalplus_gpspi_direct_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
 protected:
-	void gpspi_direct_internal_map(address_map &map);
+	void gpspi_direct_internal_map(address_map &map) ATTR_COLD;
 
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 private:
 	uint16_t ramread_r(offs_t offset);

@@ -25,9 +25,9 @@ protected:
 	rc2014_ym_ay_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, u32 clock);
 
 	// device-level overrides
-	virtual void device_start() override;
-	virtual void device_reset() override;
-	virtual ioport_constructor device_input_ports() const override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
 
 	// base class members
 	required_device<ay8910_device> m_psg;
@@ -137,8 +137,8 @@ public:
 
 protected:
 	// device-level overrides
-	virtual void device_reset() override;
-	virtual void device_add_mconfig(machine_config &config) override;
+	virtual void device_reset() override ATTR_COLD;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 };
 
 rc2014_ym2149_device::rc2014_ym2149_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock)
@@ -158,14 +158,13 @@ void rc2014_ym2149_device::device_reset()
 
 void rc2014_ym2149_device::device_add_mconfig(machine_config &config)
 {
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	YM2149(config, m_psg, 0);
-	m_psg->add_route(0, "rspeaker", 0.25);
-	m_psg->add_route(2, "rspeaker", 0.25);
-	m_psg->add_route(1, "lspeaker", 0.25);
-	m_psg->add_route(2, "lspeaker", 0.25);
+	m_psg->add_route(0, "speaker", 0.25, 1);
+	m_psg->add_route(2, "speaker", 0.25, 1);
+	m_psg->add_route(1, "speaker", 0.25, 0);
+	m_psg->add_route(2, "speaker", 0.25, 0);
 }
 
 //**************************************************************************
@@ -180,7 +179,7 @@ public:
 
 protected:
 	// device-level overrides
-	virtual void device_add_mconfig(machine_config &config) override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 };
 
 rc2014_ay8190_device::rc2014_ay8190_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock)
@@ -190,14 +189,13 @@ rc2014_ay8190_device::rc2014_ay8190_device(const machine_config &mconfig, const 
 
 void rc2014_ay8190_device::device_add_mconfig(machine_config &config)
 {
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	AY8910(config, m_psg, 0);
-	m_psg->add_route(0, "rspeaker", 0.25);
-	m_psg->add_route(2, "rspeaker", 0.25);
-	m_psg->add_route(1, "lspeaker", 0.25);
-	m_psg->add_route(2, "lspeaker", 0.25);
+	m_psg->add_route(0, "speaker", 0.25, 1);
+	m_psg->add_route(2, "speaker", 0.25, 1);
+	m_psg->add_route(1, "speaker", 0.25, 0);
+	m_psg->add_route(2, "speaker", 0.25, 0);
 }
 
 }

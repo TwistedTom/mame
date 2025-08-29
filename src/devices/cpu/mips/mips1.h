@@ -20,8 +20,8 @@ protected:
 	mips1core_device_base(machine_config const &mconfig, device_type type, char const *tag, device_t *owner, u32 clock, u32 cpurev, size_t icache_size, size_t dcache_size, bool cache_pws);
 
 	// device_t implementation
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	// device_execute_interface implementation
 	virtual u32 execute_min_cycles() const noexcept override { return 1; }
@@ -98,10 +98,6 @@ protected:
 	};
 	std::tuple<struct cache::line &, bool> cache_lookup(u32 address, bool invalidate, bool icache = false);
 
-	// debug helpers
-	std::string debug_string(u32 string_pointer, unsigned const limit = 0);
-	std::string debug_string_array(u32 array_pointer);
-
 	// address spaces
 	address_space_config const m_program_config_be;
 	address_space_config const m_program_config_le;
@@ -163,8 +159,8 @@ protected:
 	mips1_device_base(machine_config const &mconfig, device_type type, char const *tag, device_t *owner, u32 clock, u32 cpurev, size_t icache_size, size_t dcache_size, bool cache_pws);
 
 	// device_t implementation
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	virtual translate_result translate(int intention, offs_t &address, bool debug) override;
 
@@ -219,8 +215,8 @@ public:
 	r3041_device(machine_config const &mconfig, char const *tag, device_t *owner, u32 clock);
 
 protected:
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 };
 
 class r3051_device : public mips1core_device_base

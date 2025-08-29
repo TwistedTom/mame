@@ -36,12 +36,7 @@ public:
 
 	// SCU
 	auto txd_handler_cb() { return m_scu.lookup()->txd_handler(); }
-	auto dtr_handler_cb() { return m_scu.lookup()->dtr_handler(); }
-	auto rts_handler_cb() { return m_scu.lookup()->rts_handler(); }
-	auto rxrdy_handler_cb() { return m_scu.lookup()->rxrdy_handler(); }
-	auto txrdy_handler_cb() { return m_scu.lookup()->txrdy_handler(); }
-	auto txempty_handler_cb() { return m_scu.lookup()->txempty_handler(); }
-	auto syndet_handler_cb() { return m_scu.lookup()->syndet_handler(); }
+	void rxd_w(int state) { m_scu->write_rxd(state); }
 
 protected:
 	device_v5x_interface(const machine_config &mconfig, nec_common_device &device, bool is_16bit);
@@ -74,7 +69,7 @@ protected:
 	inline void internal_io_write_byte(offs_t a, u8 v) { m_internal_io->write_byte(a & INTERNAL_IO_ADDR_MASK, v); }
 	inline void internal_io_write_word(offs_t a, u16 v) { m_internal_io->write_word_unaligned(a & INTERNAL_IO_ADDR_MASK, v); }
 
-	void remappable_io_map(address_map &map);
+	void remappable_io_map(address_map &map) ATTR_COLD;
 	virtual u8 temp_io_byte_r(offs_t offset) = 0;
 	virtual void temp_io_byte_w(offs_t offset, u8 data) = 0;
 
@@ -154,9 +149,9 @@ protected:
 	v50_base_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, u32 clock, bool is_16bit, u8 prefetch_size, u8 prefetch_cycles, u32 chip_type);
 
 	// device-specific overrides
-	virtual void device_add_mconfig(machine_config &config) override;
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	// device_execute_interface overrides
 	virtual uint64_t execute_clocks_to_cycles(uint64_t clocks) const noexcept override { return (clocks / 2); }
@@ -174,7 +169,7 @@ protected:
 	virtual void io_write_byte(offs_t a, u8 v) override;
 	virtual void io_write_word(offs_t a, u16 v) override;
 
-	void internal_port_map(address_map &map);
+	void internal_port_map(address_map &map) ATTR_COLD;
 
 	u8 OPCN_r();
 	void OPCN_w(u8 data);
@@ -190,14 +185,16 @@ protected:
 
 private:
 	void tout1_w(int state);
+	void sint_w(int state);
 
 	devcb_write_line m_tout1_callback;
 	devcb_read8 m_icu_slave_ack;
 
 	u8 m_OPCN;
-	bool m_tout1;
-	bool m_intp1;
-	bool m_intp2;
+	u8 m_tout1;
+	u8 m_sint;
+	u8 m_intp1;
+	u8 m_intp2;
 };
 
 class v40_device : public v50_base_device
@@ -239,13 +236,21 @@ public:
 
 	template <unsigned Timer> auto tout_handler() { return m_tcu.lookup()->out_handler<Timer>(); }
 
+	// SCU
+	auto dtr_handler_cb() { return m_scu.lookup()->dtr_handler(); }
+	auto rts_handler_cb() { return m_scu.lookup()->rts_handler(); }
+	auto rxrdy_handler_cb() { return m_scu.lookup()->rxrdy_handler(); }
+	auto txrdy_handler_cb() { return m_scu.lookup()->txrdy_handler(); }
+	auto txempty_handler_cb() { return m_scu.lookup()->txempty_handler(); }
+	auto syndet_handler_cb() { return m_scu.lookup()->syndet_handler(); }
+
 protected:
 	v53_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, u32 clock);
 
 	// device-specific overrides
-	virtual void device_add_mconfig(machine_config &config) override;
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	// device_execute_interface overrides
 	virtual void execute_set_input(int inputnum, int state) override;
@@ -261,7 +266,7 @@ protected:
 	virtual void io_write_byte(offs_t a, u8 v) override;
 	virtual void io_write_word(offs_t a, u16 v) override;
 
-	void internal_port_map(address_map &map);
+	void internal_port_map(address_map &map) ATTR_COLD;
 	virtual void install_peripheral_io() override;
 
 	u8 SCTL_r();

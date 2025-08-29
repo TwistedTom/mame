@@ -68,6 +68,7 @@ public:
 		m_scsihelp(*this, "scsihelp"),
 		m_scc(*this, "scc"),
 		m_egret(*this, "egret"),
+		m_config(*this, "config"),
 		m_cur_floppy(nullptr),
 		m_hdsel(0)
 	{
@@ -93,8 +94,10 @@ private:
 	required_device<mac_scsi_helper_device> m_scsihelp;
 	required_device<z80scc_device> m_scc;
 	required_device<egret_device> m_egret;
+	optional_ioport m_config;
 
 	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 	u16 scc_r(offs_t offset)
 	{
@@ -137,6 +140,14 @@ void maciivx_state::machine_start()
 	m_vasp->set_ram_info((u32 *) m_ram->pointer(), m_ram->size());
 
 	save_item(NAME(m_hdsel));
+}
+
+void maciivx_state::machine_reset()
+{
+	if (m_config)
+	{
+		m_maincpu->set_fpu_enable(BIT(m_config->read(), 0));
+	}
 }
 
 /***************************************************************************
@@ -285,6 +296,13 @@ void maciivx_state::hdsel_w(int state)
 static INPUT_PORTS_START( maciivx )
 INPUT_PORTS_END
 
+static INPUT_PORTS_START( maciivi )
+	PORT_START("config")
+	PORT_CONFNAME(0x01, 0x00, "FPU")
+	PORT_CONFSETTING(0x00, "No FPU")
+	PORT_CONFSETTING(0x01, "FPU Present")
+INPUT_PORTS_END
+
 /***************************************************************************
     MACHINE DRIVERS
 ***************************************************************************/
@@ -302,8 +320,8 @@ void maciivx_state::maciiv_base(machine_config &config)
 	NSCSI_CONNECTOR(config, "scsi:3").option_set("cdrom", NSCSI_CDROM_APPLE).machine_config(
 		[](device_t *device)
 		{
-			device->subdevice<cdda_device>("cdda")->add_route(0, "^^lspeaker", 1.0);
-			device->subdevice<cdda_device>("cdda")->add_route(1, "^^rspeaker", 1.0);
+			device->subdevice<cdda_device>("cdda")->add_route(0, "^^speaker", 1.0, 0);
+			device->subdevice<cdda_device>("cdda")->add_route(1, "^^speaker", 1.0, 1);
 		});
 	NSCSI_CONNECTOR(config, "scsi:4", mac_scsi_devices, nullptr);
 	NSCSI_CONNECTOR(config, "scsi:5", mac_scsi_devices, nullptr);
@@ -342,19 +360,18 @@ void maciivx_state::maciiv_base(machine_config &config)
 	rs232b.dcd_handler().set(m_scc, FUNC(z80scc_device::dcdb_w));
 	rs232b.cts_handler().set(m_scc, FUNC(z80scc_device::ctsb_w));
 
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	APPLE_DFAC(config, m_dfac, 22257);
-	m_dfac->add_route(0, "lspeaker", 1.0);
-	m_dfac->add_route(1, "rspeaker", 1.0);
+	m_dfac->add_route(0, "speaker", 1.0, 0);
+	m_dfac->add_route(1, "speaker", 1.0, 1);
 
 	VASP(config, m_vasp, C15M);
 	m_vasp->set_maincpu_tag("maincpu");
 	m_vasp->set_rom_tag("bootrom");
 	m_vasp->hdsel_callback().set(FUNC(maciivx_state::hdsel_w));
-	m_vasp->add_route(0, m_dfac, 1.0);
-	m_vasp->add_route(1, m_dfac, 1.0);
+	m_vasp->add_route(0, m_dfac, 1.0, 0);
+	m_vasp->add_route(1, m_dfac, 1.0, 1);
 
 	MACADB(config, m_macadb, C15M);
 
@@ -424,4 +441,4 @@ ROM_END
 }   // anonymous namespace
 
 COMP(1993, maciivx, 0,       0, maciivx, maciivx, maciivx_state, empty_init, "Apple Computer", "Macintosh IIvx", MACHINE_SUPPORTS_SAVE)
-COMP(1993, maciivi, maciivx, 0, maciivi, maciivx, maciivx_state, empty_init, "Apple Computer", "Macintosh IIvi", MACHINE_SUPPORTS_SAVE)
+COMP(1993, maciivi, maciivx, 0, maciivi, maciivi, maciivx_state, empty_init, "Apple Computer", "Macintosh IIvi", MACHINE_SUPPORTS_SAVE)

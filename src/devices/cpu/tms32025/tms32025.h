@@ -17,8 +17,8 @@
 	*                                                                          *
 	\***************************************************************************/
 
-#ifndef MAME_TMS32025_TMS32025_H
-#define MAME_TMS32025_TMS32025_H
+#ifndef MAME_CPU_TMS32025_TMS32025_H
+#define MAME_CPU_TMS32025_TMS32025_H
 
 #pragma once
 
@@ -69,17 +69,17 @@ public:
 	auto dr_in_cb() { return m_dr_in.bind(); }
 	auto dx_out_cb() { return m_dx_out.bind(); }
 
-	//void tms32025_program(address_map &map);
-	void tms3202x_data(address_map &map);
-	void tms32026_data(address_map &map);
+	//void tms32025_program(address_map &map) ATTR_COLD;
+	void tms3202x_data(address_map &map) ATTR_COLD;
+	void tms32026_data(address_map &map) ATTR_COLD;
 
 protected:
 	// construction/destruction
 	tms3202x_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock, unsigned stack_depth, address_map_constructor prgmap, address_map_constructor datamap);
 
 	// device_t implementation
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	// device_execute_interface implementation
 	virtual uint32_t execute_min_cycles() const noexcept override { return 4; }
@@ -380,9 +380,9 @@ protected:
 	tms32025_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock, address_map_constructor prgmap, address_map_constructor datamap);
 
 	// device_t implementation
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 
-	virtual const tiny_rom_entry *device_rom_region() const override;
+	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
 
 	bool    m_mp_mc;
 };
@@ -394,7 +394,7 @@ public:
 	tms32026_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
 protected:
-	virtual void device_reset() override;
+	virtual void device_reset() override ATTR_COLD;
 	virtual void cnfd() override;
 	virtual void cnfp() override;
 	virtual void conf() override;
@@ -404,4 +404,4 @@ DECLARE_DEVICE_TYPE(TMS32020, tms32020_device)
 DECLARE_DEVICE_TYPE(TMS32025, tms32025_device)
 DECLARE_DEVICE_TYPE(TMS32026, tms32026_device)
 
-#endif // MAME_TMS32025_TMS32025_H
+#endif // MAME_CPU_TMS32025_TMS32025_H

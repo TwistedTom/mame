@@ -854,7 +854,7 @@ static INPUT_PORTS_START( topspeed )
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_COIN2 )
 	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_COIN1 )
 	PORT_BIT( 0x10, IP_ACTIVE_LOW,  IPT_SERVICE1 )
-	PORT_BIT( 0xe0, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(topspeed_state, brake_pedal_r) PORT_CONDITION("DSWA", 0x03, NOTEQUALS, 0x02)
+	PORT_BIT( 0xe0, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(FUNC(topspeed_state::brake_pedal_r)) PORT_CONDITION("DSWA", 0x03, NOTEQUALS, 0x02)
 	PORT_BIT( 0x20, IP_ACTIVE_LOW,  IPT_BUTTON2 ) PORT_NAME("Brake Switch") PORT_CONDITION("DSWA", 0x03, EQUALS, 0x02)
 
 	PORT_START("IN1")
@@ -863,7 +863,7 @@ static INPUT_PORTS_START( topspeed )
 	PORT_BIT( 0x04, IP_ACTIVE_LOW,  IPT_SERVICE2 ) PORT_NAME("Calibrate") // ?
 	PORT_BIT( 0x08, IP_ACTIVE_LOW,  IPT_START1 )
 	PORT_BIT( 0x10, IP_ACTIVE_LOW,  IPT_BUTTON4 ) PORT_NAME("Shifter") PORT_TOGGLE
-	PORT_BIT( 0xe0, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(topspeed_state, gas_pedal_r) PORT_CONDITION("DSWA", 0x03, NOTEQUALS, 0x02)
+	PORT_BIT( 0xe0, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(FUNC(topspeed_state::gas_pedal_r)) PORT_CONDITION("DSWA", 0x03, NOTEQUALS, 0x02)
 	PORT_BIT( 0x20, IP_ACTIVE_LOW,  IPT_BUTTON1 ) PORT_NAME("Gas Switch") PORT_CONDITION("DSWA", 0x03, EQUALS, 0x02)
 
 	PORT_START("IN2")   // Unused
@@ -993,8 +993,7 @@ void topspeed_state::topspeed(machine_config &config)
 	PALETTE(config, "palette").set_format(palette_device::xBGR_555, 8192);
 
 	// sound hardware
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	ym2151_device &ymsnd(YM2151(config, "ymsnd", 16_MHz_XTAL / 4));
 	ymsnd.irq_handler().set_inputline(m_audiocpu, 0);
@@ -1011,12 +1010,12 @@ void topspeed_state::topspeed(machine_config &config)
 	m_msm[1]->set_prescaler_selector(msm5205_device::SEX_4B);   // Slave mode, 4-bit
 	m_msm[1]->add_route(ALL_OUTPUTS, "filter3", 1.0);
 
-	FILTER_VOLUME(config, "filter1l").add_route(ALL_OUTPUTS, "lspeaker", 1.0);
-	FILTER_VOLUME(config, "filter1r").add_route(ALL_OUTPUTS, "rspeaker", 1.0);
+	FILTER_VOLUME(config, "filter1l").add_route(ALL_OUTPUTS, "speaker", 1.0, 0);
+	FILTER_VOLUME(config, "filter1r").add_route(ALL_OUTPUTS, "speaker", 1.0, 1);
 
-	FILTER_VOLUME(config, "filter2").add_route(ALL_OUTPUTS, "lspeaker", 1.0).add_route(ALL_OUTPUTS, "rspeaker", 1.0);
+	FILTER_VOLUME(config, "filter2").add_route(ALL_OUTPUTS, "speaker", 1.0, 0).add_route(ALL_OUTPUTS, "speaker", 1.0, 1);
 
-	FILTER_VOLUME(config, "filter3").add_route(ALL_OUTPUTS, "lspeaker", 1.0).add_route(ALL_OUTPUTS, "rspeaker", 1.0);
+	FILTER_VOLUME(config, "filter3").add_route(ALL_OUTPUTS, "speaker", 1.0, 0).add_route(ALL_OUTPUTS, "speaker", 1.0, 1);
 }
 
 

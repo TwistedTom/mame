@@ -65,6 +65,8 @@ To Do:
 
 - Measure video timings
 
+- cellage: still to be looked at. At 0xee30, do PC=0xee3c to boot.
+
 Stephh's notes (based on the games M68000 code and some tests) :
 
 1) 'gaia'
@@ -133,7 +135,7 @@ void cave_state::update_irq_state()
 
 TIMER_CALLBACK_MEMBER(cave_state::vblank_end)
 {
-	if (m_kludge == 3)  /* mazinger metmqstr */
+	if (m_kludge == 3) // mazinger metmqstr
 	{
 		m_unknown_irq = 1;
 		update_irq_state();
@@ -166,8 +168,8 @@ INTERRUPT_GEN_MEMBER(cave_state::interrupt)
 }
 INTERRUPT_GEN_MEMBER(ppsatan_state::interrupt_ppsatan)
 {
-	m_int_timer->adjust      (attotime::from_usec(17376 - m_time_vblank_irq));
-	m_int_timer_left->adjust (attotime::from_usec(17376 - m_time_vblank_irq));
+	m_int_timer->adjust(attotime::from_usec(17376 - m_time_vblank_irq));
+	m_int_timer_left->adjust(attotime::from_usec(17376 - m_time_vblank_irq));
 	m_int_timer_right->adjust(attotime::from_usec(17376 - m_time_vblank_irq));
 }
 
@@ -268,41 +270,38 @@ u8 cave_z80_state::soundflags_r()
 {
 	// bit 2 is low: can read command (lo)
 	// bit 3 is low: can read command (hi)
-//  return  (m_sound_flag[0] ? 0 : 4) |
-//          (m_sound_flag[1] ? 0 : 8) ;
-return 0;
+	//return (m_sound_flag[0] ? 0 : 4) | (m_sound_flag[1] ? 0 : 8) ;
+	return 0;
 }
 
 u16 cave_z80_state::soundflags_ack_r()
 {
 	// bit 0 is low: can write command
 	// bit 1 is low: can read answer
-//  return  ((m_sound_flag[0] | m_sound_flag[1]) ? 1 : 0) |
-//          (m_soundbuf_empty ? 0 : 2) ;
-
+	//return ((m_sound_flag[0] | m_sound_flag[1]) ? 1 : 0) | (m_soundbuf_empty ? 0 : 2) ;
 	return m_soundbuf_empty ? 2 : 0;
 }
 
 /* Main CPU: write a 16 bit sound latch and generate a NMI on the sound CPU */
 void cave_z80_state::sound_cmd_w(u16 data)
 {
-//  m_sound_flag[0] = 1;
-//  m_sound_flag[1] = 1;
+	//m_sound_flag[0] = 1;
+	//m_sound_flag[1] = 1;
 	m_soundlatch->write(data);
-	m_maincpu->spin_until_time(attotime::from_usec(50));  // Allow the other cpu to reply
+	m_maincpu->spin_until_time(attotime::from_usec(50)); // Allow the other cpu to reply
 }
 
 /* Sound CPU: read the low 8 bits of the 16 bit sound latch */
 u8 cave_z80_state::soundlatch_lo_r()
 {
-//  m_sound_flag[0] = 0;
+	//m_sound_flag[0] = 0;
 	return m_soundlatch->read() & 0xff;
 }
 
 /* Sound CPU: read the high 8 bits of the 16 bit sound latch */
 u8 cave_z80_state::soundlatch_hi_r()
 {
-//  m_sound_flag[1] = 0;
+	//m_sound_flag[1] = 0;
 	return m_soundlatch->read() >> 8;
 }
 
@@ -392,7 +391,7 @@ void ppsatan_state::ppsatan_eeprom_w(offs_t offset, u16 data, u16 mem_mask)
 	if (data & ~0x000f)
 		logerror("%s: Unknown EEPROM bit written %04X\n",machine().describe_context(),data);
 
-	if (ACCESSING_BITS_0_7)  // odd address
+	if (ACCESSING_BITS_0_7) // odd address
 	{
 		// bit 11?
 
@@ -530,7 +529,7 @@ u16 cave_state::donpachi_videoregs_r(offs_t offset)
 		case 2:
 		case 3: return irq_cause_r(offset);
 
-		default:    return 0x0000;
+		default: return 0x0000;
 	}
 }
 
@@ -672,7 +671,7 @@ void cave_z80_state::hotdogst_map(address_map &map)
 void cave_state::show_leds()
 {
 #ifdef MAME_DEBUG
-//  popmessage("led %04X eep %02X", m_leds[0], (m_leds[1] >> 8) & ~0x70);
+	//popmessage("led %04X eep %02X", m_leds[0], (m_leds[1] >> 8) & ~0x70);
 #endif
 }
 
@@ -682,13 +681,13 @@ void cave_state::korokoro_leds_w(offs_t offset, u16 data, u16 mem_mask)
 
 	m_led_outputs[0] = BIT(data, 15);
 	m_led_outputs[1] = BIT(data, 14);
-	m_led_outputs[2] = BIT(data, 12);    // square button
-	m_led_outputs[3] = BIT(data, 11);    // round  button
-//  machine().bookkeeping().coin_lockout_w(1, ~data & 0x0200);   // coin lockouts?
-//  machine().bookkeeping().coin_lockout_w(0, ~data & 0x0100);
+	m_led_outputs[2] = BIT(data, 12); // square button
+	m_led_outputs[3] = BIT(data, 11); // round  button
+	//machine().bookkeeping().coin_lockout_w(1, ~data & 0x0200); // coin lockouts?
+	//machine().bookkeeping().coin_lockout_w(0, ~data & 0x0100);
 
-//  machine().bookkeeping().coin_counter_w(2, data & 0x0080);
-//  machine().bookkeeping().coin_counter_w(1, data & 0x0020);
+	//machine().bookkeeping().coin_counter_w(2, data & 0x0080);
+	//machine().bookkeeping().coin_counter_w(1, data & 0x0020);
 	machine().bookkeeping().coin_counter_w(0, data & 0x0010);
 
 	m_led_outputs[5] = BIT(data, 3);
@@ -711,7 +710,8 @@ void cave_state::korokoro_eeprom_w(offs_t offset, u16 data, u16 mem_mask)
 
 	if (ACCESSING_BITS_8_15)  // even address
 	{
-		m_hopper = data & 0x0100;   // ???
+		// hopper motor
+		m_hopper->motor_w(BIT(data, 8));
 
 		// latch the bit
 		m_eeprom->di_write((data & 0x4000) >> 14);
@@ -722,11 +722,6 @@ void cave_state::korokoro_eeprom_w(offs_t offset, u16 data, u16 mem_mask)
 		// clock line asserted: write latch or select next bit to read
 		m_eeprom->clk_write((data & 0x2000) ? ASSERT_LINE : CLEAR_LINE);
 	}
-}
-
-int cave_state::korokoro_hopper_r()
-{
-	return m_hopper ? 1 : 0;
 }
 
 
@@ -869,7 +864,7 @@ u16 ppsatan_state::ppsatan_touch_r()
 		if ( ((m_ppsatan_io_mux >> 2) & (1 << slot_y)) || ((m_ppsatan_io_mux << 6) & (1 << slot_y)) )
 			ret_y |= 1 << (slot_y % 6);
 
-//      if (!Player)    popmessage("TOUCH %03x %03x -> %f -> %d", x, y, ((320.0f - 1 - x) - 12) / 20, slot_x);
+		//if (!Player) popmessage("TOUCH %03x %03x -> %f -> %d", x, y, ((320.0f - 1 - x) - 12) / 20, slot_x);
 	}
 
 	return ret_x | (ret_y << 8);
@@ -896,7 +891,7 @@ void ppsatan_state::ppsatan_out_w(offs_t offset, u16 data, u16 mem_mask)
 		m_oki[0]->set_rom_bank((data & 0x8000) >> 15);
 	}
 
-//  popmessage("OUT %04x", data);
+	//popmessage("OUT %04x", data);
 }
 
 void ppsatan_state::ppsatan_map(address_map &map)
@@ -1000,7 +995,7 @@ void cave_z80_state::pwrinst2_map(address_map &map)
 
 u16 cave_z80_state::sailormn_input0_r()
 {
-//  watchdog_reset16_r(0, 0);    // written too rarely for mame.
+	//watchdog_reset16_r(0, 0); // written too rarely for mame.
 	return m_io_in0->read();
 }
 
@@ -1106,15 +1101,10 @@ void cave_state::tjumpman_leds_w(u8 data)
 	m_led_outputs[3] = BIT(data, 3); // go
 	m_led_outputs[4] = BIT(data, 4); // 1 bet
 	m_led_outputs[5] = BIT(data, 5); // medal
-	m_hopper = BIT(data, 6);  // hopper
+	m_hopper->motor_w(BIT(data, 6)); // hopper
 	m_led_outputs[6] = BIT(data, 7); // 3 bet
 
-//  popmessage("led %04X", data);
-}
-
-int cave_state::tjumpman_hopper_r()
-{
-	return (m_hopper && !(m_screen[0]->frame_number() % 10)) ? 0 : 1;
+	//popmessage("led %04X", data);
 }
 
 void cave_state::tjumpman_map(address_map &map)
@@ -1143,15 +1133,15 @@ void cave_state::tjumpman_map(address_map &map)
 
 void cave_state::pacslot_leds_w(u8 data)
 {
-	m_led_outputs[0] = data & 0x0001; // pac-man
-	m_led_outputs[1] = data & 0x0002; // ms. pac-man
-	m_led_outputs[2] = data & 0x0004; // payout
-	m_led_outputs[3] = data & 0x0008; // start
-	m_led_outputs[4] = data & 0x0010; // bet
-	m_led_outputs[5] = data & 0x0020; // medal
-	m_hopper = data & 0x0040;  // hopper
+	m_led_outputs[0] = BIT(data, 0); // pac-man
+	m_led_outputs[1] = BIT(data, 1); // ms. pac-man
+	m_led_outputs[2] = BIT(data, 2); // payout
+	m_led_outputs[3] = BIT(data, 3); // start
+	m_led_outputs[4] = BIT(data, 4); // bet
+	m_led_outputs[5] = BIT(data, 5); // medal
+	m_hopper->motor_w(BIT(data, 6)); // hopper
 
-//  popmessage("led %04X", data);
+	//popmessage("led %04X", data);
 }
 
 void cave_state::pacslot_map(address_map &map)
@@ -1285,6 +1275,31 @@ void cave_state::jumbogod_map(address_map &map)
 
 	map(0x900001, 0x900001).rw("oki2", FUNC(okim6295_device::read), FUNC(okim6295_device::write));   // M6295
 	map(0xc00001, 0xc00001).w(FUNC(cave_state::jumbogod_leds_w));                                    // Leds
+}
+
+/***************************************************************************
+                                   Cellage
+***************************************************************************/
+
+//TODO: LEDs, at least
+
+void cave_state::cellage_map(address_map &map)
+{
+	map(0x000000, 0x07ffff).rom();                                                                   // ROM
+	map(0x100000, 0x10ffff).ram().share("nvram");                                                    // RAM (battery)
+	map(0x200000, 0x20ffff).ram().share(m_spriteram[0]);                                             // Sprites (unused)
+	map(0x300000, 0x307fff).m(m_tilemap[0], FUNC(tilemap038_device::vram_map));                      // Layer 0
+	map(0x400000, 0x400001).portr("IN0");                                                            // Inputs + EEPROM + Hopper
+	map(0x400002, 0x400003).portr("IN1");                                                            // Inputs
+	map(0x500000, 0x500005).w(m_tilemap[0], FUNC(tilemap038_device::vregs_w));                       // Layer 0 Control
+	map(0x600000, 0x60007f).w(FUNC(cave_state::videoregs_w<0>)).share(m_videoregs[0]);               // Video Regs
+	map(0x600000, 0x600007).r(FUNC(cave_state::irq_cause_r));                                        // IRQ Cause
+	map(0x600068, 0x600069).w("watchdog", FUNC(watchdog_timer_device::reset16_w));                   // Watchdog
+	map(0x700000, 0x70ffff).ram().w(m_palette[0], FUNC(palette_device::write16)).share("palette.0"); // Palette
+	map(0x800001, 0x800001).rw("oki1", FUNC(okim6295_device::read), FUNC(okim6295_device::write));   // M6295
+	map(0x900001, 0x900001).rw("oki2", FUNC(okim6295_device::read), FUNC(okim6295_device::write));   // M6295
+	map(0xc00000, 0xc00001).w(FUNC(cave_state::pacslot_leds_w));                                     // Leds + Hopper
+	map(0xe00001, 0xe00001).w(FUNC(cave_state::tjumpman_eeprom_w));                                  // EEPROM
 }
 
 /***************************************************************************
@@ -1521,7 +1536,7 @@ static INPUT_PORTS_START( cave )
 	PORT_BIT( 0x0080, IP_ACTIVE_LOW, IPT_START2 )
 	PORT_BIT( 0x0100, IP_ACTIVE_LOW, IPT_COIN2 ) PORT_IMPULSE(6)
 	PORT_BIT( 0x0200, IP_ACTIVE_LOW, IPT_SERVICE1 )
-	PORT_BIT( 0x0800, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", eeprom_serial_93cxx_device, do_read)
+	PORT_BIT( 0x0800, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", FUNC(eeprom_serial_93cxx_device::do_read))
 	PORT_BIT( 0xf400, IP_ACTIVE_LOW, IPT_UNKNOWN )
 INPUT_PORTS_END
 
@@ -1664,7 +1679,7 @@ static INPUT_PORTS_START( guwange )
 	PORT_BIT( 0x0002, IP_ACTIVE_LOW, IPT_COIN2 ) PORT_IMPULSE(6)
 	PORT_SERVICE_NO_TOGGLE( 0x0004, IP_ACTIVE_LOW )
 	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_SERVICE1 )
-	PORT_BIT( 0x0080, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", eeprom_serial_93cxx_device, do_read)
+	PORT_BIT( 0x0080, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", FUNC(eeprom_serial_93cxx_device::do_read))
 	PORT_BIT( 0xff70, IP_ACTIVE_LOW, IPT_UNKNOWN )
 INPUT_PORTS_END
 
@@ -1680,10 +1695,10 @@ static INPUT_PORTS_START( korokoro )
 	PORT_BIT( 0x1000, IP_ACTIVE_LOW, IPT_SERVICE2 ) // service medal out?
 	PORT_SERVICE( 0x2000, IP_ACTIVE_LOW )
 	PORT_BIT( 0x4000, IP_ACTIVE_LOW, IPT_SERVICE1 ) // service coin
-	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(cave_state, korokoro_hopper_r) // motor / hopper status ???
+	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("hopper", FUNC(ticket_dispenser_device::line_r))
 
 	PORT_START("IN1")
-	PORT_BIT( 0x1000, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", eeprom_serial_93cxx_device, do_read)
+	PORT_BIT( 0x1000, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", FUNC(eeprom_serial_93cxx_device::do_read))
 	PORT_BIT( 0xefff, IP_ACTIVE_LOW, IPT_UNKNOWN )
 INPUT_PORTS_END
 
@@ -1693,11 +1708,11 @@ static INPUT_PORTS_START( tekkencw )
 	PORT_SERVICE_NO_TOGGLE( 0x01, IP_ACTIVE_LOW )
 	PORT_BIT( 0x02, IP_ACTIVE_LOW,  IPT_COIN2 ) PORT_IMPULSE(10) // credits (impulse needed to coin up reliably)
 	PORT_BIT( 0x04, IP_ACTIVE_LOW,  IPT_UNKNOWN )
-	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", eeprom_serial_93cxx_device, do_read)
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", FUNC(eeprom_serial_93cxx_device::do_read))
 	PORT_BIT( 0x10, IP_ACTIVE_LOW,  IPT_OTHER ) PORT_NAME( DEF_STR( Yes ) ) PORT_CODE(KEYCODE_Y)    // suru ("do")
 	PORT_BIT( 0x20, IP_ACTIVE_LOW,  IPT_GAMBLE_PAYOUT )
 	PORT_BIT( 0x40, IP_ACTIVE_LOW,  IPT_BUTTON1 ) PORT_NAME( "Bet" )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW,  IPT_CUSTOM ) PORT_READ_LINE_MEMBER(cave_state, tjumpman_hopper_r)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW,  IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("hopper", FUNC(ticket_dispenser_device::line_r))
 
 	PORT_START("IN1")
 	PORT_CONFNAME( 0x08, 0x08, "Self Test" )
@@ -1715,11 +1730,11 @@ static INPUT_PORTS_START( tekkenbs )
 	PORT_SERVICE_NO_TOGGLE( 0x01, IP_ACTIVE_LOW )
 	PORT_BIT( 0x02, IP_ACTIVE_LOW,  IPT_COIN2 ) PORT_IMPULSE(10) // credits (impulse needed to coin up reliably)
 	PORT_BIT( 0x04, IP_ACTIVE_LOW,  IPT_UNKNOWN )
-	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", eeprom_serial_93cxx_device, do_read)
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", FUNC(eeprom_serial_93cxx_device::do_read))
 	PORT_BIT( 0x10, IP_ACTIVE_LOW,  IPT_JOYSTICK_LEFT )
 	PORT_BIT( 0x20, IP_ACTIVE_LOW,  IPT_GAMBLE_PAYOUT )
 	PORT_BIT( 0x40, IP_ACTIVE_LOW,  IPT_BUTTON1 ) PORT_NAME( "Bet" )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW,  IPT_CUSTOM ) PORT_READ_LINE_MEMBER(cave_state, tjumpman_hopper_r)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW,  IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("hopper", FUNC(ticket_dispenser_device::line_r))
 
 	PORT_START("IN1")
 	PORT_CONFNAME( 0x08, 0x08, "Self Test" )
@@ -1736,11 +1751,11 @@ static INPUT_PORTS_START( tjumpman )
 	PORT_START("IN0")
 	PORT_SERVICE_NO_TOGGLE( 0x01, IP_ACTIVE_LOW )
 	PORT_BIT( 0x06, IP_ACTIVE_LOW,  IPT_UNKNOWN )
-	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", eeprom_serial_93cxx_device, do_read)
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", FUNC(eeprom_serial_93cxx_device::do_read))
 	PORT_BIT( 0x10, IP_ACTIVE_LOW,  IPT_OTHER   ) PORT_NAME( DEF_STR( Yes ) ) PORT_CODE(KEYCODE_Y)    // suru ("do")
 	PORT_BIT( 0x20, IP_ACTIVE_LOW,  IPT_GAMBLE_PAYOUT )
 	PORT_BIT( 0x40, IP_ACTIVE_LOW,  IPT_BUTTON1 ) PORT_NAME( "1 Bet" )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW,  IPT_CUSTOM ) PORT_READ_LINE_MEMBER(cave_state, tjumpman_hopper_r)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW,  IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("hopper", FUNC(ticket_dispenser_device::line_r))
 
 	PORT_START("IN1")
 	PORT_BIT( 0x07, IP_ACTIVE_LOW, IPT_UNKNOWN )
@@ -1759,11 +1774,11 @@ static INPUT_PORTS_START( pacslot )
 	PORT_SERVICE( 0x01, IP_ACTIVE_LOW ) // must stay on during service mode
 	PORT_BIT( 0x02, IP_ACTIVE_LOW,  IPT_COIN2 ) PORT_IMPULSE(10) // credits (impulse needed to coin up reliably)
 	PORT_BIT( 0x04, IP_ACTIVE_LOW,  IPT_UNKNOWN )
-	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", eeprom_serial_93cxx_device, do_read)
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", FUNC(eeprom_serial_93cxx_device::do_read))
 	PORT_BIT( 0x10, IP_ACTIVE_LOW,  IPT_OTHER   ) PORT_NAME( "Pac-Man" ) PORT_CODE(KEYCODE_Y)
 	PORT_BIT( 0x20, IP_ACTIVE_LOW,  IPT_GAMBLE_PAYOUT )
 	PORT_BIT( 0x40, IP_ACTIVE_LOW,  IPT_BUTTON1 ) PORT_NAME( "Bet" )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW,  IPT_CUSTOM ) PORT_READ_LINE_MEMBER(cave_state, tjumpman_hopper_r)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW,  IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("hopper", FUNC(ticket_dispenser_device::line_r))
 
 	PORT_START("IN1")
 	PORT_CONFNAME( 0x08, 0x08, "Self Test" )
@@ -1791,18 +1806,18 @@ static INPUT_PORTS_START( paccarn )
 	PORT_SERVICE( 0x01, IP_ACTIVE_LOW )
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_COIN2 ) PORT_IMPULSE(10) // credits (impulse needed to coin up reliably)
 	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_UNKNOWN )
-	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", eeprom_serial_93cxx_device, do_read)
-	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(cave_state, paccarn_bet4_r)
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", FUNC(eeprom_serial_93cxx_device::do_read))
+	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(cave_state::paccarn_bet4_r))
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_NAME( "Bet 2" )
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_START1 )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(cave_state, tjumpman_hopper_r)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("hopper", FUNC(ticket_dispenser_device::line_r))
 
 	PORT_START("IN1")
 	PORT_BIT( 0x07, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_CONFNAME( 0x08, 0x08, "Self Test" )
 	PORT_CONFSETTING(    0x08, DEF_STR( Off ) )
 	PORT_CONFSETTING(    0x00, DEF_STR( On ) )
-	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(cave_state, paccarn_bet8_r)
+	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(cave_state::paccarn_bet8_r))
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_BUTTON2 ) PORT_NAME( "Bet 3" )
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_IMPULSE(10) // medal (impulse needed to coin up reliably)
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_GAMBLE_PAYOUT )
@@ -1819,7 +1834,7 @@ static INPUT_PORTS_START( jumbogod )
 	PORT_BIT( 0x01, IP_ACTIVE_LOW,  IPT_UNKNOWN )
 	PORT_BIT( 0x02, IP_ACTIVE_LOW,  IPT_COIN1 ) PORT_IMPULSE(10) // credits (impulse needed to coin up reliably)
 	PORT_BIT( 0x04, IP_ACTIVE_LOW,  IPT_UNKNOWN )
-	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", eeprom_serial_93cxx_device, do_read)
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", FUNC(eeprom_serial_93cxx_device::do_read))
 	PORT_BIT( 0x10, IP_ACTIVE_LOW,  IPT_BUTTON1 ) PORT_NAME( "Tai Atari (Body Slam)" )
 	PORT_BIT( 0x20, IP_ACTIVE_LOW,  IPT_BUTTON3 ) PORT_NAME( "Shippo Kougeki (Tail Attack)")  // not a mistake; it is #3 by the game's test menu.
 	PORT_BIT( 0xC0, IP_ACTIVE_LOW,  IPT_UNKNOWN )
@@ -1833,13 +1848,35 @@ static INPUT_PORTS_START( jumbogod )
 	PORT_BIT( 0xC0, IP_ACTIVE_LOW, IPT_UNKNOWN )
 INPUT_PORTS_END
 
+static INPUT_PORTS_START( cellage )
+	PORT_START("IN0")
+	PORT_SERVICE( 0x01, IP_ACTIVE_LOW ) // must stay on during service mode
+	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_START1 )
+	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_PLAYER(4)
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", FUNC(eeprom_serial_93cxx_device::do_read))
+	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_BUTTON5 ) PORT_PLAYER(4)
+	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_BUTTON6 ) PORT_PLAYER(4)
+	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_IMPULSE(10) // credits (impulse needed to coin up reliably)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_BUTTON8 ) PORT_PLAYER(4)
+
+	PORT_START("IN1")
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_UNKNOWN )
+	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_UNKNOWN )
+	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_UNKNOWN )
+	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_UNKNOWN )
+	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_UNKNOWN )
+	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_UNKNOWN )
+	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_UNKNOWN )
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_UNKNOWN )
+INPUT_PORTS_END
+
 static INPUT_PORTS_START( ppsatan )
 	PORT_START("SYSTEM")   // $200000
 	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_COIN1    )
 	PORT_BIT( 0x0004, IP_ACTIVE_LOW, IPT_SERVICE1 ) // service coin
 	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_SERVICE2 ) // advance in service mode
 	PORT_BIT( 0x0072, IP_ACTIVE_LOW, IPT_UNKNOWN  )
-	PORT_BIT( 0x0080, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", eeprom_serial_93cxx_device, do_read)
+	PORT_BIT( 0x0080, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", FUNC(eeprom_serial_93cxx_device::do_read))
 
 	PORT_DIPNAME( 0x0300, 0x0300, DEF_STR( Coinage ) )          PORT_DIPLOCATION("SW1:1,2")
 	PORT_DIPSETTING(      0x0300, "1 Coin/1 1P-Game (2 Coins/1 2P-Game)" )
@@ -2409,6 +2446,8 @@ void cave_state::korokoro(machine_config &config)
 
 	EEPROM_93C46_16BIT(config, m_eeprom);
 
+	TICKET_DISPENSER(config, m_hopper, attotime::from_msec(200));
+
 	/* video hardware */
 	m_screen[0]->set_visarea(0, 320-1-2, 0, 240-1-1);
 
@@ -2543,6 +2582,8 @@ void cave_state::pacslot(machine_config &config)
 
 	EEPROM_93C46_16BIT(config, m_eeprom, eeprom_serial_streaming::ENABLE);
 
+	TICKET_DISPENSER(config, m_hopper, attotime::from_msec(200));
+
 	/* video hardware */
 	m_screen[0]->set_size(0x200, 240);
 	m_screen[0]->set_visarea(0x80, 0x80 + 0x140-1, 0, 240-1);
@@ -2581,6 +2622,18 @@ void cave_state::jumbogod(machine_config &config)
 	pacslot(config);
 
 	m_maincpu->set_addrmap(AS_PROGRAM, &cave_state::jumbogod_map);
+}
+
+void cave_state::cellage(machine_config &config)
+{
+	pacslot(config);
+
+	m_maincpu->set_addrmap(AS_PROGRAM, &cave_state::cellage_map);
+
+	m_screen[0]->set_size(384, 240);
+	m_screen[0]->set_visarea(0, 384-1, 0, 240-1);
+
+	m_tilemap[0]->set_xoffs(48, 0);
 }
 
 /***************************************************************************
@@ -2743,7 +2796,7 @@ void cave_z80_state::sailormn(machine_config &config)
 	m_audiocpu->set_addrmap(AS_PROGRAM, &cave_z80_state::sailormn_sound_map);
 	m_audiocpu->set_addrmap(AS_IO, &cave_z80_state::sailormn_sound_portmap);
 
-//  config.set_maximum_quantum(attotime::from_hz(600));
+	//config.set_maximum_quantum(attotime::from_hz(600));
 
 	MCFG_MACHINE_RESET_OVERRIDE(cave_z80_state,sailormn)
 	EEPROM_93C46_16BIT(config, m_eeprom);
@@ -2800,6 +2853,8 @@ void cave_state::tekkencw(machine_config &config)
 
 	EEPROM_93C46_16BIT(config, m_eeprom, eeprom_serial_streaming::ENABLE);
 
+	TICKET_DISPENSER(config, m_hopper, attotime::from_msec(200));
+
 	/* video hardware */
 	m_screen[0]->set_size(0x200, 240);
 	m_screen[0]->set_visarea(0x80, 0x80 + 0x140-1, 0, 240-1);
@@ -2841,6 +2896,8 @@ void cave_state::tjumpman(machine_config &config)
 	WATCHDOG_TIMER(config, "watchdog").set_time(attotime::from_seconds(3));  /* a guess, and certainly wrong */
 
 	EEPROM_93C46_16BIT(config, m_eeprom, eeprom_serial_streaming::ENABLE);
+
+	TICKET_DISPENSER(config, m_hopper, attotime::from_msec(200));
 
 	/* video hardware */
 	m_screen[0]->set_size(0x200, 240);
@@ -3760,6 +3817,30 @@ ROM_START( theroes )
 	ROM_LOAD( "t-hero-snd3.u0455",    0x800000, 0x400000, CRC(52b0b2c0) SHA1(6e96698905391c21a4fedd60e2768734b58add4e) )
 ROM_END
 
+ROM_START( theroesa ) // missing ROM labels
+	ROM_REGION( 0x100000, "maincpu", 0 )        /* 68000 Code */
+	ROM_LOAD16_BYTE( "u0127", 0x000000, 0x080000, CRC(a2c599a7) SHA1(6f78e4171dbe587e997b1453ab7cb933a23e671f) )
+	ROM_LOAD16_BYTE( "u0129", 0x000001, 0x080000, CRC(f205a715) SHA1(baa94f5d6a5e3505ffab35c312686f1dc5ac15ef) )
+
+	ROM_REGION( 0x800000, "sprites0", 0 )  /* Sprites */
+	ROM_LOAD( "t-hero-obj1.u0736", 0x000000, 0x400000, CRC(35090f7c) SHA1(035e6c12a87d9c7241eea34fc7e2170bec842acc) )
+	ROM_LOAD( "t-hero-obj2.u0738", 0x400000, 0x400000, CRC(71605108) SHA1(6070c26d8f22fafc81d97cacfef96ae652e355d0) )
+
+	ROM_REGION( 0x400000, "layer0", 0 )
+	ROM_LOAD( "t-hero-bg1.u0999", 0x000000, 0x400000, CRC(47b0fb40) SHA1(a7217b3d805b4255c589821cdadd9b190cada525) )
+
+	ROM_REGION( 0x400000, "layer1", 0 )
+	ROM_LOAD( "t-hero-bg2.u0995", 0x000000, 0x400000, CRC(b16237a1) SHA1(66aed2c5036492a17d20de90333e172a6f117851) )
+
+	ROM_REGION( 0x400000, "layer2", 0 )
+	ROM_LOAD( "t-hero-bg3.u0998", 0x000000, 0x400000, CRC(08eb5604) SHA1(3d32966708c73198272c40e6ddc680bf4c7919eb) )
+
+	ROM_REGION( 0xc00000, "ymz", 0 )    /* Samples */
+	ROM_LOAD( "crvsaders-snd1.u0447", 0x000000, 0x400000, CRC(92770a52) SHA1(81f6835e1b45eb0f367e4586fdda92466f02edb9) )
+	ROM_LOAD( "crvsaders-snd2.u0454", 0x400000, 0x400000, CRC(329ae1cf) SHA1(0c5e5074a5d8f4fb85ab4893bc953f192dcb301a) )
+	ROM_LOAD( "t-hero-snd3.u0455",    0x800000, 0x400000, CRC(52b0b2c0) SHA1(6e96698905391c21a4fedd60e2768734b58add4e) )
+ROM_END
+
 
 /***************************************************************************
 
@@ -3786,8 +3867,7 @@ ROM_START( guwange )
 	ROM_RELOAD(                       0x1800000, 0x400000 )
 	ROM_LOAD32_WORD_SWAP( "u085.bin", 0x1000002, 0x400000, CRC(a7d5659e) SHA1(10abac022ebe106a3ca7186ff18ca2757f903033) )
 	ROM_RELOAD(                       0x1800002, 0x400000 )
-//  sprite bug fix?
-//  ROM_FILL(                    0x1800000, 0x800000, 0xff )
+//  ROM_FILL(                         0x1800000, 0x800000, 0xff ) // sprite bug fix?
 
 	ROM_REGION( 0x800000, "layer0", 0 )
 	ROM_LOAD( "u101.bin", 0x000000, 0x800000, CRC(0369491f) SHA1(ca6b1345506f13a17c9bace01637d1f61a278644) )
@@ -3823,8 +3903,7 @@ ROM_START( guwanges )
 	ROM_RELOAD(                       0x1800000, 0x400000 )
 	ROM_LOAD32_WORD_SWAP( "u085.bin", 0x1000002, 0x400000, CRC(a7d5659e) SHA1(10abac022ebe106a3ca7186ff18ca2757f903033) )
 	ROM_RELOAD(                       0x1800002, 0x400000 )
-//  sprite bug fix?
-//  ROM_FILL(                    0x1800000, 0x800000, 0xff )
+//  ROM_FILL(                         0x1800000, 0x800000, 0xff ) // sprite bug fix?
 
 	ROM_REGION( 0x800000, "layer0", 0 )
 	ROM_LOAD( "u101.bin", 0x000000, 0x800000, CRC(0369491f) SHA1(ca6b1345506f13a17c9bace01637d1f61a278644) )
@@ -5204,6 +5283,33 @@ ROM_START( tjumpman )
 ROM_END
 
 
+// シールプリント機 セラージュ
+// YUJIN YPIA1080 CPU BOARD (basically same as Namco's N-44 EM)
+ROM_START( cellage )
+	ROM_REGION( 0x080000, "maincpu", 0 )
+	ROM_LOAD16_WORD_SWAP( "sra143.u41", 0x00000, 0x80000, CRC(4e3e8ac5) SHA1(e58255c0ac85849e92c46a118cf3c47edcaa8b86) )
+
+	ROM_REGION( 0x100000, "sprites0", ROMREGION_ERASE00 )
+	// not populated
+
+	// TODO: correct ROM loading
+	ROM_REGION( 0x100000, "layer0", 0 )
+	ROM_LOAD16_BYTE( "sra243.u60", 0x00000, 0x80000, CRC(c117ba37) SHA1(00398a5acd49c39afe9342fabcd4e2b63905ecb8) )
+	ROM_RELOAD(                    0x00001, 0x80000 )
+	// u61 not populated
+
+	ROM_REGION( 0x40000, "oki1", 0 )
+	ROM_LOAD( "sra310.u27", 0x00000, 0x40000, CRC(cb22e32e) SHA1(a1c335c2dda32e1b319d7edf7e76b559545e33ab) ) // 1xxxxxxxxxxxxxxxxx = 0xFF
+
+	ROM_REGION( 0x40000, "oki2", 0 )
+	ROM_LOAD( "sra410.u32", 0x00000, 0x40000, CRC(502a86ca) SHA1(7f14352298a4cb641970804586e1ebc640ec72c8) )
+
+	ROM_REGION( 0x117 * 2, "plds", 0 )
+	ROM_LOAD( "n44u1j.u1", 0x117*0, 0x117, CRC(2d8e06e1) SHA1(91e2a593ee83411c1c46be2b790c7acaa04b1e3e) )   // GAL16V8D-15LP
+	ROM_LOAD( "n44u3j.u3", 0x117*1, 0x117, CRC(5b12591d) SHA1(ed0fc64da0c9252fc67c1a63a871224719a20544) )   // GAL16V8D-15LP
+ROM_END
+
+
 /***************************************************************************
 
                              Puzzle Uo Poko
@@ -5271,10 +5377,10 @@ ROM_END
    Expand the 2 bit part into a 4 bit layout, so we can decode it */
 void cave_z80_state::sailormn_unpack_tiles(int chip)
 {
-	const u32 len=   m_tileregion[chip]->bytes();
-	u8 *rgn      =   m_tileregion[chip]->base();
-	u8 *src      =   rgn + (len/4)*3 - 1;
-	u8 *dst      =   rgn + (len/4)*4 - 2;
+	const u32 len = m_tileregion[chip]->bytes();
+	u8 *rgn = m_tileregion[chip]->base();
+	u8 *src = rgn + (len/4)*3 - 1;
+	u8 *dst = rgn + (len/4)*4 - 2;
 
 	while (src <= dst)
 	{
@@ -5494,7 +5600,6 @@ void cave_z80_state::init_pwrinst2a()
 		rom[0xd46c / 2] = 0xd482;           // kurara dash fix  0xd400 -> 0xd482
 	}
 #endif
-
 }
 
 void cave_z80_state::init_sailormn()
@@ -5533,9 +5638,6 @@ void cave_state::init_tjumpman()
 	unpack_sprites(0);
 	m_kludge = 3;
 	m_time_vblank_irq = 17376;
-
-	m_hopper = 0;
-	save_item(NAME(m_hopper));
 }
 
 void cave_state::init_uopoko()
@@ -5558,9 +5660,7 @@ void cave_state::init_korokoro()
 
 	m_leds[0] = 0;
 	m_leds[1] = 0;
-	m_hopper = 0;
 	save_item(NAME(m_leds));
-	save_item(NAME(m_hopper));
 }
 
 /***************************************************************************
@@ -5634,6 +5734,8 @@ GAME( 1996, agalletah,  agallet,  sailormn, cave,     cave_z80_state, init_agall
 // 68000 ROM string 0x328e-32b5 has 1993 copyright and publisher string, it's planned release date but cancelled?
 GAME( 1996, hotdogst,   0,        hotdogst, cave,     cave_z80_state, init_hotdogst,  ROT90,  "Marble (Ace International license)",     "Hotdog Storm (Korea)", MACHINE_SUPPORTS_SAVE )
 
+GAME( 1996, cellage,    0,        cellage,  cellage,  cave_state,     init_tjumpman,  ROT0,   "Yujin / Namco",                          "Cellage", MACHINE_NOT_WORKING | MACHINE_SUPPORTS_SAVE )
+
 GAME( 1996, pacslot,    0,        pacslot,  pacslot,  cave_state,     init_tjumpman,  ROT0,   "Namco",                                  "Pac-Slot",     MACHINE_SUPPORTS_SAVE )
 GAME( 1996, paceight,   0,        paceight, paceight, cave_state,     init_tjumpman,  ROT0,   "Namco",                                  "Pac-Eight",    MACHINE_SUPPORTS_SAVE )
 GAME( 1996, paccarn,    0,        paccarn,  paccarn,  cave_state,     init_tjumpman,  ROT0,   "Namco",                                  "Pac-Carnival", MACHINE_SUPPORTS_SAVE )
@@ -5674,4 +5776,5 @@ GAME( 1999, crusherm,   0,        crusherm, korokoro, cave_state,     init_korok
 
 GAME( 1999, tjumpman,   0,        tjumpman, tjumpman, cave_state,     init_tjumpman,  ROT0,   "Namco",                                  "Tobikose! Jumpman", MACHINE_SUPPORTS_SAVE )
 
-GAME( 2001, theroes,    0,        gaia,     theroes,  cave_state,     init_gaia,      ROT0,   "Primetek Investments",                   "Thunder Heroes", MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_SOUND ) // cuts out occasionally
+GAME( 2001, theroes,    0,        gaia,     theroes,  cave_state,     init_gaia,      ROT0,   "Primetek Investments",                   "Thunder Heroes (set 1)", MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_SOUND ) // cuts out occasionally
+GAME( 2001, theroesa,   theroes,  gaia,     theroes,  cave_state,     init_gaia,      ROT0,   "Primetek Investments",                   "Thunder Heroes (set 2)", MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_SOUND ) // cuts out occasionally

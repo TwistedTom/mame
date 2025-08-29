@@ -1398,7 +1398,7 @@ static INPUT_PORTS_START( fbcrazy )
 	PORT_DIPSETTING(    0x08, DEF_STR( No ) )
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_UNUSED )
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_UNUSED )
-	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(fbcrazy_state, meter_pulse_r)
+	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(fbcrazy_state::meter_pulse_r))
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_UNUSED )
 
 	PORT_START("TRACK_X")  // Fake trackball input port
@@ -1472,13 +1472,12 @@ void rastersp_state::rs_config_base(machine_config &config)
 	PALETTE(config, m_palette, palette_device::RGB_565);
 
 	/* Sound */
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	DAC_16BIT_R2R_TWOS_COMPLEMENT(config, m_ldac, 0);
 	DAC_16BIT_R2R_TWOS_COMPLEMENT(config, m_rdac, 0);
-	m_ldac->add_route(ALL_OUTPUTS, "lspeaker", 0.5); // unknown DAC
-	m_rdac->add_route(ALL_OUTPUTS, "rspeaker", 0.5); // unknown DAC
+	m_ldac->add_route(ALL_OUTPUTS, "speaker", 0.5, 0); // unknown DAC
+	m_rdac->add_route(ALL_OUTPUTS, "speaker", 0.5, 1); // unknown DAC
 
 	SCC85C30(config, m_duart, 8'000'000);
 	m_duart->configure_channels(1'843'200, 0, 1'843'200, 0);

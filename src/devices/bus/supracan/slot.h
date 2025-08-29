@@ -1,8 +1,8 @@
 // license:BSD-3-Clause
 // copyright-holders:
 
-#ifndef MAME_BUS_SUPERACAN_SLOT_H
-#define MAME_BUS_SUPERACAN_SLOT_H
+#ifndef MAME_BUS_SUPRACAN_SLOT_H
+#define MAME_BUS_SUPRACAN_SLOT_H
 
 #include "imagedev/cartrom.h"
 
@@ -80,11 +80,11 @@ public:
 
 protected:
 	// device_t implementation
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 
 	device_superacan_cart_interface *m_cart;
 };
 
 DECLARE_DEVICE_TYPE(SUPERACAN_CART_SLOT, superacan_cart_slot_device)
 
-#endif // MAME_BUS_SUPERACAN_SLOT_H
+#endif // MAME_BUS_SUPRACAN_SLOT_H
