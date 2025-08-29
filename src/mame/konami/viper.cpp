@@ -1880,7 +1880,7 @@ static INPUT_PORTS_START( viper )
 	PORT_DIPSETTING( 0x08, DEF_STR( Off ) )
 	PORT_DIPSETTING( 0x00, DEF_STR( On ) )
 	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_UNKNOWN )
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("ds2430", ds2430a_device, data_r)
+	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("ds2430", FUNC(ds2430a_device::data_r))
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_UNKNOWN ) // if this bit is 0, loads a disk copier instead
 	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_UNKNOWN )
 
@@ -2165,7 +2165,7 @@ INPUT_PORTS_START( p9112 )
 	PORT_INCLUDE( p911 )
 
 	PORT_MODIFY("IN2")
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(viper_state, ds2430_combined_r)
+	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(viper_state::ds2430_combined_r))
 INPUT_PORTS_END
 
 INPUT_PORTS_START( mfightc )
@@ -2605,10 +2605,9 @@ void viper_state::viper(machine_config &config)
 	PALETTE(config, "palette").set_entries(65536);
 
 	/* sound hardware */
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
-	DMADAC(config, "dacl").add_route(ALL_OUTPUTS, "lspeaker", 1.0);
-	DMADAC(config, "dacr").add_route(ALL_OUTPUTS, "rspeaker", 1.0);
+	SPEAKER(config, "speaker", 2).front();
+	DMADAC(config, "dacl").add_route(ALL_OUTPUTS, "speaker", 1.0, 0);
+	DMADAC(config, "dacr").add_route(ALL_OUTPUTS, "speaker", 1.0, 1);
 
 	M48T58(config, "m48t58", 0);
 
@@ -2629,12 +2628,10 @@ void viper_state::viper_ppp(machine_config &config)
 void viper_state::viper_fullbody(machine_config &config)
 {
 	viper(config);
-	config.device_remove("lspeaker");
-	config.device_remove("rspeaker");
-	SPEAKER(config, "front").front_center();
-	SPEAKER(config, "rear").rear_center();
-	DMADAC(config.replace(), "dacl").add_route(ALL_OUTPUTS, "front", 1.0);
-	DMADAC(config.replace(), "dacr").add_route(ALL_OUTPUTS, "rear", 1.0);
+	config.device_remove("speaker");
+	SPEAKER(config, "speaker", 2).front_center(0).rear_center(1);
+	DMADAC(config.replace(), "dacl").add_route(ALL_OUTPUTS, "speaker", 1.0, 0);
+	DMADAC(config.replace(), "dacr").add_route(ALL_OUTPUTS, "speaker", 1.0, 1);
 }
 
 void viper_state::viper_fbdongle(machine_config &config)

@@ -704,7 +704,7 @@ protected:
 
 	virtual void machine_start() override ATTR_COLD;
 	virtual void machine_reset() override ATTR_COLD;
-	virtual void device_resolve_objects() override;
+	virtual void device_resolve_objects() override ATTR_COLD;
 
 	void namcos10_base(machine_config &config);
 	void namcos10_exio(machine_config &config);
@@ -1101,15 +1101,14 @@ void namcos10_state::namcos10_base(machine_config &config)
 	SCREEN(config, "screen", SCREEN_TYPE_RASTER);
 
 	/* sound hardware */
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	// CXD2938Q; SPU with CD-ROM controller - also seen in PSone, 101.4912MHz / 2
 	// TODO: This must be replaced with a proper CXD2938Q device, CD-ROM functionality of chip not used
 	spu_device &spu(SPU(config, "spu", XTAL(101'491'200)/2, m_maincpu.target()));
 	spu.set_stream_flags(STREAM_SYNCHRONOUS);
-	spu.add_route(0, "lspeaker", 0.75);
-	spu.add_route(1, "rspeaker", 0.75);
+	spu.add_route(0, "speaker", 0.75, 0);
+	spu.add_route(1, "speaker", 0.75, 1);
 
 	// TODO: Trace main PCB to see where JAMMA I/O goes and/or how int10 can be triggered (SM10MA3?)
 	m_io_update_interrupt.bind().set("maincpu:irq", FUNC(psxirq_device::intin10));
@@ -2899,8 +2898,8 @@ void namcos10_memp3_state::namcos10_memp3_base(machine_config &config)
 	});
 
 	LC82310(config, m_lc82310, XTAL(16'934'400));
-	m_lc82310->add_route(0, "lspeaker", 1.0);
-	m_lc82310->add_route(1, "rspeaker", 1.0);
+	m_lc82310->add_route(0, "speaker", 1.0, 0);
+	m_lc82310->add_route(1, "speaker", 1.0, 1);
 }
 
 void namcos10_memp3_state::machine_start()
@@ -3352,8 +3351,8 @@ static INPUT_PORTS_START( mgexio_medal )
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_TILT )
 
 	PORT_START("MGEXIO_COIN")
-	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_NAME("Coin Sensor(L)") PORT_CHANGED_MEMBER(DEVICE_SELF, namcos10_state, mgexio_coin_start, 0)
-	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_COIN2 ) PORT_NAME("Coin Sensor(R)") PORT_CHANGED_MEMBER(DEVICE_SELF, namcos10_state, mgexio_coin_start, 1)
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_NAME("Coin Sensor(L)") PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(namcos10_state::mgexio_coin_start), 0)
+	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_COIN2 ) PORT_NAME("Coin Sensor(R)") PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(namcos10_state::mgexio_coin_start), 1)
 
 INPUT_PORTS_END
 

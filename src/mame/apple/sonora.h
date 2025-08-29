@@ -9,6 +9,7 @@
 #include "machine/6522via.h"
 #include "machine/applefdintf.h"
 #include "machine/mv_sonora.h"
+#include "machine/pseudovia.h"
 #include "machine/swim2.h"
 #include "sound/asc.h"
 #include "speaker.h"
@@ -40,8 +41,10 @@ public:
 
 	void cb1_w(int state);
 	void cb2_w(int state);
-	template <u8 mask> void slot_irq_w(int state);
 	void scc_irq_w(int state);
+	void slot0_irq_w(int state);
+	void slot1_irq_w(int state);
+	void slot2_irq_w(int state);
 
 	void pixel_clock_w(u32 pclk) { m_video->set_pixel_clock(pclk); }
 
@@ -51,7 +54,7 @@ protected:
 	virtual void device_reset() override ATTR_COLD;
 	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 
-	virtual void sound_stream_update(sound_stream &stream, std::vector<read_stream_view> const &inputs, std::vector<write_stream_view> &outputs) override;
+	virtual void sound_stream_update(sound_stream &stream) override;
 
 private:
 	devcb_write_line write_pb4, write_pb5, write_cb2;
@@ -60,6 +63,7 @@ private:
 	required_device<cpu_device> m_maincpu;
 	required_device<mac_video_sonora_device> m_video;
 	required_device<via6522_device> m_via1;
+	required_device<pseudovia_device> m_pseudovia;
 	required_device<asc_device> m_asc;
 	required_device<applefdintf_device> m_fdc;
 	required_device_array<floppy_connector, 2> m_floppy;
@@ -69,7 +73,6 @@ private:
 	sound_stream *m_stream;
 	emu_timer *m_6015_timer;
 	int m_via_interrupt, m_via2_interrupt, m_scc_interrupt, m_last_taken_interrupt;
-	uint8_t m_pseudovia_regs[256], m_pseudovia_ier, m_pseudovia_ifr;
 	floppy_image_device *m_cur_floppy = nullptr;
 	int m_hdsel;
 	bool m_overlay;
@@ -77,10 +80,6 @@ private:
 	u32 m_ram_size, m_rom_size;
 
 	u32 rom_switch_r(offs_t offset);
-
-	uint8_t pseudovia_r(offs_t offset);
-	void pseudovia_w(offs_t offset, uint8_t data);
-	void pseudovia_recalc_irqs();
 
 	uint16_t mac_via_r(offs_t offset);
 	void mac_via_w(offs_t offset, uint16_t data, uint16_t mem_mask);
@@ -94,7 +93,6 @@ private:
 	void via_out_cb2(int state);
 	void via1_irq(int state);
 	void via2_irq(int state);
-	void asc_irq(int state);
 	TIMER_CALLBACK_MEMBER(mac_6015_tick);
 
 	void phases_w(uint8_t phases);

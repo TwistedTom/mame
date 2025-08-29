@@ -1173,7 +1173,7 @@ static INPUT_PORTS_START( z80ne )
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_UNUSED )
 
 	PORT_START("RST")           /* RESET key */
-	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_KEYBOARD ) PORT_NAME("LX.384 Reset")  PORT_CODE(KEYCODE_F3) PORT_CHANGED_MEMBER(DEVICE_SELF, z80ne_state, z80ne_reset, 0) PORT_CHAR('N')
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_KEYBOARD ) PORT_NAME("LX.384 Reset")  PORT_CODE(KEYCODE_F3) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(z80ne_state::z80ne_reset), 0) PORT_CHAR('N')
 
 	/* Settings - need to reboot after altering these */
 	PORT_START("LX.385")
@@ -1192,7 +1192,7 @@ static INPUT_PORTS_START( z80net )
 
 	/* LX.387 Keyboard BREAK key */
 	PORT_START("LX387_BRK")
-	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_KEYBOARD ) PORT_NAME("Break") PORT_CODE(KEYCODE_END) PORT_CHAR(UCHAR_MAMEKEY(END)) PORT_CHANGED_MEMBER(DEVICE_SELF, z80net_state, z80net_nmi, 0)
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_KEYBOARD ) PORT_NAME("Break") PORT_CODE(KEYCODE_END) PORT_CHAR(UCHAR_MAMEKEY(END)) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(z80net_state::z80net_nmi), 0)
 
 	/* LX.387 Keyboard (Encoded by KR2376) */
 	PORT_START("X0")
@@ -1417,7 +1417,7 @@ void z80net_state::z80net(machine_config &config)
 	/* video hardware */
 	SCREEN(config, "lx388", SCREEN_TYPE_RASTER);
 
-	MC6847_PAL(config, m_vdg, 4.433619_MHz_XTAL);
+	MC6847(config, m_vdg, 4.433619_MHz_XTAL, true);
 	m_vdg->set_screen("lx388");
 	m_vdg->input_callback().set(FUNC(z80net_state::lx388_mc6847_videoram_r));
 	// AG = GND, GM2 = GND, GM1 = GND, GM0 = GND, CSS = GND
@@ -1458,7 +1458,7 @@ void z80netb_state::z80netb(machine_config &config)
 	/* video hardware */
 	SCREEN(config, "lx388", SCREEN_TYPE_RASTER);
 
-	MC6847_PAL(config, m_vdg, 4.433619_MHz_XTAL);
+	MC6847(config, m_vdg, 4.433619_MHz_XTAL, true);
 	m_vdg->set_screen("lx388");
 	m_vdg->input_callback().set(FUNC(z80netb_state::lx388_mc6847_videoram_r));
 	// AG = GND, GM2 = GND, GM1 = GND, GM0 = GND, CSS = GND
@@ -1500,7 +1500,7 @@ void z80netf_state::z80netf(machine_config &config)
 	/* video hardware */
 	SCREEN(config, "lx388", SCREEN_TYPE_RASTER);
 
-	MC6847_PAL(config, m_vdg, 4.433619_MHz_XTAL);
+	MC6847(config, m_vdg, 4.433619_MHz_XTAL, true);
 	m_vdg->set_screen("lx388");
 	m_vdg->input_callback().set(FUNC(z80netf_state::lx388_mc6847_videoram_r));
 	// AG = GND, GM2 = GND, GM1 = GND, GM0 = GND, CSS = GND

@@ -6,8 +6,8 @@
 
 ***************************************************************************/
 
-#ifndef MAME_MACHINE_SA1111
-#define MAME_MACHINE_SA1111
+#ifndef MAME_MACHINE_SA1111_H
+#define MAME_MACHINE_SA1111_H
 
 #pragma once
 
@@ -45,12 +45,12 @@ public:
 
 	void l3wd_in(int state);
 
-	void map(address_map &map);
+	void map(address_map &map) ATTR_COLD;
 
 protected:
-	virtual void device_start() override;
-	virtual void device_reset() override;
-	virtual void device_add_mconfig(machine_config &config) override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 
 	void set_irq_line(uint32_t line, int state);
 	void update_interrupts();
@@ -685,4 +685,4 @@ protected:
 
 DECLARE_DEVICE_TYPE(SA1111, sa1111_device)
 
-#endif // MAME_MACHINE_SA1111
+#endif // MAME_MACHINE_SA1111_H
