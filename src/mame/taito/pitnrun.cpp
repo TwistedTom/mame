@@ -2,11 +2,11 @@
 // copyright-holders: Tomasz Slanina, Pierpaolo Prazzoli
 
 /****************************************************
-   Pit&Run - Taito 1984
 
- driver by  Tomasz Slanina and  Pierpaolo Prazzoli
+Pit & Run - Taito 1984
+driver by Tomasz Slanina and  Pierpaolo Prazzoli
 
- hardware is very similar to suprridr.cpp, thepit.cpp, timelimt.cpp
+hardware is very similar to roundup.cpp, suprridr.cpp, misc/timelimt.cpp
 
 TODO:
 
@@ -360,7 +360,6 @@ void pitnrun_state::palette(palette_device &palette) const
 		b /= 3;
 
 		palette.set_pen_color(i + 16, (r > 0xff) ? 0xff : r, (g > 0xff) ? 0xff : g, (b > 0xff) ? 0xff : b);
-
 	}
 }
 
@@ -767,7 +766,7 @@ static INPUT_PORTS_START( pitnrun )
 	PORT_DIPSETTING(    0x80, DEF_STR( On ) )       // also enables bootup test
 
 	PORT_START("TILT")
-	PORT_BIT( 1, IP_ACTIVE_HIGH, IPT_TILT ) PORT_WRITE_LINE_MEMBER(pitnrun_state, tilt_w)
+	PORT_BIT( 1, IP_ACTIVE_HIGH, IPT_TILT ) PORT_WRITE_LINE_MEMBER(FUNC(pitnrun_state::tilt_w))
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( jumpkun )

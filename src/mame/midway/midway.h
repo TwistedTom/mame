@@ -82,7 +82,7 @@ protected:
 	// device-level overrides
 	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
 	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
-	virtual ioport_constructor device_input_ports() const override;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
 	virtual void device_start() override ATTR_COLD;
 	virtual void device_reset() override ATTR_COLD;
 
@@ -108,7 +108,7 @@ private:
 	uint8_t m_mute;
 	uint8_t m_overall[2];
 	uint8_t m_duty_cycle[2][3];
-	uint8_t m_ayvolume_lookup[16];
+	float m_ayvolume_lookup[16];
 
 	// I/O port overrides
 	uint8_t m_custom_input_mask[5];

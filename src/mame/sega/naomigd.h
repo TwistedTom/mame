@@ -72,7 +72,7 @@ public:
 	naomi_gdrom_board(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
 	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
-	virtual void submap(address_map &map) override;
+	virtual void submap(address_map &map) override ATTR_COLD;
 	void sh4_map(address_map &map) ATTR_COLD;
 	void sh4_io_map(address_map &map) ATTR_COLD;
 	void pci_map(address_map &map) ATTR_COLD;
@@ -130,7 +130,7 @@ public:
 protected:
 	virtual void device_start() override ATTR_COLD;
 	virtual void device_reset() override ATTR_COLD;
-	virtual ioport_constructor device_input_ports() const override;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
 
 	virtual void board_setup_address(uint32_t address, bool is_dma) override;
 	virtual void board_get_buffer(uint8_t *&base, uint32_t &limit) override;
@@ -140,7 +140,7 @@ private:
 	enum { FILENAME_LENGTH=24 };
 	int work_mode; // set it different from 0 to enable the cpus and full dimm board emulation
 
-	required_device<sh4_device> m_maincpu;
+	required_device<sh7091_device> m_maincpu;
 	required_device<pic16c622_device> m_securitycpu;
 	required_device<i2cmem_device> m_i2c0;
 	required_device<i2cmem_device> m_i2c1;

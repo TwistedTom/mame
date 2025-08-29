@@ -1,7 +1,7 @@
 // license:BSD-3-Clause
 // copyright-holders:Olivier Galibert
-#ifndef MAME_DEVICES_MACHINE_UPD765_H
-#define MAME_DEVICES_MACHINE_UPD765_H
+#ifndef MAME_MACHINE_UPD765_H
+#define MAME_MACHINE_UPD765_H
 
 #pragma once
 
@@ -55,14 +55,15 @@ public:
 
 	void set_ready_line_connected(bool ready);
 	void set_select_lines_connected(bool select);
+	void set_ts_line_connected(bool ts);
 	void set_floppy(floppy_image_device *image);
 	virtual void soft_reset();
 
 protected:
 	upd765_family_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock);
 
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	TIMER_CALLBACK_MEMBER(update_floppy);
 
@@ -228,7 +229,7 @@ protected:
 
 	static constexpr int rates[4] = { 500000, 300000, 250000, 1000000 };
 
-	bool ready_connected, ready_polled, select_connected, select_multiplexed, has_dor;
+	bool ready_connected, ready_polled, select_connected, select_multiplexed, ts_connected, has_dor;
 
 	bool external_ready;
 
@@ -364,7 +365,7 @@ public:
 	}
 	upd765a_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
-	virtual void map(address_map &map) override;
+	virtual void map(address_map &map) override ATTR_COLD;
 };
 
 class upd765b_device : public upd765_family_device {
@@ -377,7 +378,7 @@ public:
 	}
 	upd765b_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
-	virtual void map(address_map &map) override;
+	virtual void map(address_map &map) override ATTR_COLD;
 };
 
 class i8272a_device : public upd765_family_device {
@@ -389,7 +390,7 @@ public:
 	}
 	i8272a_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
-	virtual void map(address_map &map) override;
+	virtual void map(address_map &map) override ATTR_COLD;
 };
 
 class i82072_device : public upd765_family_device {
@@ -401,10 +402,10 @@ public:
 	}
 	i82072_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
-	virtual void map(address_map &map) override;
+	virtual void map(address_map &map) override ATTR_COLD;
 
 protected:
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 
 	enum motorcfg_mask
 	{
@@ -439,8 +440,8 @@ public:
 protected:
 	ps2_fdc_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock);
 
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 	virtual void soft_reset() override;
 	virtual int check_command() override;
 	virtual void execute_command(int cmd) override;
@@ -452,7 +453,7 @@ class smc37c78_device : public ps2_fdc_device {
 public:
 	smc37c78_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
-	virtual void map(address_map &map) override;
+	virtual void map(address_map &map) override ATTR_COLD;
 };
 
 class upd72065_device : public upd765_family_device {
@@ -466,7 +467,7 @@ public:
 
 	upd72065_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
-	virtual void map(address_map &map) override;
+	virtual void map(address_map &map) override ATTR_COLD;
 	virtual void auxcmd_w(uint8_t data);
 
 protected:
@@ -496,21 +497,21 @@ public:
 	}
 	n82077aa_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
-	virtual void map(address_map &map) override;
+	virtual void map(address_map &map) override ATTR_COLD;
 };
 
 class pc_fdc_superio_device : public upd765_family_device {
 public:
 	pc_fdc_superio_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
-	virtual void map(address_map &map) override;
+	virtual void map(address_map &map) override ATTR_COLD;
 };
 
 class dp8473_device : public upd765_family_device {
 public:
 	dp8473_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
-	virtual void map(address_map &map) override;
+	virtual void map(address_map &map) override ATTR_COLD;
 
 protected:
 	virtual void soft_reset() override;
@@ -525,7 +526,7 @@ public:
 	}
 	pc8477a_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
-	virtual void map(address_map &map) override;
+	virtual void map(address_map &map) override ATTR_COLD;
 };
 
 class pc8477b_device : public ps2_fdc_device {
@@ -537,7 +538,7 @@ public:
 	}
 	pc8477b_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
-	virtual void map(address_map &map) override;
+	virtual void map(address_map &map) override ATTR_COLD;
 };
 
 class wd37c65c_device : public upd765_family_device {
@@ -554,7 +555,7 @@ public:
 	void set_clock2(uint32_t clock) { m_clock2 = clock; }
 	void set_clock2(const XTAL &xtal) { set_clock2(xtal.value()); }
 
-	virtual void map(address_map &map) override;
+	virtual void map(address_map &map) override ATTR_COLD;
 	virtual uint8_t get_st3(floppy_info &fi) override;
 
 private:
@@ -568,7 +569,7 @@ public:
 	// configuration helpers
 	auto input_handler() { return m_input_handler.bind(); }
 
-	virtual void map(address_map &map) override;
+	virtual void map(address_map &map) override ATTR_COLD;
 	uint8_t input_r();
 
 private:
@@ -579,12 +580,12 @@ class tc8566af_device : public upd765_family_device {
 public:
 	tc8566af_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
-	virtual void map(address_map &map) override;
+	virtual void map(address_map &map) override ATTR_COLD;
 
 	void cr1_w(uint8_t data);
 
 protected:
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 
 private:
 	uint8_t m_cr1;
@@ -594,7 +595,7 @@ class hd63266f_device : public upd765_family_device {
 public:
 	hd63266f_device(const machine_config &mconfig, const char *tag, device_t* owner, uint32_t clock);
 
-	virtual void map(address_map &map) override;
+	virtual void map(address_map &map) override ATTR_COLD;
 	auto inp_rd_callback() { return inp_cb.bind(); } // this is really the ts signal
 
 	void rate_w(u8 state) { state ? set_rate(500000) : set_rate(250000); }
@@ -635,4 +636,4 @@ DECLARE_DEVICE_TYPE(MCS3201,        mcs3201_device)
 DECLARE_DEVICE_TYPE(TC8566AF,       tc8566af_device)
 DECLARE_DEVICE_TYPE(HD63266F,       hd63266f_device)
 
-#endif // MAME_DEVICES_MACHINE_UPD765_H
+#endif // MAME_MACHINE_UPD765_H

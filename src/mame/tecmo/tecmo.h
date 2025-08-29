@@ -30,15 +30,17 @@ public:
 		m_fgscroll(*this, "fgscroll"),
 		m_bgscroll(*this, "bgscroll"),
 		m_adpcm_rom(*this, "adpcm"),
-		m_mainbank(*this, "mainbank")
+		m_mainbank(*this, "mainbank"),
+		m_dsw(*this, {"DSWA", "DSWB"})
 	{ }
 
-	void geminib(machine_config &config);
-	void backfirt(machine_config &config);
-	void silkworm(machine_config &config);
-	void gemini(machine_config &config);
 	void rygar(machine_config &config);
+	void gemini(machine_config &config);
+	void geminib(machine_config &config);
+	void silkworm(machine_config &config);
+	void silkwormj(machine_config &config);
 	void silkwormp(machine_config &config);
+	void backfirt(machine_config &config);
 
 	void init_silkworm();
 	void init_rygar();
@@ -46,42 +48,13 @@ public:
 
 protected:
 	virtual void machine_start() override ATTR_COLD;
-	virtual void machine_reset() override ATTR_COLD;
 	virtual void video_start() override ATTR_COLD;
 
 private:
-	required_device<cpu_device> m_maincpu;
-	required_device<cpu_device> m_soundcpu;
-	optional_device<msm5205_device> m_msm;
-	required_device<screen_device> m_screen;
-	required_device<gfxdecode_device> m_gfxdecode;
-	required_device<palette_device> m_palette;
-	required_device<tecmo_spr_device> m_sprgen;
-
-	required_shared_ptr<uint8_t> m_txvideoram;
-	required_shared_ptr<uint8_t> m_fgvideoram;
-	required_shared_ptr<uint8_t> m_bgvideoram;
-	required_shared_ptr<uint8_t> m_spriteram;
-	required_shared_ptr<uint8_t> m_fgscroll;
-	required_shared_ptr<uint8_t> m_bgscroll;
-
-	optional_region_ptr<uint8_t> m_adpcm_rom;
-	required_memory_bank m_mainbank;
-
-	tilemap_t *m_tx_tilemap = nullptr;
-	tilemap_t *m_fg_tilemap = nullptr;
-	tilemap_t *m_bg_tilemap = nullptr;
-	int m_adpcm_pos = 0;
-	int m_adpcm_end = 0;
-	int m_adpcm_data = 0;
-	int m_video_type = 0;
-
 	void bankswitch_w(uint8_t data);
 	void adpcm_end_w(uint8_t data);
-	uint8_t dswa_l_r();
-	uint8_t dswa_h_r();
-	uint8_t dswb_l_r();
-	uint8_t dswb_h_r();
+	template <unsigned Which> uint8_t dsw_l_r();
+	template <unsigned Which> uint8_t dsw_h_r();
 	void txvideoram_w(offs_t offset, uint8_t data);
 	void fgvideoram_w(offs_t offset, uint8_t data);
 	void bgvideoram_w(offs_t offset, uint8_t data);
@@ -101,13 +74,50 @@ private:
 
 	uint32_t screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 
-	void gemini_map(address_map &map) ATTR_COLD;
 	void rygar_map(address_map &map) ATTR_COLD;
-	void rygar_sound_map(address_map &map) ATTR_COLD;
+	void gemini_map(address_map &map) ATTR_COLD;
 	void silkworm_map(address_map &map) ATTR_COLD;
-	void tecmo_sound_map(address_map &map) ATTR_COLD;
+
+	void rygar_sound_map(address_map &map) ATTR_COLD;
+	void geminib_sound_map(address_map &map) ATTR_COLD;
+	void gemini_sound_map(address_map &map) ATTR_COLD;
+	void silkwormj_sound_map(address_map &map) ATTR_COLD;
 	void silkwormp_sound_map(address_map &map) ATTR_COLD;
-	void backfirt_sound_map(address_map &map) ATTR_COLD;
+
+	// devices
+	required_device<cpu_device> m_maincpu;
+	required_device<cpu_device> m_soundcpu;
+	optional_device<msm5205_device> m_msm;
+	required_device<screen_device> m_screen;
+	required_device<gfxdecode_device> m_gfxdecode;
+	required_device<palette_device> m_palette;
+	required_device<tecmo_spr_device> m_sprgen;
+
+	// memory pointers
+	required_shared_ptr<uint8_t> m_txvideoram;
+	required_shared_ptr<uint8_t> m_fgvideoram;
+	required_shared_ptr<uint8_t> m_bgvideoram;
+	required_shared_ptr<uint8_t> m_spriteram;
+	required_shared_ptr<uint8_t> m_fgscroll;
+	required_shared_ptr<uint8_t> m_bgscroll;
+
+	optional_region_ptr<uint8_t> m_adpcm_rom;
+	required_memory_bank m_mainbank;
+
+	// I/O ports
+	required_ioport_array<2> m_dsw;
+
+	// video related
+	tilemap_t *m_tx_tilemap = nullptr;
+	tilemap_t *m_fg_tilemap = nullptr;
+	tilemap_t *m_bg_tilemap = nullptr;
+	int m_video_type = 0;
+
+	// ADPCM related
+	uint8_t m_adpcm_end = 0;
+	uint16_t m_adpcm_pos = 0;
+	bool m_adpcm_toggle = false;
+	bool m_adpcm_enabled = false;
 };
 
 #endif // MAME_TECMO_TECMO_H

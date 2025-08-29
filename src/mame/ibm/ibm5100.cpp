@@ -120,8 +120,8 @@ protected:
 	virtual void machine_start() override ATTR_COLD;
 	virtual void machine_reset() override ATTR_COLD;
 
-	virtual void cpu_pgm_map(address_map &map) override;
-	virtual void cpu_ioc_map(address_map &map) override;
+	virtual void cpu_pgm_map(address_map &map) override ATTR_COLD;
+	virtual void cpu_ioc_map(address_map &map) override ATTR_COLD;
 
 	virtual void da0_ctl_w(u8 data) override;
 
@@ -536,7 +536,7 @@ u8 ibm5100_state::nxr_r()
 			 * giving 64KiB. Even and odd bytes are selected by a flip-flop
 			 * which is toggled with each read.
 			 */
-			data = BIT(m_nxr[rs][m_nxr_address >> basic], (m_nxr_ff & NXR_B0) ? 0 : 8, 8);
+			data = BIT(m_nxr[rs][m_nxr_address >> (basic ? 1 : 0)], (m_nxr_ff & NXR_B0) ? 0 : 8, 8);
 		}
 
 		// always increment address for BASIC, only on odd bytes for APL

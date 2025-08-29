@@ -481,7 +481,7 @@ static INPUT_PORTS_START( doraemon )
 	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_SERVICE1 )
 	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_UNKNOWN  )
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_BUTTON3  )
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_CUSTOM  ) PORT_READ_LINE_DEVICE_MEMBER("hopper", ticket_dispenser_device, line_r) // sensor
+	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_CUSTOM  ) PORT_READ_LINE_DEVICE_MEMBER("hopper", FUNC(ticket_dispenser_device::line_r)) // sensor
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_UNKNOWN  )
 	PORT_SERVICE_NO_TOGGLE( 0x80, IP_ACTIVE_LOW )
 INPUT_PORTS_END
@@ -571,12 +571,11 @@ void champbwl_state::champbwl(machine_config &config)
 	PALETTE(config, "palette", FUNC(champbwl_state::palette), 512);
 
 	// sound hardware
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	x1_010_device &x1snd(X1_010(config, "x1snd", 16_MHz_XTAL));
-	x1snd.add_route(0, "lspeaker", 1.0);
-	x1snd.add_route(1, "rspeaker", 1.0);
+	x1snd.add_route(0, "speaker", 1.0, 0);
+	x1snd.add_route(1, "speaker", 1.0, 1);
 }
 
 

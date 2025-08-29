@@ -21,10 +21,10 @@
 #include "machine/am9517a.h"
 #include "machine/bankdev.h"
 #include "machine/buffer.h"
+#include "machine/clock.h"
 #include "machine/i8251.h"
 #include "machine/i8255.h"
 #include "machine/output_latch.h"
-#include "pc9801_memsw.h"
 #include "machine/pic8259.h"
 #include "machine/pit8253.h"
 #include "machine/ram.h"
@@ -33,6 +33,7 @@
 #include "machine/upd4991a.h"
 #include "machine/upd765.h"
 
+#include "bus/rs232/rs232.h"
 #include "bus/scsi/pc9801_sasi.h"
 #include "bus/scsi/scsi.h"
 #include "bus/scsi/scsihd.h"
@@ -44,15 +45,19 @@
 
 #include "video/upd7220.h"
 
+#include "bus/cbus/amd98.h"
 #include "bus/cbus/pc9801_26.h"
 #include "bus/cbus/pc9801_55.h"
 #include "bus/cbus/pc9801_86.h"
 #include "bus/cbus/pc9801_118.h"
-#include "bus/cbus/pc9801_amd98.h"
 #include "bus/cbus/mpu_pc98.h"
 #include "bus/cbus/pc9801_cbus.h"
-#include "pc9801_kbd.h"
-#include "pc9801_cd.h"
+#include "bus/cbus/sb16_ct2720.h"
+
+#include "pc98_cd.h"
+#include "pc98_kbd.h"
+#include "pc98_memsw.h"
+#include "pc98_sdip.h"
 
 #include "bus/ata/atadev.h"
 #include "bus/ata/ataintf.h"
@@ -71,13 +76,13 @@
 #include "formats/nfd_dsk.h"
 
 #define RTC_TAG      "rtc"
-#define UPD8251_TAG  "upd8251"
 #define SASIBUS_TAG  "sasi"
 
 #define ATTRSEL_REG 0
 #define WIDTH40_REG 2
 #define FONTSEL_REG 3
 #define INTERLACE_REG 4
+#define KAC_REG 5
 #define MEMSW_REG   6
 #define DISPLAY_REG 7
 
@@ -98,6 +103,8 @@ public:
 		, m_ppi_sys(*this, "ppi_sys")
 		, m_ppi_prn(*this, "ppi_prn")
 		, m_beeper(*this, "beeper")
+		, m_sio_rs(*this, "sio_rs")
+		, m_sio_kbd(*this, "sio_kbd")
 	{
 	}
 
@@ -107,18 +114,26 @@ protected:
 	required_device<gfxdecode_device> m_gfxdecode;
 	required_device<palette_device> m_palette;
 	required_device<screen_device> m_screen;
-	required_device<pc9801_kbd_device> m_keyb;
+	required_device<pc98_kbd_device> m_keyb;
 	optional_device<upd1990a_device> m_rtc;
 	required_device<i8255_device> m_ppi_sys;
 	required_device<i8255_device> m_ppi_prn;
 	optional_device<beep_device> m_beeper;
+	required_device<i8251_device> m_sio_rs;
+	required_device<i8251_device> m_sio_kbd;
 
 	void rtc_w(uint8_t data);
 	void ppi_sys_beep_portc_w(uint8_t data);
 
+	virtual void uart_irq_check() = 0;
+	template <unsigned N> void update_uart_irq(int state);
+
+	void pc9801_serial(machine_config &config);
+
 	static void floppy_formats(format_registration &fr);
 
 	u8 m_sys_type = 0;
+	u8 m_uart_irq_mask = 0, m_uart_irq_pending = 0;
 };
 
 class pc9801_state : public pc98_base_state
@@ -142,7 +157,6 @@ public:
 		, m_pic1(*this, "pic8259_master")
 		, m_pic2(*this, "pic8259_slave")
 		, m_memsw(*this, "memsw")
-		, m_sio(*this, UPD8251_TAG)
 		, m_sasibus(*this, SASIBUS_TAG)
 		, m_sasi_data_out(*this, "sasi_data_out")
 		, m_sasi_data_in(*this, "sasi_data_in")
@@ -174,8 +188,7 @@ protected:
 	required_device<pic8259_device> m_pic1;
 	required_device<pic8259_device> m_pic2;
 private:
-	required_device<pc9801_memsw_device> m_memsw;
-	required_device<i8251_device> m_sio;
+	required_device<pc98_memsw_device> m_memsw;
 	optional_device<scsi_port_device> m_sasibus;
 	optional_device<output_latch_device> m_sasi_data_out;
 	optional_device<input_buffer_device> m_sasi_data_in;
@@ -186,7 +199,8 @@ protected:
 	DECLARE_MACHINE_START(pc9801_common);
 	DECLARE_MACHINE_RESET(pc9801_common);
 
-	void pc9801_keyboard(machine_config &config);
+	void config_video(machine_config &config);
+	void config_keyboard(machine_config &config);
 	void pc9801_mouse(machine_config &config);
 	void pc9801_cbus(machine_config &config);
 	void pc9801_sasi(machine_config &config);
@@ -201,7 +215,6 @@ protected:
 
 	uint8_t pc9801_a0_r(offs_t offset);
 	void pc9801_a0_w(offs_t offset, uint8_t data);
-	u8 unk_r(offs_t offset);
 	uint8_t f0_r(offs_t offset);
 
 	uint8_t m_nmi_ff = 0;
@@ -222,7 +235,8 @@ private:
 	void write_sasi_req(int state);
 	uint8_t sasi_status_r();
 	void sasi_ctrl_w(uint8_t data);
-	void draw_text(bitmap_rgb32 &bitmap, uint32_t addr, int y, int wd, int pitch, int lr, int cursor_on, int cursor_addr, bool lower);
+
+	void draw_text(bitmap_rgb32 &bitmap, uint32_t addr, int y, int wd, int pitch, int lr, int cursor_on, int cursor_addr, int cursor_bot, int cursor_top, bool lower);
 
 //  uint8_t winram_r();
 //  void winram_w(uint8_t data);
@@ -310,6 +324,8 @@ protected:
 	u8 m_vram_bank = 0;
 	u8 m_vram_disp = 0;
 
+	virtual void border_color_w(offs_t offset, u8 data);
+
 private:
 	UPD7220_DRAW_TEXT_LINE_MEMBER( hgdc_draw_text );
 
@@ -350,6 +366,10 @@ private:
 	void ppi_mouse_portc_w(uint8_t data);
 
 	TIMER_DEVICE_CALLBACK_MEMBER( mouse_irq_cb );
+
+// UART SIO
+protected:
+	virtual void uart_irq_check() override;
 };
 
 /**********************************************************
@@ -370,12 +390,12 @@ public:
 	}
 
 	void pc9801vm(machine_config &config);
+	void pc9801uv(machine_config &config);
 
 	void pc9801ux(machine_config &config);
 	void pc9801vx(machine_config &config);
 	void pc9801rs(machine_config &config);
 	void pc9801dx(machine_config &config);
-	void pc9801fs(machine_config &config);
 
 	void init_pc9801vm_kanji();
 
@@ -403,7 +423,10 @@ protected:
 	void pc9801rs_video_ff_w(offs_t offset, uint8_t data);
 	void pc9801rs_a0_w(offs_t offset, uint8_t data);
 
+	virtual void border_color_w(offs_t offset, u8 data) override;
+
 	uint8_t ide_ctrl_r();
+	uint8_t ide_ctrl_hack_r();
 	void ide_ctrl_w(uint8_t data);
 	uint16_t ide_cs0_r(offs_t offset, uint16_t mem_mask = ~0);
 	void ide_cs0_w(offs_t offset, uint16_t data, uint16_t mem_mask = ~0);
@@ -413,6 +436,7 @@ protected:
 	void dmapg8_w(offs_t offset, uint8_t data);
 
 	uint16_t timestamp_r(offs_t offset);
+	void artic_wait_w(u8 data);
 
 	void ppi_sys_dac_portc_w(uint8_t data);
 	virtual u8 ppi_prn_portb_r() override;
@@ -435,12 +459,15 @@ protected:
 	void pc9801rs_knjram_w(offs_t offset, uint8_t data);
 
 	required_ioport m_dsw3;
+
+	virtual void itf_43d_bank_w(offs_t offset, uint8_t data);
+	virtual void cbus_43f_bank_w(offs_t offset, uint8_t data);
+
 private:
 	optional_device_array<ata_interface_device, 2> m_ide;
 //  optional_device<dac_1bit_device> m_dac1bit;
 	required_device<speaker_sound_device> m_dac1bit;
 
-	void pc9801rs_bank_w(offs_t offset, uint8_t data);
 	uint8_t midi_r();
 
 	// 286-based machines except for PC98XA
@@ -448,8 +475,10 @@ private:
 	void dma_access_ctrl_w(offs_t offset, u8 data);
 
 	uint8_t a20_ctrl_r(offs_t offset);
+protected:
+	// TODO: map me as a cpu_f0_map
 	void a20_ctrl_w(offs_t offset, uint8_t data);
-
+private:
 	template <unsigned port> u8 fdc_2hd_2dd_ctrl_r();
 	template <unsigned port> void fdc_2hd_2dd_ctrl_w(u8 data);
 
@@ -459,11 +488,19 @@ private:
 	emu_timer *m_fdc_timer = nullptr;
 
 	u8 m_fdc_mode = 0;
+	struct {
+		u8 dev_sel;
+		bool access_144mb;
+	} m_fdc_3mode;
+
 	u8 fdc_mode_r();
 	void fdc_mode_w(u8 data);
 	void fdc_set_density_mode(bool is_2hd);
-
 protected:
+	// $4be, roughly around UV model
+	u8 fdc_3mode_r(offs_t offset);
+	void fdc_3mode_w(offs_t offset, uint8_t data);
+
 	struct {
 		uint8_t pal_entry = 0;
 		uint8_t r[16]{}, g[16]{}, b[16]{};
@@ -476,9 +513,11 @@ private:
 		uint16_t pat[4]{};
 		uint16_t src[4]{};
 		int16_t count = 0;
+		uint16_t mask;
 		uint16_t leftover[4]{};
 		bool first = false;
-		bool init = false;
+		bool start = false;
+		bool loaded = false;
 	} m_egc;
 
 protected:
@@ -504,9 +543,11 @@ class pc9801us_state : public pc9801vm_state
 public:
 	pc9801us_state(const machine_config &mconfig, device_type type, const char *tag)
 		: pc9801vm_state(mconfig, type, tag)
+		, m_sdip(*this, "sdip")
 	{
 	}
 	void pc9801us(machine_config &config);
+	void pc9801fs(machine_config &config);
 
 protected:
 	void pc9801us_io(address_map &map) ATTR_COLD;
@@ -516,12 +557,7 @@ protected:
 
 	// SDIP, PC9801DA onward
 protected:
-	u8 m_sdip[24];
-private:
-	u8 m_sdip_bank;
-	template<unsigned port> u8 sdip_r(offs_t offset);
-	template<unsigned port> void sdip_w(offs_t offset, u8 data);
-	void sdip_bank_w(offs_t offset, u8 data);
+	required_device<pc98_sdip_device> m_sdip;
 };
 
 /**********************************************************
