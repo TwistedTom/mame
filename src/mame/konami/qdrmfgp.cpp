@@ -519,7 +519,7 @@ static INPUT_PORTS_START( qdrmfgp )
 	PORT_DIPSETTING(      0x0000, DEF_STR( Very_Hard ) )
 
 	PORT_START("SENSOR")
-	PORT_BIT( 0x0003, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(qdrmfgp_state, battery_sensor_r)   /* battery power sensor */
+	PORT_BIT( 0x0003, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(FUNC(qdrmfgp_state::battery_sensor_r))   /* battery power sensor */
 	PORT_BIT( 0x0004, IP_ACTIVE_LOW, IPT_SERVICE2 )
 	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_SERVICE3 )
 	PORT_BIT( 0xfff0, IP_ACTIVE_LOW, IPT_UNUSED )
@@ -599,7 +599,7 @@ static INPUT_PORTS_START( qdrmfgp2 )
 	PORT_DIPSETTING(      0x0000, DEF_STR( Very_Hard ) )
 
 	PORT_START("SENSOR")
-	PORT_BIT( 0x0003, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(qdrmfgp_state, battery_sensor_r)   /* battery power sensor */
+	PORT_BIT( 0x0003, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(FUNC(qdrmfgp_state::battery_sensor_r))   /* battery power sensor */
 	PORT_BIT( 0x0004, IP_ACTIVE_LOW, IPT_SERVICE2 )
 	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_SERVICE3 )
 	PORT_BIT( 0xfff0, IP_ACTIVE_LOW, IPT_UNUSED )
@@ -697,14 +697,13 @@ void qdrmfgp_state::qdrmfgp(machine_config &config)
 	m_k053252->set_offsets(40, 16);
 
 	/* sound hardware */
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	k054539_device &k054539(K054539(config, m_k054539, XTAL(18'432'000)));
 	k054539.set_addrmap(0, &qdrmfgp_state::qdrmfgp_k054539_map);
 	k054539.timer_handler().set(FUNC(qdrmfgp_state::k054539_irq1_gen));
-	k054539.add_route(0, "lspeaker", 1.0);
-	k054539.add_route(1, "rspeaker", 1.0);
+	k054539.add_route(0, "speaker", 1.0, 0);
+	k054539.add_route(1, "speaker", 1.0, 1);
 }
 
 void qdrmfgp_state::qdrmfgp2(machine_config &config)
@@ -742,13 +741,12 @@ void qdrmfgp_state::qdrmfgp2(machine_config &config)
 	m_k053252->set_offsets(40, 16);
 
 	/* sound hardware */
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	k054539_device &k054539(K054539(config, "k054539", XTAL(18'432'000)));
 	k054539.set_addrmap(0, &qdrmfgp_state::qdrmfgp_k054539_map);
-	k054539.add_route(0, "lspeaker", 1.0);
-	k054539.add_route(1, "rspeaker", 1.0);
+	k054539.add_route(0, "speaker", 1.0, 0);
+	k054539.add_route(1, "speaker", 1.0, 1);
 }
 
 

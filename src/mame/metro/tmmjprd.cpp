@@ -560,7 +560,7 @@ static INPUT_PORTS_START( tmmjprd )
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_COIN4 ) PORT_NAME("Right Screen Coin B") // might actually be service 1
 	PORT_SERVICE( 0x20, IP_ACTIVE_LOW )
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_UNKNOWN )
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", eeprom_serial_93cxx_device, do_read)   // CHECK!
+	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", FUNC(eeprom_serial_93cxx_device::do_read))   // CHECK!
 
 	PORT_START("PL1.1")
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_MAHJONG_A ) PORT_PLAYER(1)
@@ -757,12 +757,11 @@ void tmmjprd_state::tmpdoki(machine_config &config)
 	lscreen.set_palette(m_palette);
 
 	/* sound hardware */
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	i5000snd_device &i5000snd(I5000_SND(config, "i5000snd", XTAL(40'000'000)));
-	i5000snd.add_route(0, "rspeaker", 1.0);
-	i5000snd.add_route(1, "lspeaker", 1.0);
+	i5000snd.add_route(0, "speaker", 1.0, 1);
+	i5000snd.add_route(1, "speaker", 1.0, 0);
 }
 
 void tmmjprd_state::tmmjprd(machine_config &config)

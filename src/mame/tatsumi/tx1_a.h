@@ -66,13 +66,13 @@ protected:
 	tx1_sound_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock);
 
 	// device-level overrides
-	virtual ioport_constructor device_input_ports() const override;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
 	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 	virtual void device_start() override ATTR_COLD;
 	virtual void device_reset() override ATTR_COLD;
 
 	// sound stream update overrides
-	virtual void sound_stream_update(sound_stream &stream, std::vector<read_stream_view> const &inputs, std::vector<write_stream_view> &outputs) override;
+	virtual void sound_stream_update(sound_stream &stream) override;
 
 	void tx1_sound_io(address_map &map) ATTR_COLD;
 	void tx1_sound_prg(address_map &map) ATTR_COLD;
@@ -131,7 +131,7 @@ public:
 
 protected:
 	// device-level overrides
-	virtual ioport_constructor device_input_ports() const override;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
 };
 
 class buggyboy_sound_device : public tx1_sound_device
@@ -143,13 +143,13 @@ protected:
 	buggyboy_sound_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock);
 
 	// device-level overrides
-	virtual ioport_constructor device_input_ports() const override;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
 	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 	virtual void device_start() override ATTR_COLD;
 	virtual void device_reset() override ATTR_COLD;
 
 	// sound stream update overrides
-	virtual void sound_stream_update(sound_stream &stream, std::vector<read_stream_view> const &inputs, std::vector<write_stream_view> &outputs) override;
+	virtual void sound_stream_update(sound_stream &stream) override;
 
 	void ym1_a_w(uint8_t data);
 	void ym2_a_w(uint8_t data);
@@ -171,7 +171,7 @@ public:
 
 protected:
 	// device-level overrides
-	virtual ioport_constructor device_input_ports() const override;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
 	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 
 	virtual void ym2_b_w(uint8_t data) override;

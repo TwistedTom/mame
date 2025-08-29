@@ -46,8 +46,8 @@
 
 namespace {
 
-static constexpr u32 C7M = 7833600;
-static constexpr u32 C15M = (C7M * 2);
+static constexpr XTAL C15M = 31.3344_MHz_XTAL / 2;
+static constexpr XTAL C7M = 31.3344_MHz_XTAL / 4;
 
 class maciici_state : public driver_device
 {
@@ -68,7 +68,8 @@ public:
 		m_floppy(*this, "fdc:%d", 0U),
 		m_scc(*this, "scc"),
 		m_rtc(*this, "rtc"),
-		m_egret(*this, "egret")
+		m_egret(*this, "egret"),
+		m_config(*this, "config")
 	{
 	}
 
@@ -96,6 +97,7 @@ private:
 	required_device<z80scc_device> m_scc;
 	optional_device<rtc3430042_device> m_rtc;
 	optional_device<egret_device> m_egret;
+	optional_ioport m_config;
 
 	void set_via2_interrupt(int value);
 	void field_interrupts();
@@ -175,14 +177,6 @@ private:
 		else
 			m_fdc->write((offset >> 8) & 0xf, data >> 8);
 	}
-
-	void write_6015(int state)
-	{
-		if (state)
-		{
-			m_macadb->adb_vblank();
-		}
-	}
 };
 
 void maciici_state::machine_start()
@@ -201,6 +195,11 @@ void maciici_state::machine_reset()
 	if (m_egret)
 	{
 		m_maincpu->set_input_line(INPUT_LINE_HALT, ASSERT_LINE);
+	}
+
+	if (m_config)
+	{
+		m_maincpu->set_fpu_enable(BIT(m_config->read(), 0));
 	}
 
 	// put ROM mirror at 0
@@ -502,6 +501,13 @@ void maciici_state::devsel_w(uint8_t devsel)
 static INPUT_PORTS_START(maciici)
 INPUT_PORTS_END
 
+static INPUT_PORTS_START(maciisi)
+	PORT_START("config")
+	PORT_CONFNAME(0x01, 0x00, "FPU")
+	PORT_CONFSETTING(0x00, "No FPU")
+	PORT_CONFSETTING(0x01, "FPU Present")
+INPUT_PORTS_END
+
 /***************************************************************************
     MACHINE DRIVERS
 ***************************************************************************/
@@ -539,12 +545,11 @@ void maciici_state::maciixi_base(machine_config &config)
 	rs232b.dcd_handler().set(m_scc, FUNC(z80scc_device::dcdb_w));
 	rs232b.cts_handler().set(m_scc, FUNC(z80scc_device::ctsb_w));
 
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 	ASC(config, m_asc, C15M, asc_device::asc_type::ASC);
 	m_asc->irqf_callback().set(m_rbv, FUNC(rbv_device::asc_irq_w));
-	m_asc->add_route(0, "lspeaker", 1.0);
-	m_asc->add_route(1, "rspeaker", 1.0);
+	m_asc->add_route(0, "speaker", 1.0, 0);
+	m_asc->add_route(1, "speaker", 1.0, 1);
 
 	R65NC22(config, m_via1, C7M / 10);
 	m_via1->readpa_handler().set(FUNC(maciici_state::via_in_a));
@@ -561,8 +566,8 @@ void maciici_state::maciixi_base(machine_config &config)
 	NSCSI_CONNECTOR(config, "scsi:3").option_set("cdrom", NSCSI_CDROM_APPLE).machine_config(
 		[](device_t *device)
 		{
-			device->subdevice<cdda_device>("cdda")->add_route(0, "^^lspeaker", 1.0);
-			device->subdevice<cdda_device>("cdda")->add_route(1, "^^rspeaker", 1.0);
+			device->subdevice<cdda_device>("cdda")->add_route(0, "^^speaker", 1.0, 0);
+			device->subdevice<cdda_device>("cdda")->add_route(1, "^^speaker", 1.0, 1);
 		});
 	NSCSI_CONNECTOR(config, "scsi:4", mac_scsi_devices, nullptr);
 	NSCSI_CONNECTOR(config, "scsi:5", mac_scsi_devices, nullptr);
@@ -591,9 +596,8 @@ void maciici_state::maciixi_base(machine_config &config)
 	SOFTWARE_LIST(config, "flop_mac35_clean").set_original("mac_flop_clcracked");
 	SOFTWARE_LIST(config, "flop35_list").set_original("mac_flop");
 
-	RBV(config, m_rbv, C15M);
+	RBV(config, m_rbv, 31.3344_MHz_XTAL); // main clock input - additional 30.24MHz and 57.2832MHz pixel clock inputs
 	m_rbv->via6015_callback().set(m_via1, FUNC(via6522_device::write_ca1));
-	m_rbv->via6015_callback().append(FUNC(maciici_state::write_6015));
 	m_rbv->irq_callback().set(FUNC(maciici_state::set_via2_interrupt));
 
 	/* internal ram */
@@ -687,4 +691,4 @@ ROM_END
 } // anonymous namespace
 
 COMP(1989, maciici, 0, 0, maciici, maciici, maciici_state, empty_init, "Apple Computer", "Macintosh IIci", MACHINE_SUPPORTS_SAVE)
-COMP(1990, maciisi, 0, 0, maciisi, maciici, maciici_state, empty_init, "Apple Computer", "Macintosh IIsi", MACHINE_SUPPORTS_SAVE)
+COMP(1990, maciisi, 0, 0, maciisi, maciisi, maciici_state, empty_init, "Apple Computer", "Macintosh IIsi", MACHINE_SUPPORTS_SAVE)

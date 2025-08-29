@@ -1039,7 +1039,7 @@ void twinkle_state::spu_wavebank_w(offs_t offset, uint16_t data, uint16_t mem_ma
 	// then to bank 2, and finally to bank 3.
 	//
 	// neither the 68k nor DMA access wave RAM when the bank is 0.
-	m_wave_bank = data * (4*1024*1024);
+	m_wave_bank = data * 0x400000;
 }
 
 uint16_t twinkle_state::twinkle_waveram_r(offs_t offset)
@@ -1154,8 +1154,8 @@ void twinkle_state::twinkle(machine_config &config)
 	NSCSI_CONNECTOR(config, "scsi:4").option_set("cdrom", NSCSI_XM5401).machine_config(
 			[](device_t *device)
 			{
-				device->subdevice<cdda_device>("cdda")->add_route(0, "^^speakerleft", 1.0);
-				device->subdevice<cdda_device>("cdda")->add_route(1, "^^speakerright", 1.0);
+				device->subdevice<cdda_device>("cdda")->add_route(0, "^^speaker", 1.0, 0);
+				device->subdevice<cdda_device>("cdda")->add_route(1, "^^speaker", 1.0, 1);
 			});
 	NSCSI_CONNECTOR(config, "scsi:7").option_set("ncr53cf96", NCR53CF96).clock(32_MHz_XTAL/2).machine_config(
 			[this](device_t *device)
@@ -1181,17 +1181,16 @@ void twinkle_state::twinkle(machine_config &config)
 	screen.set_physical_aspect(16, 9);
 
 	/* sound hardware */
-	SPEAKER(config, "speakerleft").front_left();
-	SPEAKER(config, "speakerright").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	spu_device &spu(SPU(config, "spu", XTAL(67'737'600)/2, subdevice<psxcpu_device>("maincpu")));
-	spu.add_route(0, "speakerleft", 0.75);
-	spu.add_route(1, "speakerright", 0.75);
+	spu.add_route(0, "speaker", 0.75, 0);
+	spu.add_route(1, "speaker", 0.75, 1);
 
 	rf5c400_device &rf5c400(RF5C400(config, "rfsnd", XTAL(33'868'800)/2));
 	rf5c400.set_addrmap(0, &twinkle_state::rf5c400_map);
-	rf5c400.add_route(0, "speakerleft", 1.0);
-	rf5c400.add_route(1, "speakerright", 1.0);
+	rf5c400.add_route(0, "speaker", 1.0, 0);
+	rf5c400.add_route(1, "speaker", 1.0, 1);
 }
 
 void twinkle_state::twinkle_dvd_type1(machine_config &config)
@@ -1337,23 +1336,23 @@ static INPUT_PORTS_START( twinklex )
 	PORT_INCLUDE( twinkle )
 
 	PORT_MODIFY("OUTSEC")
-	PORT_BIT( 0x00000010, IP_ACTIVE_HIGH, IPT_OUTPUT ) PORT_WRITE_LINE_DEVICE_MEMBER("security", x76f041_device, write_scl)
-	PORT_BIT( 0x00000008, IP_ACTIVE_HIGH, IPT_OUTPUT ) PORT_WRITE_LINE_DEVICE_MEMBER("security", x76f041_device, write_sda)
-	PORT_BIT( 0x00000004, IP_ACTIVE_HIGH, IPT_OUTPUT ) PORT_WRITE_LINE_DEVICE_MEMBER("security", x76f041_device, write_cs)
+	PORT_BIT( 0x00000010, IP_ACTIVE_HIGH, IPT_OUTPUT ) PORT_WRITE_LINE_DEVICE_MEMBER("security", FUNC(x76f041_device::write_scl))
+	PORT_BIT( 0x00000008, IP_ACTIVE_HIGH, IPT_OUTPUT ) PORT_WRITE_LINE_DEVICE_MEMBER("security", FUNC(x76f041_device::write_sda))
+	PORT_BIT( 0x00000004, IP_ACTIVE_HIGH, IPT_OUTPUT ) PORT_WRITE_LINE_DEVICE_MEMBER("security", FUNC(x76f041_device::write_cs))
 
 	PORT_MODIFY("INSEC")
-	PORT_BIT( 0x00001000, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("security", x76f041_device, read_sda)
+	PORT_BIT( 0x00001000, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("security", FUNC(x76f041_device::read_sda))
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( twinklei )
 	PORT_INCLUDE( twinkle )
 
 	PORT_MODIFY("OUTSEC")
-	PORT_BIT( 0x00000010, IP_ACTIVE_HIGH, IPT_OUTPUT ) PORT_WRITE_LINE_DEVICE_MEMBER("security", i2cmem_device, write_scl)
-	PORT_BIT( 0x00000008, IP_ACTIVE_HIGH, IPT_OUTPUT ) PORT_WRITE_LINE_DEVICE_MEMBER("security", i2cmem_device, write_sda)
+	PORT_BIT( 0x00000010, IP_ACTIVE_HIGH, IPT_OUTPUT ) PORT_WRITE_LINE_DEVICE_MEMBER("security", FUNC(i2cmem_device::write_scl))
+	PORT_BIT( 0x00000008, IP_ACTIVE_HIGH, IPT_OUTPUT ) PORT_WRITE_LINE_DEVICE_MEMBER("security", FUNC(i2cmem_device::write_sda))
 
 	PORT_MODIFY("INSEC")
-	PORT_BIT( 0x00001000, IP_ACTIVE_HIGH, IPT_OUTPUT ) PORT_READ_LINE_DEVICE_MEMBER("security", i2cmem_device, read_sda)
+	PORT_BIT( 0x00001000, IP_ACTIVE_HIGH, IPT_OUTPUT ) PORT_READ_LINE_DEVICE_MEMBER("security", FUNC(i2cmem_device::read_sda))
 INPUT_PORTS_END
 
 #define TWINKLE_BIOS    \

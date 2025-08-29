@@ -24,8 +24,8 @@ public:
 
 protected:
 	// device_t implementation
-	virtual ioport_constructor device_input_ports() const override;
-	virtual void device_start() override;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
+	virtual void device_start() override ATTR_COLD;
 
 	// device_serial_interface implementation
 	virtual void tra_callback() override;
@@ -33,7 +33,7 @@ protected:
 	virtual void rcv_complete() override;
 
 	// ROM region (unused, as the device is HLE'd)
-	virtual const tiny_rom_entry *device_rom_region() const override;
+	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
 
 	TIMER_CALLBACK_MEMBER(update_output);
 
@@ -41,13 +41,16 @@ private:
 	int check_command( const char* commandtocheck, int command_len, uint8_t* command_data );
 	void send_format_table_packet(uint8_t flag, int x, int y);
 	void send_format_decimal_packet(int x, int y);
+	void send_format_hex_packet(int x, int y);
 	void send_touch_packet();
+	char ntoc(int n) { return n < 10 ?  n + '0' : n - 10 + 'A'; }
 
 	enum
 	{
 		FORMAT_UNKNOWN,
 		FORMAT_TABLET,
-		FORMAT_DECIMAL
+		FORMAT_DECIMAL,
+		FORMAT_HEX
 	};
 
 	enum

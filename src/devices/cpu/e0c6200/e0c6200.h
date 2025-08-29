@@ -18,8 +18,8 @@ public:
 
 protected:
 	// device-level overrides
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	// device_execute_interface overrides
 	virtual u32 execute_min_cycles() const noexcept override { return 5; }
@@ -91,6 +91,7 @@ protected:
 	void inc_x();
 	void inc_y();
 	void do_branch(int condition = 1);
+	void op_illegal();
 
 	// opcode handlers
 	u8 op_inc(u8 x);

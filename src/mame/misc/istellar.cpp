@@ -299,8 +299,8 @@ static INPUT_PORTS_START( istellar )
 	PORT_DIPSETTING(    0x04, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
 	PORT_SERVICE_NO_TOGGLE( 0x08, IP_ACTIVE_HIGH )
-	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_COIN2 ) PORT_CHANGED_MEMBER(DEVICE_SELF, istellar_state, coin_inserted, 0)
-	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, istellar_state, coin_inserted, 0)
+	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_COIN2 ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(istellar_state::coin_inserted), 0)
+	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(istellar_state::coin_inserted), 0)
 	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_START2 )
 	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_START1 )
 
@@ -381,8 +381,8 @@ void istellar_state::istellar(machine_config &config)
 
 	PIONEER_LDV1000(config, m_laserdisc, 0);
 	m_laserdisc->set_overlay(256, 256, FUNC(istellar_state::screen_update));
-	m_laserdisc->add_route(0, "lspeaker", 1.0);
-	m_laserdisc->add_route(1, "rspeaker", 1.0);
+	m_laserdisc->add_route(0, "speaker", 1.0, 0);
+	m_laserdisc->add_route(1, "speaker", 1.0, 1);
 
 	// video hardware
 	m_laserdisc->add_ntsc_screen(config, "screen");
@@ -394,8 +394,7 @@ void istellar_state::istellar(machine_config &config)
 	GFXDECODE(config, m_gfxdecode, m_palette, gfx_istellar);
 
 	// sound hardware
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 }
 
 

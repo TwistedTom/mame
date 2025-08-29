@@ -740,7 +740,7 @@ void rabbit_state::rabbit_map(address_map &map)
 
 static INPUT_PORTS_START( rabbit )
 	PORT_START("INPUTS")
-	PORT_BIT( 0x00000001, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", eeprom_serial_93cxx_device, do_read) // as per code at 4d932
+	PORT_BIT( 0x00000001, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", FUNC(eeprom_serial_93cxx_device::do_read)) // as per code at 4d932
 	PORT_BIT( 0x00000002, IP_ACTIVE_LOW, IPT_UNKNOWN ) // unlabeled in input test
 	PORT_BIT( 0x00000004, IP_ACTIVE_LOW, IPT_START1 )
 	PORT_BIT( 0x00000008, IP_ACTIVE_LOW, IPT_START2 )
@@ -900,12 +900,11 @@ void rabbit_state::rabbit(machine_config &config)
 	PALETTE(config, m_palette, palette_device::BLACK).set_format(palette_device::xGRB_888, 0x4000);
 
 	/* sound hardware */
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	i5000snd_device &i5000snd(I5000_SND(config, "i5000snd", XTAL(40'000'000)));
-	i5000snd.add_route(0, "rspeaker", 1.0);
-	i5000snd.add_route(1, "lspeaker", 1.0);
+	i5000snd.add_route(0, "speaker", 1.0, 1);
+	i5000snd.add_route(1, "speaker", 1.0, 0);
 }
 
 

@@ -553,7 +553,7 @@ void rfslotsmcs48_state::hopper_decode()
 
 */
 	u8 res = 0xff;
-	if(!BIT(m_hdecode, 0) & (!BIT(m_hdecode, 1)))  // g1&g2=0
+	if(!BIT(m_hdecode, 0, 2))  // active low
 	{
 		u8 a, b, c, d;
 		d = BIT(m_maincpu->p1_r(), 6);
@@ -597,7 +597,7 @@ static INPUT_PORTS_START(babyfrts)
 	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_UNKNOWN )  // ctrl 4 (display) ?  /   :
 
 	PORT_START("IN2")
-	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_CUSTOM )  PORT_READ_LINE_DEVICE_MEMBER("hopper", ticket_dispenser_device, line_r)
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_CUSTOM )  PORT_READ_LINE_DEVICE_MEMBER("hopper", FUNC(ticket_dispenser_device::line_r))
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_COIN1)    PORT_NAME("Coin In")  PORT_IMPULSE(5)
 	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_UNKNOWN )
