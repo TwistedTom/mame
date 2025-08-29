@@ -269,7 +269,7 @@ static INPUT_PORTS_START( littlerb )
 	PORT_DIPNAME( 0x1000, 0x1000, "???"  )
 	PORT_DIPSETTING(      0x1000, DEF_STR( Off ) )
 	PORT_DIPSETTING(      0x0000, DEF_STR( On ) )
-	PORT_BIT( 0xe000, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(littlerb_state, frame_step_r)
+	PORT_BIT( 0xe000, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(FUNC(littlerb_state::frame_step_r))
 
 	PORT_START("P2")    // 16bit
 	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_JOYSTICK_UP ) PORT_8WAY PORT_PLAYER(2)
@@ -310,11 +310,10 @@ void littlerb_state::littlerb(machine_config &config)
 	TIMER(config, "step_timer").configure_periodic(FUNC(littlerb_state::sound_step_cb), attotime::from_hz(7500/150));
 	TIMER(config, "sound_timer").configure_periodic(FUNC(littlerb_state::sound_cb), attotime::from_hz(7500));
 
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
-	DAC_8BIT_R2R(config, m_ldac, 0).add_route(ALL_OUTPUTS, "lspeaker", 0.5); // unknown DAC
-	DAC_8BIT_R2R(config, m_rdac, 0).add_route(ALL_OUTPUTS, "rspeaker", 0.5); // unknown DAC
+	DAC_8BIT_R2R(config, m_ldac, 0).add_route(ALL_OUTPUTS, "speaker", 0.5, 0); // unknown DAC
+	DAC_8BIT_R2R(config, m_rdac, 0).add_route(ALL_OUTPUTS, "speaker", 0.5, 1); // unknown DAC
 }
 
 ROM_START( littlerb )
@@ -331,7 +330,7 @@ void littlerb_state::init_littlerb()
 {
 	/* various scenes flicker to the point of graphics being invisible (eg. the map screen at the very start of a game)
 	   unless you overclock the TMS34010 to 120%, possible timing bug in the core? this is a hack */
-	m_indervid->subdevice<cpu_device>("tms")->set_clock_scale(1.2f);
+	m_indervid->subdevice<cpu_device>("tms")->set_clock_scale(1.2);
 }
 
 } // anonymous namespace

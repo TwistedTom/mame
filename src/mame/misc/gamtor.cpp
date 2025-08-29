@@ -50,8 +50,8 @@ public:
 	virtual void mem_linear_w(offs_t offset,uint8_t data) override;
 
 protected:
-	virtual void io_3cx_map(address_map &map) override;
-	virtual void io_3bx_3dx_map(address_map &map) override;
+	virtual void io_3cx_map(address_map &map) override ATTR_COLD;
+	virtual void io_3bx_3dx_map(address_map &map) override ATTR_COLD;
 
 	virtual uint16_t offset() override;
 };
@@ -179,8 +179,7 @@ void gaminator_state::gaminator(machine_config &config)
 	vga.set_screen("screen");
 	vga.set_vram_size(0x100000);
 
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 	/* unknown sound */
 }
 

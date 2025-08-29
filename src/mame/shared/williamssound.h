@@ -214,7 +214,7 @@ protected:
 
 	// device-level overrides
 	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
-	virtual ioport_constructor device_input_ports() const override;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
 	virtual void device_start() override ATTR_COLD;
 	virtual void device_reset() override ATTR_COLD;
 
@@ -223,7 +223,6 @@ private:
 	void williams_s4_map(address_map &map) ATTR_COLD;
 	required_device<m6808_cpu_device> m_cpu;
 	required_device<pia6821_device> m_pia;
-	u8 m_dummy = 0;   // needed for save-state support
 };
 
 
@@ -243,7 +242,7 @@ protected:
 
 	// device-level overrides
 	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
-	virtual ioport_constructor device_input_ports() const override;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
 	virtual void device_start() override ATTR_COLD;
 	virtual void device_reset() override ATTR_COLD;
 
@@ -254,7 +253,6 @@ private:
 	required_device<m6802_cpu_device> m_cpu;
 	required_device<pia6821_device> m_pia;
 	required_device<hc55516_device> m_hc;
-	u8 m_dummy = 0;   // needed for save-state support
 };
 
 
@@ -275,7 +273,7 @@ protected:
 
 	// device-level overrides
 	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
-	virtual ioport_constructor device_input_ports() const override;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
 	virtual void device_start() override ATTR_COLD;
 	virtual void device_reset() override ATTR_COLD;
 
@@ -285,7 +283,6 @@ private:
 	required_device<m6802_cpu_device> m_cpu;
 	required_device<pia6821_device> m_pia;
 	required_device<hc55516_device> m_hc;
-	u8 m_dummy = 0;   // needed for save-state support
 };
 
 
@@ -306,7 +303,7 @@ protected:
 
 	// device-level overrides
 	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
-	virtual ioport_constructor device_input_ports() const override;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
 	virtual void device_start() override ATTR_COLD;
 	virtual void device_reset() override ATTR_COLD;
 
@@ -317,7 +314,6 @@ private:
 	required_device<m6802_cpu_device> m_cpu;
 	required_device<pia6821_device> m_pia;
 	required_device<hc55516_device> m_hc;
-	u8 m_dummy = 0;   // needed for save-state support
 };
 
 #endif // MAME_SHARED_WILLIAMSSOUND_H

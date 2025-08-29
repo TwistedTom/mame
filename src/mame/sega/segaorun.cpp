@@ -831,7 +831,7 @@ void segaorun_state::update_main_irqs()
 
 	// boost interleave during VBLANK and IRQ2 signals
 	if (m_vblank_irq_state || m_irq2_state)
-		machine().scheduler().perfect_quantum(attotime::from_usec(100));
+		machine().scheduler().add_quantum(attotime::from_ticks(4, m_maincpu->clock()), attotime::from_usec(100));
 }
 
 
@@ -963,7 +963,7 @@ static INPUT_PORTS_START( outrun_generic )
 	PORT_BIT( 0xff, 0x00, IPT_PEDAL2 ) PORT_SENSITIVITY(100) PORT_KEYDELTA(40)
 
 	PORT_START("ADC.3")
-	PORT_BIT( 0xff, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(segaorun_state, bankmotor_pos_r)
+	PORT_BIT( 0xff, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(FUNC(segaorun_state::bankmotor_pos_r))
 INPUT_PORTS_END
 
 
@@ -1202,15 +1202,16 @@ void segaorun_state::outrun_base(machine_config &config)
 	SEGAIC16_ROAD(config, m_segaic16road, 0);
 
 	// sound hardware
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
-	YM2151(config, "ymsnd", SOUND_CLOCK/4).add_route(0, "lspeaker", 0.43).add_route(1, "rspeaker", 0.43);
+	ym2151_device &ymsnd(YM2151(config, "ymsnd", SOUND_CLOCK/4));
+	ymsnd.add_route(0, "speaker", 0.30, 0);
+	ymsnd.add_route(1, "speaker", 0.30, 1);
 
 	segapcm_device &pcm(SEGAPCM(config, "pcm", SOUND_CLOCK/4));
 	pcm.set_bank(segapcm_device::BANK_512);
-	pcm.add_route(0, "lspeaker", 1.0);
-	pcm.add_route(1, "rspeaker", 1.0);
+	pcm.add_route(0, "speaker", 0.70, 0);
+	pcm.add_route(1, "speaker", 0.70, 1);
 }
 
 

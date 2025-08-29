@@ -6,10 +6,10 @@
     Written by Ryan Holtz
 */
 
-#pragma once
+#ifndef MAME_CPU_PDP8_PDP8_H
+#define MAME_CPU_PDP8_PDP8_H
 
-#ifndef __PDP8_H__
-#define __PDP8_H__
+#pragma once
 
 //**************************************************************************
 //  TYPE DEFINITIONS
@@ -25,9 +25,9 @@ public:
 	pdp8_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
 	// device-level overrides
-	virtual void device_start() override;
-	virtual void device_reset() override;
-	virtual void device_stop() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
+	virtual void device_stop() override ATTR_COLD;
 
 	// device_execute_interface overrides
 	virtual uint32_t execute_min_cycles() const noexcept override;
@@ -105,4 +105,4 @@ enum
 	PDP8_HALT
 };
 
-#endif /* __PDP8_H__ */
+#endif // MAME_CPU_PDP8_PDP8_H

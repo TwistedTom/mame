@@ -1341,7 +1341,7 @@ static INPUT_PORTS_START( system32_generic )
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_SERVICE3 ) PORT_NAME("Push SW1 (Service)") // on PCB
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_SERVICE4 ) PORT_NAME("Push SW2 (Test)") // on PCB
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_UNKNOWN )
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("mainpcb:eeprom", eeprom_serial_93cxx_device, do_read)
+	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("mainpcb:eeprom", FUNC(eeprom_serial_93cxx_device::do_read))
 INPUT_PORTS_END
 
 
@@ -1395,7 +1395,7 @@ static INPUT_PORTS_START( system32_generic_slave )
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME("slavepcb:Push SW1 (Service)") PORT_CODE(KEYCODE_OPENBRACE)
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME("slavepcb:Push SW2 (Test)") PORT_CODE(KEYCODE_CLOSEBRACE)
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_UNKNOWN )
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("slavepcb:eeprom", eeprom_serial_93cxx_device, do_read)
+	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("slavepcb:eeprom", FUNC(eeprom_serial_93cxx_device::do_read))
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( multi32_generic )
@@ -1425,7 +1425,7 @@ static INPUT_PORTS_START( multi32_generic )
 	PORT_BIT( 0x4f, IP_ACTIVE_LOW, IPT_UNUSED )
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME("Push SW3 (Service)") PORT_CODE(KEYCODE_OPENBRACE)
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME("Push SW4 (Test)") PORT_CODE(KEYCODE_CLOSEBRACE)
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("mainpcb:eeprom", eeprom_serial_93cxx_device, do_read)
+	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("mainpcb:eeprom", FUNC(eeprom_serial_93cxx_device::do_read))
 INPUT_PORTS_END
 
 
@@ -2274,21 +2274,20 @@ void segas32_state::device_add_mconfig(machine_config &config)
 	m_screen->set_screen_update(FUNC(segas32_state::screen_update_system32));
 
 	/* sound hardware */
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	ym3438_device &ym1(YM3438(config, "ym1", MASTER_CLOCK/4));
 	ym1.irq_handler().set(FUNC(segas32_state::ym3438_irq_handler));
-	ym1.add_route(0, "lspeaker", 0.40);
-	ym1.add_route(1, "rspeaker", 0.40);
+	ym1.add_route(0, "speaker", 0.30, 0);
+	ym1.add_route(1, "speaker", 0.30, 1);
 
 	ym3438_device &ym2(YM3438(config, "ym2", MASTER_CLOCK/4));
-	ym2.add_route(0, "lspeaker", 0.40);
-	ym2.add_route(1, "rspeaker", 0.40);
+	ym2.add_route(0, "speaker", 0.30, 0);
+	ym2.add_route(1, "speaker", 0.30, 1);
 
 	rf5c68_device &rfsnd(RF5C68(config, "rfsnd", 50_MHz_XTAL/4)); // ASSP (RF)5C105 or Sega 315-5476A
-	rfsnd.add_route(0, "lspeaker", 0.55);
-	rfsnd.add_route(1, "rspeaker", 0.55);
+	rfsnd.add_route(0, "speaker", 0.40, 0);
+	rfsnd.add_route(1, "speaker", 0.40, 1);
 	rfsnd.set_addrmap(0, &segas32_state::rf5c68_map);
 
 	S32COMM(config, m_s32comm, 0);
@@ -2510,8 +2509,8 @@ void segas32_cd_state::device_add_mconfig(machine_config &config)
 	NSCSI_CONNECTOR(config, "scsi:0").option_set("cdrom", NSCSI_CDROM).machine_config(
 		[](device_t *device)
 		{
-			device->subdevice<cdda_device>("cdda")->add_route(0, "^^lspeaker", 1.0);
-			device->subdevice<cdda_device>("cdda")->add_route(1, "^^rspeaker", 1.0);
+		  device->subdevice<cdda_device>("cdda")->add_route(0, "^^speaker", 1.0, 0);
+		  device->subdevice<cdda_device>("cdda")->add_route(1, "^^speaker", 1.0, 1);
 		});
 	NSCSI_CONNECTOR(config, "scsi:1", scsi_devices, nullptr);
 	NSCSI_CONNECTOR(config, "scsi:2", scsi_devices, nullptr);
@@ -2607,18 +2606,19 @@ void sega_multi32_state::device_add_mconfig(machine_config &config)
 	screen2.set_screen_update(FUNC(segas32_state::screen_update_multi32_right));
 
 	/* sound hardware */
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	/* Two mono speakers in separate cabinets */
+	SPEAKER(config, "sleft").front_center();
+	SPEAKER(config, "sright").front_center();
 
 	ym3438_device &ymsnd(YM3438(config, "ymsnd", MASTER_CLOCK/4));
 	ymsnd.irq_handler().set(FUNC(segas32_state::ym3438_irq_handler));
-	ymsnd.add_route(1, "lspeaker", 0.40);
-	ymsnd.add_route(0, "rspeaker", 0.40);
+	ymsnd.add_route(1, "sleft", 0.15);
+	ymsnd.add_route(0, "sright", 0.15);
 
 	MULTIPCM(config, m_multipcm, MULTI32_CLOCK/4);
 	m_multipcm->set_addrmap(0, &sega_multi32_state::multipcm_map);
-	m_multipcm->add_route(1, "lspeaker", 1.0);
-	m_multipcm->add_route(0, "rspeaker", 1.0);
+	m_multipcm->add_route(1, "sleft", 0.35);
+	m_multipcm->add_route(0, "sright", 0.35);
 
 	S32COMM(config, m_s32comm, 0);
 }
@@ -6012,7 +6012,7 @@ GAME( 1992, orunnersu, orunners, sega_multi32_analog,       orunners, segas32_ne
 GAME( 1992, orunnersj, orunners, sega_multi32_analog,       orunners, segas32_new_state, init_orunners, ROT0, "Sega", "OutRunners (Japan)", MACHINE_IMPERFECT_GRAPHICS )
 
 GAME( 1992, scross,    0,        sega_multi32_analog,       scross,   segas32_new_state, init_scross,   ROT0, "Sega", "Stadium Cross (World)", MACHINE_IMPERFECT_GRAPHICS )
-GAME( 1992, scrossa,   scross,   sega_multi32_analog,       scross,   segas32_new_state, init_scross,   ROT0, "Sega", "Stadium Cross (World, alt)", MACHINE_IMPERFECT_GRAPHICS )
+GAME( 1992, scrossa,   scross,   sega_multi32_analog,       scross,   segas32_new_state, init_scross,   ROT0, "Sega", "Stadium Cross (World, linkable)", MACHINE_IMPERFECT_GRAPHICS )
 GAME( 1992, scrossu,   scross,   sega_multi32_analog,       scross,   segas32_new_state, init_scross,   ROT0, "Sega", "Stadium Cross (US)", MACHINE_IMPERFECT_GRAPHICS )
 
 GAME( 1992, titlef,    0,        sega_multi32,              titlef,   segas32_new_state, init_titlef,   ROT0, "Sega",   "Title Fight (World)", MACHINE_IMPERFECT_GRAPHICS )

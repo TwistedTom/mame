@@ -11,9 +11,10 @@
 
 #pragma once
 
-#include "bus/cbus/pc9801_cbus.h"
+#include "pc9801_cbus.h"
+
+#include "bus/msx/ctrl/ctrl.h"
 #include "sound/ymopn.h"
-#include "pc9801_snd.h"
 
 //**************************************************************************
 //  TYPE DEFINITIONS
@@ -21,7 +22,7 @@
 
 // ======================> pc9801_26_device
 
-class pc9801_26_device : public pc9801_snd_device
+class pc9801_26_device : public device_t
 {
 public:
 	// construction/destruction
@@ -33,20 +34,24 @@ public:
 protected:
 	// device-level overrides
 	virtual void device_validity_check(validity_checker &valid) const override;
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 	// optional information overrides
-	virtual void device_add_mconfig(machine_config &config) override;
-	virtual ioport_constructor device_input_ports() const override;
-	virtual const tiny_rom_entry *device_rom_region() const override;
-	virtual u16 read_io_base() override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
+	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
+	u16 read_io_base();
 
 private:
 	required_device<pc9801_slot_device> m_bus;
 	required_device<ym2203_device>  m_opn;
+	required_device_array<msx_general_purpose_port_device, 2U> m_joy;
+	required_ioport m_irq_jp;
 
-	void sound_irq(int state);
 	u32 m_rom_base;
+	u16 m_io_base;
+	u8 m_joy_sel;
+	u8 m_int_level;
 };
 
 

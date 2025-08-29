@@ -1,8 +1,8 @@
 // license:BSD-3-Clause
 // copyright-holders:Angelo Salese
 
-#ifndef MAME_BUS_FP1060IO_EXP_H
-#define MAME_BUS_FP1060IO_EXP_H
+#ifndef MAME_BUS_FP1000_FP1060IO_EXP_H
+#define MAME_BUS_FP1000_FP1060IO_EXP_H
 
 #pragma once
 
@@ -34,7 +34,7 @@ public:
 	auto intd_callback() { return m_intd_cb.bind(); }
 
 protected:
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 	virtual void device_config_complete() override;
 
 	devcb_write_line m_inta_cb;
@@ -75,13 +75,12 @@ public:
 
 
 protected:
-//  virtual void device_add_mconfig(machine_config &config) override;
-	virtual void device_start() override;
+//  virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual void device_start() override ATTR_COLD;
 };
 
 void fp1060io_slot_devices(device_slot_interface &device);
 
 DECLARE_DEVICE_TYPE(FP1060IO_EXP_SLOT, fp1060io_exp_slot_device)
 
-#endif // MAME_BUS_FP1060IO_EXP_H
-
+#endif // MAME_BUS_FP1000_FP1060IO_EXP_H

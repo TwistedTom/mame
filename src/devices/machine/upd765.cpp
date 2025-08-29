@@ -189,6 +189,7 @@ upd765_family_device::upd765_family_device(const machine_config &mconfig, device
 	ready_polled(true),
 	select_connected(true),
 	select_multiplexed(true),
+	ts_connected(true),
 	has_dor(true),
 	external_ready(false),
 	recalibrate_steps(77),
@@ -209,6 +210,11 @@ void upd765_family_device::set_ready_line_connected(bool _ready)
 void upd765_family_device::set_select_lines_connected(bool _select)
 {
 	select_connected = _select;
+}
+
+void upd765_family_device::set_ts_line_connected(bool ts)
+{
+	ts_connected = ts;
 }
 
 void ps2_fdc_device::set_mode(mode_t _mode)
@@ -714,7 +720,7 @@ uint8_t upd765_family_device::fifo_pop(bool internal)
 	if(!fifo_write && !fifo_pos)
 		disable_transfer();
 	int thr = fifocfg & FIF_THR;
-	if(fifo_write && fifo_expected && (fifo_pos <= thr || (fifocfg & FIF_DIS)))
+	if(fifo_write && fifo_expected && (fifo_pos <= thr || (fifocfg & FIF_DIS)) && !tc_done)
 		enable_transfer();
 	return r;
 }
@@ -1600,10 +1606,14 @@ uint8_t upd765_family_device::get_st3(floppy_info &fi)
 	if(fi.ready)
 		st3 |= ST3_RY;
 	if(fi.dev)
+	{
 		st3 |=
 			(fi.dev->wpt_r() ? ST3_WP : 0x00) |
-			(fi.dev->trk00_r() ? 0x00 : ST3_T0) |
-			(fi.dev->twosid_r() ? 0x00 : ST3_TS);
+			(fi.dev->trk00_r() ? 0x00 : ST3_T0);
+
+		if (ts_connected)
+			st3 |= (fi.dev->twosid_r() ? 0x00 : ST3_TS);
+	}
 	return st3;
 }
 
@@ -1615,8 +1625,13 @@ void upd765_family_device::recalibrate_start(floppy_info &fi)
 	fi.dir = 1;
 	fi.counter = recalibrate_steps;
 	fi.ready = get_ready(command[1] & 3);
-	fi.st0 = (fi.ready ? 0 : ST0_NR);
-	seek_continue(fi);
+	fi.st0 = command[1] & 7;
+	if(fi.ready) {
+		seek_continue(fi);
+	} else {
+		fi.st0 |= ST0_NR | ST0_FAIL | ST0_SE;
+		command_end(fi, false);
+	}
 }
 
 void upd765_family_device::seek_start(floppy_info &fi)
@@ -1626,8 +1641,13 @@ void upd765_family_device::seek_start(floppy_info &fi)
 	fi.sub_state = SEEK_WAIT_STEP_TIME_DONE;
 	fi.dir = fi.pcn > command[2] ? 1 : 0;
 	fi.ready = get_ready(command[1] & 3);
-	fi.st0 = (fi.ready ? 0 : ST0_NR);
-	seek_continue(fi);
+	fi.st0 = command[1] & 7;
+	if(fi.ready) {
+		seek_continue(fi);
+	} else {
+		fi.st0 |= ST0_NR | ST0_FAIL | ST0_SE;
+		command_end(fi, false);
+	}
 }
 
 void upd765_family_device::delay_cycles(floppy_info &fi, int cycles)
@@ -2568,7 +2588,7 @@ TIMER_CALLBACK_MEMBER(upd765_family_device::run_drive_ready_polling)
 			LOGCOMMAND("polled %d : %d -> %d\n", fid, flopi[fid].ready, ready);
 			flopi[fid].ready = ready;
 			if(!flopi[fid].st0_filled) {
-				flopi[fid].st0 = ST0_ABRT | fid;
+				flopi[fid].st0 = ST0_ABRT | fid | (ready ? 0 : ST0_NR);
 				flopi[fid].st0_filled = true;
 				irq = true;
 			}
