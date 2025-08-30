@@ -19,8 +19,8 @@ neosprite_base_device::neosprite_base_device(
 		u32 clock)
 	: device_t(mconfig, type, tag, owner, clock)
 	, device_video_interface(mconfig, *this)
-	, m_bppshift(4)
 	, m_multicart(0)
+	, m_bppshift(4)
 	, m_region_zoomy(*this, "zoomy")
 {
 }
