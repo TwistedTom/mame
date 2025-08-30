@@ -817,7 +817,7 @@ void snes_swc_state::init_snes_swc()
 
 static INPUT_PORTS_START( snes_swc )
 	PORT_START("DRAM")
-	PORT_CONFNAME( 0x03, 0x03, "DRAM size") PORT_CHANGED_MEMBER(DEVICE_SELF, snes_swc_state, snes_swc_dram_changed, 0)
+	PORT_CONFNAME( 0x03, 0x03, "DRAM size") PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(snes_swc_state::snes_swc_dram_changed), 0)
 	PORT_CONFSETTING(    0x00, "8 mbit" )
 	PORT_CONFSETTING(    0x01, "16 mbit" )
 	PORT_CONFSETTING(    0x02, "24 mbit" )
