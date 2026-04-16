@@ -33,10 +33,10 @@ protected:
 	virtual void machine_start() override ATTR_COLD;
 	virtual void machine_reset() override ATTR_COLD;
 
+	virtual void bank3_set_page(u8 page) override;
 	virtual void spectrum_128_update_memory() override;
 	virtual rectangle get_screen_area() override;
 
-	virtual bool is_contended(offs_t offset) override;
 	virtual bool is_vram_write(offs_t offset) override;
 	virtual u8 *snow_pattern1_base(u8 i_reg) override;
 

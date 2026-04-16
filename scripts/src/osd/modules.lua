@@ -79,6 +79,7 @@ function osdmodulesbuild()
 		MAME_DIR .. "src/osd/modules/font/font_none.cpp",
 		MAME_DIR .. "src/osd/modules/font/font_osx.cpp",
 		MAME_DIR .. "src/osd/modules/font/font_sdl.cpp",
+		MAME_DIR .. "src/osd/modules/font/font_sdl3.cpp",
 		MAME_DIR .. "src/osd/modules/font/font_windows.cpp",
 		MAME_DIR .. "src/osd/modules/input/assignmenthelper.cpp",
 		MAME_DIR .. "src/osd/modules/input/assignmenthelper.h",
@@ -91,6 +92,7 @@ function osdmodulesbuild()
 		MAME_DIR .. "src/osd/modules/input/input_none.cpp",
 		MAME_DIR .. "src/osd/modules/input/input_rawinput.cpp",
 		MAME_DIR .. "src/osd/modules/input/input_sdl.cpp",
+		MAME_DIR .. "src/osd/modules/input/input_sdl3.cpp",
 		MAME_DIR .. "src/osd/modules/input/input_win32.cpp",
 		MAME_DIR .. "src/osd/modules/input/input_wincommon.h",
 		MAME_DIR .. "src/osd/modules/input/input_windows.cpp",
@@ -129,6 +131,8 @@ function osdmodulesbuild()
 		MAME_DIR .. "src/osd/modules/render/drawnone.cpp",
 		MAME_DIR .. "src/osd/modules/render/drawogl.cpp",
 		MAME_DIR .. "src/osd/modules/render/drawsdl.cpp",
+		MAME_DIR .. "src/osd/modules/render/drawsdl3accel.cpp",
+		MAME_DIR .. "src/osd/modules/render/drawsdl3soft.cpp",
 		MAME_DIR .. "src/osd/modules/render/render_module.h",
 		MAME_DIR .. "src/osd/modules/sound/coreaudio_sound.cpp",
 		MAME_DIR .. "src/osd/modules/sound/js_sound.cpp",
@@ -139,6 +143,7 @@ function osdmodulesbuild()
 		MAME_DIR .. "src/osd/modules/sound/pulse_sound.cpp",
 		MAME_DIR .. "src/osd/modules/sound/pipewire_sound.cpp",
 		MAME_DIR .. "src/osd/modules/sound/sdl_sound.cpp",
+		MAME_DIR .. "src/osd/modules/sound/sdl3_sound.cpp",
 		MAME_DIR .. "src/osd/modules/sound/sound_module.cpp",
 		MAME_DIR .. "src/osd/modules/sound/sound_module.h",
 		MAME_DIR .. "src/osd/modules/sound/wasapi_sound.cpp",
@@ -405,8 +410,8 @@ function qtdebuggerbuild()
 			MOC = "moc"
 		else
 			if _OPTIONS["QT_HOME"]~=nil then
-				MOCTST = backtick(_OPTIONS["QT_HOME"] .. "/bin/moc --version 2>/dev/null")
-				if (MOCTST=='') then
+				local MOCTST = backtick(_OPTIONS["QT_HOME"] .. "/bin/moc --version 2>/dev/null")
+				if MOCTST=='' then
 					local qt_host_libexecs = backtick(_OPTIONS["QT_HOME"] .. "/bin/qmake -query QT_HOST_LIBEXECS")
 					if not string.starts(qt_host_libexecs,"/") then
 						qt_host_libexecs = _OPTIONS["QT_HOME"] .. "/libexec"
@@ -422,8 +427,8 @@ function qtdebuggerbuild()
 					MOC = _OPTIONS["QT_HOME"] .. "/bin/moc"
 				end
 			else
-				MOCTST = backtick("which moc-qt5 2>/dev/null")
-				if (MOCTST=='') then
+				local MOCTST = backtick("which moc-qt5 2>/dev/null")
+				if MOCTST=='' then
 					MOCTST = backtick("which moc 2>/dev/null")
 				end
 				if MOCTST=='' then
