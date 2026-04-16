@@ -103,8 +103,8 @@ K053244_CB_MEMBER(rollerg_state::sprite_callback)
 	if (machine().input().code_pressed(KEYCODE_E) && (*color & 0x20)) *color = machine().rand();
 	if (machine().input().code_pressed(KEYCODE_R) && (*color & 0x10)) *color = machine().rand();
 #endif
-	*priority = (*color & 0x10) ? 0 : 0x02;
-	*color = sprite_colorbase + (*color & 0x0f);
+	priority = (color & 0x10) ? 0 : 0x02;
+	color = sprite_colorbase + (color & 0x0f);
 }
 
 
@@ -116,8 +116,8 @@ K053244_CB_MEMBER(rollerg_state::sprite_callback)
 
 K051316_CB_MEMBER(rollerg_state::zoom_callback)
 {
-	*code |= ((*color & 0x0f) << 8);
-	*color = ((*color & 0x30) >> 4);
+	code |= ((color & 0x0f) << 8);
+	color = ((color & 0x30) >> 4);
 }
 
 
@@ -334,7 +334,6 @@ void rollerg_state::machine_reset()
 {
 	// Z80 _NMI goes low at same time as reset
 	m_audiocpu->set_input_line(INPUT_LINE_NMI, ASSERT_LINE);
-	m_audiocpu->pulse_input_line(INPUT_LINE_RESET, attotime::zero);
 }
 
 

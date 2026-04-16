@@ -8,6 +8,7 @@
 
 #include "aha2940au.h"
 #include "audiowerk2.h"
+#include "clgd543x_alpine.h"
 #include "clgd5446.h"
 #include "clgd546x_laguna.h"
 #include "ds2416.h"
@@ -19,6 +20,7 @@
 #include "opti82c861.h"
 #include "oti_spitfire.h"
 #include "pdc20262.h"
+#include "permedia2.h"
 #include "promotion.h"
 #include "riva128.h"
 #include "rivatnt.h"
@@ -27,6 +29,8 @@
 #include "sis6326.h"
 #include "sonicvibes.h"
 #include "sw1000xg.h"
+#include "trident_4dwavedx.h"
+#include "trio_pci.h"
 #include "virge_pci.h"
 #include "vision.h"
 #include "vt6306.h"
@@ -116,9 +120,11 @@ void pci_cards(device_slot_interface &device)
 	device.option_add("vision964",      VISION964_PCI);
 
 	// 0x01 - mass storage controllers
+	device.option_add("aha2940",        AHA2940);
 	device.option_add("aha2940au",      AHA2940AU);
 	device.option_add("ncr53c825",      NCR53C825_PCI);
 	device.option_add("pdc20262",       PDC20262);
+	device.option_add("pdc20268",       PDC20268);
 
 	// 0x02 - network controllers
 	device.option_add("rtl8029as",      RTL8029AS_PCI);
@@ -126,13 +132,16 @@ void pci_cards(device_slot_interface &device)
 
 	// 0x03 - display controllers
 	device.option_add("vision968",      VISION968_PCI);
+	device.option_add("trio64dx",       TRIO64DX_PCI);
 	device.option_add("virge",          VIRGE_PCI);
 	device.option_add("virgedx",        VIRGEDX_PCI);
 	device.option_add("virgevx",        VIRGEVX_PCI);
 	device.option_add("mga2064w",       MGA2064W);
 	device.option_add("promotion3210",  PROMOTION3210);
+	device.option_add("gd5434",         GD5434_PCI);
 	device.option_add("gd5446",         GD5446_PCI);
 	device.option_add("oti64111",       OTI64111_PCI);
+	device.option_add("sis6326_pci",    SIS6326_PCI);
 	device.option_add("wd9710",         WD9710_PCI);
 
 	// 0x04 - multimedia controllers
@@ -140,6 +149,7 @@ void pci_cards(device_slot_interface &device)
 	device.option_add("ds2416",         DS2416);
 	device.option_add("sonicvibes",     SONICVIBES);
 	device.option_add("ess_solo1",      ES1946_SOLO1E);
+	device.option_add("4dwavedx",       TRIDENT_4DWAVEDX);
 	device.option_add("zr36057",        ZR36057_PCI);
 	device.option_add("audiowerk2",     AUDIOWERK2);
 
@@ -166,6 +176,8 @@ void pci_cards(device_slot_interface &device)
 // assume all natively with class code 03
 void agp_cards(device_slot_interface &device)
 {
+	// 3Dlabs
+	device.option_add("permedia2",      PERMEDIA2);
 	// nVidia
 	device.option_add("riva128",        RIVA128);
 	device.option_add("riva128zx",      RIVA128ZX);
@@ -183,4 +195,5 @@ void agp_cards(device_slot_interface &device)
 	device.option_add("neon250",        NEON250);
 	// SiS
 	device.option_add("sis6326_agp",    SIS6326_AGP);
+	device.option_add("sis6326_dvd",    SIS6326_DVD);
 }

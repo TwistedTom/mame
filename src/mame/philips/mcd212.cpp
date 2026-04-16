@@ -332,7 +332,7 @@ void mcd212_device::process_ica()
 	uint16_t *ica = Path ? m_planeb.target() : m_planea.target();
 	const int max_to_process = m_ica_height * 120;
 	// LCT depends on the current frame parity
-	uint32_t addr = (BIT(m_csrr[0], CSR1R_PA_BIT) == 0) ? 0x200 : 0x202;
+	uint32_t addr = !BIT(m_csrr[0], CSR1R_PA_BIT) ? 0x200 : 0x202;
 
 	for (int i = 0; i < max_to_process; i++)
 	{
@@ -350,22 +350,22 @@ void mcd212_device::process_ica()
 				break;
 			case 0x20: case 0x21: case 0x22: case 0x23: case 0x24: case 0x25: case 0x26: case 0x27: // RELOAD DCP
 			case 0x28: case 0x29: case 0x2a: case 0x2b: case 0x2c: case 0x2d: case 0x2e: case 0x2f:
-				LOGMASKED(LOG_ICA, "%08x: %08x: ICA %d: RELOAD DCP: %06x\n", (addr - 2) * 2 + Path * 0x200000, cmd, Path, cmd & 0x001fffff);
+				LOGMASKED(LOG_ICA, "%08x: %08x: ICA %d: RELOAD DCP: %06x\n", (addr - 2) * 2 + Path * 0x200000, cmd, Path, cmd & 0x003fffff);
 				set_dcp<Path>(cmd & 0x003ffffc);
 				break;
 			case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: case 0x35: case 0x36: case 0x37: // RELOAD DCP and STOP
 			case 0x38: case 0x39: case 0x3a: case 0x3b: case 0x3c: case 0x3d: case 0x3e: case 0x3f:
-				LOGMASKED(LOG_ICA, "%08x: %08x: ICA %d: RELOAD DCP and STOP: %06x\n", (addr - 2) * 2 + Path * 0x200000, cmd, Path, cmd & 0x001fffff);
+				LOGMASKED(LOG_ICA, "%08x: %08x: ICA %d: RELOAD DCP and STOP: %06x\n", (addr - 2) * 2 + Path * 0x200000, cmd, Path, cmd & 0x003fffff);
 				set_dcp<Path>(cmd & 0x003ffffc);
 				return;
 			case 0x40: case 0x41: case 0x42: case 0x43: case 0x44: case 0x45: case 0x46: case 0x47: // RELOAD VSR (ICA)
 			case 0x48: case 0x49: case 0x4a: case 0x4b: case 0x4c: case 0x4d: case 0x4e: case 0x4f:
-				LOGMASKED(LOG_ICA, "%08x: %08x: ICA %d: RELOAD VSR: %06x\n", (addr - 2) * 2 + Path * 0x200000, cmd, Path, cmd & 0x001fffff);
+				LOGMASKED(LOG_ICA, "%08x: %08x: ICA %d: RELOAD VSR: %06x\n", (addr - 2) * 2 + Path * 0x200000, cmd, Path, cmd & 0x003fffff);
 				addr = (cmd & 0x0007ffff) / 2;
 				break;
 			case 0x50: case 0x51: case 0x52: case 0x53: case 0x54: case 0x55: case 0x56: case 0x57: // RELOAD VSR and STOP
 			case 0x58: case 0x59: case 0x5a: case 0x5b: case 0x5c: case 0x5d: case 0x5e: case 0x5f:
-				LOGMASKED(LOG_ICA, "%08x: %08x: ICA %d: RELOAD VSR and STOP: VSR = %05x\n", (addr - 2) * 2 + Path * 0x200000, cmd, Path, cmd & 0x001fffff);
+				LOGMASKED(LOG_ICA, "%08x: %08x: ICA %d: RELOAD VSR and STOP: VSR = %05x\n", (addr - 2) * 2 + Path * 0x200000, cmd, Path, cmd & 0x003fffff);
 				set_vsr<Path>(cmd & 0x003fffff);
 				return;
 			case 0x60: case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66: case 0x67: // INTERRUPT
@@ -526,7 +526,7 @@ void mcd212_device::process_vsr(uint32_t *pixels, bool *transparent)
 	if (tp_ctrl == TCR_ALWAYS || !icm || !vsr)
 	{
 		std::fill_n(pixels, get_screen_width(), s_4bpp_color[0]);
-		std::fill_n(transparent, get_screen_width(), true);
+		std::fill_n(transparent, get_screen_width(), (tp_ctrl == TCR_ALWAYS));
 		return;
 	}
 
@@ -973,14 +973,15 @@ uint32_t mcd212_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 		return 0; // Do nothing on the extended rows.
 	}
 
+	// FIXME this should use the clipping rectangle to determine which lines need drawing
 	int scanline = screen.vpos();
 
 	// Process VSR and mix if we're in the visible region
 	if (scanline >= m_ica_height)
 	{
-		uint32_t bitmap_line = ((scanline - m_ica_height) << 1) + m_ica_height;
-		uint32_t *out = &bitmap.pix(bitmap_line + (!BIT(m_csrr[0], CSR1R_PA_BIT)));
-		uint32_t* out2 = &bitmap.pix(bitmap_line + (BIT(m_csrr[0], CSR1R_PA_BIT)));
+		uint32_t const bitmap_line = ((scanline - m_ica_height) << 1) + m_ica_height;
+		uint32_t *const out = &bitmap.pix(bitmap_line + BIT(~m_csrr[0], CSR1R_PA_BIT));
+		uint32_t *const out2 = &bitmap.pix(bitmap_line + BIT(m_csrr[0], CSR1R_PA_BIT));
 
 		bool draw_line = true;
 		if (!BIT(m_dcr[0], DCR_FD_BIT) && BIT(m_csrw[0], CSR1W_ST_BIT))
@@ -1035,14 +1036,16 @@ uint32_t mcd212_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 			draw_cursor(out);
 		}
 
-		if (BIT(m_dcr[0], DCR_SM_BIT)) {
+		if (BIT(m_dcr[0], DCR_SM_BIT))
+		{
 			// Interlace Output
-			memcpy(out2, m_interlace_field[scanline], 768 * sizeof(uint32_t));
-			memcpy(m_interlace_field[scanline], out, 768 * sizeof(uint32_t));
+			std::copy_n(m_interlace_field[scanline], 768, out2);
+			std::copy_n(out, 768, m_interlace_field[scanline]);
 		}
-		else {
+		else
+		{
 			// Single Field Output (duplicate lines)
-			memcpy(out2, out, 768 * sizeof(uint32_t));
+			std::copy_n(out, 768, out2);
 		}
 	}
 
@@ -1134,7 +1137,8 @@ void mcd212_device::device_reset()
 	m_ica_height = 32;
 	m_total_height = 312;
 	m_blink_time = 0;
-	for (int i = 0; i < 312; i++) {
+	for (int i = 0; i < m_total_height; i++)
+	{
 		std::fill_n(m_interlace_field[i], 768, 0);
 	}
 
