@@ -11,16 +11,13 @@
 
 #pragma once
 
-#include "cpu/drcfe.h"
 #include "cpu/drcuml.h"
+
 #include "machine/gen_fifo.h"
 
-class mb86235_frontend;
 
 class mb86235_device :  public cpu_device
 {
-	friend class mb86235_frontend;
-
 public:
 	// construction/destruction
 	mb86235_device(const machine_config &mconfig, const char *_tag, device_t *_owner, uint32_t clock);
@@ -39,6 +36,12 @@ public:
 	void pcs_overflow();
 	void pcs_underflow();
 
+	enum address_spaces
+	{
+		AS_BUSA = AS_OPCODES + 1,
+		AS_BUSB
+	};
+
 	enum
 	{
 		MB86235_PC = 1,
@@ -56,23 +59,26 @@ public:
 	void internal_bbus(address_map &map) ATTR_COLD;
 
 protected:
-	// device-level overrides
+	class frontend;
+	class opcode_desc;
+
+	// device_t implementation
 	virtual void device_start() override ATTR_COLD;
 	virtual void device_reset() override ATTR_COLD;
 
-	// device_execute_interface overrides
+	// device_execute_interface implementation
 	virtual uint32_t execute_min_cycles() const noexcept override { return 1; }
 	virtual uint32_t execute_max_cycles() const noexcept override { return 7; }
 	virtual void execute_run() override;
 	//virtual void execute_set_input(int inputnum, int state);
 
-	// device_memory_interface overrides
+	// device_memory_interface implementation
 	virtual space_config_vector memory_space_config() const override;
 
-	// device_state_interface overrides
+	// device_state_interface implementation
 	virtual void state_string_export(const device_state_entry &entry, std::string &str) const override;
 
-	// device_disasm_interface overrides
+	// device_disasm_interface implementation
 	virtual std::unique_ptr<util::disasm_interface> create_disassembler() override;
 
 private:
@@ -162,6 +168,7 @@ private:
 	uml::code_handle *m_write_abus;
 
 	address_space_config m_program_config;
+	address_space_config m_external_config;
 	address_space_config m_dataa_config;
 	address_space_config m_datab_config;
 	optional_device<generic_fifo_u32_device> m_fifoin;
@@ -169,12 +176,13 @@ private:
 
 	drc_cache m_cache;
 	std::unique_ptr<drcuml_state> m_drcuml;
-	std::unique_ptr<mb86235_frontend> m_drcfe;
+	std::unique_ptr<frontend> m_drcfe;
 
-	memory_access<32, 3, -3, ENDIANNESS_LITTLE>::cache m_pcache;
-	memory_access<32, 3, -3, ENDIANNESS_LITTLE>::specific m_program;
-	memory_access<24, 2, -2, ENDIANNESS_LITTLE>::specific m_dataa;
+	memory_access<12, 3, -3, ENDIANNESS_LITTLE>::cache m_pcache;
+	memory_access<12, 3, -3, ENDIANNESS_LITTLE>::specific m_program;
+	memory_access<10, 2, -2, ENDIANNESS_LITTLE>::specific m_dataa;
 	memory_access<10, 2, -2, ENDIANNESS_LITTLE>::specific m_datab;
+	memory_access<24, 2, -2, ENDIANNESS_LITTLE>::specific m_external;
 
 	/* internal compiler state */
 	struct compiler_state
@@ -258,8 +266,10 @@ private:
 	inline uint32_t get_transfer_reg(uint8_t which);
 	inline void set_transfer_reg(uint8_t which, uint32_t value);
 	inline uint32_t decode_ea(uint8_t mode, uint8_t rx, uint8_t ry, uint16_t disp, bool isbbus);
-	inline uint32_t read_bus(bool isbbus, uint32_t addr);
-	inline void write_bus(bool isbbus, uint32_t addr, uint32_t data);
+	inline uint32_t read_abus(uint32_t addr);
+	inline uint32_t read_bbus(uint32_t addr);
+	inline void write_abus(uint32_t addr, uint32_t data);
+	inline void write_bbus(uint32_t addr, uint32_t data);
 	inline void increment_pwp();
 	inline void increment_prp();
 	inline void decrement_prp();
