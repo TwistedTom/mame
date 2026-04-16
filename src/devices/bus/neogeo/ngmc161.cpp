@@ -1,7 +1,7 @@
 #include "emu.h"
 #include "slot.h"
 #include "rom.h"
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i80c52.h"
 
 class neogeo_ngmc161_cart_device : public neogeo_rom_device
 {
