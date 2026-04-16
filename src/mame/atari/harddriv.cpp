@@ -4269,7 +4269,7 @@ ROM_START( racedrivpan )
 	ROM_LOAD( "rdps1124.bin", 0x010000, 0x010000, CRC(071a4309) SHA1(c623bd51d6a4a56503fbf138138854d6a30b11d6) )
 	ROM_LOAD( "rdps3125.bin", 0x020000, 0x010000, CRC(856548ff) SHA1(e8a17b274185c5e4ecf5f9f1c211e18b3ef2456d) )
 	ROM_LOAD( "rdps1126.bin", 0x030000, 0x010000, CRC(f46ef09c) SHA1(ba62f73ee3b33d8f26b430ffa468f8792dca23de) )
-	ROM_LOAD( "rdps1017.bin", 0x040000, 0x010000, CRC(f46ef09c) SHA1(ba62f73ee3b33d8f26b430ffa468f8792dca23de) )
+	ROM_LOAD( "rdps1017.bin", 0x040000, 0x010000, CRC(e93129a3) SHA1(1221b08c8efbfd8cf6bfbfd956545f10bef48663) )
 
 	ROM_REGION( 0x800, "mainpcb:200e", 0 )
 	ROM_LOAD( "racedriv.200e",   0x000000, 0x000800, CRC(bfdf633c) SHA1(b930f90c388e6773e6ba4254214a3a6076e610b0) )
@@ -4863,7 +4863,7 @@ void harddriv_state::init_ds3()
 	/* predetermine memory regions, can't use a region_ptr because strtdriv expects uint8_t while hdrivair expects uint16_t, also need to check if region exists for steeltal*/
 	if (memregion("ds3sdsp_data") != nullptr)
 	{
-		m_ds3_sdata_memory = (uint16_t *)memregion("ds3sdsp_data")->base();
+		m_ds3_sdata_memory = &memregion("ds3sdsp_data")->as_u16();
 		m_ds3_sdata_memory_size = memregion("ds3sdsp_data")->bytes() / 2;
 	}
 /*
@@ -4938,7 +4938,7 @@ void harddriv_state::init_ds3()
 /* COMMON INIT: initialize the DSK add-on board */
 void harddriv_state::init_dsk()
 {
-	uint8_t *usr3 = memregion("user3")->base();
+	uint16_t *usr3 = &memregion("user3")->as_u16();
 
 	/* install ASIC61 */
 	m_maincpu->space(AS_PROGRAM).install_readwrite_handler(0x85c000, 0x85c7ff, read16sm_delegate(*this, FUNC(harddriv_state::hd68k_dsk_dsp32_r)), write16sm_delegate(*this, FUNC(harddriv_state::hd68k_dsk_dsp32_w)));
@@ -4949,7 +4949,7 @@ void harddriv_state::init_dsk()
 	/* install extra RAM */
 	m_maincpu->space(AS_PROGRAM).install_read_handler(0x900000, 0x90ffff, read16sm_delegate(*this, FUNC(harddriv_state::hd68k_dsk_ram_r)));
 	m_maincpu->space(AS_PROGRAM).install_write_handler(0x900000, 0x90ffff, write16s_delegate(*this, FUNC(harddriv_state::hd68k_dsk_ram_w)));
-	m_dsk_ram = (uint16_t *)(usr3 + 0x40000);
+	m_dsk_ram = usr3 + 0x40000/2;
 
 	/* install extra ZRAM */
 	m_maincpu->space(AS_PROGRAM).install_read_handler(0x910000, 0x910fff, read8m_delegate(*m_dsk_10c, FUNC(eeprom_parallel_28xx_device::read)), 0xff00);
@@ -4964,14 +4964,14 @@ void harddriv_state::init_dsk()
 
 	/* install extra ROM */
 	m_maincpu->space(AS_PROGRAM).install_read_handler(0x940000, 0x9fffff, read16sm_delegate(*this, FUNC(harddriv_state::hd68k_dsk_small_rom_r)));
-	m_dsk_rom = (uint16_t *)(usr3 + 0x00000);
+	m_dsk_rom = usr3 + 0x00000/2;
 }
 
 
 /* COMMON INIT: initialize the DSK II add-on board */
 void harddriv_state::init_dsk2()
 {
-	uint8_t *usr3 = memregion("user3")->base();
+	uint16_t *usr3 = &memregion("user3")->as_u16();
 
 	/* install ASIC65 */
 	m_maincpu->space(AS_PROGRAM).install_write_handler(0x824000, 0x824003, write16sm_delegate(*m_asic65, FUNC(asic65_device::data_w)));
@@ -4987,11 +4987,11 @@ void harddriv_state::init_dsk2()
 	/* install extra RAM */
 	m_maincpu->space(AS_PROGRAM).install_read_handler(0x880000, 0x8bffff, read16sm_delegate(*this, FUNC(harddriv_state::hd68k_dsk_ram_r)));
 	m_maincpu->space(AS_PROGRAM).install_write_handler(0x880000, 0x8bffff, write16s_delegate(*this, FUNC(harddriv_state::hd68k_dsk_ram_w)));
-	m_dsk_ram = (uint16_t *)(usr3 + 0x100000);
+	m_dsk_ram = usr3 + 0x100000/2;
 
 	/* install extra ROM */
 	m_maincpu->space(AS_PROGRAM).install_read_handler(0x900000, 0x9fffff, read16sm_delegate(*this, FUNC(harddriv_state::hd68k_dsk_rom_r)));
-	m_dsk_rom = (uint16_t *)(usr3 + 0x000000);
+	m_dsk_rom = usr3 + 0x000000/2;
 }
 
 
@@ -5222,8 +5222,8 @@ void harddriv_state::steeltal_init_common(offs_t ds3_transfer_pc, int proto_sloo
 	else
 		m_maincpu->space(AS_PROGRAM).install_readwrite_handler(0xe0000, 0xfffff, read16sm_delegate(*this, FUNC(harddriv_state::st68k_protosloop_r)), write16sm_delegate(*this, FUNC(harddriv_state::st68k_protosloop_w)));
 
-	m_m68k_sloop_base = (uint16_t *)(memregion("maincpu")->base() + 0xe0000);
-	m_m68k_sloop_alt_base = (uint16_t *)(memregion("maincpu")->base() + 0x4e000);
+	m_m68k_sloop_base = &memregion("maincpu")->as_u16() + 0xe0000/2;
+	m_m68k_sloop_alt_base = &memregion("maincpu")->as_u16() + 0x4e000/2;
 
 	/* set up protection hacks */
 	m_gsp->space(AS_PROGRAM).install_write_handler(0xfff965d0, 0xfff965df, write16smo_delegate(*this, FUNC(harddriv_state::hdgsp_protection_w)));
