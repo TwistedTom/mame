@@ -45,12 +45,6 @@ Known Non-Issues (confirmed on Real Genesis)
 
 void md_base_state::megadriv_z80_bank_w(uint16_t data)
 {
-	// TODO: menghu crashes here
-	// Tries to setup a bank of 0xff0000 from z80 side (PC=1131) after you talk with the cashier twice.
-	// Without a guard over it game will trash 68k memory causing a crash, works on real HW with everdrive
-	// so not coming from a cart copy protection.
-	// Update: it breaks cfodder BGM on character select at least, therefore we current don't guard against it
-	// Apparently reading 68k RAM from z80 is not recommended by Sega, so *writing* isn't possible lacking bus grant?
 	m_genz80.z80_bank_addr = ((m_genz80.z80_bank_addr >> 1) | (data << 23)) & 0xff8000;
 }
 
@@ -310,11 +304,13 @@ void md_base_state::m68k_ioport_s_ctrl_write(uint16_t data)
 
 void md_base_state::megadriv_68k_base_map(address_map &map)
 {
-	map(0xa00000, 0xa01fff).rw(FUNC(md_base_state::megadriv_68k_read_z80_ram), FUNC(md_base_state::megadriv_68k_write_z80_ram));
-	map(0xa02000, 0xa03fff).w(FUNC(md_base_state::megadriv_68k_write_z80_ram));
-	map(0xa04000, 0xa04003).rw(FUNC(md_base_state::megadriv_68k_YM2612_read), FUNC(md_base_state::megadriv_68k_YM2612_write));
+	// before_delay required by pacman2 intro
+	// TODO: unverified if 68k doesn't have bus grant
+	map(0xa00000, 0xa01fff).before_delay(NAME([](offs_t) { return 1; })).rw(FUNC(md_base_state::megadriv_68k_read_z80_ram), FUNC(md_base_state::megadriv_68k_write_z80_ram));
+	map(0xa02000, 0xa03fff).before_delay(NAME([](offs_t) { return 1; })).w(FUNC(md_base_state::megadriv_68k_write_z80_ram));
+	map(0xa04000, 0xa04003).before_delay(NAME([](offs_t) { return 1; })).rw(FUNC(md_base_state::megadriv_68k_YM2612_read), FUNC(md_base_state::megadriv_68k_YM2612_write));
 
-	map(0xa06000, 0xa06001).w(FUNC(md_base_state::megadriv_68k_z80_bank_write));
+	map(0xa06000, 0xa06001).before_delay(NAME([](offs_t) { return 1; })).w(FUNC(md_base_state::megadriv_68k_z80_bank_write));
 
 	map(0xa10000, 0xa10001).r(FUNC(md_base_state::m68k_version_read));
 	map(0xa10002, 0xa10007).rw(FUNC(md_base_state::m68k_ioport_data_read), FUNC(md_base_state::m68k_ioport_data_write));
@@ -450,7 +446,7 @@ TIMER_CALLBACK_MEMBER(md_base_state::megadriv_z80_run_state)
 		m_z80snd->set_input_line(INPUT_LINE_RESET, CLEAR_LINE);
 
 		/* Check if z80 has the bus */
-		m_z80snd->set_input_line(Z80_INPUT_LINE_BUSRQ, m_genz80.z80_has_bus ? CLEAR_LINE : ASSERT_LINE);
+		m_z80snd->set_input_line(Z80_INPUT_LINE_BUSREQ, m_genz80.z80_has_bus ? CLEAR_LINE : ASSERT_LINE);
 	}
 }
 

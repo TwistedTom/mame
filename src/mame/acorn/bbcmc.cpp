@@ -39,9 +39,12 @@ public:
 		, m_kbd(*this, "kbd")
 		, m_sn(*this, "sn")
 		, m_i2cmem(*this, "i2cmem")
-		, m_wdfdc(*this, "wdfdc")
 		, m_adlc(*this, "mc6854")
+		, m_exp(*this, "exp")
 		, m_joyport(*this, "joyport")
+		, m_wdfdc(*this, "wdfdc")
+		, m_floppy(*this, "wdfdc:%u", 0U)
+		, m_floppy_leds(*this, "floppy%u_led", 0U)
 		, m_power_led(*this, "power_led")
 	{ }
 
@@ -54,17 +57,7 @@ protected:
 	virtual void machine_reset() override ATTR_COLD;
 
 private:
-	memory_view m_view_lynne;
-	memory_view m_view_hazel;
-	memory_view m_view_andy;
-	memory_view m_view_tst;
-	required_device<bbc_kbd_device> m_kbd;
-	required_device<sn76489a_device> m_sn;
-	required_device<i2cmem_device> m_i2cmem;
-	required_device<wd1772_device> m_wdfdc;
-	required_device<mc6854_device> m_adlc;
-	required_device<bbc_joyport_slot_device> m_joyport;
-	output_finder<> m_power_led;
+	template<int floppy> void floppy_led_cb(floppy_image_device *, int state);
 
 	void bbcmc_fetch(address_map &map) ATTR_COLD;
 	void bbcmc_mem(address_map &map) ATTR_COLD;
@@ -77,6 +70,7 @@ private:
 	uint8_t fetch_r(offs_t offset);
 	uint8_t acccon_r();
 	void acccon_w(uint8_t data);
+	uint8_t romsel_r();
 	void romsel_w(offs_t offset, uint8_t data);
 	uint8_t paged_r(offs_t offset);
 	void paged_w(offs_t offset, uint8_t data);
@@ -89,6 +83,21 @@ private:
 	void sysvia_pb_w(uint8_t data);
 	uint8_t joyport_r();
 	void joyport_w(uint8_t data);
+
+	memory_view m_view_lynne;
+	memory_view m_view_hazel;
+	memory_view m_view_andy;
+	memory_view m_view_tst;
+	required_device<bbc_kbd_device> m_kbd;
+	required_device<sn76489a_device> m_sn;
+	required_device<i2cmem_device> m_i2cmem;
+	required_device<mc6854_device> m_adlc;
+	required_device<bbc_exp_slot_device> m_exp;
+	required_device<bbc_joyport_slot_device> m_joyport;
+	required_device<wd1772_device> m_wdfdc;
+	required_device_array<floppy_connector, 2> m_floppy;
+	output_finder<2> m_floppy_leds;
+	output_finder<> m_power_led;
 
 	uint8_t m_sdb = 0x00;
 	uint8_t m_acccon = 0x00;
@@ -107,11 +116,23 @@ private:
 };
 
 
+template<int floppy> void bbcmc_state::floppy_led_cb(floppy_image_device *, int state)
+{
+	m_floppy_leds[floppy] = state;
+}
+
+
 void bbcmc_state::machine_start()
 {
 	bbc_state::machine_start();
 
 	m_power_led.resolve();
+	m_floppy_leds.resolve();
+
+	if (m_floppy[0]->get_device())
+		m_floppy[0]->get_device()->setup_led_cb(floppy_image_device::led_cb(&bbcmc_state::floppy_led_cb<0>, this));
+	if (m_floppy[1]->get_device())
+		m_floppy[1]->get_device()->setup_led_cb(floppy_image_device::led_cb(&bbcmc_state::floppy_led_cb<1>, this));
 
 	save_item(NAME(m_acccon));
 	save_item(NAME(m_sdb));
@@ -162,7 +183,7 @@ void bbcmc_state::bbcmc_io(address_map &map)
 	map(0x0220, 0x0223).w(FUNC(bbcmc_state::video_ula_w));                                                             // W: FE20-FE23  Video ULA      Video system chip
 	map(0x0224, 0x0227).w(FUNC(bbcmc_state::drive_control_w));                                                         // W: FE24-FE27  FDC Latch      1772 Control latch
 	map(0x0228, 0x022f).rw(m_wdfdc, FUNC(wd1772_device::read), FUNC(wd1772_device::write));                            //    FE28-FE2F  1772 FDC       Floppy disc controller
-	map(0x0230, 0x0233).w(FUNC(bbcmc_state::romsel_w));                                                                // W: FE30-FE33  ROMSEL         ROM Select
+	map(0x0230, 0x0233).rw(FUNC(bbcmc_state::romsel_r), FUNC(bbcmc_state::romsel_w));                                  //    FE30-FE33  ROMSEL         ROM Select
 	map(0x0234, 0x0237).rw(FUNC(bbcmc_state::acccon_r), FUNC(bbcmc_state::acccon_w));                                  //    FE34-FE37  ACCCON         ACCCON select register
 	map(0x0238, 0x023b).lr8(NAME([this]() { econet_int_enable(0); return 0xfe; }));                                    // R: FE38-FE3B  INTOFF         ECONET Interrupt Off
 	map(0x0238, 0x023b).lw8(NAME([this](uint8_t data) { econet_int_enable(0); }));                                     // W: FE38-FE3B  INTOFF         ECONET Interrupt Off
@@ -203,9 +224,14 @@ uint8_t bbcmc_state::fetch_r(offs_t offset)
 }
 
 
+uint8_t bbcmc_state::romsel_r()
+{
+	return m_romsel;
+}
+
 void bbcmc_state::romsel_w(offs_t offset, uint8_t data)
 {
-	// ROMSEL - FE30 write only
+	// ROMSEL - FE30 read/write register
 	//  b7 RAM 1 = Page in ANDY 8000-8FFF
 	//         0 = Page in ROM  8000-8FFF
 	//  b6     Not Used
@@ -279,7 +305,20 @@ uint8_t bbcmc_state::paged_r(offs_t offset)
 
 	switch (m_romsel)
 	{
-	case 0: case 1: case 4: case 5: case 6: case 7:
+	case 0: case 1:
+		// 32K socket or External (selected by link PL11)
+		if (m_rom[m_romsel & 0x0e] && m_rom[m_romsel & 0x0e]->present())
+		{
+			data = m_rom[m_romsel & 0x0e]->read(offset | (m_romsel & 0x01) << 14);
+		}
+		else
+		{
+			data  = m_exp->rom_r(offset | (m_romsel & 0x01) << 14);
+			data &= m_region_rom->base()[offset + (m_romsel << 14)];
+		}
+		break;
+
+	case 4: case 5: case 6: case 7:
 		// 32K sockets
 		if (m_rom[m_romsel & 0x0e] && m_rom[m_romsel & 0x0e]->present())
 		{
@@ -311,7 +350,19 @@ void bbcmc_state::paged_w(offs_t offset, uint8_t data)
 {
 	switch (m_romsel)
 	{
-	case 0: case 1: case 4: case 5: case 6: case 7:
+	case 0: case 1:
+		// 32K socket or External (selected by link PL11)
+		if (m_rom[m_romsel & 0x0e] && m_rom[m_romsel & 0x0e]->present())
+		{
+			m_rom[m_romsel & 0x0e]->write(offset | (m_romsel & 0x01) << 14, data);
+		}
+		else
+		{
+			m_exp->rom_w(offset | (m_romsel & 0x01) << 14, data);
+		}
+		break;
+
+	case 4: case 5: case 6: case 7:
 		// 32K sockets
 		if (m_rom[m_romsel & 0x0e])
 		{
@@ -347,6 +398,12 @@ void bbcmc_state::sysvia_pa_w(uint8_t data)
 
 void bbcmc_state::update_sdb()
 {
+	uint8_t const latch = m_latch->output_state();
+
+	// sound
+	if (!BIT(latch, 0))
+		m_sn->write(m_sdb);
+
 	// keyboard
 	m_sdb = m_kbd->read(m_sdb);
 }
@@ -416,11 +473,21 @@ void bbcmc_state::drive_control_w(uint8_t data)
 	//  1        Drive select 1
 	//  0        Drive select 0
 
+	int ds = -1;
+
 	floppy_image_device *floppy = nullptr;
 
 	// bit 0, 1, 3: drive select
-	if (BIT(data, 0)) floppy = m_wdfdc->subdevice<floppy_connector>("0")->get_device();
-	if (BIT(data, 1)) floppy = m_wdfdc->subdevice<floppy_connector>("1")->get_device();
+	if (BIT(data, 0)) ds = 0;
+	if (BIT(data, 1)) ds = 1;
+
+	for (auto &conn : m_floppy)
+	{
+		floppy = conn->get_device();
+		if (floppy)
+			floppy->ds_w(ds);
+	}
+	floppy = (ds != -1) ? m_floppy[ds]->get_device() : nullptr;
 	m_wdfdc->set_floppy(floppy);
 
 	// bit 4: side select
@@ -497,7 +564,6 @@ void bbcmc_state::bbcmc(machine_config &config)
 	config.set_default_layout(layout_bbcm);
 
 	LS259(config, m_latch);
-	m_latch->q_out_cb<0>().set([this](int state) { if (!state) m_sn->write(m_sdb); });
 	m_latch->q_out_cb<3>().set(m_kbd, FUNC(bbc_kbd_device::write_kb_en));
 	m_latch->q_out_cb<6>().set_output("capslock_led");
 	m_latch->q_out_cb<7>().set_output("shiftlock_led");
@@ -560,8 +626,8 @@ void bbcmc_state::bbcmc(machine_config &config)
 	m_wdfdc->intrq_wr_callback().set(FUNC(bbcmc_state::fdc_intrq_w));
 	m_wdfdc->drq_wr_callback().set(FUNC(bbcmc_state::fdc_drq_w));
 
-	FLOPPY_CONNECTOR(config, "wdfdc:0", bbc_floppies, "35dd", bbc_state::floppy_formats).enable_sound(true);
-	FLOPPY_CONNECTOR(config, "wdfdc:1", bbc_floppies, nullptr, bbc_state::floppy_formats).enable_sound(true);
+	FLOPPY_CONNECTOR(config, m_floppy[0], bbc_floppies, "35dd",  bbc_state::floppy_formats).enable_sound(true);
+	FLOPPY_CONNECTOR(config, m_floppy[1], bbc_floppies, nullptr, bbc_state::floppy_formats).enable_sound(true);
 
 	MC6854(config, m_adlc);
 	m_adlc->out_txd_cb().set("network", FUNC(econet_device::host_data_w));
@@ -575,8 +641,12 @@ void bbcmc_state::bbcmc(machine_config &config)
 	ECONET_SLOT(config, "econet", "network", econet_devices);
 
 	BBC_EXP_SLOT(config, m_exp, 16_MHz_XTAL / 2, bbc_exp_devices, nullptr);
+	m_exp->set_screen("screen");
 	m_exp->irq_handler().set(m_irqs, FUNC(input_merger_device::in_w<3>));
 	m_exp->nmi_handler().set(FUNC(bbcmc_state::bus_nmi_w));
+	m_exp->lpstb_handler().set(m_sysvia, FUNC(via6522_device::write_cb2));
+	m_exp->lpstb_handler().append([this](int state) { if (state) m_crtc->assert_light_pen_input(); });
+	// CB handlers for Mertec device that also plugs into joystick port.
 	m_exp->cb1_handler().set(m_uservia, FUNC(via6522_device::write_cb1));
 	m_exp->cb2_handler().set(m_uservia, FUNC(via6522_device::write_cb2));
 
@@ -596,6 +666,7 @@ void bbcmc_state::bbcmc(machine_config &config)
 	SOFTWARE_LIST(config, "flop_ls_m").set_compatible("bbcm_flop");
 	SOFTWARE_LIST(config, "flop_ls_b").set_compatible("bbcb_flop");
 	SOFTWARE_LIST(config, "flop_ls_b_orig").set_compatible("bbcb_flop_orig");
+	SOFTWARE_LIST(config, "cart_ls_m").set_original("bbcm_cart");
 	SOFTWARE_LIST(config, "rom_ls").set_original("bbc_rom").set_filter("M");
 }
 
@@ -733,7 +804,7 @@ ROM_END
 } // anonymous namespace
 
 
-//    YEAR  NAME        PARENT  COMPAT MACHINE     INPUT   CLASS         INIT        COMPANY                        FULLNAME                              FLAGS
+//    YEAR  NAME        PARENT  COMPAT MACHINE     INPUT   CLASS          INIT       COMPANY                        FULLNAME                              FLAGS
 COMP( 1986, bbcmc,      0,      bbcm,  bbcmc,      bbcm,   bbcmc_state,   init_bbc,  "Acorn Computers",             "BBC Master Compact",                 MACHINE_IMPERFECT_GRAPHICS )
 COMP( 1986, bbcmc_ar,   bbcmc,  0,     bbcmc_ar,   bbcm,   bbcmc_state,   init_bbc,  "Acorn Computers",             "BBC Master Compact (Arabic)",        MACHINE_IMPERFECT_GRAPHICS )
 COMP( 1987, pro128s,    bbcmc,  0,     bbcmc,      bbcm,   bbcmc_state,   init_bbc,  "Olivetti",                    "Prodest PC 128S",                    MACHINE_IMPERFECT_GRAPHICS )

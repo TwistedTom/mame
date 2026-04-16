@@ -227,7 +227,7 @@ void cps1bl_5205_state::knightsb_layer_w(offs_t offset, uint16_t data)
 				data = 0x1380;
 				break;
 			default:
-				printf ("Unknown control word = %X\n",data);
+				logerror("Unknown control word = %X\n", data);
 				data = 0x12c0;
 			}
 		m_cps_b_regs[m_layer_enable_reg / 2] = data;
@@ -271,7 +271,7 @@ void cps1bl_5205_state::sf2b_layer_w(offs_t offset, uint16_t data)
 		m_cps_b_regs[m_layer_enable_reg / 2] = data;
 		break;
 	default:
-		printf("%X:%X ",offset,data);
+		logerror("%X:%X ", offset,data);
 	}
 }
 
@@ -432,7 +432,7 @@ void cps1bl_5205_state::sf2mdt(machine_config &config)
 	m_screen->set_palette(m_palette);
 
 	GFXDECODE(config, m_gfxdecode, m_palette, gfx_cps1);
-	PALETTE(config, m_palette, palette_device::BLACK).set_entries(4096);
+	PALETTE(config, m_palette, palette_device::BLACK).set_entries(0xc00);
 
 	/* sound hardware */
 	SPEAKER(config, "mono").front_center();
