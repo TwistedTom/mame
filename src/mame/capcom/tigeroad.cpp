@@ -56,17 +56,19 @@ single plane board.
 
 #include "emu.h"
 #include "tigeroad.h"
+
 #include "machine/gen_latch.h"
+
 #include "screen.h"
 #include "speaker.h"
 
 
 void tigeroad_state::msm5205_w(u8 data)
 {
+	m_msm->s1_w(BIT(data, 6));
 	m_msm->reset_w(BIT(data, 7));
-	m_msm->data_w(data);
-	m_msm->vclk_w(1);
-	m_msm->vclk_w(0);
+
+	m_msm->data_w(data & 0xf);
 }
 
 void f1dream_state::out3_w(u8 data)
@@ -138,7 +140,7 @@ void f1dream_state::f1dream_map(address_map &map)
 	map(0xfe4002, 0xfe4003).portr("SYSTEM").w(FUNC(f1dream_state::to_mcu_w));
 }
 
-void f1dream_state::f1dream_mcu_io(address_map &map)
+void f1dream_state::f1dream_mcu_data(address_map &map)
 {
 	map(0x7f0, 0x7ff).rw(FUNC(f1dream_state::mcu_shared_r), FUNC(f1dream_state::mcu_shared_w));
 }
@@ -622,11 +624,11 @@ GFXDECODE_END
 void tigeroad_state::tigeroad(machine_config &config)
 {
 	// basic machine hardware
-	M68000(config, m_maincpu, XTAL(10'000'000)); // verified on pcb
+	M68000(config, m_maincpu, 10_MHz_XTAL); // verified on pcb
 	m_maincpu->set_addrmap(AS_PROGRAM, &tigeroad_state::main_map);
 	m_maincpu->set_vblank_int("screen", FUNC(tigeroad_state::irq2_line_hold));
 
-	Z80(config, m_audiocpu, XTAL(3'579'545)); // verified on pcb
+	Z80(config, m_audiocpu, 3.579545_MHz_XTAL); // verified on pcb
 	m_audiocpu->set_addrmap(AS_PROGRAM, &tigeroad_state::sound_map);
 	m_audiocpu->set_addrmap(AS_IO, &tigeroad_state::sound_port_map);
 
@@ -637,7 +639,7 @@ void tigeroad_state::tigeroad(machine_config &config)
 
 	// Timings may be different, driver originally had 60.08Hz vblank.
 	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
-	screen.set_raw(XTAL(24'000'000)/4, 384, 0, 256, 262, 16, 240); // hsync is 306..333 (offset by 128), vsync is 251..253 (offset by 6)
+	screen.set_raw(24_MHz_XTAL / 4, 384, 0, 256, 262, 16, 240); // hsync is 306..333 (offset by 128), vsync is 251..253 (offset by 6)
 	screen.set_screen_update(FUNC(tigeroad_state::screen_update));
 	screen.screen_vblank().set("spriteram", FUNC(buffered_spriteram16_device::vblank_copy_rising));
 	screen.set_palette(m_palette);
@@ -656,11 +658,11 @@ void tigeroad_state::tigeroad(machine_config &config)
 	GENERIC_LATCH_8(config, "soundlatch");
 	GENERIC_LATCH_8(config, "soundlatch2");
 
-	ym2203_device &ym1(YM2203(config, "ym1", XTAL(3'579'545))); // verified on pcb
+	ym2203_device &ym1(YM2203(config, "ym1", 3.579545_MHz_XTAL)); // verified on pcb
 	ym1.irq_handler().set_inputline(m_audiocpu, 0);
 	ym1.add_route(ALL_OUTPUTS, "mono", 0.25);
 
-	ym2203_device &ym2(YM2203(config, "ym2", XTAL(3'579'545))); // verified on pcb
+	ym2203_device &ym2(YM2203(config, "ym2", 3.579545_MHz_XTAL)); // verified on pcb
 	ym2.add_route(ALL_OUTPUTS, "mono", 0.25);
 }
 
@@ -675,8 +677,8 @@ void f1dream_state::f1dream(machine_config &config)
 
 	m_maincpu->set_addrmap(AS_PROGRAM, &f1dream_state::f1dream_map);
 
-	I8751(config, m_mcu, XTAL(10'000'000)); // 8MHz rated chip, 24.0000MHz/3???
-	m_mcu->set_addrmap(AS_IO, &f1dream_state::f1dream_mcu_io);
+	I8751(config, m_mcu, 10_MHz_XTAL); // 8MHz rated chip, 10MHz or 6MHz(24/4)?
+	m_mcu->set_addrmap(AS_DATA, &f1dream_state::f1dream_mcu_data);
 	m_mcu->port_out_cb<1>().set("soundlatch", FUNC(generic_latch_8_device::write));
 	m_mcu->port_out_cb<3>().set(FUNC(f1dream_state::out3_w));
 }
@@ -687,26 +689,25 @@ void tigeroad_state::toramich(machine_config &config)
 	tigeroad(config);
 
 	// basic machine hardware
-
-	z80_device &sample(Z80(config, "sample", XTAL(3'579'545)));
+	z80_device &sample(Z80(config, "sample", 3.579545_MHz_XTAL));
 	sample.set_addrmap(AS_PROGRAM, &tigeroad_state::sample_map);
 	sample.set_addrmap(AS_IO, &tigeroad_state::sample_port_map);
-	sample.set_periodic_int(FUNC(tigeroad_state::irq0_line_hold), attotime::from_hz(4000));  // ?
 
 	// sound hardware
-	MSM5205(config, m_msm, 384000);
-	m_msm->set_prescaler_selector(msm5205_device::SEX_4B);  // 4KHz playback ?
+	MSM5205(config, m_msm, 384_kHz_XTAL);
+	m_msm->vck_callback().set_inputline("sample", 0, HOLD_LINE);
+	m_msm->set_prescaler_selector(msm5205_device::S96_4B); // 4 KHz
 	m_msm->add_route(ALL_OUTPUTS, "mono", 1.0);
 }
 
 void tigeroad_state::f1dream_comad(machine_config &config) // COMAD-01 PCB with 24.0000MHz, 10.0000MHz & 8.0000MHz OSCs
 {
 	// basic machine hardware
-	M68000(config, m_maincpu, XTAL(10'000'000));
+	M68000(config, m_maincpu, 10_MHz_XTAL);
 	m_maincpu->set_addrmap(AS_PROGRAM, &tigeroad_state::main_map);
 	m_maincpu->set_vblank_int("screen", FUNC(tigeroad_state::irq2_line_hold));
 
-	Z80(config, m_audiocpu, XTAL(8'000'000)/2); // 4MHz
+	Z80(config, m_audiocpu, 8_MHz_XTAL / 2); // 4MHz
 	m_audiocpu->set_addrmap(AS_PROGRAM, &tigeroad_state::comad_sound_map);
 	m_audiocpu->set_addrmap(AS_IO, &tigeroad_state::comad_sound_io_map);
 
@@ -716,7 +717,7 @@ void tigeroad_state::f1dream_comad(machine_config &config) // COMAD-01 PCB with 
 	BUFFERED_SPRITERAM16(config, "spriteram");
 
 	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
-	screen.set_raw(XTAL(24'000'000)/4, 384, 0, 256, 262, 16, 240); // hsync is 306..333 (offset by 128), vsync is 251..253 (offset by 6)
+	screen.set_raw(24_MHz_XTAL / 4, 384, 0, 256, 262, 16, 240); // hsync is 306..333 (offset by 128), vsync is 251..253 (offset by 6)
 	screen.set_screen_update(FUNC(tigeroad_state::screen_update));
 	screen.screen_vblank().set("spriteram", FUNC(buffered_spriteram16_device::vblank_copy_rising));
 	screen.set_palette(m_palette);
@@ -734,11 +735,11 @@ void tigeroad_state::f1dream_comad(machine_config &config) // COMAD-01 PCB with 
 
 	GENERIC_LATCH_8(config, "soundlatch");
 
-	ym2203_device &ym1(YM2203(config, "ym1", XTAL(8'000'000)/4)); // 2MHz
+	ym2203_device &ym1(YM2203(config, "ym1", 8_MHz_XTAL / 4)); // 2MHz
 	ym1.irq_handler().set_inputline("audiocpu", 0);
 	ym1.add_route(ALL_OUTPUTS, "mono", 0.40);
 
-	ym2203_device &ym2(YM2203(config, "ym2", XTAL(8'000'000)/4)); // 2MHz
+	ym2203_device &ym2(YM2203(config, "ym2", 8_MHz_XTAL / 4)); // 2MHz
 	ym2.add_route(ALL_OUTPUTS, "mono", 0.40);
 }
 
@@ -757,11 +758,11 @@ void pushman_state::pushman(machine_config &config) // all clocks measured on PC
 {
 	f1dream_comad(config);
 	m_maincpu->set_addrmap(AS_PROGRAM, &pushman_state::pushman_map);
-	m_maincpu->set_clock(XTAL(8'000'000));
+	m_maincpu->set_clock(8_MHz_XTAL);
 
-	m_audiocpu->set_clock(XTAL(10'000'000) / 2);
+	m_audiocpu->set_clock(10_MHz_XTAL / 2);
 
-	M68705R3(config, m_mcu, XTAL(8'000'000) / 2);
+	M68705R3(config, m_mcu, 8_MHz_XTAL / 2);
 	m_mcu->porta_w().set(FUNC(pushman_state::mcu_pa_w));
 	m_mcu->portb_w().set(FUNC(pushman_state::mcu_pb_w));
 	m_mcu->portc_w().set(FUNC(pushman_state::mcu_pc_w));
@@ -1027,6 +1028,56 @@ ROM_START( tigeroadb )
 	ROM_LOAD32_BYTE( "gfx.ic50", 0x40001, 0x10000, CRC(f48f94e1) SHA1(d841de5374288e98c48c59c86c66a643f26e95e6) )
 	ROM_LOAD32_BYTE( "gfx.ic2",  0x40002, 0x10000, CRC(a0b4615c) SHA1(f9df393c1f4a7b88fbc4c870da1819f36f29e111) )
 	ROM_LOAD32_BYTE( "gfx.ic3",  0x40003, 0x10000, CRC(f956392e) SHA1(e0da0c353067e32fc6015e84b00070a7c7fa1de9) )
+
+	ROM_REGION16_LE( 0x08000, "bgmap", 0 )
+	ROM_LOAD16_WORD( "gfx.ic175", 0x0000, 0x8000, CRC(a79be1eb) SHA1(4191ccd48f7650930f9a4c2be0790239d7420bb1) )
+
+	ROM_REGION( 0x0100, "proms", 0 )
+	ROM_LOAD( "82s129.ic74", 0x0000, 0x0100, CRC(ec80ae36) SHA1(397ec8fc1b106c8b8d4bf6798aa429e8768a101a) )    // priority (not used)
+ROM_END
+
+ROM_START( tigeroadba )
+	ROM_REGION( 0x40000, "maincpu", 0 ) // 256K for 68000 code
+	ROM_LOAD16_BYTE( "cpu.ic18", 0x00000, 0x10000, CRC(14c87e07) SHA1(31363b56dd9d387f3ebd7ca1c209148c389ec1aa) )
+	ROM_LOAD16_BYTE( "cpu.ic5",  0x00001, 0x10000, CRC(0904254c) SHA1(9ce7b8a699bc21618032db9b0c5494242ad77a6b) )
+	ROM_LOAD16_BYTE( "cpu.ic19", 0x20000, 0x10000, CRC(cedb1f46) SHA1(bc2d5730ff809fb0f38327d72485d472ab9da54d) )
+	ROM_LOAD16_BYTE( "cpu.ic6",  0x20001, 0x10000, CRC(e117f0b1) SHA1(ed0050247789bedaeb213c3d7c2d2cdb239bb4b4) )
+
+	ROM_REGION( 0x10000, "audiocpu", 0 )
+	ROM_LOAD( "cpu.ic12", 0x0000, 0x8000, CRC(f9a7c9bf) SHA1(4d37c71aa6523ac21c6e8b23f9957e75ec4304bf) )
+
+	// no samples player in the English version
+
+	ROM_REGION( 0x008000, "text", 0 )
+	ROM_LOAD( "cpu.ic60", 0x00000, 0x08000, CRC(74a9f08c) SHA1(458958c8d9a2af5df88bb24c9c5bcbd37d6856bc) ) // 8x8 text
+
+	ROM_REGION( 0x100000, "tiles", 0 )
+	ROM_LOAD( "gfx.ic84",  0x00000, 0x10000, CRC(3db68b96) SHA1(d62a8f12e3a1c5583672a292f2a000f8528db2d8) )
+	ROM_LOAD( "gfx.ic82",  0x10000, 0x10000, CRC(a12fa19d) SHA1(07b0f4ba1f45628310a4f1b95fafe3676684e883) )
+	ROM_LOAD( "gfx.ic115", 0x20000, 0x10000, CRC(c9c396aa) SHA1(2447a4475dd0ed85bac101ddf3f1bb33763007e7) )
+	ROM_LOAD( "gfx.ic113", 0x30000, 0x10000, CRC(6bfc90a4) SHA1(d5b37995b0382721eba1b527add983e04c2b6edf) )
+	ROM_LOAD( "gfx.ic132", 0x40000, 0x10000, CRC(dccf34bb) SHA1(938933916cc3e911aa7040c375d83492756f2a9c) )
+	ROM_LOAD( "gfx.ic130", 0x50000, 0x10000, CRC(a1cee4cd) SHA1(d8dfbeecd6e961ab825b3536ef715b6fb5d62b45) )
+	ROM_LOAD( "gfx.ic171", 0x60000, 0x10000, CRC(7266e3ad) SHA1(c00648f6d420ad97c52f755bcafd7446aed2896b) )
+	ROM_LOAD( "gfx.ic169", 0x70000, 0x10000, CRC(5ec867a6) SHA1(46d278c4b0f2c090e45c5a8c433af343e1514dc7) )
+	ROM_LOAD( "gfx.ic83",  0x80000, 0x10000, CRC(95c69541) SHA1(890c576a7996a8d707c162f281f979f68215e020) )
+	ROM_LOAD( "gfx.ic81",  0x90000, 0x10000, CRC(ecb67157) SHA1(ba1d30f50e22e426d8ad4a35cf005a410d974dbc) )
+	ROM_LOAD( "gfx.ic114", 0xa0000, 0x10000, CRC(53f24910) SHA1(984b8e5eb6a9bc72625179df82f9dfd30645b86f) )
+	ROM_LOAD( "gfx.ic112", 0xb0000, 0x10000, CRC(5a309d8b) SHA1(81cf3b98b1f5782f41998e14533dde2c1a4fbed3) )
+	ROM_LOAD( "gfx.ic131", 0xc0000, 0x10000, CRC(710feda8) SHA1(5561b784b75d02791c7cb96d453a85c97bd264a4) )
+	ROM_LOAD( "gfx.ic129", 0xd0000, 0x10000, CRC(24b08a7e) SHA1(867fee3e41fedf1a66038e7c8ee8eb66aa35f20f) )
+	ROM_LOAD( "gfx.ic170", 0xe0000, 0x10000, CRC(3f7539cc) SHA1(ca3ef1fabcb0c7abd7bc211ba128d2433e3dbf26) )
+	ROM_LOAD( "gfx.ic168", 0xf0000, 0x10000, CRC(e2e053cb) SHA1(eb9432140fc167dec5d3273112933201be2be1b3) )
+
+	ROM_REGION( 0x080000, "spritegen", 0 )
+	ROM_LOAD32_BYTE( "wb.bin", 0x00000, 0x10000, CRC(e5039e3b) SHA1(25c76e518b21acd6c1e1b027aea1c36896007371) )
+	ROM_LOAD32_BYTE( "vb.bin", 0x00001, 0x10000, CRC(ffb2c34c) SHA1(9cbcd4f90e17b3cf3b768aa9a5621d51b5928b1a) )
+	ROM_LOAD32_BYTE( "sb.bin", 0x00002, 0x10000, CRC(1e8eb4be) SHA1(f49bc2dbcc573e44b2d5a4400407f5adc129b060) )
+	ROM_LOAD32_BYTE( "ib.bin", 0x00003, 0x10000, CRC(12437511) SHA1(2ca0d3729fefbe5e9049dcc153784afdea5c6fee) )
+	ROM_LOAD32_BYTE( "ub.bin", 0x40000, 0x10000, CRC(5e564954) SHA1(5d51c1a358ca1ba215da3643c6e3778267cbdbfd) )
+	ROM_LOAD32_BYTE( "tb.bin", 0x40001, 0x10000, CRC(312a40e9) SHA1(930f467268438e99dc49ac44f9b6e730a1688d1f) )
+	ROM_LOAD32_BYTE( "hb.bin", 0x40002, 0x10000, CRC(486a7528) SHA1(7eff7b2a1e2bc996d635e1b4896cd8cf123512e4) )
+	ROM_LOAD32_BYTE( "gb.bin", 0x40003, 0x10000, CRC(9207b4eb) SHA1(73f8d73a02daa2bbd001e008031332b6e842b691) )
 
 	ROM_REGION16_LE( 0x08000, "bgmap", 0 )
 	ROM_LOAD16_WORD( "gfx.ic175", 0x0000, 0x8000, CRC(a79be1eb) SHA1(4191ccd48f7650930f9a4c2be0790239d7420bb1) )
@@ -1358,10 +1409,11 @@ void tigeroad_state::init_tigeroadb()
 /***************************************************************************/
 
 
-GAME( 1987, tigeroad,  0,        tigeroad, tigeroad, tigeroad_state, empty_init,     ROT0, "Capcom",                   "Tiger Road (US)",                  MACHINE_SUPPORTS_SAVE )
-GAME( 1987, tigeroadu, tigeroad, tigeroad, tigeroad, tigeroad_state, empty_init,     ROT0, "Capcom (Romstar license)", "Tiger Road (US, Romstar license)", MACHINE_SUPPORTS_SAVE )
-GAME( 1987, toramich,  tigeroad, toramich, toramich, tigeroad_state, empty_init,     ROT0, "Capcom",                   "Tora e no Michi (Japan)",          MACHINE_SUPPORTS_SAVE )
-GAME( 1987, tigeroadb, tigeroad, tigeroad, tigeroad, tigeroad_state, init_tigeroadb, ROT0, "bootleg",                  "Tiger Road (US bootleg)",          MACHINE_SUPPORTS_SAVE )
+GAME( 1987, tigeroad,   0,        tigeroad, tigeroad, tigeroad_state, empty_init,     ROT0, "Capcom",                   "Tiger Road (US)",                  MACHINE_SUPPORTS_SAVE )
+GAME( 1987, tigeroadu,  tigeroad, tigeroad, tigeroad, tigeroad_state, empty_init,     ROT0, "Capcom (Romstar license)", "Tiger Road (US, Romstar license)", MACHINE_SUPPORTS_SAVE )
+GAME( 1987, toramich,   tigeroad, toramich, toramich, tigeroad_state, empty_init,     ROT0, "Capcom",                   "Tora e no Michi (Japan)",          MACHINE_SUPPORTS_SAVE )
+GAME( 1987, tigeroadb,  tigeroad, tigeroad, tigeroad, tigeroad_state, init_tigeroadb, ROT0, "bootleg",                  "Tiger Road (US bootleg, set 1)",   MACHINE_SUPPORTS_SAVE )
+GAME( 1987, tigeroadba, tigeroad, tigeroad, tigeroad, tigeroad_state, empty_init,     ROT0, "bootleg",                  "Tiger Road (US bootleg, set 2)",   MACHINE_SUPPORTS_SAVE )
 
 // F1 Dream has an Intel 8751 microcontroller for protection
 GAME( 1988, f1dream,  0,       f1dream,  f1dream, f1dream_state,  empty_init, ROT0, "Capcom (Romstar license)", "F-1 Dream",                  MACHINE_SUPPORTS_SAVE )

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "nmk_irq.h"
 #include "nmk004.h"
 #include "nmk214.h"
 #include "nmk16spr.h"
@@ -34,6 +35,7 @@ public:
 		m_screen(*this, "screen"),
 		m_palette(*this, "palette"),
 		m_spritegen(*this, "spritegen"),
+		m_nmk_irq(*this, "nmk_irq"),
 		m_nmk004(*this, "nmk004"),
 		m_soundlatch(*this, "soundlatch"),
 		m_bgvideoram(*this, "bgvideoram%u", 0U),
@@ -45,7 +47,6 @@ public:
 		m_tilemap_rom(*this, "tilerom"),
 		m_audiobank(*this, "audiobank"),
 		m_okibank(*this, "okibank%u", 1U),
-		m_vtiming_prom(*this, "vtiming"),
 		m_dsw_io(*this, "DSW%u", 1U),
 		m_in_io(*this, "IN%u", 0U),
 		m_sprdma_base(0x8000)
@@ -76,6 +77,7 @@ public:
 	void strahljbl(machine_config &config) ATTR_COLD;
 	void tdragon3h(machine_config &config) ATTR_COLD;
 	void macross(machine_config &config) ATTR_COLD;
+	void macrossbl(machine_config &config) ATTR_COLD;
 	void mustang(machine_config &config) ATTR_COLD;
 	void mustangb(machine_config &config) ATTR_COLD;
 	void mustangb3(machine_config &config) ATTR_COLD;
@@ -101,11 +103,9 @@ public:
 	void init_bjtwin() ATTR_COLD;
 	void init_powerinsa() ATTR_COLD;
 	void init_acrobatmbl() ATTR_COLD;
+	void init_macrossbl() ATTR_COLD;
 
 protected:
-	virtual void machine_start() override ATTR_COLD;
-	virtual void machine_reset() override ATTR_COLD;
-
 	required_device<cpu_device> m_maincpu;
 	optional_device<cpu_device> m_audiocpu;
 	optional_device_array<okim6295_device, 2> m_oki;
@@ -113,6 +113,7 @@ protected:
 	required_device<screen_device> m_screen;
 	required_device<palette_device> m_palette;
 	required_device<nmk_16bit_sprite_device> m_spritegen;
+	optional_device<nmk_irq_device> m_nmk_irq;
 	optional_device<nmk004_device> m_nmk004;
 	optional_device<generic_latch_8_device> m_soundlatch;
 
@@ -126,13 +127,12 @@ protected:
 	optional_region_ptr<u16> m_tilemap_rom;
 	optional_memory_bank m_audiobank;
 	optional_memory_bank_array<2> m_okibank;
-	optional_memory_region m_vtiming_prom;
 
 	optional_ioport_array<2> m_dsw_io;
 	optional_ioport_array<3> m_in_io;
 
 	u32 m_tilerambank = 0;
-	int m_sprdma_base = 0;
+	u32 m_sprdma_base = 0;
 	std::unique_ptr<u16[]> m_spriteram_old;
 	std::unique_ptr<u16[]> m_spriteram_old2;
 	u8 m_bgbank = 0;
@@ -143,7 +143,6 @@ protected:
 	u8 m_scroll[2][4]{};
 	u16 m_vscroll[4]{};
 	u8 m_prot_count = 0;
-	u8 m_vtiming_val = 0;
 
 	void mainram_strange_w(offs_t offset, u16 data/*, u16 mem_mask = ~0*/);
 	u16 mainram_swapped_r(offs_t offset);
@@ -185,7 +184,8 @@ protected:
 
 	void configure_nmk004(machine_config &config) ATTR_COLD;
 
-	TIMER_DEVICE_CALLBACK_MEMBER(nmk16_scanline);
+	void main_irq_cb(u8 data);
+	void sprite_dma_cb(int state);
 	TIMER_DEVICE_CALLBACK_MEMBER(nmk16_hacky_scanline);
 
 	TILEMAP_MAPPER_MEMBER(tilemap_scan_pages);
@@ -194,6 +194,7 @@ protected:
 	TILE_GET_INFO_MEMBER(bioship_get_bg_tile_info);
 	TILE_GET_INFO_MEMBER(bjtwin_get_bg_tile_info);
 	TILE_GET_INFO_MEMBER(powerins_get_bg_tile_info);
+	DECLARE_VIDEO_START(manybloc);
 	DECLARE_VIDEO_START(macross);
 	DECLARE_VIDEO_START(bioship);
 	DECLARE_VIDEO_START(strahl);
@@ -239,18 +240,16 @@ protected:
 	void macross2_sound_io_map(address_map &map) ATTR_COLD;
 	void macross2_sound_map(address_map &map) ATTR_COLD;
 	void macross_map(address_map &map) ATTR_COLD;
+	void macrossbl_map(address_map &map) ATTR_COLD;
 	void manybloc_map(address_map &map) ATTR_COLD;
 	void mustang_map(address_map &map) ATTR_COLD;
 	void mustangb_map(address_map &map) ATTR_COLD;
 	void mustangb3_map(address_map &map) ATTR_COLD;
 	void mustangb3_sound_map(address_map &map) ATTR_COLD;
-	void oki1_map(address_map &map) ATTR_COLD;
-	void oki2_map(address_map &map) ATTR_COLD;
 	void powerins_map(address_map &map) ATTR_COLD;
 	void powerins_sound_map(address_map &map) ATTR_COLD;
 	void powerins_bootleg_audio_io_map(address_map &map) ATTR_COLD;
 	void powerinsa_map(address_map &map) ATTR_COLD;
-	void powerinsa_oki_map(address_map &map) ATTR_COLD;
 	void raphero_map(address_map &map) ATTR_COLD;
 	void raphero_sound_mem_map(address_map &map) ATTR_COLD;
 	void ssmissin_map(address_map &map) ATTR_COLD;
@@ -263,7 +262,6 @@ protected:
 	void tdragon_map(address_map &map) ATTR_COLD;
 	void tdragonb_map(address_map &map) ATTR_COLD;
 	void tdragonb2_map(address_map &map) ATTR_COLD;
-	void tdragonb2_oki_map(address_map &map) ATTR_COLD;
 	void tdragonb3_map(address_map &map) ATTR_COLD;
 	void tharrier_map(address_map &map) ATTR_COLD;
 	void tharrier_sound_io_map(address_map &map) ATTR_COLD;
@@ -271,6 +269,13 @@ protected:
 	void twinactn_map(address_map &map) ATTR_COLD;
 	void vandyke_map(address_map &map) ATTR_COLD;
 	void vandykeb_map(address_map &map) ATTR_COLD;
+
+	void oki1_map(address_map &map) ATTR_COLD;
+	void oki2_map(address_map &map) ATTR_COLD;
+	void nmk112_oki0_map(address_map &map) ATTR_COLD;
+	void nmk112_oki1_map(address_map &map) ATTR_COLD;
+	void powerinsa_oki_map(address_map &map) ATTR_COLD;
+	void tdragonb2_oki_map(address_map &map) ATTR_COLD;
 };
 
 class tdragon_prot_state : public nmk16_state

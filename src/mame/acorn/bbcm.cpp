@@ -45,9 +45,11 @@ public:
 		, m_kbd(*this, "kbd")
 		, m_sn(*this, "sn")
 		, m_rtc(*this, "rtc")
-		, m_wdfdc(*this, "wdfdc")
 		, m_adlc(*this, "mc6854")
 		, m_modem(*this, "modem")
+		, m_wdfdc(*this, "wdfdc")
+		, m_floppy(*this, "wdfdc:%u", 0U)
+		, m_floppy_leds(*this, "floppy%u_led", 0U)
 		, m_power_led(*this, "power_led")
 	{ }
 
@@ -67,6 +69,8 @@ public:
 	void mpc900gx(machine_config &config);
 	void se3010(machine_config &config);
 
+	void init_se();
+
 	//static void mpc_prisma_default(device_t *device);
 
 protected:
@@ -74,18 +78,7 @@ protected:
 	virtual void machine_reset() override ATTR_COLD;
 
 private:
-	memory_view m_view_lynne;
-	memory_view m_view_hazel;
-	memory_view m_view_andy;
-	memory_view m_view_1mhz;
-	memory_view m_view_tst;
-	required_device<bbc_kbd_device> m_kbd;
-	optional_device<sn76489a_device> m_sn;
-	required_device<mc146818_device> m_rtc;
-	optional_device<wd1770_device> m_wdfdc;
-	required_device<mc6854_device> m_adlc;
-	optional_device<bbc_modem_slot_device> m_modem;
-	output_finder<> m_power_led;
+	template<int floppy> void floppy_led_cb(floppy_image_device *, int state);
 
 	void bbcm_fetch(address_map &map) ATTR_COLD;
 	void bbcm_base(address_map &map) ATTR_COLD;
@@ -99,6 +92,7 @@ private:
 	uint8_t fetch_r(offs_t offset);
 	uint8_t acccon_r();
 	void acccon_w(uint8_t data);
+	uint8_t romsel_r();
 	void romsel_w(offs_t offset, uint8_t data);
 	uint8_t paged_r(offs_t offset);
 	void paged_w(offs_t offset, uint8_t data);
@@ -115,6 +109,21 @@ private:
 	void update_sdb();
 	uint8_t sysvia_pb_r();
 	void sysvia_pb_w(uint8_t data);
+
+	memory_view m_view_lynne;
+	memory_view m_view_hazel;
+	memory_view m_view_andy;
+	memory_view m_view_1mhz;
+	memory_view m_view_tst;
+	required_device<bbc_kbd_device> m_kbd;
+	optional_device<sn76489a_device> m_sn;
+	required_device<mc146818_device> m_rtc;
+	required_device<mc6854_device> m_adlc;
+	optional_device<bbc_modem_slot_device> m_modem;
+	optional_device<wd1770_device> m_wdfdc;
+	optional_device_array<floppy_connector, 2> m_floppy;
+	output_finder<2> m_floppy_leds;
+	output_finder<> m_power_led;
 
 	int m_mc146818_as = 0;
 	int m_mc146818_ce = 0;
@@ -136,11 +145,23 @@ private:
 };
 
 
+template<int floppy> void bbcm_state::floppy_led_cb(floppy_image_device *, int state)
+{
+	m_floppy_leds[floppy] = state;
+}
+
+
 void bbcm_state::machine_start()
 {
 	bbc_state::machine_start();
 
 	m_power_led.resolve();
+	m_floppy_leds.resolve();
+
+	if (m_floppy[0] && m_floppy[0]->get_device())
+		m_floppy[0]->get_device()->setup_led_cb(floppy_image_device::led_cb(&bbcm_state::floppy_led_cb<0>, this));
+	if (m_floppy[1] && m_floppy[1]->get_device())
+		m_floppy[1]->get_device()->setup_led_cb(floppy_image_device::led_cb(&bbcm_state::floppy_led_cb<1>, this));
 
 	save_item(NAME(m_acccon));
 	save_item(NAME(m_sdb));
@@ -198,7 +219,7 @@ void bbcm_state::bbcm_io(address_map &map)
 	map(0x0220, 0x0223).w(FUNC(bbcm_state::video_ula_w));                                                                // W: FE20-FE23  Video ULA      Video system chip
 	map(0x0224, 0x0227).w(FUNC(bbcm_state::drive_control_w));                                                            // W: FE24-FE27  FDC Latch      1770 Control latch
 	map(0x0228, 0x022f).rw(m_wdfdc, FUNC(wd1770_device::read), FUNC(wd1770_device::write));                              //    FE28-FE2F  1770 FDC       Floppy disc controller
-	map(0x0230, 0x0233).w(FUNC(bbcm_state::romsel_w));                                                                   // W: FE30-FE33  ROMSEL         ROM Select
+	map(0x0230, 0x0233).rw(FUNC(bbcm_state::romsel_r), FUNC(bbcm_state::romsel_w));                                      //    FE30-FE33  ROMSEL         ROM Select
 	map(0x0234, 0x0237).rw(FUNC(bbcm_state::acccon_r), FUNC(bbcm_state::acccon_w));                                      //    FE34-FE37  ACCCON         ACCCON select register
 	map(0x0238, 0x023b).lr8(NAME([this]() { econet_int_enable(0); return 0xfe; }));                                      // R: FE38-FE3B  INTOFF         ECONET Interrupt Off
 	map(0x0238, 0x023b).lw8(NAME([this](uint8_t data) { econet_int_enable(0); }));                                       // W: FE38-FE3B  INTOFF         ECONET Interrupt Off
@@ -229,7 +250,7 @@ void bbcm_state::bbcmet_io(address_map &map)
 	map(0x0200, 0x0200).mirror(0x06).rw(m_crtc, FUNC(hd6845s_device::status_r), FUNC(hd6845s_device::address_w));        //    FE00-FE07  6845 CRTC      Video controller
 	map(0x0201, 0x0201).mirror(0x06).rw(m_crtc, FUNC(hd6845s_device::register_r), FUNC(hd6845s_device::register_w));
 	map(0x0220, 0x0223).w(FUNC(bbcm_state::video_ula_w));                                                                // W: FE20-FE23  Video ULA      Video system chip
-	map(0x0230, 0x0233).w(FUNC(bbcm_state::romsel_w));                                                                   // W: FE30-FE33  ROMSEL         ROM Select
+	map(0x0230, 0x0233).rw(FUNC(bbcm_state::romsel_r), FUNC(bbcm_state::romsel_w));                                      // W: FE30-FE33  ROMSEL         ROM Select
 	map(0x0234, 0x0237).rw(FUNC(bbcm_state::acccon_r), FUNC(bbcm_state::acccon_w));                                      //    FE34-FE37  ACCCON         ACCCON select register
 	map(0x0238, 0x023b).lr8(NAME([this]() { econet_int_enable(0); return 0xfe; }));                                      // R: FE38-FE3B  INTOFF         ECONET Interrupt Off
 	map(0x0238, 0x023b).lw8(NAME([this](uint8_t data) { econet_int_enable(0); }));                                       // W: FE38-FE3B  INTOFF         ECONET Interrupt Off
@@ -251,9 +272,14 @@ uint8_t bbcm_state::fetch_r(offs_t offset)
 }
 
 
+uint8_t bbcm_state::romsel_r()
+{
+	return m_romsel;
+}
+
 void bbcm_state::romsel_w(offs_t offset, uint8_t data)
 {
-	// ROMSEL - FE30 write only
+	// ROMSEL - FE30 read/write register
 	//  b7 RAM 1 = Page in ANDY 8000-8FFF
 	//         0 = Page in ROM  8000-8FFF
 	//  b6     Not Used
@@ -495,6 +521,10 @@ void bbcm_state::update_sdb()
 {
 	uint8_t const latch = m_latch->output_state();
 
+	// sound
+	if (!BIT(latch,0))
+		m_sn->write(m_sdb);
+
 	// rtc
 	if (m_mc146818_ce)
 	{
@@ -564,11 +594,21 @@ void bbcm_state::drive_control_w(uint8_t data)
 	//  1        Drive select 1
 	//  0        Drive select 0
 
+	int ds = -1;
+
 	floppy_image_device *floppy = nullptr;
 
 	// bit 0, 1, 3: drive select
-	if (BIT(data, 0)) floppy = m_wdfdc->subdevice<floppy_connector>("0")->get_device();
-	if (BIT(data, 1)) floppy = m_wdfdc->subdevice<floppy_connector>("1")->get_device();
+	if (BIT(data, 0)) ds = 0;
+	if (BIT(data, 1)) ds = 1;
+
+	for (auto &conn : m_floppy)
+	{
+		floppy = conn->get_device();
+		if (floppy)
+			floppy->ds_w(ds);
+	}
+	floppy = (ds != -1) ? m_floppy[ds]->get_device() : nullptr;
 	m_wdfdc->set_floppy(floppy);
 
 	// bit 4: side select
@@ -609,6 +649,17 @@ static INPUT_PORTS_START(bbcm)
 INPUT_PORTS_END
 
 
+void bbcm_state::init_se()
+{
+	bbc_state::init_bbc();
+
+	uint8_t *cmos = memregion("rtc")->base();
+
+	cmos[0x13] |= 0x0f; // *Configure File 15
+	cmos[0x1e] |= 0x10; // *Configure Boot
+}
+
+
 static void bbc_floppies(device_slot_interface &device)
 {
 	device.option_add("525sssd", FLOPPY_525_SSSD);
@@ -645,7 +696,7 @@ void bbcm_state::bbcmet(machine_config &config)
 	RAM(config, m_ram).set_default_size("128K");
 
 	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
-	m_screen->set_raw(16_MHz_XTAL, 1024, 0, 640, 624, 0, 512);
+	m_screen->set_raw(16_MHz_XTAL, 1024, 0, 640, 312, 0, 256);
 	m_screen->set_screen_update("crtc", FUNC(hd6845s_device::screen_update));
 
 	PALETTE(config, m_palette).set_entries(16);
@@ -665,7 +716,6 @@ void bbcm_state::bbcmet(machine_config &config)
 	config.set_default_layout(layout_bbcm);
 
 	LS259(config, m_latch);
-	m_latch->q_out_cb<0>().set([this](int state) { if (!state) m_sn->write(m_sdb); });
 	m_latch->q_out_cb<3>().set(m_kbd, FUNC(bbc_kbd_device::write_kb_en));
 	m_latch->q_out_cb<6>().set_output("capslock_led");
 	m_latch->q_out_cb<7>().set_output("shiftlock_led");
@@ -764,10 +814,11 @@ void bbcm_state::bbcm(machine_config &config)
 	centronics.set_output_latch(latch);
 
 	upd7002_device &upd7002(UPD7002(config, "upd7002", 16_MHz_XTAL / 16));
-	upd7002.set_get_analogue_callback(FUNC(bbcm_state::get_analogue_input));
-	upd7002.set_eoc_callback(m_sysvia, FUNC(via6522_device::write_cb1));
+	upd7002.get_analogue_callback().set(m_analog, FUNC(bbc_analogue_slot_device::ch_r));
+	upd7002.eoc_callback().set(m_sysvia, FUNC(via6522_device::write_cb1));
 
 	BBC_ANALOGUE_SLOT(config, m_analog, bbc_analogue_devices, nullptr);
+	m_analog->set_screen("screen");
 	m_analog->lpstb_handler().set(m_sysvia, FUNC(via6522_device::write_cb2));
 	m_analog->lpstb_handler().append([this](int state) { if (state) m_crtc->assert_light_pen_input(); });
 
@@ -775,8 +826,8 @@ void bbcm_state::bbcm(machine_config &config)
 	m_wdfdc->intrq_wr_callback().set(FUNC(bbcm_state::fdc_intrq_w));
 	m_wdfdc->drq_wr_callback().set(FUNC(bbcm_state::fdc_drq_w));
 
-	FLOPPY_CONNECTOR(config, "wdfdc:0", bbc_floppies, "525qd", bbc_state::floppy_formats).enable_sound(true);
-	FLOPPY_CONNECTOR(config, "wdfdc:1", bbc_floppies, "525qd", bbc_state::floppy_formats).enable_sound(true);
+	FLOPPY_CONNECTOR(config, m_floppy[0], bbc_floppies, "525qd", bbc_state::floppy_formats).enable_sound(true);
+	FLOPPY_CONNECTOR(config, m_floppy[1], bbc_floppies, "525qd", bbc_state::floppy_formats).enable_sound(true);
 
 	BBC_1MHZBUS_SLOT(config, m_1mhzbus, 16_MHz_XTAL / 16, bbcm_1mhzbus_devices, nullptr);
 	m_1mhzbus->add_route(ALL_OUTPUTS, "mono", 1.0);
@@ -865,8 +916,8 @@ void bbcm_state::cfa3000(machine_config &config)
 {
 	bbcm(config);
 
-	m_wdfdc->subdevice<floppy_connector>("0")->set_default_option(nullptr);
-	m_wdfdc->subdevice<floppy_connector>("1")->set_default_option(nullptr);
+	m_floppy[0]->set_default_option(nullptr);
+	m_floppy[1]->set_default_option(nullptr);
 
 	// LK18 and LK19 are set to enable rom, disabling ram
 	m_rom[0x04]->set_default_option("rom").set_fixed(true);
@@ -1025,14 +1076,20 @@ ROM_START(bbcm)
 	// page 6  18000  IC37 SWRAM or bottom 16K           // page 14 38000  IC24 View + MOS code
 	// page 7  1C000  IC37 SWRAM or top 16K              // page 15 3C000  IC24 Terminal + Tube host + CFS
 	ROM_REGION(0x44000, "rom", ROMREGION_ERASEFF)
-	ROM_SYSTEM_BIOS(0, "320", "MOS 3.20")
+	ROM_SYSTEM_BIOS(0, "320", "MOS 3.20") // 1986 original release
 	ROMX_LOAD("mos320.ic24", 0x20000, 0x20000, CRC(0f747ebe) SHA1(eacacbec3892dc4809ad5800e6c8299ff9eb528f), ROM_BIOS(0))
 
-	ROM_SYSTEM_BIOS(1, "350", "MOS 3.50")
-	ROMX_LOAD("mos350.ic24", 0x20000, 0x20000, CRC(141027b9) SHA1(85211b5bc7c7a269952d2b063b7ec0e1f0196803), ROM_BIOS(1))
+	ROM_SYSTEM_BIOS(1, "329", "MOS 3.29") // FinMOS, unknown source
+	ROMX_LOAD("mos329.ic24", 0x20000, 0x20000, CRC(8dd7338b) SHA1(4604203c70c04a9fd003103deec438fc5bd44839), ROM_BIOS(1))
 
-	ROM_SYSTEM_BIOS(2, "329", "MOS 3.29")
-	ROMX_LOAD("mos329.ic24", 0x20000, 0x20000, CRC(8dd7338b) SHA1(4604203c70c04a9fd003103deec438fc5bd44839), ROM_BIOS(2))
+	ROM_SYSTEM_BIOS(2, "343", "MOS 3.43") // Caspl MOS, found on an Acorn ROM Simulator carrier board
+	ROMX_LOAD("caspl_mos343_89.bin", 0x20000, 0x08000, CRC(fa2b881f) SHA1(eb7c09d942f9dac378337094416053df16cb3fe2), ROM_BIOS(2))
+	ROMX_LOAD("caspl_mos343_ab.bin", 0x28000, 0x08000, CRC(704d86e9) SHA1(c3ee6018230c7201a6dfa10162f25d630f12c795), ROM_BIOS(2))
+	ROMX_LOAD("caspl_mos343_cd.bin", 0x30000, 0x08000, CRC(953b7530) SHA1(19c1a59abd817f7011b142177417f7abb9eb3f64), ROM_BIOS(2))
+	ROMX_LOAD("caspl_mos343_ef.bin", 0x38000, 0x08000, CRC(ebc09359) SHA1(24ff90709495adda8a01858c60275193e70b2690), ROM_BIOS(2))
+
+	ROM_SYSTEM_BIOS(3, "350", "MOS 3.50") // 1989 official upgrade
+	ROMX_LOAD("mos350.ic24", 0x20000, 0x20000, CRC(141027b9) SHA1(85211b5bc7c7a269952d2b063b7ec0e1f0196803), ROM_BIOS(3))
 
 	ROM_COPY("rom", 0x20000, 0x40000, 0x4000) // Move loaded roms into place
 	ROM_FILL(0x20000, 0x4000, 0xff)
@@ -1046,6 +1103,7 @@ ROM_START(bbcm)
 	ROMX_LOAD("mos320.cmos", 0x00, 0x40, CRC(c7f9e85a) SHA1(f24cc9db0525910689219f7204bf8b864033ee94), ROM_BIOS(0))
 	ROMX_LOAD("mos350.cmos", 0x00, 0x40, CRC(e84c1854) SHA1(f3cb7f12b7432caba28d067f01af575779220aac), ROM_BIOS(1))
 	ROMX_LOAD("mos350.cmos", 0x00, 0x40, CRC(e84c1854) SHA1(f3cb7f12b7432caba28d067f01af575779220aac), ROM_BIOS(2))
+	ROMX_LOAD("mos350.cmos", 0x00, 0x40, CRC(e84c1854) SHA1(f3cb7f12b7432caba28d067f01af575779220aac), ROM_BIOS(3))
 ROM_END
 
 
@@ -1405,7 +1463,7 @@ COMP( 1986, bbcmarm,    bbcm,   0,     bbcmarm,    bbcm,   bbcm_state,   init_bb
 COMP( 1987, mpc800,     bbcm,   0,     mpc800,     bbcm,   bbcm_state,   init_bbc,  "G2 Systems",                  "MasterPieCe 800 Series",             MACHINE_NOT_WORKING )
 COMP( 1988, mpc900,     bbcm,   0,     mpc900,     bbcm,   bbcm_state,   init_bbc,  "G2 Systems",                  "MasterPieCe 900 Series",             MACHINE_NOT_WORKING )
 COMP( 1990, mpc900gx,   bbcm,   0,     mpc900gx,   bbcm,   bbcm_state,   init_bbc,  "G2 Systems",                  "MasterPieCe 900GX Series",           MACHINE_NOT_WORKING )
-COMP( 1987, se3010,     bbcm,   0,     se3010,     bbcm,   bbcm_state,   init_bbc,  "Softel Electronics",          "SE3010 Teletext Editing Terminal",   MACHINE_NOT_WORKING )
+COMP( 1987, se3010,     bbcm,   0,     se3010,     bbcm,   bbcm_state,   init_se,   "Softel Electronics",          "SE3010 Teletext Editing Terminal",   MACHINE_NOT_WORKING )
 
 // Jukeboxes
 //COMP( 1988, discmast,   bbcm,   0,     discmast,   bbcm,   bbcm_state,   init_bbc,  "Arbiter Leisure",             "Arbiter Discmaster A-00",            MACHINE_NOT_WORKING )

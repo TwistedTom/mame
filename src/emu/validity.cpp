@@ -392,10 +392,10 @@ void validate_rgb()
 	volatile s32 expected_a, expected_r, expected_g, expected_b;
 	volatile s32 actual_a, actual_r, actual_g, actual_b;
 	volatile s32 imm;
-	rgbaint_t rgb, other;
+	rgbaint_t rgb;
 	rgb_t packed;
 	auto check_expected =
-			[&] (const char *desc)
+			[&expected_a, &expected_r, &expected_g, &expected_b, &rgb] (const char *desc)
 			{
 				const volatile s32 a = rgb.get_a32();
 				const volatile s32 r = rgb.get_r32();
@@ -1277,22 +1277,25 @@ void validate_rgb()
 
 	// test bilinear_filter and bilinear_filter_rgbaint
 	// SSE implementation carries more internal precision between the bilinear stages
-#if defined(MAME_RGB_HIGH_PRECISION)
-	const int first_shift = 1;
-#else
-	const int first_shift = 8;
-#endif
+	auto const filter_expected =
+			[] (u8 x00, u8 x01, u8 x10, u8 x11, u8 u, u8 v)
+			{
+				const unsigned shift_inner = rgbaint_t::FILTER_SHIFT_INNER;
+				const unsigned shift_outer = rgbaint_t::FILTER_SHIFT_OUTER;
+
+				const unsigned upper = (((x00 * (256U - u)) >> shift_inner) + ((x01 * u) >> shift_inner)) >> shift_outer;
+				const unsigned lower = (((x10 * (256U - u)) >> shift_inner) + ((x11 * u) >> shift_inner)) >> shift_outer;
+				return u8(((upper * (256U - v)) + (lower * v)) >> (16 - shift_inner - shift_outer));
+			};
 	for (int index = 0; index < 1000; index++)
 	{
-		u8 u, v;
 		rgbaint_t rgb_point[4];
-		u32 top_row, bottom_row;
-
 		for (int i = 0; i < 4; i++)
 		{
 			rgb_point[i].set(random_u32());
 		}
 
+		u8 u, v;
 		switch (index)
 		{
 			case 0: u = 0; v = 0; break;
@@ -1307,21 +1310,10 @@ void validate_rgb()
 				break;
 		}
 
-		top_row = (rgb_point[0].get_a() * (256 - u) + rgb_point[1].get_a() * u) >> first_shift;
-		bottom_row = (rgb_point[2].get_a() * (256 - u) + rgb_point[3].get_a() * u) >> first_shift;
-		expected_a = (top_row * (256 - v) + bottom_row * v) >> (16 - first_shift);
-
-		top_row = (rgb_point[0].get_r() * (256 - u) + rgb_point[1].get_r() * u) >> first_shift;
-		bottom_row = (rgb_point[2].get_r() * (256 - u) + rgb_point[3].get_r() * u) >> first_shift;
-		expected_r = (top_row * (256 - v) + bottom_row * v) >> (16 - first_shift);
-
-		top_row = (rgb_point[0].get_g() * (256 - u) + rgb_point[1].get_g() * u) >> first_shift;
-		bottom_row = (rgb_point[2].get_g() * (256 - u) + rgb_point[3].get_g() * u) >> first_shift;
-		expected_g = (top_row * (256 - v) + bottom_row * v) >> (16 - first_shift);
-
-		top_row = (rgb_point[0].get_b() * (256 - u) + rgb_point[1].get_b() * u) >> first_shift;
-		bottom_row = (rgb_point[2].get_b() * (256 - u) + rgb_point[3].get_b() * u) >> first_shift;
-		expected_b = (top_row * (256 - v) + bottom_row * v) >> (16 - first_shift);
+		expected_a = filter_expected(rgb_point[0].get_a(), rgb_point[1].get_a(), rgb_point[2].get_a(), rgb_point[3].get_a(), u, v);
+		expected_r = filter_expected(rgb_point[0].get_r(), rgb_point[1].get_r(), rgb_point[2].get_r(), rgb_point[3].get_r(), u, v);
+		expected_g = filter_expected(rgb_point[0].get_g(), rgb_point[1].get_g(), rgb_point[2].get_g(), rgb_point[3].get_g(), u, v);
+		expected_b = filter_expected(rgb_point[0].get_b(), rgb_point[1].get_b(), rgb_point[2].get_b(), rgb_point[3].get_b(), u, v);
 
 		imm = rgbaint_t::bilinear_filter(rgb_point[0].to_rgba(), rgb_point[1].to_rgba(), rgb_point[2].to_rgba(), rgb_point[3].to_rgba(), u, v);
 		rgb.set(imm);
@@ -2738,7 +2730,7 @@ void validity_checker::validate_devices(machine_config &config)
 				device_t *card;
 				{
 					machine_config::token const tok(config.begin_configuration(slot->device()));
-					card = config.device_add(option.second->name(), option.second->devtype(), option.second->clock());
+					card = config.device_add(std::string(option.second->name()).c_str(), option.second->devtype(), option.second->clock()); // TODO: support string_view tags
 
 					const char *const def_bios = option.second->default_bios();
 					if (def_bios)
@@ -2753,14 +2745,14 @@ void validity_checker::validate_devices(machine_config &config)
 
 				for (device_slot_interface &subslot : slot_interface_enumerator(*card))
 				{
-					if (subslot.fixed())
+					if (subslot.fixed() && subslot.default_option())
 					{
 						// TODO: make this self-contained so it can apply itself
-						device_slot_interface::slot_option const *suboption = subslot.option(subslot.default_option());
+						device_slot_interface::slot_option const *const suboption = subslot.option(subslot.default_option());
 						if (suboption)
 						{
 							machine_config::token const tok(config.begin_configuration(subslot.device()));
-							device_t *const sub_card = config.device_add(suboption->name(), suboption->devtype(), suboption->clock());
+							device_t *const sub_card = config.device_add(std::string(suboption->name()).c_str(), suboption->devtype(), suboption->clock()); // TODO: support string_view tags
 							const char *const sub_bios = suboption->default_bios();
 							if (sub_bios)
 								sub_card->set_default_bios_tag(sub_bios);
@@ -2786,7 +2778,7 @@ void validity_checker::validate_devices(machine_config &config)
 				}
 
 				machine_config::token const tok(config.begin_configuration(slot->device()));
-				config.device_remove(option.second->name());
+				config.device_remove(std::string(option.second->name()).c_str()); // TODO: support string_view tags
 				m_checking_card = false;
 			}
 		}
