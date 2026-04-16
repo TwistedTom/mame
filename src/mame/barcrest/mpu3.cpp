@@ -101,7 +101,7 @@ TODO: - Distinguish door switches using manual
 ***********************************************************************************************************/
 
 #include "emu.h"
-#include "awpvid.h"       //Fruit Machines Only
+#include "awpvid.h" // Fruit Machines Only
 
 #include "mpu4_characteriser_pal.h"
 
@@ -113,9 +113,9 @@ TODO: - Distinguish door switches using manual
 
 #include "cpu/m6800/m6800.h"
 #include "machine/steppers.h"
-#include "machine/roc10937.h"
 #include "machine/meters.h"
 #include "machine/rescap.h"
+#include "video/roc10937.h"
 
 #include "mpu3.lh"
 
@@ -652,7 +652,7 @@ static INPUT_PORTS_START( mpu3 )
 	PORT_BIT(0x08, IP_ACTIVE_HIGH, IPT_OTHER)   PORT_NAME("Auto Nudge")
 	PORT_BIT(0x20, IP_ACTIVE_HIGH, IPT_SERVICE) PORT_NAME("Test Button") PORT_CODE(KEYCODE_W)
 	PORT_BIT(0x40, IP_ACTIVE_HIGH, IPT_SERVICE) PORT_NAME("Refill Key") PORT_CODE(KEYCODE_R) PORT_TOGGLE
-	PORT_BIT(0x80, IP_ACTIVE_HIGH, IPT_INTERLOCK) PORT_NAME("Cashbox Door")  PORT_CODE(KEYCODE_Q) PORT_TOGGLE
+	PORT_BIT(0x80, IP_ACTIVE_HIGH, IPT_DOOR) PORT_NAME("Cashbox Door") PORT_CODE(KEYCODE_Q) PORT_TOGGLE
 
 	PORT_START("BLACK2")
 	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_OTHER) PORT_NAME("20p")

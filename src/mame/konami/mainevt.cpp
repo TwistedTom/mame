@@ -153,12 +153,12 @@ K052109_CB_MEMBER(mainevt_state::tile_callback)
 {
 	static const int layer_colorbase[] = { 0 / 16, 128 / 16, 64 / 16 };
 
-	*flags = (*color & 0x02) ? TILE_FLIPX : 0;
+	flags = (color & 0x02) ? TILE_FLIPX : 0;
 
 	// priority relative to HALF priority sprites
-	*priority = (layer == 2) ? (*color & 0x20) >> 5 : 0;
-	*code |= ((*color & 0x01) << 8) | ((*color & 0x1c) << 7);
-	*color = layer_colorbase[layer] + ((*color & 0xc0) >> 6);
+	priority = (layer == 2) ? (color & 0x20) >> 5 : 0;
+	code |= ((color & 0x01) << 8) | ((color & 0x1c) << 7);
+	color = layer_colorbase[layer] + ((color & 0xc0) >> 6);
 }
 
 K052109_CB_MEMBER(devstors_state::tile_callback)
@@ -166,8 +166,8 @@ K052109_CB_MEMBER(devstors_state::tile_callback)
 	static const int layer_colorbase[] = { 0 / 16, 0 / 16, 64 / 16 };
 
 	// (color & 0x02) is flip y handled internally by the 052109
-	*code |= ((*color & 0x01) << 8) | ((*color & 0x3c) << 7);
-	*color = layer_colorbase[layer] + ((*color & 0xc0) >> 6);
+	code |= ((color & 0x01) << 8) | ((color & 0x3c) << 7);
+	color = layer_colorbase[layer] + ((color & 0xc0) >> 6);
 }
 
 
@@ -183,15 +183,15 @@ K051960_CB_MEMBER(mainevt_state::sprite_callback)
 
 	// bit 5 = priority over layer B (has precedence)
 	// bit 6 = HALF priority over layer B (used for crowd when you get out of the ring)
-	if (*color & 0x20)
-		*priority = 0xff00;
-	else if (*color & 0x40)
-		*priority = 0xff00 | 0xf0f0;
+	if (color & 0x20)
+		priority = 0xff00;
+	else if (color & 0x40)
+		priority = 0xff00 | 0xf0f0;
 	else
-		*priority = 0xff00 | 0xf0f0 | 0xcccc;
+		priority = 0xff00 | 0xf0f0 | 0xcccc;
 	// bit 7 is shadow, not used
 
-	*color = sprite_colorbase + (*color & 0x03);
+	color = sprite_colorbase + (color & 0x03);
 }
 
 K051960_CB_MEMBER(devstors_state::sprite_callback)
@@ -199,7 +199,7 @@ K051960_CB_MEMBER(devstors_state::sprite_callback)
 	enum { sprite_colorbase = 128 / 16 };
 
 	// TODO: the priority/shadow handling (bits 5-7) seems to be quite complex (see PROM)
-	*color = sprite_colorbase + (*color & 0x07);
+	color = sprite_colorbase + (color & 0x07);
 }
 
 
@@ -646,6 +646,9 @@ void devstors_state::devstors(machine_config &config)
 
 	WATCHDOG_TIMER(config, "watchdog");
 
+	k051733_device &k051733(K051733(config, "k051733", 24_MHz_XTAL / 2));
+	k051733.set_nmi_cb().set_inputline(m_maincpu, INPUT_LINE_NMI);
+
 	// video hardware
 	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
 	screen.set_raw(24_MHz_XTAL / 4, 384, 0+24, 320-8, 264, 16, 240); // measured 59.17
@@ -665,9 +668,6 @@ void devstors_state::devstors(machine_config &config)
 	m_k051960->set_palette("palette");
 	m_k051960->set_screen("screen");
 	m_k051960->set_sprite_callback(FUNC(devstors_state::sprite_callback));
-
-	k051733_device &k051733(K051733(config, "k051733", 24_MHz_XTAL / 2));
-	k051733.set_nmi_cb().set_inputline(m_maincpu, INPUT_LINE_NMI);
 
 	// sound hardware
 	SPEAKER(config, "mono").front_center();

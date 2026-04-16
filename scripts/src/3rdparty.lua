@@ -14,7 +14,7 @@
 -- expat library objects
 --------------------------------------------------
 
-if not _OPTIONS["with-system-expat"] then
+if _OPTIONS["with-system-expat"] ~= "1" then
 project "expat"
 	uuid "f4cd40b1-c37c-452d-9785-640f26f0bf54"
 	kind "StaticLib"
@@ -120,7 +120,7 @@ end
 -- zlib library objects
 --------------------------------------------------
 
-if not _OPTIONS["with-system-zlib"] then
+if _OPTIONS["with-system-zlib"] ~= "1" then
 project "zlib"
 	uuid "3d78bd2a-2bd0-4449-8087-42ddfaef7ec9"
 	kind "StaticLib"
@@ -181,7 +181,7 @@ end
 -- zstd library objects
 --------------------------------------------------
 
-if not _OPTIONS["with-system-zstd"] then
+if _OPTIONS["with-system-zstd"] ~= "1" then
 project "zstd"
 	uuid "5edd8713-bc60-456d-9c95-b928a913c84b"
 	kind "StaticLib"
@@ -655,7 +655,7 @@ end
 -- libJPEG library objects
 --------------------------------------------------
 
-if not _OPTIONS["with-system-jpeg"] then
+if _OPTIONS["with-system-jpeg"] ~= "1" then
 project "jpeg"
 	uuid "447c6800-dcfd-4c48-b72a-a8223bb409ca"
 	kind "StaticLib"
@@ -734,7 +734,7 @@ end
 -- libflac library objects
 --------------------------------------------------
 
-if not _OPTIONS["with-system-flac"] then
+if _OPTIONS["with-system-flac"] ~= "1" then
 project "flac"
 	uuid "b6fc19e8-073a-4541-bb7b-d24b548d424a"
 	kind "StaticLib"
@@ -977,7 +977,7 @@ end
 --------------------------------------------------
 if (STANDALONE~=true) then
 
-if not _OPTIONS["with-system-lua"] then
+if _OPTIONS["with-system-lua"] ~= "1" then
 project "lua"
 	uuid "d9e2eed1-f1ab-4737-a6ac-863700b1a5a9"
 	kind "StaticLib"
@@ -1011,7 +1011,7 @@ end
 			"LUA_COMPAT_5_1",
 			"LUA_COMPAT_5_2",
 		}
-	if not (_OPTIONS["targetos"]=="windows") and not (_OPTIONS["targetos"]=="asmjs") then
+	if (_OPTIONS["targetos"] ~= "windows") and (_OPTIONS["targetos"] ~= "asmjs") then
 		defines {
 			"LUA_USE_POSIX",
 		}
@@ -1128,7 +1128,7 @@ end
 -- SQLite3 library objects
 --------------------------------------------------
 
-if not _OPTIONS["with-system-sqlite3"] then
+if _OPTIONS["with-system-sqlite3"] ~= "1" then
 project "sqlite3"
 	uuid "5cb3d495-57ed-461c-81e5-80dc0857517d"
 	kind "StaticLib"
@@ -1179,8 +1179,8 @@ end
 -- portmidi library objects
 --------------------------------------------------
 
-if _OPTIONS["NO_USE_MIDI"]~="1" then
-if not _OPTIONS["with-system-portmidi"] then
+if _OPTIONS["NO_USE_MIDI"] ~= "1" then
+if _OPTIONS["with-system-portmidi"] ~= "1" then
 project "portmidi"
 	uuid "587f2da6-3274-4a65-86a2-f13ea315bb98"
 	kind "StaticLib"
@@ -1688,8 +1688,8 @@ end
 -- PortAudio library objects
 --------------------------------------------------
 
-if _OPTIONS["NO_USE_PORTAUDIO"]~="1" then
-if not _OPTIONS["with-system-portaudio"] then
+if _OPTIONS["NO_USE_PORTAUDIO"] ~= "1" then
+if _OPTIONS["with-system-portaudio"] ~= "1" then
 project "portaudio"
 	uuid "0755c5f5-eccf-47f3-98a9-df67018a94d4"
 	kind "StaticLib"
@@ -1897,7 +1897,7 @@ end
 -- utf8proc library objects
 --------------------------------------------------
 
-if not _OPTIONS["with-system-utf8proc"] then
+if _OPTIONS["with-system-utf8proc"] ~= "1" then
 project "utf8proc"
 	uuid "1f881f09-0395-4483-ac37-2935fb092187"
 	kind "StaticLib"
@@ -2033,7 +2033,6 @@ project "asmjit"
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/arm/armformatter_p.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/arm/armformatter.cpp",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/arm/armglobals.h",
-		MAME_DIR .. "3rdparty/asmjit/src/asmjit/arm/armoperand.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/arm/armutils.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/asmjit-scope-begin.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/asmjit-scope-end.h",
@@ -2044,6 +2043,20 @@ project "asmjit"
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/archcommons.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/archtraits.cpp",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/archtraits.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/arena.cpp",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/arena.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/arenabitset.cpp",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/arenabitset_p.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/arenahash.cpp",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/arenahash.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/arenalist.cpp",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/arenalist.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/arenapool.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/arenastring.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/arenatree.cpp",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/arenatree.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/arenavector.cpp",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/arenavector.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/assembler.cpp",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/assembler.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/builder_p.h",
@@ -2071,6 +2084,7 @@ project "asmjit"
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/environment.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/errorhandler.cpp",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/errorhandler.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/fixup.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/formatter_p.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/formatter.cpp",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/formatter.h",
@@ -2097,14 +2111,19 @@ project "asmjit"
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/osutils.cpp",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/osutils.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/raassignment_p.h",
-		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/rabuilders_p.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/racfgblock_p.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/racfgbuilder_p.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/raconstraints_p.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/radefs_p.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/rainst_p.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/ralocal_p.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/ralocal.cpp",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/rapass_p.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/rapass.cpp",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/rareg_p.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/rastack_p.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/rastack.cpp",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/span.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/string.cpp",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/string.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/support_p.h",
@@ -2116,19 +2135,17 @@ project "asmjit"
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/type.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/virtmem.cpp",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/virtmem.h",
-		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/zone.cpp",
-		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/zone.h",
-		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/zonehash.cpp",
-		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/zonehash.h",
-		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/zonelist.cpp",
-		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/zonelist.h",
-		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/zonestack.cpp",
-		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/zonestack.h",
-		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/zonestring.h",
-		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/zonetree.cpp",
-		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/zonetree.h",
-		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/zonevector.cpp",
-		MAME_DIR .. "3rdparty/asmjit/src/asmjit/core/zonevector.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/host.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/ujit.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/ujit/ujitbase.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/ujit/unicompiler.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/ujit/unicompiler_a64.cpp",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/ujit/unicompiler_utils_p.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/ujit/unicompiler_x86.cpp",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/ujit/unicondition.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/ujit/uniop.h",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/ujit/vecconsttable.cpp",
+		MAME_DIR .. "3rdparty/asmjit/src/asmjit/ujit/vecconsttable.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/x86.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/x86/x86archtraits_p.h",
 		MAME_DIR .. "3rdparty/asmjit/src/asmjit/x86/x86assembler.cpp",

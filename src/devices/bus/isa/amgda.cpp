@@ -42,6 +42,9 @@
 //#define VERBOSE (LOG_GENERAL|LOG_REGR|LOG_REGW|LOG_MODE|LOG_VRAM)
 #include "logmacro.h"
 
+
+namespace {
+
 class isa16_amgda_device
 	: public device_t
 	, public device_isa16_card_interface
@@ -55,9 +58,9 @@ public:
 }
 
 protected:
-	virtual void device_add_mconfig(machine_config &config) override;
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	u32 screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 
@@ -123,8 +126,6 @@ private:
 	u16 m_ba;   // block address
 	bool m_aw;  // automatic write
 };
-
-DEFINE_DEVICE_TYPE_PRIVATE(ISA16_AMGDA, device_isa16_card_interface, isa16_amgda_device, "isa16_amgda_device", "IBM Advanced Monochrome Graphics Display Adapter")
 
 void isa16_amgda_device::device_add_mconfig(machine_config &config)
 {
@@ -461,3 +462,7 @@ u8 isa16_amgda_device::alu(unsigned const byte) const
 	// FIXME: undocumented functions 1 and 3
 	return 0;
 }
+
+} // anonymous namespace
+
+DEFINE_DEVICE_TYPE_PRIVATE(ISA16_AMGDA, device_isa16_card_interface, isa16_amgda_device, "amgda", "IBM Advanced Monochrome Graphics Display Adapter")
